@@ -62,4 +62,24 @@ class AppIcons {
   // ── Onboarding ─────────────────────────────────────
   static final IconData solo = MdiIcons.accountOutline;
   static final IconData group = MdiIcons.accountMultipleOutline;
+
+  // ── Features ─────────────────────────────────────
+  static final IconData journal = MdiIcons.bookOpenPageVariantOutline;
+  static final IconData buddy = MdiIcons.accountHeartOutline;
+  static final IconData challenge = MdiIcons.swordCross;
+  static final IconData calendar = MdiIcons.calendarMonthOutline;
+  static final IconData compare = MdiIcons.scaleBalance;
+  static final IconData shoppingList = MdiIcons.cartOutline;
+  static final IconData camera = MdiIcons.cameraOutline;
+  static final IconData image = MdiIcons.imageOutline;
+  static final IconData edit = MdiIcons.pencilOutline;
+  static final IconData mood = MdiIcons.emoticonHappyOutline;
+  static final IconData seasonal = MdiIcons.weatherSunny;
+  static final IconData faq = MdiIcons.frequentlyAskedQuestions;
+  static final IconData note = MdiIcons.noteTextOutline;
+  static final IconData stories = MdiIcons.messageTextOutline;
+  static final IconData local = MdiIcons.mapMarkerOutline;
+  static final IconData yearReview = MdiIcons.starCircleOutline;
+  static final IconData radar = MdiIcons.hexagonMultipleOutline;
+  static final IconData shareProfile = MdiIcons.shareVariantOutline;
 }
