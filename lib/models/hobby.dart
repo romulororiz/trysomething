@@ -114,6 +114,7 @@ class UserHobby {
   final HobbyStatus status;
   final Set<String> completedStepIds;
   final DateTime? startedAt;
+  final DateTime? lastActivityAt;
   final int streakDays;
 
   const UserHobby({
@@ -121,6 +122,7 @@ class UserHobby {
     required this.status,
     this.completedStepIds = const {},
     this.startedAt,
+    this.lastActivityAt,
     this.streakDays = 0,
   });
 
@@ -128,6 +130,7 @@ class UserHobby {
     HobbyStatus? status,
     Set<String>? completedStepIds,
     DateTime? startedAt,
+    DateTime? lastActivityAt,
     int? streakDays,
   }) {
     return UserHobby(
@@ -135,6 +138,7 @@ class UserHobby {
       status: status ?? this.status,
       completedStepIds: completedStepIds ?? this.completedStepIds,
       startedAt: startedAt ?? this.startedAt,
+      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
       streakDays: streakDays ?? this.streakDays,
     );
   }
