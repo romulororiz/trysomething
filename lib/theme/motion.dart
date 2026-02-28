@@ -60,6 +60,10 @@ class Motion {
   /// Filter panel expand/collapse
   static const Duration filterToggle = Duration(milliseconds: 200);
 
+  /// Bottom nav notch travel between tabs — 300ms
+  static const Duration navNotchTravel = Duration(milliseconds: 450);
+  static const Curve navNotchCurve = Curves.easeInOutCubic;
+
   /// Forward navigation (push)
   static const Duration navForward = Duration(milliseconds: 350);
 

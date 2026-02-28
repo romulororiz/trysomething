@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// TrySomething — ThemeData (Light mode primary)
+/// TrySomething — ThemeData (Midnight Neon dark mode)
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light {
+  static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.cream,
-      colorScheme: const ColorScheme.light(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.coral,
         onPrimary: Colors.white,
         secondary: AppColors.amber,
@@ -145,11 +145,8 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.coral,
           minimumSize: const Size(double.infinity, 46),
-          side: BorderSide(
-            color: AppColors.coral.withValues(alpha: 0.25),
-            width: 1.5,
-          ),
-          backgroundColor: AppColors.coralPale,
+          side: BorderSide.none,
+          backgroundColor: AppColors.sand,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -164,15 +161,15 @@ class AppTheme {
         fillColor: AppColors.warmWhite,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.sandDark),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.sandDark),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+          borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         hintStyle: GoogleFonts.dmSans(

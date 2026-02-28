@@ -9,12 +9,12 @@ import 'providers/user_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // System UI style — match Sunset Analog cream
+  // System UI style — match Midnight Neon dark theme
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-    systemNavigationBarColor: Color(0xFFFFFDFB), // warmWhite
-    systemNavigationBarIconBrightness: Brightness.dark,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Color(0xFF141420), // warmWhite (dark)
+    systemNavigationBarIconBrightness: Brightness.light,
   ));
 
   // Initialize SharedPreferences
@@ -40,7 +40,7 @@ class TrySomethingApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'TrySomething',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       routerConfig: router,
     );
   }

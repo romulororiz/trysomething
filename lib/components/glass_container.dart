@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 /// Frosted glass surface widget — Kinetic Glass signature element.
 ///
 /// Uses BackdropFilter with blur for the glass effect,
-/// white overlay for light-mode warmth (not dark glass),
+/// dark surface overlay for Midnight Neon dark glass,
 /// plus a subtle noise grain texture for realism.
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -42,10 +42,10 @@ class GlassContainer extends StatelessWidget {
             child: Container(
               padding: padding,
               decoration: BoxDecoration(
-                color: (backgroundColor ?? Colors.white).withValues(alpha: opacity),
+                color: (backgroundColor ?? const Color(0xFF1E1E2E)).withValues(alpha: opacity),
                 borderRadius: BorderRadius.circular(borderRadius),
                 border: Border.all(
-                  color: borderColor ?? Colors.white.withValues(alpha: 0.6),
+                  color: borderColor ?? const Color(0xFF2A2A3C).withValues(alpha: 0.8),
                   width: 1,
                 ),
               ),

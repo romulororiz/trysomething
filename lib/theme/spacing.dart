@@ -60,12 +60,12 @@ class Spacing {
   // ═══════════════════════════════════════════════════
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Color(0x241E1A17),
+      color: Color(0x24000000),
       blurRadius: 32,
       offset: Offset(0, 8),
     ),
     BoxShadow(
-      color: Color(0x141E1A17),
+      color: Color(0x14000000),
       blurRadius: 8,
       offset: Offset(0, 2),
     ),
@@ -73,7 +73,7 @@ class Spacing {
 
   static const List<BoxShadow> specBarShadow = [
     BoxShadow(
-      color: Color(0x0A1E1A17),
+      color: Color(0x0A000000),
       blurRadius: 8,
       offset: Offset(0, 2),
     ),
@@ -81,7 +81,7 @@ class Spacing {
 
   static const List<BoxShadow> subtleShadow = [
     BoxShadow(
-      color: Color(0x0A1E1A17),
+      color: Color(0x0A000000),
       blurRadius: 12,
       offset: Offset(0, 4),
     ),
@@ -94,9 +94,9 @@ class Spacing {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0x001E1A17), // transparent
-      Color(0x661E1A17), // 0.4 at 55%
-      Color(0xEB1E1A17), // 0.92 at 100%
+      Color(0x000A0A0F), // transparent
+      Color(0x660A0A0F), // 0.4 at 55%
+      Color(0xEB0A0A0F), // 0.92 at 100%
     ],
     stops: [0.3, 0.55, 1.0],
   );
@@ -105,9 +105,9 @@ class Spacing {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0x00FFF9F5), // cream transparent
-      Color(0xB3FFF9F5), // cream @ 0.7
-      Color(0xFFFFF9F5), // cream solid
+      Color(0x000A0A0F), // cream transparent
+      Color(0xB30A0A0F), // cream @ 0.7
+      Color(0xFF0A0A0F), // cream solid
     ],
     stops: [0.25, 0.65, 1.0],
   );
@@ -116,8 +116,8 @@ class Spacing {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0x00FFF9F5),
-      Color(0xFFFFF9F5),
+      Color(0x000A0A0F),
+      Color(0xFF0A0A0F),
     ],
     stops: [0.0, 0.3],
   );
