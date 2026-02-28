@@ -31,7 +31,7 @@ class HobbyCard extends StatefulWidget {
   State<HobbyCard> createState() => _HobbyCardState();
 }
 
-class _HobbyCardState extends State<HobbyCard> with SingleTickerProviderStateMixin {
+class _HobbyCardState extends State<HobbyCard> {
   bool _pressed = false;
 
   @override
@@ -56,7 +56,7 @@ class _HobbyCardState extends State<HobbyCard> with SingleTickerProviderStateMix
             borderRadius: Spacing.cardBorderRadius,
             boxShadow: Spacing.cardShadow,
           ),
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: Clip.hardEdge,
           child: Stack(
             fit: StackFit.expand,
             children: [

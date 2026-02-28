@@ -46,27 +46,27 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // Entry animation: overlay + spec badges + details reveal.
-    // Duration matches the page slide-in (Motion.navForward ~350ms) so all
-    // elements finish animating exactly as the Hero lands.
+    // Entry animation: 600ms total, starts immediately.
+    // Overlay fades in early and smooth (no flicker), spec badges arrive
+    // after the Hero flight lands (~350ms).
     _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 600),
     );
 
-    // Gradient overlay: starts at 0.4 (240ms), finishes at 0.9 (540ms) — 300ms fade
+    // Gradient overlay: 30ms–390ms (smooth 360ms fade, no flicker)
     _overlayOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _entryController,
-        curve: const Interval(0.4, 0.9, curve: Curves.easeOut),
+        curve: const Interval(0.05, 0.65, curve: Curves.easeOut),
       ),
     );
 
-    // Details (category chip, hook): same timing as overlay for sync
+    // Details (category chip, hook): 90ms–420ms
     _detailsOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _entryController,
-        curve: const Interval(0.4, 0.9, curve: Curves.easeOut),
+        curve: const Interval(0.15, 0.7, curve: Curves.easeOut),
       ),
     );
     _detailsSlide = Tween<Offset>(
@@ -75,15 +75,15 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     ).animate(
       CurvedAnimation(
         parent: _entryController,
-        curve: Interval(0.4, 0.95, curve: Motion.heroCurve),
+        curve: Interval(0.15, 0.8, curve: Motion.heroCurve),
       ),
     );
 
-    // Spec badge: starts slightly after overlay, slide up + fade in
+    // Spec badge: 210ms–480ms (appears after hero lands at ~350ms)
     _specBadgeOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _entryController,
-        curve: const Interval(0.5, 0.85, curve: Curves.easeOut),
+        curve: const Interval(0.35, 0.8, curve: Curves.easeOut),
       ),
     );
     _specBadgeSlide = Tween<Offset>(
@@ -92,7 +92,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     ).animate(
       CurvedAnimation(
         parent: _entryController,
-        curve: Interval(0.5, 0.95, curve: Motion.heroCurve),
+        curve: Interval(0.35, 0.9, curve: Motion.heroCurve),
       ),
     );
 
@@ -153,14 +153,31 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               // Hero image with parallax
               SliverToBoxAdapter(child: _buildHeroImage(context, hobby)),
 
-              // Sticky spec bar
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _StickySpecBarDelegate(
-                  hobby: hobby,
+              // Spec bar (animated entry — no longer a SliverPersistentHeader
+              // because the slide animation was pushing content beyond the
+              // sliver's geometry bounds, causing layoutExtent > paintExtent)
+              SliverToBoxAdapter(
+                child: AnimatedBuilder(
                   animation: _specBadgeOpacity,
-                  slideAnimation: _specBadgeSlide,
-                  topPadding: topPad,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: _specBadgeSlide.value,
+                      child: Opacity(
+                        opacity: _specBadgeOpacity.value,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                    color: AppColors.cream,
+                    child: SpecBar(
+                      cost: hobby.costText,
+                      time: hobby.timeText,
+                      difficulty: hobby.difficultyText,
+                      withContainer: true,
+                    ),
+                  ),
                 ),
               ),
 
@@ -304,10 +321,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.85),
-                  border: Border.all(color: AppColors.sandDark),
+                  color: Color(0xCC1E1E2E),
                 ),
                 child: const Center(
                   child: Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.nearBlack),
@@ -359,7 +375,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               tag: 'hobby_image_${hobby.id}',
               flightShuttleBuilder: (flightContext, animation, direction,
                   fromHeroContext, toHeroContext) {
-                // Animate clip radius from card (20) → detail (0)
+                // Use Hero's child directly — passing the full Hero widget
+                // into the overlay causes null check failures in the flight system.
+                final Hero toHero = toHeroContext.widget as Hero;
                 final radiusTween = Tween<double>(
                   begin: direction == HeroFlightDirection.push
                       ? Spacing.radiusCard
@@ -370,11 +388,12 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 );
                 return AnimatedBuilder(
                   animation: animation,
+                  child: toHero.child,
                   builder: (context, child) {
                     final r = radiusTween.evaluate(animation);
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(r),
-                      child: toHeroContext.widget,
+                      child: child,
                     );
                   },
                 );
@@ -434,8 +453,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                      color: hobby.catColor.withValues(alpha: 0.07),
-                      border: Border.all(color: hobby.catColor.withValues(alpha: 0.15)),
+                      color: AppColors.sand,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -444,7 +462,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                         const SizedBox(width: 5),
                         Text(
                           hobby.category.toUpperCase(),
-                          style: AppTypography.categoryLabel.copyWith(color: hobby.catColor),
+                          style: AppTypography.categoryLabel.copyWith(color: AppColors.driftwood),
                         ),
                       ],
                     ),
@@ -457,9 +475,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   tag: 'hobby_title_${hobby.id}',
                   flightShuttleBuilder: (flightContext, animation, direction,
                       fromHeroContext, toHeroContext) {
-                    // Cross-fade text color from white (card) to dark (detail)
-                    final fromWidget = fromHeroContext.widget;
-                    final toWidget = toHeroContext.widget;
+                    // Cross-fade text: use Hero children, not the Hero wrappers
+                    final fromChild = (fromHeroContext.widget as Hero).child;
+                    final toChild = (toHeroContext.widget as Hero).child;
                     return AnimatedBuilder(
                       animation: animation,
                       builder: (context, _) {
@@ -467,11 +485,11 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                           children: [
                             Opacity(
                               opacity: 1 - animation.value,
-                              child: fromWidget,
+                              child: fromChild,
                             ),
                             Opacity(
                               opacity: animation.value,
-                              child: toWidget,
+                              child: toChild,
                             ),
                           ],
                         );
@@ -514,7 +532,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       decoration: BoxDecoration(
         color: AppColors.warmWhite,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.sandDark),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,75 +633,5 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         ],
       ),
     );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  STICKY SPEC BAR DELEGATE
-// ═══════════════════════════════════════════════════════
-
-class _StickySpecBarDelegate extends SliverPersistentHeaderDelegate {
-  final Hobby hobby;
-  final Animation<double> animation;
-  final Animation<Offset> slideAnimation;
-  final double topPadding;
-
-  _StickySpecBarDelegate({
-    required this.hobby,
-    required this.animation,
-    required this.slideAnimation,
-    required this.topPadding,
-  });
-
-  static const double _collapsedHeight = 60;
-  static const double _expandedHeight = 64;
-
-  @override
-  double get minExtent => _collapsedHeight;
-
-  @override
-  double get maxExtent => _expandedHeight;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // When pinned at top, show a subtle top border
-    final isPinned = shrinkOffset > 0;
-
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: slideAnimation.value,
-          child: Opacity(
-            opacity: animation.value,
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.cream,
-          border: isPinned
-              ? Border(
-                  bottom: BorderSide(
-                    color: AppColors.sandDark.withValues(alpha: 0.3),
-                  ),
-                )
-              : null,
-        ),
-        child: SpecBar(
-          cost: hobby.costText,
-          time: hobby.timeText,
-          difficulty: hobby.difficultyText,
-          withContainer: true,
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _StickySpecBarDelegate oldDelegate) {
-    return hobby != oldDelegate.hobby;
   }
 }
