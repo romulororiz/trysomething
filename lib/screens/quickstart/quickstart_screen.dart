@@ -22,7 +22,7 @@ class QuickstartScreen extends ConsumerStatefulWidget {
 }
 
 class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
-  int _seconds = 25 * 60;
+  int _seconds = 30 * 60;
   bool _running = false;
   Timer? _timer;
 
@@ -116,7 +116,6 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.sand,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.sandDark),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,11 +133,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
                         height: 50,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _running ? AppColors.coralPale : AppColors.warmWhite,
-                          border: Border.all(
-                            width: 1.5,
-                            color: _running ? AppColors.coral : AppColors.sandDark,
-                          ),
+                          color: _running ? AppColors.coralPale : AppColors.sand,
                         ),
                         child: Center(
                           child: Icon(
@@ -215,11 +210,6 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
                         decoration: BoxDecoration(
                           color: isDone ? AppColors.coralPale : AppColors.warmWhite,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isDone
-                                ? AppColors.coral.withValues(alpha: 0.22)
-                                : AppColors.sandDark,
-                          ),
                         ),
                         child: Row(
                           children: [
@@ -276,6 +266,48 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
                   },
                 ),
               ),
+
+              // Celebration banner (when all done)
+              if (allDone) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.indigo, AppColors.indigoDeep],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(AppIcons.trophy, size: 28, color: AppColors.amber),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Nice work!',
+                              style: AppTypography.sansLabel.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.coral,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'You completed your first ${hobby.title} session.',
+                              style: AppTypography.sansCaption.copyWith(
+                                color: AppColors.driftwood,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               // Bottom button
               const SizedBox(height: 14),

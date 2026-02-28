@@ -273,6 +273,14 @@ class _HobbyListItemState extends State<_HobbyListItem>
     super.dispose();
   }
 
+  String _timeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${(diff.inDays / 7).floor()}w ago';
+  }
+
   @override
   Widget build(BuildContext context) {
     final progress = widget.userHobby.progressPercent(widget.hobby.roadmapSteps.length);
@@ -416,6 +424,17 @@ class _HobbyListItemState extends State<_HobbyListItem>
                         ],
                       ),
                     ),
+                    // Last activity timestamp
+                    if (widget.userHobby.lastActivityAt != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Last active ${_timeAgo(widget.userHobby.lastActivityAt!)}',
+                        style: AppTypography.sansTiny.copyWith(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 10),
 
                     // Progress bar (if trying/active)

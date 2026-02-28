@@ -198,34 +198,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   const SizedBox(height: 28),
 
-                  // ── Danger zone ──
-                  _SectionLabel(text: 'DATA'),
-                  const SizedBox(height: 12),
+                  // ── Logout ──
+                  const SizedBox(height: 8),
 
                   GestureDetector(
-                    onTap: () => _showResetDialog(context, ref),
+                    onTap: () => _showLogoutDialog(context, ref),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.rosePale,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.rose.withAlpha(40)),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.restart_alt_rounded, size: 20, color: AppColors.rose),
+                          Icon(Icons.logout_rounded, size: 20, color: AppColors.rose),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Reset all data',
+                                'Log out',
                                 style: AppTypography.sansLabel.copyWith(color: AppColors.rose),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Clear preferences, saved hobbies & progress',
+                                'Clear preferences & return to onboarding',
                                 style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
                               ),
                             ],
@@ -245,15 +243,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _showResetDialog(BuildContext context, WidgetRef ref) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cream,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Reset everything?', style: AppTypography.sansSection),
+        title: Text('Log out?', style: AppTypography.sansSection),
         content: Text(
-          'This will clear all your saved hobbies, progress, and preferences. You\'ll go through onboarding again.',
+          'This will clear your preferences and saved progress. You\'ll start fresh from onboarding.',
           style: AppTypography.sansBodySmall.copyWith(color: AppColors.warmGray),
         ),
         actions: [
@@ -267,7 +265,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Navigator.of(ctx).pop();
               context.go('/onboarding');
             },
-            child: Text('Reset', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
+            child: Text('Log out', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
           ),
         ],
       ),
