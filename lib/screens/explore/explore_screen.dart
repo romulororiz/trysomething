@@ -129,11 +129,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       decoration: BoxDecoration(
         color: AppColors.warmWhite,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _searchActive
-              ? AppColors.coral.withValues(alpha: 0.4)
-              : AppColors.sandDark,
-        ),
       ),
       child: Row(
         children: [
@@ -181,11 +176,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         decoration: BoxDecoration(
           color: _showFilters ? AppColors.coralPale : AppColors.warmWhite,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _showFilters
-                ? AppColors.coral.withValues(alpha: 0.25)
-                : AppColors.sandDark,
-          ),
         ),
         child: Center(
           child: Icon(
@@ -204,7 +194,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       decoration: BoxDecoration(
         color: AppColors.warmWhite,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.sandDark),
       ),
       child: Column(
         children: [
@@ -301,7 +290,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         decoration: BoxDecoration(
           color: AppColors.warmWhite,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.sandDark),
         ),
         child: Row(
           children: [
@@ -500,7 +488,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         decoration: BoxDecoration(
           color: AppColors.warmWhite,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.sandDark),
         ),
         child: Row(
           children: [

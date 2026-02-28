@@ -61,7 +61,7 @@ class SpecBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: config.backgroundColor,
         borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-        border: Border.all(color: config.borderColor),
+        // No border — dark mode cards use bg color contrast
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -156,7 +156,6 @@ class SpecBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.warmWhite,
         borderRadius: BorderRadius.circular(Spacing.radiusButton),
-        border: Border.all(color: AppColors.sandDark),
         boxShadow: Spacing.specBarShadow,
       ),
       child: Row(

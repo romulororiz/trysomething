@@ -95,7 +95,7 @@ class HobbyMiniCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.warmWhite,
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
-          border: Border.all(color: AppColors.sandDark),
+          // No border — dark mode uses bg color contrast
         ),
         child: Row(
           children: [

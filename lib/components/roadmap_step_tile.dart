@@ -141,12 +141,7 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
             ? AppColors.coralPale
             : AppColors.warmWhite,
         borderRadius: BorderRadius.circular(Spacing.radiusButton),
-        border: Border.all(
-          color: widget.isCurrent
-              ? AppColors.coral.withValues(alpha: 0.35)
-              : AppColors.sandDark,
-          width: widget.isCurrent ? 1.5 : 1,
-        ),
+        // No border — dark mode uses bg color contrast
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +256,7 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
             decoration: BoxDecoration(
               color: AppColors.amberPale,
               borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-              border: Border.all(color: AppColors.amber.withValues(alpha: 0.3)),
+              // No border — dark mode milestone pill
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
