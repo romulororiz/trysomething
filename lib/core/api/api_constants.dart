@@ -16,5 +16,5 @@ class ApiConstants {
   static String faq(String hobbyId) => '/hobbies/$hobbyId/faq';
   static String cost(String hobbyId) => '/hobbies/$hobbyId/cost';
   static String budget(String hobbyId) => '/hobbies/$hobbyId/budget';
-  static String mood(String mood) => '/hobbies/mood/$mood';
+  static const mood = '/hobbies/mood';
 }

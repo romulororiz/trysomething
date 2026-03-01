@@ -7,4 +7,5 @@ abstract class FeatureRepository {
   Future<List<BudgetAlternative>> getBudgetAlternatives(String hobbyId);
   Future<Map<String, List<String>>> getSeasonalHobbies();
   Future<Map<String, List<String>>> getMoodTags();
+  Future<List<HobbyCombo>> getCombos();
 }

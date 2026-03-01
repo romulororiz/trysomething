@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'cache_manager.dart';
 
 /// Hive local storage initialization and box name constants.
 class LocalStorage {
@@ -11,5 +12,6 @@ class LocalStorage {
   /// Call once in main() before runApp.
   static Future<void> init() async {
     await Hive.initFlutter();
+    await CacheManager.init();
   }
 }

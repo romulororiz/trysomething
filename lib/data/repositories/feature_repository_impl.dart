@@ -29,4 +29,9 @@ class FeatureRepositoryImpl implements FeatureRepository {
   Future<Map<String, List<String>>> getMoodTags() async {
     return FeatureSeedData.moodToTags;
   }
+
+  @override
+  Future<List<HobbyCombo>> getCombos() async {
+    return FeatureSeedData.combos;
+  }
 }

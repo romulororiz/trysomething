@@ -1,0 +1,128 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import '../../core/api/api_client.dart';
+import '../../core/api/api_constants.dart';
+import '../../core/storage/cache_manager.dart';
+import '../../models/hobby.dart';
+import 'hobby_repository.dart';
+import 'hobby_repository_impl.dart';
+
+/// API-backed hobby repository with Hive cache and SeedData fallback.
+class HobbyRepositoryApi implements HobbyRepository {
+  final Dio _dio = ApiClient.instance;
+  final HobbyRepositoryImpl _seedFallback = HobbyRepositoryImpl();
+
+  @override
+  Future<List<Hobby>> getHobbies() async {
+    const key = 'hobbies';
+    try {
+      // Check cache first
+      final cached = CacheManager.get(key);
+      if (cached != null) {
+        return _parseHobbyList(cached);
+      }
+
+      // Fetch from API
+      final response = await _dio.get(ApiConstants.hobbies);
+      final jsonString = json.encode(response.data);
+      await CacheManager.put(key, jsonString);
+      return _parseHobbyList(jsonString);
+    } catch (e) {
+      // Try stale cache
+      final stale = CacheManager.getStale(key);
+      if (stale != null) return _parseHobbyList(stale);
+      // Fall back to seed data
+      return _seedFallback.getHobbies();
+    }
+  }
+
+  @override
+  Future<Hobby?> getHobbyById(String id) async {
+    final key = 'hobby_$id';
+    try {
+      final cached = CacheManager.get(key);
+      if (cached != null) {
+        return Hobby.fromJson(json.decode(cached) as Map<String, dynamic>);
+      }
+
+      final response = await _dio.get(ApiConstants.hobby(id));
+      final jsonString = json.encode(response.data);
+      await CacheManager.put(key, jsonString);
+      return Hobby.fromJson(response.data as Map<String, dynamic>);
+    } catch (e) {
+      final stale = CacheManager.getStale(key);
+      if (stale != null) {
+        return Hobby.fromJson(json.decode(stale) as Map<String, dynamic>);
+      }
+      return _seedFallback.getHobbyById(id);
+    }
+  }
+
+  @override
+  Future<List<HobbyCategory>> getCategories() async {
+    const key = 'categories';
+    try {
+      final cached = CacheManager.get(key);
+      if (cached != null) {
+        return _parseCategoryList(cached);
+      }
+
+      final response = await _dio.get(ApiConstants.categories);
+      final jsonString = json.encode(response.data);
+      await CacheManager.put(key, jsonString);
+      return _parseCategoryList(jsonString);
+    } catch (e) {
+      final stale = CacheManager.getStale(key);
+      if (stale != null) return _parseCategoryList(stale);
+      return _seedFallback.getCategories();
+    }
+  }
+
+  @override
+  Future<List<Hobby>> getRelatedHobbies(String hobbyId, {int limit = 3}) async {
+    // Use the full hobby list to find related hobbies by category
+    try {
+      final allHobbies = await getHobbies();
+      final hobby = allHobbies.where((h) => h.id == hobbyId).firstOrNull;
+      if (hobby == null) return [];
+      return allHobbies
+          .where((h) => h.category == hobby.category && h.id != hobbyId)
+          .take(limit)
+          .toList();
+    } catch (e) {
+      return _seedFallback.getRelatedHobbies(hobbyId, limit: limit);
+    }
+  }
+
+  @override
+  Future<List<Hobby>> searchHobbies(String query) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final response = await _dio.get(
+        ApiConstants.search,
+        queryParameters: {'q': query},
+      );
+      return (response.data as List)
+          .map((e) => Hobby.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      return _seedFallback.searchHobbies(query);
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────
+
+  List<Hobby> _parseHobbyList(String jsonString) {
+    final list = json.decode(jsonString) as List;
+    return list
+        .map((e) => Hobby.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  List<HobbyCategory> _parseCategoryList(String jsonString) {
+    final list = json.decode(jsonString) as List;
+    return list
+        .map((e) => HobbyCategory.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+}
