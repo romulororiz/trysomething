@@ -58,6 +58,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isLoading = authState.status == AuthStatus.loading;
+    final isEmailLoading = isLoading && authState.loadingMethod == AuthMethod.email;
+    final isGoogleLoading = isLoading && authState.loadingMethod == AuthMethod.google;
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -222,7 +224,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // ── Create account CTA ──
                   _PrimaryButton(
                     label: 'Create account',
-                    isLoading: isLoading,
+                    isLoading: isEmailLoading,
                     onTap: isLoading ? null : _submit,
                   ),
                   const SizedBox(height: 16),
@@ -245,7 +247,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // ── Google sign-up ──
                   _OutlinedButton(
                     label: 'Sign up with Google',
-                    isLoading: isLoading,
+                    isLoading: isGoogleLoading,
                     onTap: isLoading ? null : _googleSignUp,
                   ),
                   const SizedBox(height: 32),

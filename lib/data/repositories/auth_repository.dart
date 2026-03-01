@@ -14,7 +14,7 @@ abstract class AuthRepository {
     required String password,
   });
 
-  Future<AuthResponse> loginWithGoogle({required String idToken});
+  Future<AuthResponse> loginWithGoogle({String? idToken, String? accessToken});
 
   Future<Map<String, dynamic>> refreshToken({required String refreshToken});
 

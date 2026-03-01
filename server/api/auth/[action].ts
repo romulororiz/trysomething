@@ -193,32 +193,69 @@ async function handleGoogle(
   res: VercelResponse
 ): Promise<void> {
   try {
-    const { idToken } = req.body ?? {};
+    const { idToken, accessToken } = req.body ?? {};
 
-    if (!idToken) {
-      errorResponse(res, 400, "idToken is required");
+    if (!idToken && !accessToken) {
+      errorResponse(res, 400, "idToken or accessToken is required");
       return;
     }
 
-    const tokenInfoUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
-    const googleRes = await fetch(tokenInfoUrl);
+    let googleId: string;
+    let email: string;
+    let name: string | undefined;
+    let picture: string | undefined;
 
-    if (!googleRes.ok) {
-      errorResponse(res, 401, "Invalid Google ID token");
-      return;
+    if (idToken) {
+      // Verify ID token via Google's tokeninfo endpoint
+      const tokenInfoUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+      const googleRes = await fetch(tokenInfoUrl);
+
+      if (!googleRes.ok) {
+        errorResponse(res, 401, "Invalid Google ID token");
+        return;
+      }
+
+      const tokenInfo = (await googleRes.json()) as GoogleTokenInfo;
+
+      // Accept tokens from any client ID in our Google Cloud project.
+      const allowedAudiences = (process.env.GOOGLE_CLIENT_IDS ?? process.env.GOOGLE_CLIENT_ID ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (allowedAudiences.length > 0 && !allowedAudiences.includes(tokenInfo.aud)) {
+        errorResponse(res, 401, "Google token audience mismatch");
+        return;
+      }
+
+      googleId = tokenInfo.sub;
+      email = tokenInfo.email;
+      name = tokenInfo.name;
+      picture = tokenInfo.picture;
+    } else {
+      // Fallback: verify access token via Google's userinfo endpoint
+      // (used on platforms where idToken is unavailable, e.g. Windows)
+      const userinfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!userinfoRes.ok) {
+        errorResponse(res, 401, "Invalid Google access token");
+        return;
+      }
+
+      const userinfo = (await userinfoRes.json()) as {
+        sub: string;
+        email: string;
+        name?: string;
+        picture?: string;
+      };
+
+      googleId = userinfo.sub;
+      email = userinfo.email;
+      name = userinfo.name;
+      picture = userinfo.picture;
     }
-
-    const tokenInfo = (await googleRes.json()) as GoogleTokenInfo;
-
-    if (
-      process.env.GOOGLE_CLIENT_ID &&
-      tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID
-    ) {
-      errorResponse(res, 401, "Google token audience mismatch");
-      return;
-    }
-
-    const { sub: googleId, email, name, picture } = tokenInfo;
 
     let user = await prisma.user.findFirst({
       where: {

@@ -46,12 +46,16 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 // ═══════════════════════════════════════════════════════
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final onboardingComplete = ref.watch(onboardingCompleteProvider);
-  final authState = ref.watch(authProvider);
+  // Notifier that triggers GoRouter to re-evaluate its redirect
+  // without recreating the entire router (which resets navigation state).
+  final refreshNotifier = ValueNotifier<int>(0);
+  ref.listen(authProvider, (_, __) => refreshNotifier.value++);
+  ref.listen(onboardingCompleteProvider, (_, __) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/feed',
+    refreshListenable: refreshNotifier,
     routes: [
       // Auth screens (outside shell)
       GoRoute(
@@ -392,30 +396,32 @@ final routerProvider = Provider<GoRouter>((ref) {
 
     // Auth + onboarding redirect chain
     redirect: (context, state) {
+      final auth = ref.read(authProvider);
+      final onboarded = ref.read(onboardingCompleteProvider);
       final path = state.uri.path;
       final isAuthRoute = path == '/login' || path == '/register';
       final isOnboarding = path == '/onboarding';
 
       // While session is being restored or an auth request is in-flight, don't redirect
-      if (authState.status == AuthStatus.unknown ||
-          authState.status == AuthStatus.loading) {
+      if (auth.status == AuthStatus.unknown ||
+          auth.status == AuthStatus.loading) {
         return null;
       }
 
       // Unauthenticated: must go to login/register
-      if (authState.status == AuthStatus.unauthenticated) {
+      if (auth.status == AuthStatus.unauthenticated) {
         if (!isAuthRoute) return '/login';
         return null;
       }
 
       // Authenticated: shouldn't be on auth routes
       if (isAuthRoute) {
-        return onboardingComplete ? '/feed' : '/onboarding';
+        return onboarded ? '/feed' : '/onboarding';
       }
 
       // Onboarding guard (existing logic)
-      if (!onboardingComplete && !isOnboarding) return '/onboarding';
-      if (onboardingComplete && isOnboarding) return '/feed';
+      if (!onboarded && !isOnboarding) return '/onboarding';
+      if (onboarded && isOnboarding) return '/feed';
 
       return null;
     },

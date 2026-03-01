@@ -36,9 +36,13 @@ class AuthRepositoryApi implements AuthRepository {
   }
 
   @override
-  Future<AuthResponse> loginWithGoogle({required String idToken}) async {
+  Future<AuthResponse> loginWithGoogle({
+    String? idToken,
+    String? accessToken,
+  }) async {
     final response = await _dio.post(ApiConstants.authGoogle, data: {
-      'idToken': idToken,
+      if (idToken != null) 'idToken': idToken,
+      if (accessToken != null) 'accessToken': accessToken,
     });
     return AuthResponse.fromJson(response.data as Map<String, dynamic>);
   }

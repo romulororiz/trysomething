@@ -51,6 +51,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isLoading = authState.status == AuthStatus.loading;
+    final isEmailLoading = isLoading && authState.loadingMethod == AuthMethod.email;
+    final isGoogleLoading = isLoading && authState.loadingMethod == AuthMethod.google;
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -171,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // ── Sign in CTA ──
                   _PrimaryButton(
                     label: 'Sign in',
-                    isLoading: isLoading,
+                    isLoading: isEmailLoading,
                     onTap: isLoading ? null : _submit,
                   ),
                   const SizedBox(height: 16),
@@ -194,7 +196,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // ── Google sign-in ──
                   _OutlinedButton(
                     label: 'Sign in with Google',
-                    isLoading: isLoading,
+                    isLoading: isGoogleLoading,
                     onTap: isLoading ? null : _googleSignIn,
                   ),
                   const SizedBox(height: 32),

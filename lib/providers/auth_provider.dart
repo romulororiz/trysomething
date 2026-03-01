@@ -12,22 +12,32 @@ import '../models/auth.dart';
 
 enum AuthStatus { unknown, unauthenticated, loading, authenticated }
 
+enum AuthMethod { none, email, google }
+
 class AuthState {
   final AuthStatus status;
   final AuthUser? user;
   final String? error;
+  final AuthMethod loadingMethod;
 
   const AuthState({
     this.status = AuthStatus.unknown,
     this.user,
     this.error,
+    this.loadingMethod = AuthMethod.none,
   });
 
-  AuthState copyWith({AuthStatus? status, AuthUser? user, String? error}) {
+  AuthState copyWith({
+    AuthStatus? status,
+    AuthUser? user,
+    String? error,
+    AuthMethod? loadingMethod,
+  }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
       error: error,
+      loadingMethod: loadingMethod ?? this.loadingMethod,
     );
   }
 }
@@ -35,6 +45,16 @@ class AuthState {
 // ═══════════════════════════════════════════════════
 //  AUTH NOTIFIER
 // ═══════════════════════════════════════════════════
+
+// Shared GoogleSignIn instance — must be reused across sign-in/sign-out.
+final _googleSignIn = GoogleSignIn(
+  scopes: ['email', 'profile'],
+  // On Android, serverClientId makes the plugin request an idToken
+  // your server can verify. Empty string means "not set".
+  serverClientId: const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID') != ''
+      ? const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')
+      : null,
+);
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
@@ -63,7 +83,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
     required String displayName,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading, error: null);
+    state = state.copyWith(status: AuthStatus.loading, error: null, loadingMethod: AuthMethod.email);
     try {
       final response = await _repo.register(
         email: email,
@@ -89,7 +109,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String email,
     required String password,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading, error: null);
+    state = state.copyWith(status: AuthStatus.loading, error: null, loadingMethod: AuthMethod.email);
     try {
       final response = await _repo.login(email: email, password: password);
       await TokenStorage.saveTokens(
@@ -108,10 +128,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> loginWithGoogle() async {
-    state = state.copyWith(status: AuthStatus.loading, error: null);
+    state = state.copyWith(status: AuthStatus.loading, error: null, loadingMethod: AuthMethod.google);
     try {
-      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-      final account = await googleSignIn.signIn();
+      // Sign out first to clear cached session and force account picker.
+      await _googleSignIn.signOut().catchError((_) => null);
+      final account = await _googleSignIn.signIn();
       if (account == null) {
         // User cancelled
         state = const AuthState(status: AuthStatus.unauthenticated);
@@ -119,15 +140,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       final googleAuth = await account.authentication;
       final idToken = googleAuth.idToken;
-      if (idToken == null) {
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null && accessToken == null) {
         state = const AuthState(
           status: AuthStatus.unauthenticated,
-          error: 'Failed to get Google ID token',
+          error: 'Failed to get Google credentials',
         );
         return false;
       }
 
-      final response = await _repo.loginWithGoogle(idToken: idToken);
+      // Prefer idToken (Android/iOS), fall back to accessToken (Windows/web).
+      final response = await _repo.loginWithGoogle(
+        idToken: idToken,
+        accessToken: accessToken,
+      );
       await TokenStorage.saveTokens(
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
@@ -145,8 +172,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await TokenStorage.clearTokens();
-    // Fire-and-forget — GoogleSignIn hangs on unsupported platforms (Windows/Linux)
-    GoogleSignIn().signOut().catchError((_) => null);
+    // Fire-and-forget — signOut hangs on unsupported platforms (Windows/Linux).
+    _googleSignIn.signOut().catchError((_) => null);
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
