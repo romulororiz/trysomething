@@ -145,10 +145,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await TokenStorage.clearTokens();
-    try {
-      await GoogleSignIn().signOut();
-    } catch (_) {}
+    // Fire-and-forget — GoogleSignIn hangs on unsupported platforms (Windows/Linux)
+    GoogleSignIn().signOut().catchError((_) => null);
     state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
+  void clearError() {
+    if (state.error != null) {
+      state = state.copyWith(error: null);
+    }
   }
 
   Future<void> updateProfile({String? displayName, String? avatarUrl}) async {

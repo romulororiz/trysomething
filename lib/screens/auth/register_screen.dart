@@ -253,7 +253,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // ── Login link ──
                   Center(
                     child: GestureDetector(
-                      onTap: () => context.go('/login'),
+                      onTap: () {
+                        ref.read(authProvider.notifier).clearError();
+                        context.go('/login');
+                      },
                       child: Text.rich(
                         TextSpan(
                           text: 'Already have an account? ',

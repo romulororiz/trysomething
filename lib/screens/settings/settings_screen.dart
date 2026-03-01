@@ -263,7 +263,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           TextButton(
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
-              ref.read(onboardingCompleteProvider.notifier).reset();
+              // Don't reset onboarding — returning users skip it on next login
               if (ctx.mounted) Navigator.of(ctx).pop();
               if (context.mounted) context.go('/login');
             },

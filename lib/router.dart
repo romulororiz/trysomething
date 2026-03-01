@@ -396,8 +396,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = path == '/login' || path == '/register';
       final isOnboarding = path == '/onboarding';
 
-      // While session is being restored, don't redirect
-      if (authState.status == AuthStatus.unknown) return null;
+      // While session is being restored or an auth request is in-flight, don't redirect
+      if (authState.status == AuthStatus.unknown ||
+          authState.status == AuthStatus.loading) {
+        return null;
+      }
 
       // Unauthenticated: must go to login/register
       if (authState.status == AuthStatus.unauthenticated) {
