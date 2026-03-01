@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import '../../models/hobby.dart';
 import '../../models/feature_seed_data.dart';
+import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/feature_providers.dart';

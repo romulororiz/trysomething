@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../models/hobby.dart';
 import '../../models/seed_data.dart';
+import '../../theme/category_ui.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';

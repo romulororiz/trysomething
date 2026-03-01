@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-
 // ═══════════════════════════════════════════════════════
 //  HOBBY MODEL
 // ═══════════════════════════════════════════════════════
@@ -10,8 +7,6 @@ class Hobby {
   final String title;
   final String hook;
   final String category;
-  final IconData catIcon;
-  final Color catColor;
   final String imageUrl;
   final List<String> tags;
   final String costText;
@@ -28,8 +23,6 @@ class Hobby {
     required this.title,
     required this.hook,
     required this.category,
-    required this.catIcon,
-    required this.catColor,
     required this.imageUrl,
     required this.tags,
     required this.costText,
@@ -88,16 +81,12 @@ class RoadmapStep {
 class HobbyCategory {
   final String id;
   final String name;
-  final IconData icon;
-  final Color color;
   final int count;
   final String imageUrl;
 
   const HobbyCategory({
     required this.id,
     required this.name,
-    required this.icon,
-    required this.color,
     required this.count,
     required this.imageUrl,
   });

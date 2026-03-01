@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../models/hobby.dart';
 import '../../models/feature_seed_data.dart';
+import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
