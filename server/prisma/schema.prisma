@@ -1,6 +1,7 @@
 // TrySomething — Prisma Schema
 // Phase 1: Content models (10 tables)
-// Future phases add: User, Auth, Progress, Social, Gamification models
+// Phase 2: Auth models (User, UserPreference)
+// Future phases add: Progress, Social, Gamification models
 
 generator client {
   provider = "prisma-client-js"
@@ -141,4 +142,32 @@ model MoodTag {
   hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
 
   @@unique([hobbyId, mood])
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTH MODELS (Phase 2)
+// ═══════════════════════════════════════════════════
+
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  passwordHash String
+  displayName  String
+  avatarUrl    String?
+  googleId     String?         @unique
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  preferences  UserPreference?
+}
+
+model UserPreference {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  hoursPerWeek Int      @default(3)
+  budgetLevel  Int      @default(1)
+  preferSocial Boolean  @default(false)
+  vibes        String[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
