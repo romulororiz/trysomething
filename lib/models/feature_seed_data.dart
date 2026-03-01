@@ -51,8 +51,8 @@ class FeatureSeedData {
   // ═══════════════════════════════════════════════════
 
   static final List<BuddyProfile> buddyProfiles = [
-    const BuddyProfile(id: 'buddy1', name: 'Marco', avatarInitial: 'M', currentHobbyId: 'pottery', progress: 0.4),
-    const BuddyProfile(id: 'buddy2', name: 'Lena', avatarInitial: 'L', currentHobbyId: 'bouldering', progress: 0.6),
+    BuddyProfile(id: 'buddy1', name: 'Marco', avatarInitial: 'M', currentHobbyId: 'pottery', progress: 0.4),
+    BuddyProfile(id: 'buddy2', name: 'Lena', avatarInitial: 'L', currentHobbyId: 'bouldering', progress: 0.6),
   ];
 
   static final List<BuddyActivity> buddyActivities = [
@@ -66,7 +66,7 @@ class FeatureSeedData {
   //  COMMUNITY STORIES
   // ═══════════════════════════════════════════════════
 
-  static const List<CommunityStory> stories = [
+  static final List<CommunityStory> stories = [
     CommunityStory(
       id: 'st1',
       authorName: 'Julia',
@@ -97,7 +97,7 @@ class FeatureSeedData {
   //  NEARBY USERS
   // ═══════════════════════════════════════════════════
 
-  static const List<NearbyUser> nearbyUsers = [
+  static final List<NearbyUser> nearbyUsers = [
     NearbyUser(name: 'Sarah K.', avatarInitial: 'S', hobbyId: 'pottery', distance: '2.3 km', startedText: 'Started this week'),
     NearbyUser(name: 'Alex M.', avatarInitial: 'A', hobbyId: 'bouldering', distance: '0.8 km', startedText: '3 weeks in'),
     NearbyUser(name: 'Priya T.', avatarInitial: 'P', hobbyId: 'sourdough', distance: '4.1 km', startedText: 'Started yesterday'),
@@ -154,7 +154,7 @@ class FeatureSeedData {
   //  SCHEDULE EVENTS
   // ═══════════════════════════════════════════════════
 
-  static const List<ScheduleEvent> scheduleEvents = [
+  static final List<ScheduleEvent> scheduleEvents = [
     ScheduleEvent(id: 'ev1', hobbyId: 'pottery', dayOfWeek: 2, startTime: '19:00', durationMinutes: 90),
     ScheduleEvent(id: 'ev2', hobbyId: 'bouldering', dayOfWeek: 4, startTime: '18:30', durationMinutes: 75),
     ScheduleEvent(id: 'ev3', hobbyId: 'sourdough', dayOfWeek: 6, startTime: '09:00', durationMinutes: 60),
@@ -164,7 +164,7 @@ class FeatureSeedData {
   //  HOBBY COMBOS
   // ═══════════════════════════════════════════════════
 
-  static const List<HobbyCombo> combos = [
+  static final List<HobbyCombo> combos = [
     HobbyCombo(
       hobbyId1: 'pottery',
       hobbyId2: 'calligraphy',
@@ -189,7 +189,7 @@ class FeatureSeedData {
   //  FAQ ITEMS (per hobby)
   // ═══════════════════════════════════════════════════
 
-  static const Map<String, List<FaqItem>> faqByHobby = {
+  static final Map<String, List<FaqItem>> faqByHobby = {
     'pottery': [
       FaqItem(question: 'Do I need a kiln to start?', answer: 'No! Air-dry clay needs no kiln at all. Many studios also offer kiln access for firing.', upvotes: 47),
       FaqItem(question: 'Can I use pottery without firing it?', answer: 'Air-dry clay pieces are functional for dry goods and decoration. For food-safe use, you\'ll need to glaze and fire.', upvotes: 32),
@@ -221,7 +221,7 @@ class FeatureSeedData {
   //  COST BREAKDOWNS (per hobby)
   // ═══════════════════════════════════════════════════
 
-  static const Map<String, CostBreakdown> costByHobby = {
+  static final Map<String, CostBreakdown> costByHobby = {
     'pottery': CostBreakdown(starter: 35, threeMonth: 125, oneYear: 380, tips: [
       'Air-dry clay is much cheaper than kiln clay',
       'Studio classes often include materials in the fee',
@@ -268,7 +268,7 @@ class FeatureSeedData {
   //  BUDGET ALTERNATIVES (per kit item)
   // ═══════════════════════════════════════════════════
 
-  static const Map<String, List<BudgetAlternative>> budgetAlternatives = {
+  static final Map<String, List<BudgetAlternative>> budgetAlternatives = {
     'pottery': [
       BudgetAlternative(
         itemName: 'Air-dry clay',

@@ -1,123 +1,109 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'features.freezed.dart';
+part 'features.g.dart';
+
 // ═══════════════════════════════════════════════════════
 //  FEATURE MODELS (Gamification, Utility, Content)
 // ═══════════════════════════════════════════════════════
 
-class UserProfile {
-  final String username;
-  final String bio;
-  final String? avatarUrl;
+@freezed
+class UserProfile with _$UserProfile {
+  const factory UserProfile({
+    @Default('Your Name') String username,
+    @Default('') String bio,
+    String? avatarUrl,
+  }) = _UserProfile;
 
-  const UserProfile({
-    this.username = 'Your Name',
-    this.bio = '',
-    this.avatarUrl,
-  });
-
-  UserProfile copyWith({String? username, String? bio, String? avatarUrl}) {
-    return UserProfile(
-      username: username ?? this.username,
-      bio: bio ?? this.bio,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-    );
-  }
+  factory UserProfile.fromJson(Map<String, dynamic> json) =>
+      _$UserProfileFromJson(json);
 }
 
-class Challenge {
-  final String id;
-  final String title;
-  final String description;
-  final int targetCount;
-  final int currentCount;
-  final DateTime startDate;
-  final DateTime endDate;
-  final bool isCompleted;
+@freezed
+class Challenge with _$Challenge {
+  const Challenge._();
 
-  const Challenge({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.targetCount,
-    this.currentCount = 0,
-    required this.startDate,
-    required this.endDate,
-    this.isCompleted = false,
-  });
+  const factory Challenge({
+    required String id,
+    required String title,
+    required String description,
+    required int targetCount,
+    @Default(0) int currentCount,
+    required DateTime startDate,
+    required DateTime endDate,
+    @Default(false) bool isCompleted,
+  }) = _Challenge;
 
   int get daysLeft => endDate.difference(DateTime.now()).inDays.clamp(0, 999);
+
+  factory Challenge.fromJson(Map<String, dynamic> json) =>
+      _$ChallengeFromJson(json);
 }
 
-class ScheduleEvent {
-  final String id;
-  final String hobbyId;
-  final int dayOfWeek; // 1=Mon, 7=Sun
-  final String startTime; // "19:00"
-  final int durationMinutes;
+@freezed
+class ScheduleEvent with _$ScheduleEvent {
+  const factory ScheduleEvent({
+    required String id,
+    required String hobbyId,
+    required int dayOfWeek, // 1=Mon, 7=Sun
+    required String startTime, // "19:00"
+    required int durationMinutes,
+  }) = _ScheduleEvent;
 
-  const ScheduleEvent({
-    required this.id,
-    required this.hobbyId,
-    required this.dayOfWeek,
-    required this.startTime,
-    required this.durationMinutes,
-  });
+  factory ScheduleEvent.fromJson(Map<String, dynamic> json) =>
+      _$ScheduleEventFromJson(json);
 }
 
-class HobbyCombo {
-  final String hobbyId1;
-  final String hobbyId2;
-  final String reason;
-  final List<String> sharedTags;
+@freezed
+class HobbyCombo with _$HobbyCombo {
+  const factory HobbyCombo({
+    required String hobbyId1,
+    required String hobbyId2,
+    required String reason,
+    required List<String> sharedTags,
+  }) = _HobbyCombo;
 
-  const HobbyCombo({
-    required this.hobbyId1,
-    required this.hobbyId2,
-    required this.reason,
-    required this.sharedTags,
-  });
+  factory HobbyCombo.fromJson(Map<String, dynamic> json) =>
+      _$HobbyComboFromJson(json);
 }
 
-class FaqItem {
-  final String question;
-  final String answer;
-  final int upvotes;
+@freezed
+class FaqItem with _$FaqItem {
+  const factory FaqItem({
+    required String question,
+    required String answer,
+    @Default(0) int upvotes,
+  }) = _FaqItem;
 
-  const FaqItem({
-    required this.question,
-    required this.answer,
-    this.upvotes = 0,
-  });
+  factory FaqItem.fromJson(Map<String, dynamic> json) =>
+      _$FaqItemFromJson(json);
 }
 
-class CostBreakdown {
-  final int starter;
-  final int threeMonth;
-  final int oneYear;
-  final List<String> tips;
+@freezed
+class CostBreakdown with _$CostBreakdown {
+  const factory CostBreakdown({
+    required int starter,
+    required int threeMonth,
+    required int oneYear,
+    @Default([]) List<String> tips,
+  }) = _CostBreakdown;
 
-  const CostBreakdown({
-    required this.starter,
-    required this.threeMonth,
-    required this.oneYear,
-    this.tips = const [],
-  });
+  factory CostBreakdown.fromJson(Map<String, dynamic> json) =>
+      _$CostBreakdownFromJson(json);
 }
 
-class BudgetAlternative {
-  final String itemName;
-  final String diyOption;
-  final int diyCost;
-  final String budgetOption;
-  final int budgetCost;
-  final String premiumOption;
-  final int premiumCost;
+@freezed
+class BudgetAlternative with _$BudgetAlternative {
+  const factory BudgetAlternative({
+    required String itemName,
+    required String diyOption,
+    required int diyCost,
+    required String budgetOption,
+    required int budgetCost,
+    required String premiumOption,
+    required int premiumCost,
+  }) = _BudgetAlternative;
 
-  const BudgetAlternative({
-    required this.itemName,
-    required this.diyOption,
-    required this.diyCost,
-    required this.budgetOption,
-    required this.budgetCost,
-    required this.premiumOption,
-    required this.premiumCost,
-  });
+  factory BudgetAlternative.fromJson(Map<String, dynamic> json) =>
+      _$BudgetAlternativeFromJson(json);
 }

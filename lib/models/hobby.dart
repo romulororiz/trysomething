@@ -1,95 +1,98 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'hobby.freezed.dart';
+part 'hobby.g.dart';
+
+// ═══════════════════════════════════════════════════════
+//  JSON CONVERTERS
+// ═══════════════════════════════════════════════════════
+
+/// Converts Set<String> ↔ List<dynamic> for JSON serialization.
+class SetStringConverter implements JsonConverter<Set<String>, List<dynamic>> {
+  const SetStringConverter();
+
+  @override
+  Set<String> fromJson(List<dynamic> json) => json.cast<String>().toSet();
+
+  @override
+  List<String> toJson(Set<String> object) => object.toList();
+}
+
 // ═══════════════════════════════════════════════════════
 //  HOBBY MODEL
 // ═══════════════════════════════════════════════════════
 
-class Hobby {
-  final String id;
-  final String title;
-  final String hook;
-  final String category;
-  final String imageUrl;
-  final List<String> tags;
-  final String costText;
-  final String timeText;
-  final String difficultyText;
-  final String whyLove;
-  final String difficultyExplain;
-  final List<KitItem> starterKit;
-  final List<String> pitfalls;
-  final List<RoadmapStep> roadmapSteps;
+@freezed
+class Hobby with _$Hobby {
+  const factory Hobby({
+    required String id,
+    required String title,
+    required String hook,
+    required String category,
+    required String imageUrl,
+    required List<String> tags,
+    required String costText,
+    required String timeText,
+    required String difficultyText,
+    required String whyLove,
+    required String difficultyExplain,
+    required List<KitItem> starterKit,
+    required List<String> pitfalls,
+    required List<RoadmapStep> roadmapSteps,
+  }) = _Hobby;
 
-  const Hobby({
-    required this.id,
-    required this.title,
-    required this.hook,
-    required this.category,
-    required this.imageUrl,
-    required this.tags,
-    required this.costText,
-    required this.timeText,
-    required this.difficultyText,
-    required this.whyLove,
-    required this.difficultyExplain,
-    required this.starterKit,
-    required this.pitfalls,
-    required this.roadmapSteps,
-  });
+  factory Hobby.fromJson(Map<String, dynamic> json) => _$HobbyFromJson(json);
 }
 
 // ═══════════════════════════════════════════════════════
 //  KIT ITEM MODEL
 // ═══════════════════════════════════════════════════════
 
-class KitItem {
-  final String name;
-  final String description;
-  final int cost;
-  final bool isOptional;
+@freezed
+class KitItem with _$KitItem {
+  const factory KitItem({
+    required String name,
+    required String description,
+    required int cost,
+    @Default(false) bool isOptional,
+  }) = _KitItem;
 
-  const KitItem({
-    required this.name,
-    required this.description,
-    required this.cost,
-    this.isOptional = false,
-  });
+  factory KitItem.fromJson(Map<String, dynamic> json) => _$KitItemFromJson(json);
 }
 
 // ═══════════════════════════════════════════════════════
 //  ROADMAP STEP MODEL
 // ═══════════════════════════════════════════════════════
 
-class RoadmapStep {
-  final String id;
-  final String title;
-  final String description;
-  final int estimatedMinutes;
-  final String? milestone;
+@freezed
+class RoadmapStep with _$RoadmapStep {
+  const factory RoadmapStep({
+    required String id,
+    required String title,
+    required String description,
+    required int estimatedMinutes,
+    String? milestone,
+  }) = _RoadmapStep;
 
-  const RoadmapStep({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.estimatedMinutes,
-    this.milestone,
-  });
+  factory RoadmapStep.fromJson(Map<String, dynamic> json) =>
+      _$RoadmapStepFromJson(json);
 }
 
 // ═══════════════════════════════════════════════════════
 //  HOBBY CATEGORY MODEL
 // ═══════════════════════════════════════════════════════
 
-class HobbyCategory {
-  final String id;
-  final String name;
-  final int count;
-  final String imageUrl;
+@freezed
+class HobbyCategory with _$HobbyCategory {
+  const factory HobbyCategory({
+    required String id,
+    required String name,
+    required int count,
+    required String imageUrl,
+  }) = _HobbyCategory;
 
-  const HobbyCategory({
-    required this.id,
-    required this.name,
-    required this.count,
-    required this.imageUrl,
-  });
+  factory HobbyCategory.fromJson(Map<String, dynamic> json) =>
+      _$HobbyCategoryFromJson(json);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -98,70 +101,37 @@ class HobbyCategory {
 
 enum HobbyStatus { saved, trying, active, done }
 
-class UserHobby {
-  final String hobbyId;
-  final HobbyStatus status;
-  final Set<String> completedStepIds;
-  final DateTime? startedAt;
-  final DateTime? lastActivityAt;
-  final int streakDays;
+@freezed
+class UserHobby with _$UserHobby {
+  const UserHobby._();
 
-  const UserHobby({
-    required this.hobbyId,
-    required this.status,
-    this.completedStepIds = const {},
-    this.startedAt,
-    this.lastActivityAt,
-    this.streakDays = 0,
-  });
-
-  UserHobby copyWith({
-    HobbyStatus? status,
-    Set<String>? completedStepIds,
+  const factory UserHobby({
+    required String hobbyId,
+    required HobbyStatus status,
+    @SetStringConverter() @Default(<String>{}) Set<String> completedStepIds,
     DateTime? startedAt,
     DateTime? lastActivityAt,
-    int? streakDays,
-  }) {
-    return UserHobby(
-      hobbyId: hobbyId,
-      status: status ?? this.status,
-      completedStepIds: completedStepIds ?? this.completedStepIds,
-      startedAt: startedAt ?? this.startedAt,
-      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
-      streakDays: streakDays ?? this.streakDays,
-    );
-  }
+    @Default(0) int streakDays,
+  }) = _UserHobby;
 
   double progressPercent(int totalSteps) {
     if (totalSteps == 0) return 0;
     return completedStepIds.length / totalSteps;
   }
+
+  factory UserHobby.fromJson(Map<String, dynamic> json) =>
+      _$UserHobbyFromJson(json);
 }
 
-class UserPreferences {
-  final int hoursPerWeek;
-  final int budgetLevel; // 0 = low, 1 = medium, 2 = high
-  final bool preferSocial;
-  final Set<String> vibes; // creative, physical, relaxing, technical, outdoors, competitive
+@freezed
+class UserPreferences with _$UserPreferences {
+  const factory UserPreferences({
+    @Default(3) int hoursPerWeek,
+    @Default(1) int budgetLevel,
+    @Default(false) bool preferSocial,
+    @SetStringConverter() @Default(<String>{}) Set<String> vibes,
+  }) = _UserPreferences;
 
-  const UserPreferences({
-    this.hoursPerWeek = 3,
-    this.budgetLevel = 1,
-    this.preferSocial = false,
-    this.vibes = const {},
-  });
-
-  UserPreferences copyWith({
-    int? hoursPerWeek,
-    int? budgetLevel,
-    bool? preferSocial,
-    Set<String>? vibes,
-  }) {
-    return UserPreferences(
-      hoursPerWeek: hoursPerWeek ?? this.hoursPerWeek,
-      budgetLevel: budgetLevel ?? this.budgetLevel,
-      preferSocial: preferSocial ?? this.preferSocial,
-      vibes: vibes ?? this.vibes,
-    );
-  }
+  factory UserPreferences.fromJson(Map<String, dynamic> json) =>
+      _$UserPreferencesFromJson(json);
 }

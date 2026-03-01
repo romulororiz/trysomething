@@ -1,81 +1,77 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'social.freezed.dart';
+part 'social.g.dart';
+
 // ═══════════════════════════════════════════════════════
 //  SOCIAL & COMMUNITY MODELS
 // ═══════════════════════════════════════════════════════
 
-class JournalEntry {
-  final String id;
-  final String hobbyId;
-  final String text;
-  final String? photoUrl;
-  final DateTime createdAt;
+@freezed
+class JournalEntry with _$JournalEntry {
+  const factory JournalEntry({
+    required String id,
+    required String hobbyId,
+    required String text,
+    String? photoUrl,
+    required DateTime createdAt,
+  }) = _JournalEntry;
 
-  const JournalEntry({
-    required this.id,
-    required this.hobbyId,
-    required this.text,
-    this.photoUrl,
-    required this.createdAt,
-  });
+  factory JournalEntry.fromJson(Map<String, dynamic> json) =>
+      _$JournalEntryFromJson(json);
 }
 
-class BuddyProfile {
-  final String id;
-  final String name;
-  final String avatarInitial;
-  final String currentHobbyId;
-  final double progress;
+@freezed
+class BuddyProfile with _$BuddyProfile {
+  const factory BuddyProfile({
+    required String id,
+    required String name,
+    required String avatarInitial,
+    required String currentHobbyId,
+    required double progress,
+  }) = _BuddyProfile;
 
-  const BuddyProfile({
-    required this.id,
-    required this.name,
-    required this.avatarInitial,
-    required this.currentHobbyId,
-    required this.progress,
-  });
+  factory BuddyProfile.fromJson(Map<String, dynamic> json) =>
+      _$BuddyProfileFromJson(json);
 }
 
-class BuddyActivity {
-  final String userId;
-  final String text;
-  final DateTime timestamp;
+@freezed
+class BuddyActivity with _$BuddyActivity {
+  const factory BuddyActivity({
+    required String userId,
+    required String text,
+    required DateTime timestamp,
+  }) = _BuddyActivity;
 
-  const BuddyActivity({
-    required this.userId,
-    required this.text,
-    required this.timestamp,
-  });
+  factory BuddyActivity.fromJson(Map<String, dynamic> json) =>
+      _$BuddyActivityFromJson(json);
 }
 
-class CommunityStory {
-  final String id;
-  final String authorName;
-  final String authorInitial;
-  final String quote;
-  final String hobbyId;
-  final Map<String, int> reactions;
+@freezed
+class CommunityStory with _$CommunityStory {
+  const factory CommunityStory({
+    required String id,
+    required String authorName,
+    required String authorInitial,
+    required String quote,
+    required String hobbyId,
+    @Default({}) Map<String, int> reactions,
+  }) = _CommunityStory;
 
-  const CommunityStory({
-    required this.id,
-    required this.authorName,
-    required this.authorInitial,
-    required this.quote,
-    required this.hobbyId,
-    this.reactions = const {},
-  });
+  factory CommunityStory.fromJson(Map<String, dynamic> json) =>
+      _$CommunityStoryFromJson(json);
 }
 
-class NearbyUser {
-  final String name;
-  final String avatarInitial;
-  final String hobbyId;
-  final String distance;
-  final String startedText;
+@freezed
+class NearbyUser with _$NearbyUser {
+  const factory NearbyUser({
+    required String name,
+    required String avatarInitial,
+    required String hobbyId,
+    required String distance,
+    required String startedText,
+  }) = _NearbyUser;
 
-  const NearbyUser({
-    required this.name,
-    required this.avatarInitial,
-    required this.hobbyId,
-    required this.distance,
-    required this.startedText,
-  });
+  factory NearbyUser.fromJson(Map<String, dynamic> json) =>
+      _$NearbyUserFromJson(json);
 }

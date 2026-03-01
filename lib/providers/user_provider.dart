@@ -56,12 +56,8 @@ class UserPreferencesNotifier extends StateNotifier<UserPreferences> {
     final json = prefs.getString(_key);
     if (json == null) return const UserPreferences();
     try {
-      final map = jsonDecode(json) as Map<String, dynamic>;
-      return UserPreferences(
-        hoursPerWeek: map['hoursPerWeek'] as int? ?? 3,
-        budgetLevel: map['budgetLevel'] as int? ?? 1,
-        preferSocial: map['preferSocial'] as bool? ?? false,
-        vibes: (map['vibes'] as List<dynamic>?)?.map((e) => e as String).toSet() ?? {},
+      return UserPreferences.fromJson(
+        jsonDecode(json) as Map<String, dynamic>,
       );
     } catch (_) {
       return const UserPreferences();
@@ -69,12 +65,7 @@ class UserPreferencesNotifier extends StateNotifier<UserPreferences> {
   }
 
   void _save() {
-    _prefs.setString(_key, jsonEncode({
-      'hoursPerWeek': state.hoursPerWeek,
-      'budgetLevel': state.budgetLevel,
-      'preferSocial': state.preferSocial,
-      'vibes': state.vibes.toList(),
-    }));
+    _prefs.setString(_key, jsonEncode(state.toJson()));
   }
 
   void setHoursPerWeek(int hours) {
@@ -116,7 +107,6 @@ final userHobbiesProvider = StateNotifierProvider<UserHobbiesNotifier, Map<Strin
 class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   final SharedPreferences _prefs;
   static const _key = 'user_hobbies';
-  static const _stepsKey = 'completed_steps';
 
   UserHobbiesNotifier(this._prefs) : super(_load(_prefs));
 
@@ -125,28 +115,18 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
     if (json == null) return {};
     try {
       final map = jsonDecode(json) as Map<String, dynamic>;
-      final stepsJson = prefs.getString(_stepsKey);
-      final stepsMap = stepsJson != null ? jsonDecode(stepsJson) as Map<String, dynamic> : <String, dynamic>{};
-
-      return map.map((key, value) {
-        final statusIndex = value as int;
-        final stepsList = (stepsMap[key] as List<dynamic>?)?.map((e) => e as String).toSet() ?? {};
-        return MapEntry(key, UserHobby(
-          hobbyId: key,
-          status: HobbyStatus.values[statusIndex],
-          completedStepIds: stepsList,
-        ));
-      });
+      return map.map((key, value) => MapEntry(
+        key,
+        UserHobby.fromJson(value as Map<String, dynamic>),
+      ));
     } catch (_) {
       return {};
     }
   }
 
   void _save() {
-    final statusMap = state.map((key, value) => MapEntry(key, value.status.index));
-    final stepsMap = state.map((key, value) => MapEntry(key, value.completedStepIds.toList()));
-    _prefs.setString(_key, jsonEncode(statusMap));
-    _prefs.setString(_stepsKey, jsonEncode(stepsMap));
+    final map = state.map((key, value) => MapEntry(key, value.toJson()));
+    _prefs.setString(_key, jsonEncode(map));
   }
 
   void saveHobby(String hobbyId) {
