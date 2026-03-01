@@ -101,24 +101,6 @@ A step-by-step roadmap with a **"First 30 Minutes"** quickstart — a checklist 
 
 ---
 
-## 🎨 Design
-
-The app uses the **Sunset Analog** palette — warm, inviting, and human. It should feel like opening a well-made magazine about making things, not downloading a fintech app.
-
-| Role | Color | Hex |
-|------|-------|-----|
-| Primary Action | Warm Coral | `#E8734A` |
-| Highlights | Golden Amber | `#E5A630` |
-| Depth | Soft Indigo | `#5B6AAF` |
-| Supporting | Sage, Rose, Sky | `#7EA47E` `#C47878` `#6AA8C4` |
-| Background | Cream → Sand | `#FFF9F5` → `#F5EDE6` |
-
-**Typography:** Source Serif 4 (headings) · DM Sans (body) · IBM Plex Mono (data)
-
-**Mode:** Light mode primary, dark mode available.
-
----
-
 ## 🛠 Tech Stack
 
 | Layer | Technology |
@@ -129,17 +111,6 @@ The app uses the **Sunset Analog** palette — warm, inviting, and human. It sho
 | Payments | Stripe / RevenueCat |
 | Analytics | PostHog |
 | Push Notifications | OneSignal |
-
----
-
-## 💰 Monetization
-
-| Stream | How |
-|--------|-----|
-| **Affiliate Starter Kits** | Partner links from hobby detail pages |
-| **Curated Packs** | Premium themed collections (*"10 Hobbies for Introverts"*) |
-| **Partner Referrals** | Local classes, workshops, studios |
-| **Premium Subscription** | AI coach, unlimited roadmaps, advanced analytics |
 
 ---
 
@@ -202,18 +173,6 @@ trysomething/
 ├── test/               # Unit & widget tests
 └── pubspec.yaml
 ```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) before submitting a PR.
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/hobby-combos`)
-3. Commit your changes (`git commit -m 'Add hobby combos feature'`)
-4. Push to the branch (`git push origin feature/hobby-combos`)
-5. Open a Pull Request
 
 ---
 
