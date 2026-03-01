@@ -182,6 +182,53 @@ export function mapCombo(c: PrismaHobbyCombo) {
   };
 }
 
+// ── User ────────────────────────────────────────
+
+type PrismaUser = {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  preferences?: PrismaUserPreference | null;
+};
+
+type PrismaUserPreference = {
+  id: string;
+  userId: string;
+  hoursPerWeek: number;
+  budgetLevel: number;
+  preferSocial: boolean;
+  vibes: string[];
+};
+
+export function mapUser(u: PrismaUser) {
+  return {
+    id: u.id,
+    email: u.email,
+    displayName: u.displayName,
+    avatarUrl: u.avatarUrl,
+    createdAt: u.createdAt.toISOString(),
+  };
+}
+
+export function mapUserWithPreferences(u: PrismaUser) {
+  return {
+    ...mapUser(u),
+    preferences: u.preferences ? mapUserPreference(u.preferences) : null,
+  };
+}
+
+export function mapUserPreference(p: PrismaUserPreference) {
+  return {
+    hoursPerWeek: p.hoursPerWeek,
+    budgetLevel: p.budgetLevel,
+    preferSocial: p.preferSocial,
+    vibes: p.vibes,
+  };
+}
+
 // ── Aggregation helpers ──────────────────────────
 
 export function groupByField<T extends Record<string, unknown>>(
