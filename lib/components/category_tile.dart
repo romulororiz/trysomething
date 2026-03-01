@@ -222,21 +222,18 @@ class _Chip extends StatelessWidget {
         curve: Motion.fastCurve,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withValues(alpha: 0.15)
-              : AppColors.sand,
+          color: isSelected ? chipColor : AppColors.warmWhite,
           borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-          border: Border.all(
-            color: isSelected
-                ? chipColor.withValues(alpha: 0.4)
-                : AppColors.sandDark,
-          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon!, size: 13, color: isSelected ? chipColor : chipColor.withValues(alpha: 0.6)),
+              Icon(
+                icon!,
+                size: 13,
+                color: isSelected ? Colors.white : chipColor.withValues(alpha: 0.55),
+              ),
               const SizedBox(width: 4),
             ],
             Text(
@@ -244,7 +241,7 @@ class _Chip extends StatelessWidget {
               style: AppTypography.sansCaption.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
-                color: isSelected ? chipColor : AppColors.driftwood,
+                color: isSelected ? Colors.white : AppColors.driftwood,
               ),
             ),
           ],

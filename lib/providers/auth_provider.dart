@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../core/auth/token_storage.dart';
@@ -162,6 +163,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
       return true;
     } catch (e) {
+      debugPrint('Google sign-in error: $e');
       state = AuthState(
         status: AuthStatus.unauthenticated,
         error: _extractError(e),
@@ -201,6 +203,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       if (e.response?.statusCode == 409) return 'Email already registered';
       if (e.response?.statusCode == 401) return 'Invalid email or password';
+    }
+    // Surface Google Sign-In plugin errors
+    final msg = e.toString();
+    if (msg.contains('sign_in_failed')) {
+      return 'Google sign-in failed. Check your Google account configuration.';
+    }
+    if (msg.contains('network_error')) {
+      return 'Network error. Please check your connection.';
     }
     return 'Something went wrong. Please try again.';
   }

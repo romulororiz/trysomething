@@ -191,47 +191,130 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   Widget _buildFilterPanel() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       decoration: BoxDecoration(
         color: AppColors.warmWhite,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.sandDark, width: 0.5),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header + reset
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Max starter cost',
-                  style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood)),
-              Text('CHF ${_maxCost.round()}',
-                  style: AppTypography.monoCaption.copyWith(color: AppColors.coral)),
+              Text('FILTER', style: AppTypography.overline),
+              GestureDetector(
+                onTap: () => setState(() {
+                  _maxCost = 200;
+                  _maxHours = 5;
+                }),
+                child: Text(
+                  'Reset',
+                  style: AppTypography.sansCaption.copyWith(
+                    color: AppColors.coral,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ],
           ),
-          Slider(
-            value: _maxCost,
-            min: 0,
-            max: 500,
-            divisions: 10,
-            onChanged: (v) => setState(() => _maxCost = v),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+
+          // Cost row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Max hours/week',
-                  style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood)),
-              Text('${_maxHours.round()}h',
-                  style: AppTypography.monoCaption.copyWith(color: AppColors.amber)),
+              Row(
+                children: [
+                  Icon(AppIcons.badgeCost, size: 13, color: AppColors.coral),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Max starter cost',
+                    style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.coralPale,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'CHF ${_maxCost.round()}',
+                  style: AppTypography.monoBadgeSmall.copyWith(color: AppColors.coral),
+                ),
+              ),
             ],
           ),
-          Slider(
-            value: _maxHours,
-            min: 1,
-            max: 10,
-            divisions: 9,
-            activeColor: AppColors.amber,
-            onChanged: (v) => setState(() => _maxHours = v),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2.5,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+              activeTrackColor: AppColors.coral,
+              inactiveTrackColor: AppColors.sandDark,
+              thumbColor: AppColors.coral,
+              overlayColor: AppColors.coral.withValues(alpha: 0.15),
+            ),
+            child: Slider(
+              value: _maxCost,
+              min: 0,
+              max: 500,
+              divisions: 10,
+              onChanged: (v) => setState(() => _maxCost = v),
+            ),
           ),
+          const SizedBox(height: 4),
+
+          // Hours row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(AppIcons.badgeTime, size: 13, color: AppColors.amber),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Max hours / week',
+                    style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.amberPale,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${_maxHours.round()}h',
+                  style: AppTypography.monoBadgeSmall.copyWith(color: AppColors.amber),
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2.5,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+              activeTrackColor: AppColors.amber,
+              inactiveTrackColor: AppColors.sandDark,
+              thumbColor: AppColors.amber,
+              overlayColor: AppColors.amber.withValues(alpha: 0.15),
+            ),
+            child: Slider(
+              value: _maxHours,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              onChanged: (v) => setState(() => _maxHours = v),
+            ),
+          ),
+          const SizedBox(height: 4),
         ],
       ),
     );
@@ -395,9 +478,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: pick.$3.withValues(alpha: 0.12),
+                      color: AppColors.warmWhite,
                       borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                      border: Border.all(color: pick.$3.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,

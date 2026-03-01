@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "TrySomething (Debug)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=GOOGLE_SERVER_CLIENT_ID=973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com"
+      ]
+    }
+  ]
+}
