@@ -20,7 +20,7 @@ class BeginnerFaqScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     final faqItems = FeatureSeedData.faqByHobby[hobbyId] ?? [];
     final topPad = MediaQuery.of(context).padding.top;
     final hobbyName = hobby?.title ?? hobbyId;

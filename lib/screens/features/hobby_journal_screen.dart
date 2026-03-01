@@ -113,7 +113,7 @@ class HobbyJournalScreen extends ConsumerWidget {
   void _showAddEntrySheet(BuildContext context, WidgetRef ref) {
     final textController = TextEditingController();
     String? selectedHobbyId;
-    final hobbies = ref.read(hobbyListProvider);
+    final hobbies = ref.read(hobbyListProvider).valueOrNull ?? [];
     if (hobbies.isNotEmpty) {
       selectedHobbyId = hobbies.first.id;
     }
@@ -307,7 +307,7 @@ class _JournalEntryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(entry.hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(entry.hobbyId)).valueOrNull;
     final hobbyName = hobby?.title ?? entry.hobbyId;
 
     return Container(

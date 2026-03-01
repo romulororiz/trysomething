@@ -121,7 +121,7 @@ class _BuddyCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(buddy.currentHobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(buddy.currentHobbyId)).valueOrNull;
     final hobbyName = hobby?.title ?? buddy.currentHobbyId;
 
     return Container(

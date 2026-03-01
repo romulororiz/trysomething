@@ -64,8 +64,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider);
-    final allHobbies = ref.watch(hobbyListProvider);
+    final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
+    final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final searchResults = _getSearchResults(allHobbies);
 
     return SafeArea(

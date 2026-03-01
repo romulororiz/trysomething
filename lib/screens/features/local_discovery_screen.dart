@@ -113,7 +113,7 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final user = nearbyUsers[index];
-                    final hobby = ref.watch(hobbyByIdProvider(user.hobbyId));
+                    final hobby = ref.watch(hobbyByIdProvider(user.hobbyId)).valueOrNull;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),

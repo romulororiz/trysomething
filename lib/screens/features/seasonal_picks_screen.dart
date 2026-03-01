@@ -322,7 +322,7 @@ class _SeasonHobbyCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     if (hobby == null) return const SizedBox.shrink();
 
     return GestureDetector(

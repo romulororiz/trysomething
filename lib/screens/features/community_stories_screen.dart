@@ -99,7 +99,7 @@ class _StoryCardState extends ConsumerState<_StoryCard> {
 
   @override
   Widget build(BuildContext context) {
-    final hobby = ref.watch(hobbyByIdProvider(widget.story.hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(widget.story.hobbyId)).valueOrNull;
     final hobbyName = hobby?.title ?? widget.story.hobbyId;
 
     return Container(

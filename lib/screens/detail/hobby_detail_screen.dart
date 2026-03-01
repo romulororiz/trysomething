@@ -128,17 +128,20 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final hobby = ref.watch(hobbyByIdProvider(widget.hobbyId));
+    final hobbyAsync = ref.watch(hobbyByIdProvider(widget.hobbyId));
+    final hobby = hobbyAsync.valueOrNull;
     if (hobby == null) {
       return Scaffold(
         backgroundColor: AppColors.cream,
         body: Center(
-          child: Text('Hobby not found', style: AppTypography.sansBody),
+          child: hobbyAsync.isLoading
+              ? const CircularProgressIndicator()
+              : Text('Hobby not found', style: AppTypography.sansBody),
         ),
       );
     }
 
-    final relatedHobbies = ref.watch(relatedHobbiesProvider(widget.hobbyId));
+    final relatedHobbies = ref.watch(relatedHobbiesProvider(widget.hobbyId)).valueOrNull ?? [];
     final userHobbies = ref.watch(userHobbiesProvider);
     final userHobby = userHobbies[widget.hobbyId];
     final topPad = MediaQuery.of(context).padding.top;
@@ -301,7 +304,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   ),
                   child: Center(
                     child: Text(
-                      ref.read(hobbyByIdProvider(widget.hobbyId))?.title ?? '',
+                      ref.watch(hobbyByIdProvider(widget.hobbyId)).valueOrNull?.title ?? '',
                       style: AppTypography.sansBodySmall.copyWith(
                         fontWeight: FontWeight.w600,
                         color: AppColors.nearBlack,

@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../models/hobby.dart';
-import '../../models/seed_data.dart';
 import '../../theme/category_ui.dart';
+import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
@@ -257,7 +257,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   // ── Matching & Persona ──
 
   List<Hobby> _computeMatchedHobbies() {
-    final all = SeedData.hobbies;
+    final all = ref.read(hobbyListProvider).valueOrNull ?? [];
     if (_vibes.isEmpty) return all.toList();
 
     final scored = all.map((h) {

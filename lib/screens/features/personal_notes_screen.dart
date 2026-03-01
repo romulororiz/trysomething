@@ -19,7 +19,7 @@ class PersonalNotesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     final topPad = MediaQuery.of(context).padding.top;
     final hobbyName = hobby?.title ?? hobbyId;
     final steps = hobby?.roadmapSteps ?? [];

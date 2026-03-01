@@ -31,7 +31,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final prefs = ref.watch(userPreferencesProvider);
     final userHobbies = ref.watch(userHobbiesProvider);
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final profile = ref.watch(profileProvider);
 
     // Counts

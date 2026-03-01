@@ -17,7 +17,7 @@ class ShoppingListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     final checkedItems = ref.watch(shoppingListCheckedProvider);
 
     if (hobby == null) {

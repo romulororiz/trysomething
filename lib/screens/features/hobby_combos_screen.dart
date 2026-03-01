@@ -104,8 +104,8 @@ class _ComboCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby1 = ref.watch(hobbyByIdProvider(combo.hobbyId1));
-    final hobby2 = ref.watch(hobbyByIdProvider(combo.hobbyId2));
+    final hobby1 = ref.watch(hobbyByIdProvider(combo.hobbyId1)).valueOrNull;
+    final hobby2 = ref.watch(hobbyByIdProvider(combo.hobbyId2)).valueOrNull;
 
     if (hobby1 == null || hobby2 == null) return const SizedBox.shrink();
 

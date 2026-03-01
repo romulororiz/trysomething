@@ -28,8 +28,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbiesAsync = ref.watch(hobbyListProvider);
 
+    return allHobbiesAsync.when(
+      loading: () => const SafeArea(child: Center(child: CircularProgressIndicator())),
+      error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
+      data: (allHobbies) {
     // Filter hobbies by query
     final results = _query.isEmpty
         ? <dynamic>[]
@@ -236,6 +240,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

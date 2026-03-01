@@ -33,7 +33,7 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
   @override
   Widget build(BuildContext context) {
     final userHobbies = ref.watch(userHobbiesProvider);
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbiesAsync = ref.watch(hobbyListProvider);
 
     // Stat counts
     final tryingCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.trying));
@@ -46,6 +46,10 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
         .where((uh) => uh.status == currentStatus)
         .toList();
 
+    return allHobbiesAsync.when(
+      loading: () => const SafeArea(child: Center(child: CircularProgressIndicator())),
+      error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
+      data: (allHobbies) {
     return SafeArea(
       bottom: false,
       child: Column(
@@ -139,6 +143,8 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 

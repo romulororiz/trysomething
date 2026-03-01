@@ -35,7 +35,7 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final topPad = MediaQuery.of(context).padding.top;
 
     // Filter hobbies by mood tags

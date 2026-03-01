@@ -20,7 +20,7 @@ class BudgetAlternativesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     final alternatives = FeatureSeedData.budgetAlternatives[hobbyId] ?? [];
     final costBreakdown = FeatureSeedData.costByHobby[hobbyId];
     final topPad = MediaQuery.of(context).padding.top;
