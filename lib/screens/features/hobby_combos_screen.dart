@@ -16,7 +16,7 @@ class HobbyCombosScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final combos = ref.watch(combosProvider);
+    final combos = ref.watch(combosProvider).valueOrNull ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.cream,

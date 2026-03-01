@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/hobby_repository.dart';
-import '../data/repositories/hobby_repository_impl.dart';
+import '../data/repositories/hobby_repository_api.dart';
 import '../data/repositories/feature_repository.dart';
-import '../data/repositories/feature_repository_impl.dart';
+import '../data/repositories/feature_repository_api.dart';
 
-/// Hobby data repository — swap implementation for API in Phase 3.
+/// Hobby data repository — API-backed with Hive cache + SeedData fallback.
 final hobbyRepositoryProvider = Provider<HobbyRepository>((ref) {
-  return HobbyRepositoryImpl();
+  return HobbyRepositoryApi();
 });
 
-/// Feature data repository — swap implementation for API in Phase 3.
+/// Feature data repository — API-backed with Hive cache + SeedData fallback.
 final featureRepositoryProvider = Provider<FeatureRepository>((ref) {
-  return FeatureRepositoryImpl();
+  return FeatureRepositoryApi();
 });

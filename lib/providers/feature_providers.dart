@@ -169,6 +169,6 @@ final nearbyUsersProvider = Provider<List<NearbyUser>>((ref) {
 //  HOBBY COMBOS
 // ═══════════════════════════════════════════════════════
 
-final combosProvider = Provider<List<HobbyCombo>>((ref) {
-  return FeatureSeedData.combos;
+final combosProvider = FutureProvider<List<HobbyCombo>>((ref) {
+  return ref.watch(featureRepositoryProvider).getCombos();
 });

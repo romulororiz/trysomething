@@ -39,12 +39,12 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
     final moodTagsData = ref.watch(moodTagsProvider).valueOrNull ?? {};
     final topPad = MediaQuery.of(context).padding.top;
 
-    // Filter hobbies by mood tags
-    final moodTags = _selectedMood != null
+    // Filter hobbies by mood → hobby ID mapping (from API)
+    final moodHobbyIds = _selectedMood != null
         ? moodTagsData[_selectedMood] ?? <String>[]
         : <String>[];
     final matchedHobbies = _selectedMood != null
-        ? allHobbies.where((h) => h.tags.any((t) => moodTags.contains(t))).toList()
+        ? allHobbies.where((h) => moodHobbyIds.contains(h.id)).toList()
         : <Hobby>[];
 
     return Scaffold(
@@ -211,10 +211,7 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final hobby = matchedHobbies[index];
-                      // Find which tags matched
-                      final matchingTags = hobby.tags
-                          .where((t) => moodTags.contains(t))
-                          .toList();
+                      final matchingTags = hobby.tags;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
