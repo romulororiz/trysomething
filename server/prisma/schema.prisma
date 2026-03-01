@@ -1,0 +1,144 @@
+// TrySomething — Prisma Schema
+// Phase 1: Content models (10 tables)
+// Future phases add: User, Auth, Progress, Social, Gamification models
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════
+//  CONTENT MODELS (Phase 1)
+// ═══════════════════════════════════════════════════
+
+model Category {
+  id       String  @id
+  name     String
+  imageUrl String
+  sortOrder Int    @default(0)
+  hobbies  Hobby[]
+}
+
+model Hobby {
+  id                String   @id
+  title             String
+  hook              String
+  categoryId        String
+  imageUrl          String
+  tags              String[]
+  costText          String
+  timeText          String
+  difficultyText    String
+  whyLove           String
+  difficultyExplain String
+  pitfalls          String[]
+  sortOrder         Int      @default(0)
+
+  category       Category            @relation(fields: [categoryId], references: [id])
+  kitItems       KitItem[]
+  roadmapSteps   RoadmapStep[]
+  faqItems       FaqItem[]
+  costBreakdown  CostBreakdown?
+  budgetAlts     BudgetAlternative[]
+  combosAsFirst  HobbyCombo[]        @relation("comboHobbyA")
+  combosAsSecond HobbyCombo[]        @relation("comboHobbyB")
+  seasonalPicks  SeasonalPick[]
+  moodTags       MoodTag[]
+}
+
+model KitItem {
+  id          String  @id @default(cuid())
+  hobbyId     String
+  name        String
+  description String
+  cost        Int
+  isOptional  Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+}
+
+model RoadmapStep {
+  id               String  @id
+  hobbyId          String
+  title            String
+  description      String
+  estimatedMinutes Int
+  milestone        String?
+  sortOrder        Int     @default(0)
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+}
+
+model FaqItem {
+  id       String @id @default(cuid())
+  hobbyId  String
+  question String
+  answer   String
+  upvotes  Int    @default(0)
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+}
+
+model CostBreakdown {
+  id         String   @id @default(cuid())
+  hobbyId    String   @unique
+  starter    Int
+  threeMonth Int
+  oneYear    Int
+  tips       String[]
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+}
+
+model BudgetAlternative {
+  id            String @id @default(cuid())
+  hobbyId       String
+  itemName      String
+  diyOption     String
+  diyCost       Int
+  budgetOption  String
+  budgetCost    Int
+  premiumOption String
+  premiumCost   Int
+  sortOrder     Int    @default(0)
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+}
+
+model HobbyCombo {
+  id         String   @id @default(cuid())
+  hobbyId1   String
+  hobbyId2   String
+  reason     String
+  sharedTags String[]
+
+  hobbyA Hobby @relation("comboHobbyA", fields: [hobbyId1], references: [id], onDelete: Cascade)
+  hobbyB Hobby @relation("comboHobbyB", fields: [hobbyId2], references: [id], onDelete: Cascade)
+
+  @@unique([hobbyId1, hobbyId2])
+}
+
+model SeasonalPick {
+  id       String @id @default(cuid())
+  hobbyId  String
+  season   String
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+
+  @@unique([hobbyId, season])
+}
+
+model MoodTag {
+  id      String @id @default(cuid())
+  hobbyId String
+  mood    String
+
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+
+  @@unique([hobbyId, mood])
+}
