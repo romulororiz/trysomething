@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -251,7 +252,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Log out?', style: AppTypography.sansSection),
         content: Text(
-          'This will clear your preferences and saved progress. You\'ll start fresh from onboarding.',
+          'You\'ll need to sign in again to access your data.',
           style: AppTypography.sansBodySmall.copyWith(color: AppColors.warmGray),
         ),
         actions: [
@@ -260,10 +261,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood)),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await ref.read(authProvider.notifier).logout();
               ref.read(onboardingCompleteProvider.notifier).reset();
-              Navigator.of(ctx).pop();
-              context.go('/onboarding');
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (context.mounted) context.go('/login');
             },
             child: Text('Log out', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
           ),

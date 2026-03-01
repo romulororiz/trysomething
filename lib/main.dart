@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'router.dart';
 import 'providers/user_provider.dart';
+import 'providers/auth_provider.dart';
 import 'core/storage/local_storage.dart';
 
 void main() async {
@@ -32,11 +33,25 @@ void main() async {
   );
 }
 
-class TrySomethingApp extends ConsumerWidget {
+class TrySomethingApp extends ConsumerStatefulWidget {
   const TrySomethingApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrySomethingApp> createState() => _TrySomethingAppState();
+}
+
+class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Attempt to restore auth session from stored tokens
+    Future.microtask(() {
+      ref.read(authProvider.notifier).tryRestoreSession();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(

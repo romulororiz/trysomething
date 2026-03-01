@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/user_provider.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/register_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/feed/discover_feed_screen.dart';
@@ -44,11 +47,34 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   final onboardingComplete = ref.watch(onboardingCompleteProvider);
+  final authState = ref.watch(authProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: onboardingComplete ? '/feed' : '/onboarding',
+    initialLocation: '/feed',
     routes: [
+      // Auth screens (outside shell)
+      GoRoute(
+        path: '/login',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const LoginScreen(),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: Motion.slow,
+        ),
+      ),
+      GoRoute(
+        path: '/register',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const RegisterScreen(),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: Motion.slow,
+        ),
+      ),
+
       // Onboarding
       GoRoute(
         path: '/onboarding',
@@ -364,15 +390,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
 
-    // Redirect to onboarding if not complete
+    // Auth + onboarding redirect chain
     redirect: (context, state) {
-      final isOnboarding = state.uri.path == '/onboarding';
-      if (!onboardingComplete && !isOnboarding) {
-        return '/onboarding';
+      final path = state.uri.path;
+      final isAuthRoute = path == '/login' || path == '/register';
+      final isOnboarding = path == '/onboarding';
+
+      // While session is being restored, don't redirect
+      if (authState.status == AuthStatus.unknown) return null;
+
+      // Unauthenticated: must go to login/register
+      if (authState.status == AuthStatus.unauthenticated) {
+        if (!isAuthRoute) return '/login';
+        return null;
       }
-      if (onboardingComplete && isOnboarding) {
-        return '/feed';
+
+      // Authenticated: shouldn't be on auth routes
+      if (isAuthRoute) {
+        return onboardingComplete ? '/feed' : '/onboarding';
       }
+
+      // Onboarding guard (existing logic)
+      if (!onboardingComplete && !isOnboarding) return '/onboarding';
+      if (onboardingComplete && isOnboarding) return '/feed';
+
       return null;
     },
   );
