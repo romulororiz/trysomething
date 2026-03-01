@@ -9,6 +9,7 @@ import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/feature_providers.dart';
+import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -33,6 +34,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final userHobbies = ref.watch(userHobbiesProvider);
     final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final profile = ref.watch(profileProvider);
+    final authUser = ref.watch(authProvider).user;
+
+    // Use auth data as primary source for name/avatar
+    final displayName = authUser?.displayName ?? profile.username;
+    final avatarUrl = authUser?.avatarUrl ?? profile.avatarUrl;
 
     // Counts
     final tryingCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.trying));
@@ -151,7 +157,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 height: 96,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: profile.avatarUrl == null
+                                  gradient: avatarUrl == null
                                       ? const LinearGradient(
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -159,18 +165,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         )
                                       : null,
                                   border: Border.all(color: AppColors.indigo, width: 3),
-                                  image: profile.avatarUrl != null
+                                  image: avatarUrl != null
                                       ? DecorationImage(
-                                          image: NetworkImage(profile.avatarUrl!),
+                                          image: NetworkImage(avatarUrl),
                                           fit: BoxFit.cover,
                                         )
                                       : null,
                                 ),
-                                child: profile.avatarUrl == null
+                                child: avatarUrl == null
                                     ? Center(
                                         child: Text(
-                                          profile.username != 'Your Name'
-                                              ? profile.username[0].toUpperCase()
+                                          displayName != 'Your Name'
+                                              ? displayName[0].toUpperCase()
                                               : '?',
                                           style: AppTypography.serifHeading
                                               .copyWith(color: AppColors.coral),
@@ -240,12 +246,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                         // ── Editable username ──
                         GestureDetector(
-                          onTap: () => _editUsername(context, ref, profile.username),
+                          onTap: () => _editUsername(context, ref, displayName),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                profile.username,
+                                displayName,
                                 style: AppTypography.serifSubheading.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -977,6 +983,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 final name = controller.text.trim();
                 if (name.isNotEmpty) {
                   ref.read(profileProvider.notifier).updateUsername(name);
+                  ref.read(authProvider.notifier).updateProfile(displayName: name);
                 }
                 Navigator.pop(ctx);
               },
