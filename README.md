@@ -134,7 +134,7 @@ Local discovery, community stories, creator roadmaps, curated packs marketplace.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/trysomething.git
+git clone https://github.com/romulororiz/trysomething.git
 cd trysomething
 
 # Install dependencies
