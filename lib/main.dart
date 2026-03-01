@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'router.dart';
 import 'providers/user_provider.dart';
+import 'core/storage/local_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,8 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
-  // Initialize SharedPreferences
+  // Initialize local storage
+  await LocalStorage.init();
   final prefs = await SharedPreferences.getInstance();
 
   runApp(
