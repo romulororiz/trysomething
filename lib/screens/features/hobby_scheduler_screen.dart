@@ -234,6 +234,7 @@ class HobbySchedulerScreen extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(

@@ -950,6 +950,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         text: current == 'Your Name' ? '' : current);
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
@@ -991,6 +992,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final controller = TextEditingController(text: current);
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
@@ -1032,6 +1034,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _showPhotoOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
