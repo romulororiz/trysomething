@@ -41,9 +41,9 @@ Map<String, dynamic> _$$HobbyImplToJson(_$HobbyImpl instance) =>
       'difficultyText': instance.difficultyText,
       'whyLove': instance.whyLove,
       'difficultyExplain': instance.difficultyExplain,
-      'starterKit': instance.starterKit,
+      'starterKit': instance.starterKit.map((e) => e.toJson()).toList(),
       'pitfalls': instance.pitfalls,
-      'roadmapSteps': instance.roadmapSteps,
+      'roadmapSteps': instance.roadmapSteps.map((e) => e.toJson()).toList(),
     };
 
 _$KitItemImpl _$$KitItemImplFromJson(Map<String, dynamic> json) =>

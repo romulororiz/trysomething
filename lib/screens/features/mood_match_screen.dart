@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../models/hobby.dart';
-import '../../models/feature_seed_data.dart';
 import '../../theme/category_ui.dart';
+import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -36,11 +36,12 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
   @override
   Widget build(BuildContext context) {
     final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
+    final moodTagsData = ref.watch(moodTagsProvider).valueOrNull ?? {};
     final topPad = MediaQuery.of(context).padding.top;
 
     // Filter hobbies by mood tags
     final moodTags = _selectedMood != null
-        ? FeatureSeedData.moodToTags[_selectedMood] ?? <String>[]
+        ? moodTagsData[_selectedMood] ?? <String>[]
         : <String>[];
     final matchedHobbies = _selectedMood != null
         ? allHobbies.where((h) => h.tags.any((t) => moodTags.contains(t))).toList()

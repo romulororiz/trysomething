@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import '../../models/feature_seed_data.dart';
+import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/category_ui.dart';
 import '../../theme/app_colors.dart';
@@ -32,18 +32,14 @@ class SeasonalPicksScreen extends ConsumerWidget {
     'Autumn Coziness': _SeasonData(MdiIcons.leaf, AppColors.coral, AppColors.coralPale),
   };
 
-  /// Ordered season keys so current season appears first.
-  static List<String> _orderedSeasons(String currentKey) {
-    final all = FeatureSeedData.seasonalHobbies.keys.toList();
-    all.remove(currentKey);
-    return [currentKey, ...all];
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final seasonalData = ref.watch(seasonalHobbiesProvider).valueOrNull ?? {};
     final topPad = MediaQuery.of(context).padding.top;
     final currentKey = _currentSeasonKey(DateTime.now().month);
-    final orderedSeasons = _orderedSeasons(currentKey);
+    final allKeys = seasonalData.keys.toList();
+    allKeys.remove(currentKey);
+    final orderedSeasons = [currentKey, ...allKeys];
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -102,7 +98,7 @@ class SeasonalPicksScreen extends ConsumerWidget {
             final isCurrent = seasonKey == currentKey;
             final meta = _seasonMeta[seasonKey] ??
                 _SeasonData(MdiIcons.calendarBlank, AppColors.warmGray, AppColors.sand);
-            final hobbyIds = FeatureSeedData.seasonalHobbies[seasonKey] ?? [];
+            final hobbyIds = seasonalData[seasonKey] ?? [];
 
             return SliverToBoxAdapter(
               child: _SeasonSection(
