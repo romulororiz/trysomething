@@ -1,6 +1,9 @@
 # Reference docs (local only)
 reference/
 
+# Claude Code project instructions (local only)
+CLAUDE.md
+
 # Miscellaneous
 *.class
 *.log
