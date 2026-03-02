@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/repositories/personal_tools_repository.dart';
 import '../models/activity_log.dart';
 import '../models/features.dart';
 import '../models/social.dart';
@@ -51,14 +53,45 @@ final profileProvider = StateNotifierProvider<ProfileNotifier, UserProfile>(
 // ═══════════════════════════════════════════════════════
 
 class JournalNotifier extends StateNotifier<List<JournalEntry>> {
-  JournalNotifier() : super(FeatureSeedData.journalEntries);
+  final PersonalToolsRepository _repo;
+  JournalNotifier(this._repo) : super([]);
+
+  void _apiCall(
+    List<JournalEntry> snapshot,
+    Future<void> Function() call,
+  ) {
+    call().catchError((e) {
+      debugPrint('[Journal] API call failed, rolling back: $e');
+      state = snapshot;
+    });
+  }
+
+  Future<void> loadFromServer() async {
+    try {
+      state = await _repo.getJournalEntries();
+    } catch (e) {
+      debugPrint('[Journal] Failed to load from server: $e');
+    }
+  }
 
   void addEntry(JournalEntry entry) {
+    final snapshot = List<JournalEntry>.from(state);
     state = [entry, ...state];
+    _apiCall(snapshot, () async {
+      final created = await _repo.createJournalEntry(
+        hobbyId: entry.hobbyId,
+        text: entry.text,
+        photoUrl: entry.photoUrl,
+      );
+      // Replace temp entry with server response (has real ID)
+      state = [created, ...state.where((e) => e.id != entry.id).toList()];
+    });
   }
 
   void removeEntry(String id) {
+    final snapshot = List<JournalEntry>.from(state);
     state = state.where((e) => e.id != id).toList();
+    _apiCall(snapshot, () => _repo.deleteJournalEntry(id));
   }
 
   List<JournalEntry> entriesForHobby(String hobbyId) {
@@ -67,7 +100,7 @@ class JournalNotifier extends StateNotifier<List<JournalEntry>> {
 }
 
 final journalProvider = StateNotifierProvider<JournalNotifier, List<JournalEntry>>(
-  (ref) => JournalNotifier(),
+  (ref) => JournalNotifier(ref.watch(personalToolsRepositoryProvider)),
 );
 
 // ═══════════════════════════════════════════════════════
@@ -92,19 +125,51 @@ final currentChallengeProvider = Provider<Challenge?>((ref) {
 // ═══════════════════════════════════════════════════════
 
 class ScheduleNotifier extends StateNotifier<List<ScheduleEvent>> {
-  ScheduleNotifier() : super(FeatureSeedData.scheduleEvents);
+  final PersonalToolsRepository _repo;
+  ScheduleNotifier(this._repo) : super([]);
+
+  void _apiCall(
+    List<ScheduleEvent> snapshot,
+    Future<void> Function() call,
+  ) {
+    call().catchError((e) {
+      debugPrint('[Schedule] API call failed, rolling back: $e');
+      state = snapshot;
+    });
+  }
+
+  Future<void> loadFromServer() async {
+    try {
+      state = await _repo.getScheduleEvents();
+    } catch (e) {
+      debugPrint('[Schedule] Failed to load from server: $e');
+    }
+  }
 
   void addEvent(ScheduleEvent event) {
+    final snapshot = List<ScheduleEvent>.from(state);
     state = [...state, event];
+    _apiCall(snapshot, () async {
+      final created = await _repo.createScheduleEvent(
+        hobbyId: event.hobbyId,
+        dayOfWeek: event.dayOfWeek,
+        startTime: event.startTime,
+        durationMinutes: event.durationMinutes,
+      );
+      // Replace temp event with server response (has real ID)
+      state = [...state.where((e) => e.id != event.id), created];
+    });
   }
 
   void removeEvent(String id) {
+    final snapshot = List<ScheduleEvent>.from(state);
     state = state.where((e) => e.id != id).toList();
+    _apiCall(snapshot, () => _repo.deleteScheduleEvent(id));
   }
 }
 
 final scheduleProvider = StateNotifierProvider<ScheduleNotifier, List<ScheduleEvent>>(
-  (ref) => ScheduleNotifier(),
+  (ref) => ScheduleNotifier(ref.watch(personalToolsRepositoryProvider)),
 );
 
 // ═══════════════════════════════════════════════════════

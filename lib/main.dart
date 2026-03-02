@@ -8,6 +8,7 @@ import 'theme/app_typography.dart';
 import 'router.dart';
 import 'providers/user_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/feature_providers.dart';
 import 'core/storage/local_storage.dart';
 
 void main() async {
@@ -51,6 +52,8 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
       await ref.read(authProvider.notifier).tryRestoreSession();
       if (ref.read(authProvider).status == AuthStatus.authenticated) {
         ref.read(userHobbiesProvider.notifier).syncFromServer();
+        ref.read(journalProvider.notifier).loadFromServer();
+        ref.read(scheduleProvider.notifier).loadFromServer();
       }
     });
   }
