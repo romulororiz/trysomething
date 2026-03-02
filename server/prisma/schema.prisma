@@ -169,6 +169,8 @@ model User {
   storyReactions     StoryReaction[]
   buddyRequestsSent  BuddyPair[] @relation("buddyRequests")
   buddyRequestsRcvd  BuddyPair[] @relation("buddyAccepts")
+  challenges         UserChallenge[]
+  achievements       UserAchievement[]
 }
 
 model UserPreference {
@@ -332,4 +334,36 @@ model BuddyPair {
   @@unique([requesterId, accepterId])
   @@index([requesterId])
   @@index([accepterId])
+}
+
+// ═══════════════════════════════════════════════════
+//  GAMIFICATION MODELS (Phase 7)
+// ═══════════════════════════════════════════════════
+
+model UserChallenge {
+  id            String    @id @default(uuid())
+  userId        String
+  challengeType String    // try_new_hobby, complete_steps, journal_entry, share_story
+  currentCount  Int       @default(0)
+  targetCount   Int
+  isCompleted   Boolean   @default(false)
+  weekStart     DateTime  // Monday of the challenge week
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeType, weekStart])
+  @@index([userId, weekStart])
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String   // matches server-side achievement definitions
+  unlockedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
 }
