@@ -22,6 +22,7 @@ class Spacing {
   // ═══════════════════════════════════════════════════
   static const double radiusCard = 22;
   static const double radiusTile = 16;
+  static const double radiusCta = 20;
   static const double radiusButton = 14;
   static const double radiusInput = 12;
   static const double radiusSmall = 10;
@@ -45,15 +46,19 @@ class Spacing {
   static const double cardHeight = 480;
   static const double heroHeight = 350;
   static const double bottomNavHeight = 82;
+  static const double buttonCtaHeight = 56;
   static const double buttonPrimaryHeight = 54;
   static const double buttonSecondaryHeight = 46;
   static const double searchBarHeight = 46;
+  static const double iconCircleSize = 40;
   static const double iconButtonSize = 40;
   static const double iconButtonSizeLg = 46;
   static const double checkboxSize = 28;
   static const double checkboxSizeSm = 32;
   static const double categoryIconSize = 50;
   static const double thumbnailSize = 50;
+
+  static const double cardBorderWidth = 0.5;
 
   // ═══════════════════════════════════════════════════
   //  SHADOWS

@@ -130,9 +130,9 @@ class AppTheme {
           backgroundColor: AppColors.coral,
           foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 54),
+          minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: GoogleFonts.dmSans(
             fontSize: 14,

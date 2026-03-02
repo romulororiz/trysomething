@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_icons.dart';
 import '../theme/spacing.dart';
+import '../theme/motion.dart';
 
 /// Reusable section header with title and optional right-side text/widget.
 class SectionHeader extends StatelessWidget {
@@ -185,6 +186,196 @@ class HobbyMiniCard extends StatelessWidget {
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, color: AppColors.stone, size: 20),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  REDESIGN COMPONENTS (Batch 10)
+// ═══════════════════════════════════════════════════════
+
+/// 40x40 circle with pale-tint background and accent-colored icon.
+/// Used in settings tiles, tip cards, stat items, step indicators.
+class IconCircle extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final double size;
+
+  const IconCircle({
+    super.key,
+    required this.color,
+    required this.icon,
+    this.size = Spacing.iconCircleSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Icon(icon, color: color, size: size * 0.45),
+      ),
+    );
+  }
+}
+
+/// Screen header: circle back button + centered title + optional trailing.
+class ScreenHeader extends StatelessWidget {
+  final String title;
+  final VoidCallback? onBack;
+  final Widget? trailing;
+
+  const ScreenHeader({
+    super.key,
+    required this.title,
+    this.onBack,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          // Back button — 40x40 circle
+          GestureDetector(
+            onTap: onBack ?? () => Navigator.of(context).pop(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: AppColors.sand,
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(Icons.arrow_back_ios_new,
+                    size: 16, color: AppColors.nearBlack),
+              ),
+            ),
+          ),
+          // Centered title
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.sansSection,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          // Trailing or spacer
+          if (trailing != null)
+            trailing!
+          else
+            const SizedBox(width: 40),
+        ],
+      ),
+    );
+  }
+}
+
+/// Horizontal pill-shaped filter tab bar.
+/// Selected: coral bg + white text. Unselected: sand bg + driftwood text.
+class FilterTabBar extends StatelessWidget {
+  final List<String> tabs;
+  final int selected;
+  final ValueChanged<int> onTap;
+
+  const FilterTabBar({
+    super.key,
+    required this.tabs,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: tabs.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final isSelected = i == selected;
+          return GestureDetector(
+            onTap: () => onTap(i),
+            child: AnimatedContainer(
+              duration: Motion.fast,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.coral : AppColors.sand,
+                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+              ),
+              child: Text(
+                tabs[i],
+                style: AppTypography.sansLabel.copyWith(
+                  color: isSelected ? Colors.white : AppColors.driftwood,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Full-width coral gradient CTA button with glow shadow and arrow suffix.
+class PrimaryCtaButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final bool isLoading;
+
+  const PrimaryCtaButton({
+    super.key,
+    required this.label,
+    this.onTap,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      child: Container(
+        width: double.infinity,
+        height: Spacing.buttonCtaHeight,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.coral, AppColors.coralDeep],
+          ),
+          borderRadius: BorderRadius.circular(Spacing.radiusCta),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.coral.withValues(alpha: 0.40),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  label,
+                  style: AppTypography.sansCta,
+                ),
         ),
       ),
     );
