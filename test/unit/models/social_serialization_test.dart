@@ -54,6 +54,7 @@ void main() {
     test('round-trips through JSON', () {
       final activity = BuddyActivity(
         userId: 'user1',
+        userName: 'Alice',
         text: 'Completed step 3',
         timestamp: DateTime(2026, 2, 20, 10, 0),
       );
@@ -98,6 +99,7 @@ void main() {
   group('NearbyUser serialization', () {
     test('round-trips through JSON', () {
       final user = NearbyUser(
+        id: 'u1',
         name: 'Charlie',
         avatarInitial: 'C',
         hobbyId: 'bouldering',
