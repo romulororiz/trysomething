@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../models/hobby.dart';
 import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
@@ -279,17 +280,10 @@ class YearInReviewScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Sharing coming soon!',
-                              style: AppTypography.sansLabel
-                                  .copyWith(color: Colors.white)),
-                          backgroundColor: AppColors.coral,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      );
+                      final text = 'My ${DateTime.now().year} on TrySomething\n'
+                          '$totalTried hobbies tried \u2022 $totalSteps steps completed\n'
+                          'Longest streak: ${longestStreak}d';
+                      Share.share(text);
                     },
                     icon: Icon(AppIcons.share, size: 18),
                     label: const Text('Share Your Year'),

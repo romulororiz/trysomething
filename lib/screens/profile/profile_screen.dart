@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:share_plus/share_plus.dart';
 import '../../core/media/image_upload.dart';
 import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
@@ -348,17 +349,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         // ── Share profile button ──
                         OutlinedButton.icon(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Profile sharing coming soon!',
-                                    style: AppTypography.sansLabel
-                                        .copyWith(color: Colors.white)),
-                                backgroundColor: AppColors.coral,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            );
+                            final text = '$displayName on TrySomething\n'
+                                '$totalTried hobbies tried \u2022 $totalSteps steps completed\n'
+                                'Longest streak: ${totalStreak}d';
+                            Share.share(text);
                           },
                           icon: Icon(AppIcons.shareProfile, size: 16),
                           label: const Text('Share Profile Card'),
