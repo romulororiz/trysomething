@@ -1,53 +1,73 @@
 # TrySomething — Project Context
 
-A hobby discovery app ("helps you actually start") built with Flutter. Dark-mode-first "Midnight Neon" design. Currently running on hardcoded seed data; architecture is Riverpod + GoRouter with SharedPreferences persistence. Backend roadmap planned and approved — see Production Roadmap section below.
+A hobby discovery app ("helps you actually start") built with Flutter. Dark-mode-first "Midnight Neon" design. Backend is live (Node.js + Express on Vercel, Neon Postgres). Architecture is Riverpod + GoRouter with API-backed repositories, Hive caching, and SharedPreferences persistence.
 
 ## Tech Stack
 
 ### Flutter Client
 - **Framework:** Flutter (Dart ^3.6.0)
 - **State:** flutter_riverpod ^2.6.1 — `StateNotifierProvider` for mutable state, `Provider` for derived
-- **Routing:** go_router ^14.8.1 — 24 routes, onboarding redirect guard
+- **Routing:** go_router ^14.8.1 — 26 routes, auth + onboarding redirect guards
 - **Fonts:** google_fonts ^6.2.1 — Source Serif 4 (headings), DM Sans (body), IBM Plex Mono (data)
 - **Icons:** material_design_icons_flutter, phosphor_flutter
 - **Images:** cached_network_image + dio
-- **Persistence:** shared_preferences (onboarding, user prefs, hobby statuses); feature state is in-memory
+- **HTTP:** Dio with AuthInterceptor (auto-attaches JWT, handles 401 refresh)
+- **Auth:** flutter_secure_storage (tokens), google_sign_in (Google OAuth)
+- **Caching:** Hive (hobby content cache), SharedPreferences (onboarding, user prefs, hobby statuses)
+- **Serialization:** Freezed + json_annotation with build_runner code generation
 - **Animations:** flutter_animate, plus many custom AnimationController/CustomPainter animations
 - **Bottom nav:** Local fork of `curved_navigation_bar` in `lib/components/curved_nav/` (5 files, customized `buttonElevation` parameter)
-- **Unused deps (ready for Batch 1):** Dio (HTTP), Hive (local cache), Freezed + JsonAnnotation (code gen), postgres ^3.4.5
 
-### Backend (planned, not yet implemented)
+### Backend (live)
 - **Server:** Node.js + Express (TypeScript), deployed to Vercel (serverless functions)
+- **URL:** `https://server-psi-seven-49.vercel.app/api`
 - **Database:** Neon Postgres (serverless)
-- **ORM:** Prisma
-- **Auth:** Email + password + Google sign-in (JWT-based, bcryptjs + jsonwebtoken + Google OAuth)
-- **Server repo:** `trysomething-api/` (separate project, scaffolded but not yet connected)
+- **ORM:** Prisma (12 models: 10 content + User + UserPreference)
+- **Auth:** Email + password + Google sign-in (JWT pair: access 15min, refresh 30 days)
+- **Server directory:** `server/` (within main repo)
 
 ## Architecture
 
 ```
 lib/
 ├── main.dart                    # Bootstrap, ProviderScope, SharedPreferences init
-├── router.dart                  # GoRouter: 24 routes, onboarding redirect guard
+├── router.dart                  # GoRouter: 26 routes, auth + onboarding redirect guards
 ├── models/
 │   ├── hobby.dart               # Hobby, KitItem, RoadmapStep, HobbyCategory, UserHobby, UserPreferences
 │   ├── features.dart            # UserProfile, Challenge, ScheduleEvent, HobbyCombo, FaqItem, CostBreakdown
 │   ├── social.dart              # JournalEntry, BuddyProfile, BuddyActivity, CommunityStory, NearbyUser
 │   ├── seed_data.dart           # Static SeedData: 9 categories, all hobbies with full content
 │   └── feature_seed_data.dart   # Static FeatureSeedData: journals, buddies, challenges, etc.
+├── core/
+│   ├── api/
+│   │   ├── api_client.dart      # Dio singleton with AuthInterceptor
+│   │   └── api_constants.dart   # All endpoint path constants
+│   └── auth/
+│       ├── auth_interceptor.dart # Attaches JWT, handles 401 auto-refresh
+│       └── token_storage.dart   # flutter_secure_storage wrapper
+├── data/
+│   └── repositories/
+│       ├── auth_repository.dart          # Auth interface
+│       ├── auth_repository_api.dart      # Auth API implementation
+│       ├── hobby_repository.dart         # Hobby interface
+│       └── hobby_repository_api.dart     # Hobby API implementation (Hive cache + SeedData fallback)
 ├── providers/
-│   ├── hobby_provider.dart      # hobbyList, hobbyById, categories, selectedCategory, filteredHobbies
+│   ├── auth_provider.dart       # AuthNotifier (register/login/google/logout/restore), AuthState, AuthMethod
+│   ├── hobby_provider.dart      # Async hobby providers (API → Hive cache → SeedData fallback)
 │   ├── user_provider.dart       # onboardingComplete, userPreferences, userHobbies (SharedPrefs-persisted)
 │   └── feature_providers.dart   # profile, journal, challenge, schedule, shoppingList, notes, compare, buddy, stories
 ├── screens/
 │   ├── main_shell.dart          # ShellRoute with 4-tab bottom nav (Discover, Explore, My Stuff, Profile)
+│   ├── auth/
+│   │   ├── login_screen.dart    # Email/password + Google sign-in
+│   │   └── register_screen.dart # Registration with Google sign-up
 │   ├── onboarding/              # 3-page animated onboarding (vibes, budget, time, solo/social)
 │   ├── feed/                    # Vertical discovery feed with category chip filter
-│   ├── explore/                 # 2-column category grid
+│   ├── explore/                 # 2-column category grid with filter panel
 │   ├── search/                  # Full-text search across hobbies
 │   ├── my_stuff/                # Personal library segmented by status (Saved/Trying/Active/Done)
 │   ├── profile/                 # User profile, stats, activity heatmap, skills radar
-│   ├── settings/                # Settings + onboarding reset
+│   ├── settings/                # Settings + onboarding reset + logout
 │   ├── detail/                  # Full hobby detail: hero, specs, starter kit, roadmap checklist
 │   ├── quickstart/              # Modal slide-up hobby starter sheet
 │   └── features/                # 16 feature screens (see Routes below)
@@ -148,12 +168,14 @@ fast=150ms, normal=250ms, slow=350ms, hero=500ms, spring=400ms. breathingGlow=18
 
 ## Data Flow
 
-1. `main.dart` initializes SharedPreferences, overrides `sharedPreferencesProvider`
-2. `router.dart` checks `onboardingCompleteProvider` → redirect to `/onboarding` or `/feed`
-3. Onboarding collects preferences → persisted via `userPreferencesProvider`
-4. Feed reads `hobbyListProvider` (from `SeedData`) filtered by `selectedCategoryProvider`
-5. Detail screen reads `hobbyByIdProvider`, user progress from `userHobbiesProvider`
-6. Feature screens read from `feature_providers.dart` (mostly in-memory, backed by `FeatureSeedData`)
+1. `main.dart` initializes SharedPreferences, overrides `sharedPreferencesProvider`, shows splash overlay during auth restore
+2. `AuthNotifier.tryRestoreSession()` checks for stored JWT tokens, calls `/users/me` to verify
+3. `router.dart` redirect chain: auth status (unauthenticated → `/login`) → onboarding check (→ `/onboarding`) → normal routing
+4. Router uses `refreshListenable` pattern (ValueNotifier + `ref.listen`) — NOT `ref.watch` (which would recreate the router)
+5. Onboarding collects preferences → persisted locally via `userPreferencesProvider`, synced to server fire-and-forget
+6. Feed reads `hobbyListProvider` (API → Hive cache → SeedData fallback) filtered by `selectedCategoryProvider`
+7. Detail screen reads `hobbyByIdProvider`, user progress from `userHobbiesProvider` (SharedPreferences only — not yet synced to server)
+8. Feature screens read from `feature_providers.dart` (mostly in-memory, backed by `FeatureSeedData`)
 
 ## Commands
 
@@ -164,439 +186,125 @@ flutter run             # Hot restart (Shift+R) required after theme/color const
 
 ## Current State
 
-- All 21 screens implemented with full UI + 16 feature screens registered in router
-- Midnight Neon dark theme applied across all 37+ files via token system
-- Custom curved bottom nav bar (local fork, web-compatible)
-- Category pills neutralized across all screens (sand bg, driftwood text)
-- All data is seed data (no backend connected yet)
-- SharedPreferences persists: onboarding completion, user preferences, hobby statuses/progress
-- Feature state (journal, schedule, notes) is in-memory only (resets on app restart)
-- Server project scaffolded at `../trysomething-api/` (npm + deps installed, not yet configured)
-
-## Production Roadmap — 8 Batches
-
-Full detailed plan: `.claude/plans/elegant-tickling-yao.md`
-
-### Stack decisions (approved)
-- **Server:** Node.js + Express (TypeScript) on Vercel (serverless)
-- **Database:** Neon Postgres + Prisma ORM
-- **Auth:** Email + password + Google sign-in (JWT)
-- **Flutter deps to wire:** Dio (HTTP), Hive (cache), Freezed (serialization), flutter_secure_storage, connectivity_plus, google_sign_in
-
-### Batch overview
-
-| # | Batch | What ships | Key screens affected |
-|---|-------|-----------|---------------------|
-| 1 | **Foundation** | Server scaffolding (Prisma, Neon, health endpoint). Flutter repository pattern + Dio/Hive init. Model serialization. Category UI mapping extraction. | 0 (architecture only) |
-| 2 | **Auth & Onboarding** | User registration (email + Google), login, JWT auth. Profile + preferences sync to server. | Login, Register (new), Onboarding, Profile, Settings |
-| 3 | **Core Content** | All hobby data from API. Replace SeedData reads with async providers. Loading/error states. | Feed, Explore, Search, Detail, Quickstart + 10 feature screens (**15 total**) |
-| 4 | **User Progress** | Save/try/complete hobbies via API. Roadmap step tracking. Streaks. Activity heatmap. | My Stuff, Detail, Quickstart, Profile |
-| 5 | **Personal Tools** | Journal, notes, scheduler, shopping list — full CRUD synced to server. | Journal, Notes, Scheduler, Shopping List |
-| 6 | **Social** | Buddy pairing, community stories with reactions, location-based nearby users. | Buddy Mode, Stories, Local Discovery |
-| 7 | **Gamification** | Weekly challenges, achievements (auto-unlock), year-in-review with real data. | Challenge, Year Review, Profile |
-| 8 | **Polish & Ship** | Push notifications (FCM), analytics, crash reporting, tests, CI/CD, app store submission. | Cross-cutting |
-
-### Database: 29 Prisma models total across all batches
-### Server: ~43 API endpoints across all batches
-### Flutter: ~71 new Dart files + ~25 existing files modified
-
-### Critical path files (touched in multiple batches)
-- `lib/main.dart` — Batches 1, 2, 8
-- `lib/providers/hobby_provider.dart` — Batches 1, 3
-- `lib/providers/user_provider.dart` — Batches 2, 4
-- `lib/providers/feature_providers.dart` — Batches 5, 6, 7
-- `lib/router.dart` — Batches 2, 8
-- `lib/models/hobby.dart` — Batch 1 (serialization + UI mapping extraction)
-- `prisma/schema.prisma` — Every batch adds models
-
-
-
-
-## TrySomething — Production Roadmap
-
----
-
-## Context
-
-The app is a polished Flutter UI prototype (26 screens, Midnight Neon dark theme, Riverpod + GoRouter) running entirely on hardcoded seed data.
-
-- Zero backend  
-- Zero auth  
-- Zero persistence beyond SharedPreferences for onboarding/preferences/hobby status  
-
-**Goal:** Take it to a production-ready, shippable app through 8 incremental batches following the user journey.
-
-**Current state:**  
-56 Dart files, ~4,200 LOC, all screens functional with mock data.
-
-**Target state:**  
-Real backend, auth, data sync, social features, push notifications, analytics, CI/CD, store submission.
-
----
-
-# Backend Stack
-
-- **Server:** Node.js + Express (TypeScript), deployed to Vercel (serverless functions)
-- **Database:** Neon Postgres (serverless)
-- **Auth:** Email + password + Google sign-in (JWT-based)
-- **Flutter HTTP:** Dio
-- **Local cache:** Hive
-- **Serialization:** Freezed + JsonAnnotation
-
----
-
-# Server Repo Structure (`trysomething-api/`)
-
-
-trysomething-api/
-api/
-hobbies/
-index.ts
-[id].ts
-search.ts
-auth/
-register.ts
-login.ts
-refresh.ts
-google.ts
-users/
-me.ts
-preferences.ts
-hobbies.ts
-activity.ts
-journal.ts
-notes.ts
-schedule.ts
-shopping.ts
-buddies/
-stories/
-challenges/
-lib/
-db.ts
-auth.ts
-middleware.ts
-prisma/
-schema.prisma
-vercel.json
-package.json
-tsconfig.json
-
-
----
-
-# Batch 1 — Foundation
-
-## Goal
-
-Architectural backbone on both sides.  
-App works identically but is ready for API swap.
-
----
-
-## Server Setup
-
-
-trysomething-api/
-api/
-health.ts
-lib/
-db.ts
-middleware.ts
-prisma/
-schema.prisma
-seed.ts
-vercel.json
-package.json
-tsconfig.json
-.env.example
-
-
-### Prisma Content Models (10)
-
-- Hobby
-- Category
-- KitItem
-- RoadmapStep
-- FaqItem
-- CostBreakdown
-- BudgetAlternative
-- HobbyCombo
-- SeasonalPick
-- MoodTag
-
----
-
-## Flutter Architecture
-
-### New Structure
-
-
-lib/core/
-api/
-storage/
-
-lib/data/
-repositories/
-datasources/
-
-lib/theme/
-
-
-### Key Changes
-
-- JSON serialization for models
-- Remove UI fields from models
-- Repository abstraction layer
-- Hive + Dio initialized
-- SeedData becomes fallback only
-
----
-
-# Batch 2 — Auth & Onboarding
-
-## Goal
-
-Users can:
-
-- Register (email or Google)
-- Log in
-- Sync profile + preferences
-
-### Server Models
-
-- User
-- UserPreference
-
-### Endpoints
-
-
-/api/auth/register
-/api/auth/login
-/api/auth/refresh
-/api/auth/google
-/api/users/me
-/api/users/preferences
-
-
-### Flutter Additions
-
-
-lib/core/auth/
-lib/screens/auth/
-lib/providers/auth_provider.dart
-
-
-Key changes:
-
-- Router guards
-- Auth interceptor
-- Secure token storage
-- Google Sign-In config
-
----
-
-# Batch 3 — Core Content
-
-## Goal
-
-Replace all SeedData with live API.
-
-15 screens transition from mock → real.
-
-### Endpoints
-
-
-/api/hobbies
-/api/hobbies/:id
-/api/hobbies/search
-/api/categories
-/api/hobbies/combos
-/api/hobbies/seasonal
-/api/hobbies/mood/:mood
-
-
-### Flutter Changes
-
-- AsyncNotifier providers
-- Loading + error states
-- Debounced search
-- Hive fallback cache
-
----
-
-# Batch 4 — User Progress
-
-## Goal
-
-Persist:
-
-- Saved hobbies
-- Step completion
-- Streaks
-- Activity logs
-
-### Models
-
-- UserHobby
-- UserCompletedStep
-- UserActivityLog
-
-Daily streak handled via server cron.
-
----
-
-# Batch 5 — Personal Tools
-
-## Goal
-
-Full CRUD sync for:
-
-- Journal
-- Notes
-- Scheduler
-- Shopping list
-
-### Models
-
-- JournalEntry
-- PersonalNote
-- ScheduleEvent
-- ShoppingListCheck
-
----
-
-# Batch 6 — Social & Community
-
-## Goal
-
-Real social features.
-
-### Models
-
-- BuddyPair
-- BuddyActivity
-- CommunityStory
-- StoryReaction
-- UserLocation
-
-Features:
-
-- Buddy requests
-- Story moderation
-- Nearby users (earthdistance)
-
----
-
-# Batch 7 — Gamification
-
-## Goal
-
-Challenges, achievements, year review.
-
-### Models
-
-- Challenge
-- UserChallenge
-- Achievement
-- UserAchievement
-
-Server handles achievement triggers + cron jobs.
-
----
-
-# Batch 8 — Production Polish
-
-## Goal
-
-Ship to App Store and Play Store.
-
-### Flutter New Dependencies
-
-- firebase_core
-- firebase_messaging
-- firebase_analytics
-- firebase_crashlytics
-- app_links
-
-### Analytics Events
-
-- hobby_viewed
-- hobby_saved
-- hobby_started
-- step_completed
-- journal_entry_created
-- search_performed
-- challenge_completed
-- buddy_paired
-- story_submitted
-
----
-
-# Testing
-
-
-test/unit/models/
-test/unit/repositories/
-test/unit/providers/
-test/widget/screens/
-test/widget/components/
-test/integration/
-
-
----
-
-# CI/CD
-
-
-.github/workflows/
-ci.yml
-cd_android.yml
-cd_ios.yml
-api_deploy.yml
-
-
----
-
-# Summary
-
-| Batch | Prisma Models | Endpoints | Screens Mock→Real |
-|-------|--------------|----------|------------------|
-| 1 | 10 | 1 | 0 |
-| 2 | 2 | 7 | 5 |
-| 3 | 0 | 11 | 15 |
-| 4 | 3 | 6 | 4 |
-| 5 | 4 | 4 | 4 |
-| 6 | 5 | 7 | 3 |
-| 7 | 4 | 5 | 3 |
-| 8 | 1 | 2 | 0 |
-
-**Totals**
-
-- 29 Prisma models  
-- ~43 endpoints  
-- 26 screens  
-- Full production pipeline  
-
----
-
-# Verification Per Batch
-
-## Server
+### Batch Progress
+
+| Batch | Name | Status | What shipped |
+| --- | --- | --- | --- |
+| 1 | **Foundation** | DONE | Server scaffolding (Prisma, Neon, health endpoint). Flutter repository pattern, Dio/Hive init, model serialization, category UI mapping extraction. |
+| 2 | **Auth & Onboarding** | DONE | Email + Google sign-in, JWT auth, login/register screens, splash screen, profile + preferences sync, router auth guards. |
+| 3 | **Core Content** | DONE | All hobby data from API. 15 screens transitioned from SeedData to async API-backed providers. Loading/error states. Hive caching with SeedData fallback. |
+| 4 | **User Progress** | NEXT | Plan written and approved (`.claude/plans/valiant-sauteeing-sutton.md`). Will persist hobby save/try/complete + step tracking + activity log + streaks to server. |
+| 5 | Personal Tools | Planned | Journal, notes, scheduler, shopping list — full CRUD synced to server. |
+| 6 | Social | Planned | Buddy pairing, community stories, nearby users. |
+| 7 | Gamification | Planned | Weekly challenges, achievements, year-in-review with real data. |
+| 8 | Polish & Ship | Planned | Push notifications, analytics, crash reporting, tests, CI/CD, app store submission. |
+
+### What's live now
+
+**Server (11 serverless functions, Vercel Hobby plan limit is 12):**
+
+- URL: `https://server-psi-seven-49.vercel.app/api`
+- 12 Prisma models: 10 content (Hobby, Category, KitItem, RoadmapStep, FaqItem, CostBreakdown, BudgetAlternative, HobbyCombo, SeasonalPick, MoodTag) + User + UserPreference
+- Auth endpoints: register, login, refresh, google (consolidated into `server/api/auth/[action].ts`)
+- User endpoints: me (GET/PUT), preferences (PUT) (consolidated into `server/api/users/[path].ts`)
+- Content endpoints: hobbies (list, detail, search, combos, seasonal, mood) + categories + per-hobby features (faq, cost, budget)
+- Server accepts both `idToken` and `accessToken` for Google sign-in (Windows/web sends accessToken, Android/iOS sends idToken)
+- JWT pair: access token 15min, refresh token 30 days
+- Google OAuth: 3 client IDs (Android, iOS, Web) — server checks `GOOGLE_CLIENT_IDS` env var
+
+**Flutter client:**
+
+- All 26 screens + login/register screens implemented with full Midnight Neon dark theme
+- API-backed repositories with Hive caching and SeedData fallback for hobby content
+- Auth: email + password + Google sign-in with flutter_secure_storage token persistence
+- Dio AuthInterceptor: auto-attaches Bearer token, catches 401, refreshes, retries
+- GoRouter redirect chain using `refreshListenable` pattern (stable router, no recreation)
+- Animated splash screen overlay during session restore (`AuthStatus.unknown`)
+- Per-button loading spinners (AuthMethod enum) on login/register screens
+- `debugPrint` logging on Google sign-in errors for diagnostics
+
+**What's NOT yet server-synced (still local-only):**
+
+- User hobby progress (save/try/complete, step tracking) — SharedPreferences only, Batch 4 will fix this
+- Feature state (journal, schedule, notes, challenges) — in-memory only, resets on restart
+- Activity heatmap — hardcoded seed data
+
+### Key architecture files
+
+**Server:**
+
+- `server/api/auth/[action].ts` — All 4 auth endpoints in one handler (register, login, refresh, google)
+- `server/api/users/[path].ts` — User endpoints (me, preferences) — Batch 4 will add hobbies/activity here
+- `server/prisma/schema.prisma` — All Prisma models
+- `server/lib/auth.ts` — JWT helpers (hashPassword, comparePassword, generateTokenPair, verifyAccessToken, requireAuth)
+- `server/lib/mappers.ts` — Response mapping (strips sensitive fields)
+- `server/lib/middleware.ts` — CORS, methodNotAllowed, errorResponse helpers
+- `server/vercel.json` — Route rules mapping URLs to consolidated handler files
+
+**Flutter:**
+
+- `lib/core/api/api_client.dart` — Dio singleton with AuthInterceptor
+- `lib/core/api/api_constants.dart` — All endpoint path constants (baseUrl + paths)
+- `lib/core/auth/token_storage.dart` — flutter_secure_storage wrapper (saveTokens, getAccessToken, clearTokens)
+- `lib/core/auth/auth_interceptor.dart` — Dio interceptor: attaches JWT, handles 401 refresh with separate Dio instance
+- `lib/providers/auth_provider.dart` — AuthNotifier (register/login/google/logout/restore), AuthState, AuthMethod enum
+- `lib/providers/hobby_provider.dart` — Async hobby providers (API → Hive cache → SeedData fallback)
+- `lib/providers/user_provider.dart` — SharedPreferences-backed onboarding/preferences/userHobbies
+- `lib/router.dart` — GoRouter with refreshListenable + auth/onboarding redirect chain
+- `lib/data/repositories/` — Repository pattern (interface + API impl) for auth and hobbies
+
+### Build commands
 
 ```bash
-npx prisma migrate dev
-Deploy to Vercel
-Test endpoints with curl/Postman
-Flutter
-flutter analyze
-Run app
-Test Android + Chrome
-Integration
+flutter analyze lib/              # Should show 0 errors
+flutter run                       # Basic run
+flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com  # With Google Sign-In idToken support on Android
+dart run build_runner build --delete-conflicting-outputs  # Regenerate Freezed/JSON files
+cd server && npx vercel --prod    # Deploy server to Vercel
+```
 
-Flutter calls live API
+### Google OAuth setup
 
-Auth persists
+- **Web client ID:** `973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com` (also used as `serverClientId` on Android via dart-define)
+- **Android client ID:** Bound to debug keystore SHA-1 + `com.example.trysomething`
+- **iOS client ID:** GoogleService-Info.plist in `ios/Runner/`, reversed client ID in Info.plist URL schemes
+- **Vercel env vars:** `GOOGLE_CLIENT_IDS` (all 3 comma-separated), `JWT_SECRET`, `JWT_REFRESH_SECRET`, `DATABASE_URL`
 
-Data round-trips
+### Known issues / notes
 
-Sync verified
+- Vercel Hobby plan allows max 12 serverless functions — currently at 11. All new endpoints must be consolidated into existing handler files.
+- Vercel deployments can go stale/down occasionally — if all endpoints return 404, redeploy with `cd server && npx vercel --prod`
+- On Windows, `google_sign_in` doesn't return `idToken` — uses `accessToken` fallback via Google userinfo endpoint
+- `GoogleSignIn.signOut()` hangs on Windows/Linux — called as fire-and-forget with `.catchError`
+- `String.fromEnvironment` returns `''` not `null` — serverClientId uses ternary null check
+
+## Production Roadmap — Remaining Batches
+
+Detailed Batch 4 plan: `.claude/plans/valiant-sauteeing-sutton.md`
+
+### Critical path files (touched in upcoming batches)
+
+- `lib/providers/user_provider.dart` — Batch 4
+- `lib/providers/feature_providers.dart` — Batches 5, 6, 7
+- `lib/router.dart` — Batch 8
+- `server/prisma/schema.prisma` — Every batch adds models
+- `server/api/users/[path].ts` — Batches 4, 5 (add new switch cases, no new serverless functions)
+
+### Remaining batch details
+
+**Batch 4 — User Progress (3 Prisma models, ~7 endpoints, 4 screens)**
+Models: UserHobby, UserCompletedStep, UserActivityLog. Optimistic updates with rollback. SharedPreferences as offline cache. Streak computed server-side from activity log. All endpoints consolidated into existing `users/[path].ts`.
+
+**Batch 5 — Personal Tools (4 models, ~4 endpoints, 4 screens)**
+Full CRUD sync for: Journal, Notes, Scheduler, Shopping list.
+
+**Batch 6 — Social & Community (5 models, ~7 endpoints, 3 screens)**
+Buddy pairing, community stories with reactions, nearby users (earthdistance).
+
+**Batch 7 — Gamification (4 models, ~5 endpoints, 3 screens)**
+Weekly challenges, achievements (auto-unlock), year-in-review with real data.
+
+**Batch 8 — Production Polish (1 model, ~2 endpoints, cross-cutting)**
+Push notifications (FCM), analytics, crash reporting, tests, CI/CD, app store submission.
+
+**Totals remaining:** 17 Prisma models, ~25 endpoints across 4 handler files
