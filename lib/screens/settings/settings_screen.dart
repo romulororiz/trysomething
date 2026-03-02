@@ -16,8 +16,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkMode = false;
+  late bool _notificationsEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = ref.read(sharedPreferencesProvider);
+    _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,19 +181,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: _notificationsEnabled ? 'Reminders on' : 'Reminders off',
                     trailing: Switch.adaptive(
                       value: _notificationsEnabled,
-                      onChanged: (v) => setState(() => _notificationsEnabled = v),
+                      onChanged: (v) {
+                        setState(() => _notificationsEnabled = v);
+                        ref.read(sharedPreferencesProvider).setBool('notifications_enabled', v);
+                      },
                       activeColor: AppColors.coral,
-                    ),
-                  ),
-
-                  _SettingsTile(
-                    icon: Icons.palette_outlined,
-                    title: 'Theme',
-                    subtitle: _darkMode ? 'Dark mode' : 'Light mode',
-                    trailing: Switch.adaptive(
-                      value: _darkMode,
-                      onChanged: (v) => setState(() => _darkMode = v),
-                      activeColor: AppColors.indigo,
                     ),
                   ),
 

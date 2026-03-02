@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/curated_pack.dart';
 import '../models/hobby.dart';
 import 'repository_providers.dart';
 
@@ -25,6 +26,11 @@ final categoriesProvider = FutureProvider<List<HobbyCategory>>((ref) {
 final relatedHobbiesProvider =
     FutureProvider.family<List<Hobby>, String>((ref, hobbyId) {
   return ref.watch(hobbyRepositoryProvider).getRelatedHobbies(hobbyId);
+});
+
+/// Curated packs from server
+final curatedPacksProvider = FutureProvider<List<CuratedPack>>((ref) {
+  return ref.watch(hobbyRepositoryProvider).getCuratedPacks();
 });
 
 // ═══════════════════════════════════════════════════════

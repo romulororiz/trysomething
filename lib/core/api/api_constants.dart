@@ -16,6 +16,7 @@ class ApiConstants {
 
   // Content
   static const hobbies = '/hobbies';
+  static const hobbyPacks = '/hobbies?packs=true';
   static const categories = '/categories';
   static const search = '/hobbies/search';
   static const combos = '/hobbies/combos';

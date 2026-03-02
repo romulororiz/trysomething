@@ -1,3 +1,4 @@
+import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
 import '../../models/seed_data.dart';
 import 'hobby_repository.dart';
@@ -35,5 +36,10 @@ class HobbyRepositoryImpl implements HobbyRepository {
       h.tags.any((t) => t.toLowerCase().contains(q)) ||
       h.hook.toLowerCase().contains(q)
     ).toList();
+  }
+
+  @override
+  Future<List<CuratedPack>> getCuratedPacks() async {
+    return []; // No seed data for curated packs
   }
 }

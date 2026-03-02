@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
 import '../../core/storage/cache_manager.dart';
+import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
 import 'hobby_repository.dart';
 import 'hobby_repository_impl.dart';
@@ -107,6 +108,18 @@ class HobbyRepositoryApi implements HobbyRepository {
           .toList();
     } catch (e) {
       return _seedFallback.searchHobbies(query);
+    }
+  }
+
+  @override
+  Future<List<CuratedPack>> getCuratedPacks() async {
+    try {
+      final response = await _dio.get(ApiConstants.hobbyPacks);
+      return (response.data as List)
+          .map((e) => CuratedPack.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      return _seedFallback.getCuratedPacks();
     }
   }
 

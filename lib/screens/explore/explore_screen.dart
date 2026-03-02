@@ -529,27 +529,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           const SizedBox(height: 28),
 
           // Curated Packs
-          Row(
-            children: [
-              Text('Curated Packs', style: AppTypography.sansSection),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.indigoPale,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                ),
-                child: Text(
-                  'COMING SOON',
-                  style: AppTypography.monoBadgeSmall.copyWith(
-                    color: AppColors.indigo,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          Text('Curated Packs', style: AppTypography.sansSection),
           const SizedBox(height: 14),
           ..._buildCuratedPacks(),
         ],
@@ -557,39 +537,99 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     );
   }
 
-  List<Widget> _buildCuratedPacks() {
-    final packs = [
-      (AppIcons.packIntroverts, '10 Hobbies for Introverts'),
-      (AppIcons.packBudget, 'Weekend Hobbies Under CHF 50'),
-      (AppIcons.packCommunity, 'Hobbies That Build Community'),
-    ];
+  static final _packIcons = <String, IconData>{
+    'introvert': AppIcons.packIntroverts,
+    'budget': AppIcons.packBudget,
+    'community': AppIcons.packCommunity,
+  };
 
-    return packs.map((pack) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: AppColors.warmWhite,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Icon(pack.$1, size: 26, color: AppColors.indigo),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                pack.$2,
-                style: AppTypography.sansBody.copyWith(fontWeight: FontWeight.w600),
-              ),
+  List<Widget> _buildCuratedPacks() {
+    final packsAsync = ref.watch(curatedPacksProvider);
+
+    return packsAsync.when(
+      loading: () => [
+        for (var i = 0; i < 3; i++)
+          Container(
+            height: 56,
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warmWhite,
+              borderRadius: BorderRadius.circular(14),
             ),
-            Opacity(
-              opacity: 0.2,
-              child: Icon(AppIcons.lock, size: 14, color: AppColors.warmGray),
+          ),
+      ],
+      error: (_, __) => [
+        // Fallback to static labels on error
+        for (final label in [
+          '10 Hobbies for Introverts',
+          'Weekend Hobbies Under CHF 50',
+          'Hobbies That Build Community',
+        ])
+          Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warmWhite,
+              borderRadius: BorderRadius.circular(14),
             ),
-          ],
-        ),
-      );
-    }).toList();
+            child: Row(
+              children: [
+                Icon(AppIcons.packIntroverts, size: 26, color: AppColors.indigo),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTypography.sansBody.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      data: (packs) => packs.map((pack) {
+        final icon = _packIcons[pack.icon] ?? AppIcons.packIntroverts;
+        return GestureDetector(
+          onTap: () {
+            // Search for the first tag keyword from the pack title
+            final keyword = pack.title.split(' ').last;
+            _searchController.text = keyword;
+            _searchFocusNode.requestFocus();
+            setState(() => _searchQuery = keyword);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warmWhite,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 26, color: AppColors.indigo),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pack.title,
+                        style: AppTypography.sansBody.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${pack.hobbies.length} hobbies',
+                        style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 16, color: AppColors.warmGray),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 
