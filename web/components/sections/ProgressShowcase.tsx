@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { TextReveal } from "@/components/ui/TextReveal";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -391,14 +391,61 @@ function DonePanel() {
   );
 }
 
+/* ─── Animated height panel container ─── */
+function PanelContainer({ activeStatus }: { activeStatus: string }) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+
+  // ResizeObserver watches the inner content div and updates height
+  // whenever its size changes (panel swap, content reflow, etc.)
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const h = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+      setHeight(h);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <motion.div
+      animate={{ height: height ?? "auto" }}
+      initial={false}
+      transition={{ duration: 0.35, ease: [0.33, 1, 0.68, 1] }}
+      className="w-full overflow-hidden flex items-center"
+      style={{ minHeight: 280 }}
+    >
+      <div ref={contentRef} className="w-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeStatus}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
+            className="w-full"
+          >
+            {activeStatus === "Saved" && <SavedPanel />}
+            {activeStatus === "Trying" && <TryingPanel />}
+            {activeStatus === "Active" && <ActivePanel />}
+            {activeStatus === "Done" && <DonePanel />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ─── Main Component ─── */
 export function ProgressShowcase() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-50px" });
-  const [activeStatus, setActiveStatus] = useState("Active");
+  const [activeStatus, setActiveStatus] = useState("Saved");
 
   return (
-    <section className="relative py-20 px-6 md:px-12" ref={ref}>
+    <section id="progress" className="relative py-20 px-6 md:px-12" ref={ref}>
       <div className="max-w-7xl mx-auto text-center">
         {/* Overline */}
         <motion.p
@@ -436,6 +483,7 @@ export function ProgressShowcase() {
         >
           <GlassCard className="p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-stretch gap-8 md:gap-10">
+
               {/* Left: Vertical status timeline */}
               <div className="flex flex-col items-center md:items-start gap-0 md:min-w-[200px]">
                 <p className="font-sans text-sm font-semibold text-near-black mb-5 self-start">
@@ -556,22 +604,8 @@ export function ProgressShowcase() {
               <div className="block md:hidden h-px bg-sand-dark/30 w-full" />
 
               {/* Right: Dynamic panel based on active status */}
-              <div className="flex-1 min-h-[280px] flex items-center">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeStatus}
-                    initial={{ opacity: 0, x: 16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -16 }}
-                    transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
-                    className="w-full"
-                  >
-                    {activeStatus === "Saved" && <SavedPanel />}
-                    {activeStatus === "Trying" && <TryingPanel />}
-                    {activeStatus === "Active" && <ActivePanel />}
-                    {activeStatus === "Done" && <DonePanel />}
-                  </motion.div>
-                </AnimatePresence>
+              <div className="flex-1 flex items-center overflow-hidden">
+                <PanelContainer activeStatus={activeStatus} />
               </div>
             </div>
           </GlassCard>
