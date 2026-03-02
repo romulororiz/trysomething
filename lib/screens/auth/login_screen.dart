@@ -38,6 +38,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
+      final user = ref.read(authProvider).user;
+      if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
       ref.read(userHobbiesProvider.notifier).syncFromServer();
       ref.read(journalProvider.notifier).loadFromServer();
       ref.read(scheduleProvider.notifier).loadFromServer();
@@ -51,6 +53,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _googleSignIn() async {
     final success = await ref.read(authProvider.notifier).loginWithGoogle();
     if (success && mounted) {
+      final user = ref.read(authProvider).user;
+      if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
       ref.read(userHobbiesProvider.notifier).syncFromServer();
       ref.read(journalProvider.notifier).loadFromServer();
       ref.read(scheduleProvider.notifier).loadFromServer();

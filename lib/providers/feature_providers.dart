@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/repositories/auth_repository.dart';
 import '../data/repositories/gamification_repository.dart';
 import '../data/repositories/personal_tools_repository.dart';
 import '../data/repositories/social_repository.dart';
 import '../models/activity_log.dart';
+import '../models/auth.dart';
 import '../models/features.dart';
 import '../models/gamification.dart';
 import '../models/social.dart';
+import 'auth_provider.dart';
 import 'repository_providers.dart';
 import 'user_provider.dart';
 
@@ -39,15 +42,45 @@ final moodTagsProvider = FutureProvider<Map<String, List<String>>>((ref) {
 // ═══════════════════════════════════════════════════════
 
 class ProfileNotifier extends StateNotifier<UserProfile> {
-  ProfileNotifier() : super(const UserProfile());
+  final AuthRepository _repo;
+  ProfileNotifier(this._repo) : super(const UserProfile());
 
-  void updateUsername(String name) => state = state.copyWith(username: name);
-  void updateBio(String bio) => state = state.copyWith(bio: bio);
-  void updateAvatar(String? url) => state = state.copyWith(avatarUrl: url);
+  void initFromAuth(AuthUser user) {
+    state = UserProfile(
+      username: user.displayName,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl,
+    );
+  }
+
+  void updateUsername(String name) {
+    state = state.copyWith(username: name);
+    _syncToServer(displayName: name);
+  }
+
+  void updateBio(String bio) {
+    state = state.copyWith(bio: bio);
+    _syncToServer(bio: bio);
+  }
+
+  void updateAvatar(String? url) {
+    state = state.copyWith(avatarUrl: url);
+    if (url != null) _syncToServer(avatarUrl: url);
+  }
+
+  void _syncToServer({String? displayName, String? bio, String? avatarUrl}) {
+    _repo
+        .updateProfile(
+            displayName: displayName, bio: bio, avatarUrl: avatarUrl)
+        .then((_) {})
+        .catchError((e) {
+      debugPrint('[Profile] Failed to sync: $e');
+    });
+  }
 }
 
 final profileProvider = StateNotifierProvider<ProfileNotifier, UserProfile>(
-  (ref) => ProfileNotifier(),
+  (ref) => ProfileNotifier(ref.watch(authRepositoryProvider)),
 );
 
 // ═══════════════════════════════════════════════════════

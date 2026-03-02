@@ -9,6 +9,7 @@ class AuthUser with _$AuthUser {
     required String id,
     required String email,
     required String displayName,
+    @Default('') String bio,
     String? avatarUrl,
     String? createdAt,
   }) = _AuthUser;

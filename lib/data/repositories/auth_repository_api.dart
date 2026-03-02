@@ -66,10 +66,12 @@ class AuthRepositoryApi implements AuthRepository {
   @override
   Future<AuthUser> updateProfile({
     String? displayName,
+    String? bio,
     String? avatarUrl,
   }) async {
     final response = await _dio.put(ApiConstants.usersMe, data: {
       if (displayName != null) 'displayName': displayName,
+      if (bio != null) 'bio': bio,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
     });
     return AuthUser.fromJson(response.data as Map<String, dynamic>);

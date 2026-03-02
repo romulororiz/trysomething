@@ -45,6 +45,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (success && mounted) {
       // New user → go through onboarding (sync fires but will be empty)
+      final user = ref.read(authProvider).user;
+      if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
       ref.read(userHobbiesProvider.notifier).syncFromServer();
       ref.read(journalProvider.notifier).loadFromServer();
       ref.read(scheduleProvider.notifier).loadFromServer();
@@ -58,6 +60,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _googleSignUp() async {
     final success = await ref.read(authProvider.notifier).loginWithGoogle();
     if (success && mounted) {
+      final user = ref.read(authProvider).user;
+      if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
       ref.read(userHobbiesProvider.notifier).syncFromServer();
       ref.read(journalProvider.notifier).loadFromServer();
       ref.read(scheduleProvider.notifier).loadFromServer();

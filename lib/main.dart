@@ -50,7 +50,11 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
     // Attempt to restore auth session from stored tokens, then sync hobbies
     Future.microtask(() async {
       await ref.read(authProvider.notifier).tryRestoreSession();
-      if (ref.read(authProvider).status == AuthStatus.authenticated) {
+      final authState = ref.read(authProvider);
+      if (authState.status == AuthStatus.authenticated) {
+        if (authState.user != null) {
+          ref.read(profileProvider.notifier).initFromAuth(authState.user!);
+        }
         ref.read(userHobbiesProvider.notifier).syncFromServer();
         ref.read(journalProvider.notifier).loadFromServer();
         ref.read(scheduleProvider.notifier).loadFromServer();

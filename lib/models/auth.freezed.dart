@@ -23,6 +23,7 @@ mixin _$AuthUser {
   String get id => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   String get displayName => throw _privateConstructorUsedError;
+  String get bio => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
   String? get createdAt => throw _privateConstructorUsedError;
 
@@ -45,6 +46,7 @@ abstract class $AuthUserCopyWith<$Res> {
       {String id,
       String email,
       String displayName,
+      String bio,
       String? avatarUrl,
       String? createdAt});
 }
@@ -67,6 +69,7 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
     Object? id = null,
     Object? email = null,
     Object? displayName = null,
+    Object? bio = null,
     Object? avatarUrl = freezed,
     Object? createdAt = freezed,
   }) {
@@ -82,6 +85,10 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
       displayName: null == displayName
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
+              as String,
+      bio: null == bio
+          ? _value.bio
+          : bio // ignore: cast_nullable_to_non_nullable
               as String,
       avatarUrl: freezed == avatarUrl
           ? _value.avatarUrl
@@ -107,6 +114,7 @@ abstract class _$$AuthUserImplCopyWith<$Res>
       {String id,
       String email,
       String displayName,
+      String bio,
       String? avatarUrl,
       String? createdAt});
 }
@@ -127,6 +135,7 @@ class __$$AuthUserImplCopyWithImpl<$Res>
     Object? id = null,
     Object? email = null,
     Object? displayName = null,
+    Object? bio = null,
     Object? avatarUrl = freezed,
     Object? createdAt = freezed,
   }) {
@@ -142,6 +151,10 @@ class __$$AuthUserImplCopyWithImpl<$Res>
       displayName: null == displayName
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
+              as String,
+      bio: null == bio
+          ? _value.bio
+          : bio // ignore: cast_nullable_to_non_nullable
               as String,
       avatarUrl: freezed == avatarUrl
           ? _value.avatarUrl
@@ -162,6 +175,7 @@ class _$AuthUserImpl implements _AuthUser {
       {required this.id,
       required this.email,
       required this.displayName,
+      this.bio = '',
       this.avatarUrl,
       this.createdAt});
 
@@ -175,13 +189,16 @@ class _$AuthUserImpl implements _AuthUser {
   @override
   final String displayName;
   @override
+  @JsonKey()
+  final String bio;
+  @override
   final String? avatarUrl;
   @override
   final String? createdAt;
 
   @override
   String toString() {
-    return 'AuthUser(id: $id, email: $email, displayName: $displayName, avatarUrl: $avatarUrl, createdAt: $createdAt)';
+    return 'AuthUser(id: $id, email: $email, displayName: $displayName, bio: $bio, avatarUrl: $avatarUrl, createdAt: $createdAt)';
   }
 
   @override
@@ -193,6 +210,7 @@ class _$AuthUserImpl implements _AuthUser {
             (identical(other.email, email) || other.email == email) &&
             (identical(other.displayName, displayName) ||
                 other.displayName == displayName) &&
+            (identical(other.bio, bio) || other.bio == bio) &&
             (identical(other.avatarUrl, avatarUrl) ||
                 other.avatarUrl == avatarUrl) &&
             (identical(other.createdAt, createdAt) ||
@@ -201,8 +219,8 @@ class _$AuthUserImpl implements _AuthUser {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, email, displayName, avatarUrl, createdAt);
+  int get hashCode => Object.hash(
+      runtimeType, id, email, displayName, bio, avatarUrl, createdAt);
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.
@@ -225,6 +243,7 @@ abstract class _AuthUser implements AuthUser {
       {required final String id,
       required final String email,
       required final String displayName,
+      final String bio,
       final String? avatarUrl,
       final String? createdAt}) = _$AuthUserImpl;
 
@@ -237,6 +256,8 @@ abstract class _AuthUser implements AuthUser {
   String get email;
   @override
   String get displayName;
+  @override
+  String get bio;
   @override
   String? get avatarUrl;
   @override
