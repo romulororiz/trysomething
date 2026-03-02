@@ -158,9 +158,13 @@ model User {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
-  preferences  UserPreference?
-  hobbies      UserHobby[]
-  activityLogs UserActivityLog[]
+  preferences    UserPreference?
+  hobbies        UserHobby[]
+  activityLogs   UserActivityLog[]
+  journalEntries JournalEntry[]
+  personalNotes  PersonalNote[]
+  scheduleEvents ScheduleEvent[]
+  shoppingChecks ShoppingCheck[]
 }
 
 model UserPreference {
@@ -225,4 +229,58 @@ model UserActivityLog {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// ═══════════════════════════════════════════════════
+//  PERSONAL TOOLS MODELS (Phase 5)
+// ═══════════════════════════════════════════════════
+
+model JournalEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  hobbyId   String
+  text      String
+  photoUrl  String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model PersonalNote {
+  id       String @id @default(uuid())
+  userId   String
+  hobbyId  String
+  stepId   String
+  text     String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hobbyId, stepId])
+}
+
+model ScheduleEvent {
+  id              String @id @default(uuid())
+  userId          String
+  hobbyId         String
+  dayOfWeek       Int
+  startTime       String
+  durationMinutes Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ShoppingCheck {
+  id       String  @id @default(uuid())
+  userId   String
+  hobbyId  String
+  itemName String
+  checked  Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hobbyId, itemName])
 }
