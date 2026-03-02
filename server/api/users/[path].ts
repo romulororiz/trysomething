@@ -278,10 +278,11 @@ async function handleHobbyDetail(
         });
       }
 
-      // Update lastActivityAt
-      await prisma.userHobby.update({
+      // Ensure hobby exists + update lastActivityAt
+      await prisma.userHobby.upsert({
         where: { userId_hobbyId: { userId, hobbyId } },
-        data: { lastActivityAt: new Date() },
+        create: { userId, hobbyId, status: "trying", lastActivityAt: new Date() },
+        update: { lastActivityAt: new Date() },
       });
 
       await prisma.userActivityLog.create({
@@ -300,12 +301,20 @@ async function handleHobbyDetail(
       return;
     }
 
-    // PUT /users/hobbies/:hobbyId — update status
+    // PUT /users/hobbies/:hobbyId — update status (upsert to handle race conditions)
     if (req.method === "PUT") {
       const { status, startedAt, completedAt } = req.body ?? {};
-      const hobby = await prisma.userHobby.update({
+      const hobby = await prisma.userHobby.upsert({
         where: { userId_hobbyId: { userId, hobbyId } },
-        data: {
+        create: {
+          userId,
+          hobbyId,
+          status: status ?? "trying",
+          ...(startedAt && { startedAt: new Date(startedAt) }),
+          ...(completedAt && { completedAt: new Date(completedAt) }),
+          lastActivityAt: new Date(),
+        },
+        update: {
           ...(status !== undefined && { status }),
           ...(startedAt !== undefined && {
             startedAt: startedAt ? new Date(startedAt) : null,
