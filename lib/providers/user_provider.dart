@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/repositories/user_progress_repository.dart';
+import '../data/repositories/user_progress_repository_api.dart';
 import '../models/hobby.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -99,16 +102,22 @@ class UserPreferencesNotifier extends StateNotifier<UserPreferences> {
 //  USER HOBBIES (Saved / Trying / Active / Done)
 // ═══════════════════════════════════════════════════════
 
+final userProgressRepositoryProvider = Provider<UserProgressRepository>((ref) {
+  return UserProgressRepositoryApi();
+});
+
 final userHobbiesProvider = StateNotifierProvider<UserHobbiesNotifier, Map<String, UserHobby>>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return UserHobbiesNotifier(prefs);
+  final repo = ref.watch(userProgressRepositoryProvider);
+  return UserHobbiesNotifier(prefs, repo);
 });
 
 class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   final SharedPreferences _prefs;
+  final UserProgressRepository _repo;
   static const _key = 'user_hobbies';
 
-  UserHobbiesNotifier(this._prefs) : super(_load(_prefs));
+  UserHobbiesNotifier(this._prefs, this._repo) : super(_load(_prefs));
 
   static Map<String, UserHobby> _load(SharedPreferences prefs) {
     final json = prefs.getString(_key);
@@ -129,20 +138,55 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
     _prefs.setString(_key, jsonEncode(map));
   }
 
+  /// Fire-and-forget API call with rollback on failure.
+  void _apiCall(
+    Map<String, UserHobby> snapshot,
+    Future<void> Function() call,
+  ) {
+    call().catchError((e) {
+      debugPrint('[UserHobbies] API call failed, rolling back: $e');
+      state = snapshot;
+      _save();
+    });
+  }
+
+  /// Sync local state with server. Called after login/session restore.
+  /// If server has data, it replaces local. If server is empty but local
+  /// has data, pushes local to server (first-login migration).
+  Future<void> syncFromServer() async {
+    try {
+      final serverHobbies = await _repo.getHobbies();
+      if (serverHobbies.isNotEmpty) {
+        // Server is source of truth — replace local state
+        state = {for (final h in serverHobbies) h.hobbyId: h};
+        _save();
+      } else if (state.isNotEmpty) {
+        // First login with existing local data — push to server
+        await _repo.syncHobbies(state.values.toList());
+      }
+    } catch (e) {
+      debugPrint('[UserHobbies] syncFromServer failed: $e');
+    }
+  }
+
   void saveHobby(String hobbyId) {
     if (state.containsKey(hobbyId)) return;
+    final snapshot = Map<String, UserHobby>.from(state);
     state = {
       ...state,
       hobbyId: UserHobby(hobbyId: hobbyId, status: HobbyStatus.saved),
     };
     _save();
+    _apiCall(snapshot, () async => _repo.saveHobby(hobbyId));
   }
 
   void unsaveHobby(String hobbyId) {
     final hobby = state[hobbyId];
     if (hobby == null || hobby.status != HobbyStatus.saved) return;
+    final snapshot = Map<String, UserHobby>.from(state);
     state = Map.from(state)..remove(hobbyId);
     _save();
+    _apiCall(snapshot, () => _repo.unsaveHobby(hobbyId));
   }
 
   void toggleSave(String hobbyId) {
@@ -158,40 +202,51 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   }
 
   void startTrying(String hobbyId) {
+    final snapshot = Map<String, UserHobby>.from(state);
     final existing = state[hobbyId];
+    final now = DateTime.now();
     state = {
       ...state,
       hobbyId: UserHobby(
         hobbyId: hobbyId,
         status: HobbyStatus.trying,
         completedStepIds: existing?.completedStepIds ?? {},
-        startedAt: DateTime.now(),
+        startedAt: now,
       ),
     };
     _save();
+    _apiCall(snapshot, () async =>
+      _repo.updateStatus(hobbyId, HobbyStatus.trying, startedAt: now));
   }
 
   void setActive(String hobbyId) {
     final existing = state[hobbyId];
     if (existing == null) return;
+    final snapshot = Map<String, UserHobby>.from(state);
     state = {
       ...state,
       hobbyId: existing.copyWith(status: HobbyStatus.active),
     };
     _save();
+    _apiCall(snapshot, () async =>
+      _repo.updateStatus(hobbyId, HobbyStatus.active));
   }
 
   void setDone(String hobbyId) {
     final existing = state[hobbyId];
     if (existing == null) return;
+    final snapshot = Map<String, UserHobby>.from(state);
     state = {
       ...state,
       hobbyId: existing.copyWith(status: HobbyStatus.done),
     };
     _save();
+    _apiCall(snapshot, () async =>
+      _repo.updateStatus(hobbyId, HobbyStatus.done, completedAt: DateTime.now()));
   }
 
   void toggleStep(String hobbyId, String stepId) {
+    final snapshot = Map<String, UserHobby>.from(state);
     final existing = state[hobbyId] ?? UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying);
     final steps = Set<String>.from(existing.completedStepIds);
     if (steps.contains(stepId)) {
@@ -204,6 +259,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       hobbyId: existing.copyWith(completedStepIds: steps),
     };
     _save();
+    _apiCall(snapshot, () async => _repo.toggleStep(hobbyId, stepId));
   }
 
   bool isStepCompleted(String hobbyId, String stepId) {

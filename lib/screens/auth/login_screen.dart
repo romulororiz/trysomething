@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
@@ -36,6 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
+      ref.read(userHobbiesProvider.notifier).syncFromServer();
       context.go('/feed');
     }
   }
@@ -43,6 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _googleSignIn() async {
     final success = await ref.read(authProvider.notifier).loginWithGoogle();
     if (success && mounted) {
+      ref.read(userHobbiesProvider.notifier).syncFromServer();
       context.go('/feed');
     }
   }

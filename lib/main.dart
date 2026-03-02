@@ -46,9 +46,12 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
   @override
   void initState() {
     super.initState();
-    // Attempt to restore auth session from stored tokens
-    Future.microtask(() {
-      ref.read(authProvider.notifier).tryRestoreSession();
+    // Attempt to restore auth session from stored tokens, then sync hobbies
+    Future.microtask(() async {
+      await ref.read(authProvider.notifier).tryRestoreSession();
+      if (ref.read(authProvider).status == AuthStatus.authenticated) {
+        ref.read(userHobbiesProvider.notifier).syncFromServer();
+      }
     });
   }
 

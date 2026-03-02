@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
@@ -42,7 +43,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
 
     if (success && mounted) {
-      // New user → go through onboarding
+      // New user → go through onboarding (sync fires but will be empty)
+      ref.read(userHobbiesProvider.notifier).syncFromServer();
       context.go('/onboarding');
     }
   }
@@ -50,6 +52,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _googleSignUp() async {
     final success = await ref.read(authProvider.notifier).loginWithGoogle();
     if (success && mounted) {
+      ref.read(userHobbiesProvider.notifier).syncFromServer();
       context.go('/onboarding');
     }
   }
