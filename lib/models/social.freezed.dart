@@ -494,6 +494,7 @@ BuddyActivity _$BuddyActivityFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$BuddyActivity {
   String get userId => throw _privateConstructorUsedError;
+  String get userName => throw _privateConstructorUsedError;
   String get text => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
 
@@ -513,7 +514,7 @@ abstract class $BuddyActivityCopyWith<$Res> {
           BuddyActivity value, $Res Function(BuddyActivity) then) =
       _$BuddyActivityCopyWithImpl<$Res, BuddyActivity>;
   @useResult
-  $Res call({String userId, String text, DateTime timestamp});
+  $Res call({String userId, String userName, String text, DateTime timestamp});
 }
 
 /// @nodoc
@@ -532,6 +533,7 @@ class _$BuddyActivityCopyWithImpl<$Res, $Val extends BuddyActivity>
   @override
   $Res call({
     Object? userId = null,
+    Object? userName = null,
     Object? text = null,
     Object? timestamp = null,
   }) {
@@ -539,6 +541,10 @@ class _$BuddyActivityCopyWithImpl<$Res, $Val extends BuddyActivity>
       userId: null == userId
           ? _value.userId
           : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      userName: null == userName
+          ? _value.userName
+          : userName // ignore: cast_nullable_to_non_nullable
               as String,
       text: null == text
           ? _value.text
@@ -560,7 +566,7 @@ abstract class _$$BuddyActivityImplCopyWith<$Res>
       __$$BuddyActivityImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String userId, String text, DateTime timestamp});
+  $Res call({String userId, String userName, String text, DateTime timestamp});
 }
 
 /// @nodoc
@@ -577,6 +583,7 @@ class __$$BuddyActivityImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? userId = null,
+    Object? userName = null,
     Object? text = null,
     Object? timestamp = null,
   }) {
@@ -584,6 +591,10 @@ class __$$BuddyActivityImplCopyWithImpl<$Res>
       userId: null == userId
           ? _value.userId
           : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      userName: null == userName
+          ? _value.userName
+          : userName // ignore: cast_nullable_to_non_nullable
               as String,
       text: null == text
           ? _value.text
@@ -601,7 +612,10 @@ class __$$BuddyActivityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$BuddyActivityImpl implements _BuddyActivity {
   const _$BuddyActivityImpl(
-      {required this.userId, required this.text, required this.timestamp});
+      {required this.userId,
+      required this.userName,
+      required this.text,
+      required this.timestamp});
 
   factory _$BuddyActivityImpl.fromJson(Map<String, dynamic> json) =>
       _$$BuddyActivityImplFromJson(json);
@@ -609,13 +623,15 @@ class _$BuddyActivityImpl implements _BuddyActivity {
   @override
   final String userId;
   @override
+  final String userName;
+  @override
   final String text;
   @override
   final DateTime timestamp;
 
   @override
   String toString() {
-    return 'BuddyActivity(userId: $userId, text: $text, timestamp: $timestamp)';
+    return 'BuddyActivity(userId: $userId, userName: $userName, text: $text, timestamp: $timestamp)';
   }
 
   @override
@@ -624,6 +640,8 @@ class _$BuddyActivityImpl implements _BuddyActivity {
         (other.runtimeType == runtimeType &&
             other is _$BuddyActivityImpl &&
             (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.userName, userName) ||
+                other.userName == userName) &&
             (identical(other.text, text) || other.text == text) &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp));
@@ -631,7 +649,8 @@ class _$BuddyActivityImpl implements _BuddyActivity {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, userId, text, timestamp);
+  int get hashCode =>
+      Object.hash(runtimeType, userId, userName, text, timestamp);
 
   /// Create a copy of BuddyActivity
   /// with the given fields replaced by the non-null parameter values.
@@ -652,6 +671,7 @@ class _$BuddyActivityImpl implements _BuddyActivity {
 abstract class _BuddyActivity implements BuddyActivity {
   const factory _BuddyActivity(
       {required final String userId,
+      required final String userName,
       required final String text,
       required final DateTime timestamp}) = _$BuddyActivityImpl;
 
@@ -660,6 +680,8 @@ abstract class _BuddyActivity implements BuddyActivity {
 
   @override
   String get userId;
+  @override
+  String get userName;
   @override
   String get text;
   @override
@@ -685,6 +707,7 @@ mixin _$CommunityStory {
   String get quote => throw _privateConstructorUsedError;
   String get hobbyId => throw _privateConstructorUsedError;
   Map<String, int> get reactions => throw _privateConstructorUsedError;
+  List<String> get userReactions => throw _privateConstructorUsedError;
 
   /// Serializes this CommunityStory to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -708,7 +731,8 @@ abstract class $CommunityStoryCopyWith<$Res> {
       String authorInitial,
       String quote,
       String hobbyId,
-      Map<String, int> reactions});
+      Map<String, int> reactions,
+      List<String> userReactions});
 }
 
 /// @nodoc
@@ -732,6 +756,7 @@ class _$CommunityStoryCopyWithImpl<$Res, $Val extends CommunityStory>
     Object? quote = null,
     Object? hobbyId = null,
     Object? reactions = null,
+    Object? userReactions = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -758,6 +783,10 @@ class _$CommunityStoryCopyWithImpl<$Res, $Val extends CommunityStory>
           ? _value.reactions
           : reactions // ignore: cast_nullable_to_non_nullable
               as Map<String, int>,
+      userReactions: null == userReactions
+          ? _value.userReactions
+          : userReactions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -776,7 +805,8 @@ abstract class _$$CommunityStoryImplCopyWith<$Res>
       String authorInitial,
       String quote,
       String hobbyId,
-      Map<String, int> reactions});
+      Map<String, int> reactions,
+      List<String> userReactions});
 }
 
 /// @nodoc
@@ -798,6 +828,7 @@ class __$$CommunityStoryImplCopyWithImpl<$Res>
     Object? quote = null,
     Object? hobbyId = null,
     Object? reactions = null,
+    Object? userReactions = null,
   }) {
     return _then(_$CommunityStoryImpl(
       id: null == id
@@ -824,6 +855,10 @@ class __$$CommunityStoryImplCopyWithImpl<$Res>
           ? _value._reactions
           : reactions // ignore: cast_nullable_to_non_nullable
               as Map<String, int>,
+      userReactions: null == userReactions
+          ? _value._userReactions
+          : userReactions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ));
   }
 }
@@ -837,8 +872,10 @@ class _$CommunityStoryImpl implements _CommunityStory {
       required this.authorInitial,
       required this.quote,
       required this.hobbyId,
-      final Map<String, int> reactions = const {}})
-      : _reactions = reactions;
+      final Map<String, int> reactions = const {},
+      final List<String> userReactions = const []})
+      : _reactions = reactions,
+        _userReactions = userReactions;
 
   factory _$CommunityStoryImpl.fromJson(Map<String, dynamic> json) =>
       _$$CommunityStoryImplFromJson(json);
@@ -862,9 +899,18 @@ class _$CommunityStoryImpl implements _CommunityStory {
     return EqualUnmodifiableMapView(_reactions);
   }
 
+  final List<String> _userReactions;
+  @override
+  @JsonKey()
+  List<String> get userReactions {
+    if (_userReactions is EqualUnmodifiableListView) return _userReactions;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_userReactions);
+  }
+
   @override
   String toString() {
-    return 'CommunityStory(id: $id, authorName: $authorName, authorInitial: $authorInitial, quote: $quote, hobbyId: $hobbyId, reactions: $reactions)';
+    return 'CommunityStory(id: $id, authorName: $authorName, authorInitial: $authorInitial, quote: $quote, hobbyId: $hobbyId, reactions: $reactions, userReactions: $userReactions)';
   }
 
   @override
@@ -880,13 +926,22 @@ class _$CommunityStoryImpl implements _CommunityStory {
             (identical(other.quote, quote) || other.quote == quote) &&
             (identical(other.hobbyId, hobbyId) || other.hobbyId == hobbyId) &&
             const DeepCollectionEquality()
-                .equals(other._reactions, _reactions));
+                .equals(other._reactions, _reactions) &&
+            const DeepCollectionEquality()
+                .equals(other._userReactions, _userReactions));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, authorName, authorInitial,
-      quote, hobbyId, const DeepCollectionEquality().hash(_reactions));
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      authorName,
+      authorInitial,
+      quote,
+      hobbyId,
+      const DeepCollectionEquality().hash(_reactions),
+      const DeepCollectionEquality().hash(_userReactions));
 
   /// Create a copy of CommunityStory
   /// with the given fields replaced by the non-null parameter values.
@@ -912,7 +967,8 @@ abstract class _CommunityStory implements CommunityStory {
       required final String authorInitial,
       required final String quote,
       required final String hobbyId,
-      final Map<String, int> reactions}) = _$CommunityStoryImpl;
+      final Map<String, int> reactions,
+      final List<String> userReactions}) = _$CommunityStoryImpl;
 
   factory _CommunityStory.fromJson(Map<String, dynamic> json) =
       _$CommunityStoryImpl.fromJson;
@@ -929,6 +985,8 @@ abstract class _CommunityStory implements CommunityStory {
   String get hobbyId;
   @override
   Map<String, int> get reactions;
+  @override
+  List<String> get userReactions;
 
   /// Create a copy of CommunityStory
   /// with the given fields replaced by the non-null parameter values.
@@ -944,6 +1002,7 @@ NearbyUser _$NearbyUserFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$NearbyUser {
+  String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get avatarInitial => throw _privateConstructorUsedError;
   String get hobbyId => throw _privateConstructorUsedError;
@@ -967,7 +1026,8 @@ abstract class $NearbyUserCopyWith<$Res> {
       _$NearbyUserCopyWithImpl<$Res, NearbyUser>;
   @useResult
   $Res call(
-      {String name,
+      {String id,
+      String name,
       String avatarInitial,
       String hobbyId,
       String distance,
@@ -989,6 +1049,7 @@ class _$NearbyUserCopyWithImpl<$Res, $Val extends NearbyUser>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
     Object? name = null,
     Object? avatarInitial = null,
     Object? hobbyId = null,
@@ -996,6 +1057,10 @@ class _$NearbyUserCopyWithImpl<$Res, $Val extends NearbyUser>
     Object? startedText = null,
   }) {
     return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -1029,7 +1094,8 @@ abstract class _$$NearbyUserImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String name,
+      {String id,
+      String name,
       String avatarInitial,
       String hobbyId,
       String distance,
@@ -1049,6 +1115,7 @@ class __$$NearbyUserImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
     Object? name = null,
     Object? avatarInitial = null,
     Object? hobbyId = null,
@@ -1056,6 +1123,10 @@ class __$$NearbyUserImplCopyWithImpl<$Res>
     Object? startedText = null,
   }) {
     return _then(_$NearbyUserImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -1084,7 +1155,8 @@ class __$$NearbyUserImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$NearbyUserImpl implements _NearbyUser {
   const _$NearbyUserImpl(
-      {required this.name,
+      {required this.id,
+      required this.name,
       required this.avatarInitial,
       required this.hobbyId,
       required this.distance,
@@ -1093,6 +1165,8 @@ class _$NearbyUserImpl implements _NearbyUser {
   factory _$NearbyUserImpl.fromJson(Map<String, dynamic> json) =>
       _$$NearbyUserImplFromJson(json);
 
+  @override
+  final String id;
   @override
   final String name;
   @override
@@ -1106,7 +1180,7 @@ class _$NearbyUserImpl implements _NearbyUser {
 
   @override
   String toString() {
-    return 'NearbyUser(name: $name, avatarInitial: $avatarInitial, hobbyId: $hobbyId, distance: $distance, startedText: $startedText)';
+    return 'NearbyUser(id: $id, name: $name, avatarInitial: $avatarInitial, hobbyId: $hobbyId, distance: $distance, startedText: $startedText)';
   }
 
   @override
@@ -1114,6 +1188,7 @@ class _$NearbyUserImpl implements _NearbyUser {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$NearbyUserImpl &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.avatarInitial, avatarInitial) ||
                 other.avatarInitial == avatarInitial) &&
@@ -1127,7 +1202,7 @@ class _$NearbyUserImpl implements _NearbyUser {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType, name, avatarInitial, hobbyId, distance, startedText);
+      runtimeType, id, name, avatarInitial, hobbyId, distance, startedText);
 
   /// Create a copy of NearbyUser
   /// with the given fields replaced by the non-null parameter values.
@@ -1147,7 +1222,8 @@ class _$NearbyUserImpl implements _NearbyUser {
 
 abstract class _NearbyUser implements NearbyUser {
   const factory _NearbyUser(
-      {required final String name,
+      {required final String id,
+      required final String name,
       required final String avatarInitial,
       required final String hobbyId,
       required final String distance,
@@ -1156,6 +1232,8 @@ abstract class _NearbyUser implements NearbyUser {
   factory _NearbyUser.fromJson(Map<String, dynamic> json) =
       _$NearbyUserImpl.fromJson;
 
+  @override
+  String get id;
   @override
   String get name;
   @override
@@ -1172,5 +1250,302 @@ abstract class _NearbyUser implements NearbyUser {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$NearbyUserImplCopyWith<_$NearbyUserImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+BuddyRequest _$BuddyRequestFromJson(Map<String, dynamic> json) {
+  return _BuddyRequest.fromJson(json);
+}
+
+/// @nodoc
+mixin _$BuddyRequest {
+  String get id => throw _privateConstructorUsedError;
+  String get userId => throw _privateConstructorUsedError;
+  String get name => throw _privateConstructorUsedError;
+  String get avatarInitial => throw _privateConstructorUsedError;
+  String? get hobbyId => throw _privateConstructorUsedError;
+  String get status => throw _privateConstructorUsedError;
+  String get direction => throw _privateConstructorUsedError;
+  DateTime get createdAt => throw _privateConstructorUsedError;
+
+  /// Serializes this BuddyRequest to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of BuddyRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $BuddyRequestCopyWith<BuddyRequest> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $BuddyRequestCopyWith<$Res> {
+  factory $BuddyRequestCopyWith(
+          BuddyRequest value, $Res Function(BuddyRequest) then) =
+      _$BuddyRequestCopyWithImpl<$Res, BuddyRequest>;
+  @useResult
+  $Res call(
+      {String id,
+      String userId,
+      String name,
+      String avatarInitial,
+      String? hobbyId,
+      String status,
+      String direction,
+      DateTime createdAt});
+}
+
+/// @nodoc
+class _$BuddyRequestCopyWithImpl<$Res, $Val extends BuddyRequest>
+    implements $BuddyRequestCopyWith<$Res> {
+  _$BuddyRequestCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of BuddyRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = null,
+    Object? name = null,
+    Object? avatarInitial = null,
+    Object? hobbyId = freezed,
+    Object? status = null,
+    Object? direction = null,
+    Object? createdAt = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      avatarInitial: null == avatarInitial
+          ? _value.avatarInitial
+          : avatarInitial // ignore: cast_nullable_to_non_nullable
+              as String,
+      hobbyId: freezed == hobbyId
+          ? _value.hobbyId
+          : hobbyId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
+      direction: null == direction
+          ? _value.direction
+          : direction // ignore: cast_nullable_to_non_nullable
+              as String,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$BuddyRequestImplCopyWith<$Res>
+    implements $BuddyRequestCopyWith<$Res> {
+  factory _$$BuddyRequestImplCopyWith(
+          _$BuddyRequestImpl value, $Res Function(_$BuddyRequestImpl) then) =
+      __$$BuddyRequestImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String id,
+      String userId,
+      String name,
+      String avatarInitial,
+      String? hobbyId,
+      String status,
+      String direction,
+      DateTime createdAt});
+}
+
+/// @nodoc
+class __$$BuddyRequestImplCopyWithImpl<$Res>
+    extends _$BuddyRequestCopyWithImpl<$Res, _$BuddyRequestImpl>
+    implements _$$BuddyRequestImplCopyWith<$Res> {
+  __$$BuddyRequestImplCopyWithImpl(
+      _$BuddyRequestImpl _value, $Res Function(_$BuddyRequestImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of BuddyRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = null,
+    Object? name = null,
+    Object? avatarInitial = null,
+    Object? hobbyId = freezed,
+    Object? status = null,
+    Object? direction = null,
+    Object? createdAt = null,
+  }) {
+    return _then(_$BuddyRequestImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      avatarInitial: null == avatarInitial
+          ? _value.avatarInitial
+          : avatarInitial // ignore: cast_nullable_to_non_nullable
+              as String,
+      hobbyId: freezed == hobbyId
+          ? _value.hobbyId
+          : hobbyId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
+      direction: null == direction
+          ? _value.direction
+          : direction // ignore: cast_nullable_to_non_nullable
+              as String,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$BuddyRequestImpl implements _BuddyRequest {
+  const _$BuddyRequestImpl(
+      {required this.id,
+      required this.userId,
+      required this.name,
+      required this.avatarInitial,
+      this.hobbyId,
+      required this.status,
+      required this.direction,
+      required this.createdAt});
+
+  factory _$BuddyRequestImpl.fromJson(Map<String, dynamic> json) =>
+      _$$BuddyRequestImplFromJson(json);
+
+  @override
+  final String id;
+  @override
+  final String userId;
+  @override
+  final String name;
+  @override
+  final String avatarInitial;
+  @override
+  final String? hobbyId;
+  @override
+  final String status;
+  @override
+  final String direction;
+  @override
+  final DateTime createdAt;
+
+  @override
+  String toString() {
+    return 'BuddyRequest(id: $id, userId: $userId, name: $name, avatarInitial: $avatarInitial, hobbyId: $hobbyId, status: $status, direction: $direction, createdAt: $createdAt)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$BuddyRequestImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.avatarInitial, avatarInitial) ||
+                other.avatarInitial == avatarInitial) &&
+            (identical(other.hobbyId, hobbyId) || other.hobbyId == hobbyId) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.direction, direction) ||
+                other.direction == direction) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, userId, name, avatarInitial,
+      hobbyId, status, direction, createdAt);
+
+  /// Create a copy of BuddyRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$BuddyRequestImplCopyWith<_$BuddyRequestImpl> get copyWith =>
+      __$$BuddyRequestImplCopyWithImpl<_$BuddyRequestImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$BuddyRequestImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _BuddyRequest implements BuddyRequest {
+  const factory _BuddyRequest(
+      {required final String id,
+      required final String userId,
+      required final String name,
+      required final String avatarInitial,
+      final String? hobbyId,
+      required final String status,
+      required final String direction,
+      required final DateTime createdAt}) = _$BuddyRequestImpl;
+
+  factory _BuddyRequest.fromJson(Map<String, dynamic> json) =
+      _$BuddyRequestImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  String get userId;
+  @override
+  String get name;
+  @override
+  String get avatarInitial;
+  @override
+  String? get hobbyId;
+  @override
+  String get status;
+  @override
+  String get direction;
+  @override
+  DateTime get createdAt;
+
+  /// Create a copy of BuddyRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$BuddyRequestImplCopyWith<_$BuddyRequestImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

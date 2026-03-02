@@ -39,6 +39,7 @@ class BuddyProfile with _$BuddyProfile {
 class BuddyActivity with _$BuddyActivity {
   const factory BuddyActivity({
     required String userId,
+    required String userName,
     required String text,
     required DateTime timestamp,
   }) = _BuddyActivity;
@@ -56,6 +57,7 @@ class CommunityStory with _$CommunityStory {
     required String quote,
     required String hobbyId,
     @Default({}) Map<String, int> reactions,
+    @Default([]) List<String> userReactions,
   }) = _CommunityStory;
 
   factory CommunityStory.fromJson(Map<String, dynamic> json) =>
@@ -65,6 +67,7 @@ class CommunityStory with _$CommunityStory {
 @freezed
 class NearbyUser with _$NearbyUser {
   const factory NearbyUser({
+    required String id,
     required String name,
     required String avatarInitial,
     required String hobbyId,
@@ -74,4 +77,21 @@ class NearbyUser with _$NearbyUser {
 
   factory NearbyUser.fromJson(Map<String, dynamic> json) =>
       _$NearbyUserFromJson(json);
+}
+
+@freezed
+class BuddyRequest with _$BuddyRequest {
+  const factory BuddyRequest({
+    required String id,
+    required String userId,
+    required String name,
+    required String avatarInitial,
+    String? hobbyId,
+    required String status,
+    required String direction,
+    required DateTime createdAt,
+  }) = _BuddyRequest;
+
+  factory BuddyRequest.fromJson(Map<String, dynamic> json) =>
+      _$BuddyRequestFromJson(json);
 }

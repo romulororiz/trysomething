@@ -5,6 +5,8 @@ import '../data/repositories/feature_repository.dart';
 import '../data/repositories/feature_repository_api.dart';
 import '../data/repositories/personal_tools_repository.dart';
 import '../data/repositories/personal_tools_repository_api.dart';
+import '../data/repositories/social_repository.dart';
+import '../data/repositories/social_repository_api.dart';
 
 /// Hobby data repository — API-backed with Hive cache + SeedData fallback.
 final hobbyRepositoryProvider = Provider<HobbyRepository>((ref) {
@@ -19,4 +21,9 @@ final featureRepositoryProvider = Provider<FeatureRepository>((ref) {
 /// Personal tools repository — journal, notes, schedule, shopping.
 final personalToolsRepositoryProvider = Provider<PersonalToolsRepository>((ref) {
   return PersonalToolsRepositoryApi();
+});
+
+/// Social repository — stories, buddies, similar users.
+final socialRepositoryProvider = Provider<SocialRepository>((ref) {
+  return SocialRepositoryApi();
 });

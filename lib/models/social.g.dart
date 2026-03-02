@@ -45,6 +45,7 @@ Map<String, dynamic> _$$BuddyProfileImplToJson(_$BuddyProfileImpl instance) =>
 _$BuddyActivityImpl _$$BuddyActivityImplFromJson(Map<String, dynamic> json) =>
     _$BuddyActivityImpl(
       userId: json['userId'] as String,
+      userName: json['userName'] as String,
       text: json['text'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
@@ -52,6 +53,7 @@ _$BuddyActivityImpl _$$BuddyActivityImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$BuddyActivityImplToJson(_$BuddyActivityImpl instance) =>
     <String, dynamic>{
       'userId': instance.userId,
+      'userName': instance.userName,
       'text': instance.text,
       'timestamp': instance.timestamp.toIso8601String(),
     };
@@ -67,6 +69,10 @@ _$CommunityStoryImpl _$$CommunityStoryImplFromJson(Map<String, dynamic> json) =>
             (k, e) => MapEntry(k, (e as num).toInt()),
           ) ??
           const {},
+      userReactions: (json['userReactions'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$$CommunityStoryImplToJson(
@@ -78,10 +84,12 @@ Map<String, dynamic> _$$CommunityStoryImplToJson(
       'quote': instance.quote,
       'hobbyId': instance.hobbyId,
       'reactions': instance.reactions,
+      'userReactions': instance.userReactions,
     };
 
 _$NearbyUserImpl _$$NearbyUserImplFromJson(Map<String, dynamic> json) =>
     _$NearbyUserImpl(
+      id: json['id'] as String,
       name: json['name'] as String,
       avatarInitial: json['avatarInitial'] as String,
       hobbyId: json['hobbyId'] as String,
@@ -91,9 +99,34 @@ _$NearbyUserImpl _$$NearbyUserImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$NearbyUserImplToJson(_$NearbyUserImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'name': instance.name,
       'avatarInitial': instance.avatarInitial,
       'hobbyId': instance.hobbyId,
       'distance': instance.distance,
       'startedText': instance.startedText,
+    };
+
+_$BuddyRequestImpl _$$BuddyRequestImplFromJson(Map<String, dynamic> json) =>
+    _$BuddyRequestImpl(
+      id: json['id'] as String,
+      userId: json['userId'] as String,
+      name: json['name'] as String,
+      avatarInitial: json['avatarInitial'] as String,
+      hobbyId: json['hobbyId'] as String?,
+      status: json['status'] as String,
+      direction: json['direction'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+
+Map<String, dynamic> _$$BuddyRequestImplToJson(_$BuddyRequestImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'userId': instance.userId,
+      'name': instance.name,
+      'avatarInitial': instance.avatarInitial,
+      'hobbyId': instance.hobbyId,
+      'status': instance.status,
+      'direction': instance.direction,
+      'createdAt': instance.createdAt.toIso8601String(),
     };

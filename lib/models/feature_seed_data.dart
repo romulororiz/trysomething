@@ -56,10 +56,10 @@ class FeatureSeedData {
   ];
 
   static final List<BuddyActivity> buddyActivities = [
-    BuddyActivity(userId: 'buddy1', text: "Marco completed 'Make a pinch pot'", timestamp: DateTime.now().subtract(const Duration(hours: 3))),
-    BuddyActivity(userId: 'you', text: "You completed 'Try coil building'", timestamp: DateTime.now().subtract(const Duration(hours: 8))),
-    BuddyActivity(userId: 'buddy1', text: 'Marco saved a photo of his first pot', timestamp: DateTime.now().subtract(const Duration(days: 1))),
-    BuddyActivity(userId: 'buddy2', text: "Lena sent her first V1", timestamp: DateTime.now().subtract(const Duration(days: 2))),
+    BuddyActivity(userId: 'buddy1', userName: 'Marco', text: "Marco completed 'Make a pinch pot'", timestamp: DateTime.now().subtract(const Duration(hours: 3))),
+    BuddyActivity(userId: 'you', userName: 'You', text: "You completed 'Try coil building'", timestamp: DateTime.now().subtract(const Duration(hours: 8))),
+    BuddyActivity(userId: 'buddy1', userName: 'Marco', text: 'Marco saved a photo of his first pot', timestamp: DateTime.now().subtract(const Duration(days: 1))),
+    BuddyActivity(userId: 'buddy2', userName: 'Lena', text: "Lena sent her first V1", timestamp: DateTime.now().subtract(const Duration(days: 2))),
   ];
 
   // ═══════════════════════════════════════════════════
@@ -98,10 +98,10 @@ class FeatureSeedData {
   // ═══════════════════════════════════════════════════
 
   static final List<NearbyUser> nearbyUsers = [
-    NearbyUser(name: 'Sarah K.', avatarInitial: 'S', hobbyId: 'pottery', distance: '2.3 km', startedText: 'Started this week'),
-    NearbyUser(name: 'Alex M.', avatarInitial: 'A', hobbyId: 'bouldering', distance: '0.8 km', startedText: '3 weeks in'),
-    NearbyUser(name: 'Priya T.', avatarInitial: 'P', hobbyId: 'sourdough', distance: '4.1 km', startedText: 'Started yesterday'),
-    NearbyUser(name: 'Tom R.', avatarInitial: 'T', hobbyId: 'guitar', distance: '1.5 km', startedText: '2 months in'),
+    NearbyUser(id: 'fake-sarah', name: 'Sarah K.', avatarInitial: 'S', hobbyId: 'pottery', distance: '2.3 km', startedText: 'Started this week'),
+    NearbyUser(id: 'fake-alex', name: 'Alex M.', avatarInitial: 'A', hobbyId: 'bouldering', distance: '0.8 km', startedText: '3 weeks in'),
+    NearbyUser(id: 'fake-priya', name: 'Priya T.', avatarInitial: 'P', hobbyId: 'sourdough', distance: '4.1 km', startedText: 'Started yesterday'),
+    NearbyUser(id: 'fake-tom', name: 'Tom R.', avatarInitial: 'T', hobbyId: 'guitar', distance: '1.5 km', startedText: '2 months in'),
   ];
 
   // ═══════════════════════════════════════════════════

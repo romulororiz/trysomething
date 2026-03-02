@@ -46,4 +46,15 @@ class ApiConstants {
   static String usersScheduleEvent(String eventId) =>
       '/users/schedule/$eventId';
   static String usersShopping(String hobbyId) => '/users/shopping/$hobbyId';
+
+  // Social
+  static const usersStories = '/users/stories';
+  static String usersStory(String storyId) => '/users/stories/$storyId';
+  static String usersStoryReact(String storyId, String type) =>
+      '/users/stories/$storyId/react/$type';
+  static const usersBuddies = '/users/buddies';
+  static const usersBuddyRequests = '/users/buddy-requests';
+  static String usersBuddyRequest(String requestId) =>
+      '/users/buddy-requests/$requestId';
+  static const usersSimilarUsers = '/users/similar-users';
 }
