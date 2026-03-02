@@ -176,26 +176,99 @@ final scheduleProvider = StateNotifierProvider<ScheduleNotifier, List<ScheduleEv
 //  SHOPPING LIST
 // ═══════════════════════════════════════════════════════
 
-final shoppingListCheckedProvider = StateProvider<Set<String>>((ref) => {});
+class ShoppingListNotifier extends StateNotifier<Set<String>> {
+  final PersonalToolsRepository _repo;
+  ShoppingListNotifier(this._repo) : super({});
+
+  void _apiCall(
+    Set<String> snapshot,
+    Future<void> Function() call,
+  ) {
+    call().catchError((e) {
+      debugPrint('[Shopping] API call failed, rolling back: $e');
+      state = snapshot;
+    });
+  }
+
+  Future<void> loadForHobby(String hobbyId) async {
+    try {
+      final items = await _repo.getCheckedItems(hobbyId);
+      state = {...state, ...items};
+    } catch (e) {
+      debugPrint('[Shopping] Failed to load for hobby $hobbyId: $e');
+    }
+  }
+
+  void toggle(String hobbyId, String itemName, bool checked) {
+    final key = '${hobbyId}_$itemName';
+    final snapshot = Set<String>.from(state);
+    if (checked) {
+      state = {...state, key};
+    } else {
+      state = Set.from(state)..remove(key);
+    }
+    _apiCall(snapshot, () => _repo.toggleShoppingItem(
+      hobbyId: hobbyId,
+      itemName: itemName,
+      checked: checked,
+    ));
+  }
+}
+
+final shoppingListCheckedProvider =
+    StateNotifierProvider<ShoppingListNotifier, Set<String>>(
+  (ref) => ShoppingListNotifier(ref.watch(personalToolsRepositoryProvider)),
+);
 
 // ═══════════════════════════════════════════════════════
 //  PERSONAL NOTES (stepId → note text)
 // ═══════════════════════════════════════════════════════
 
 class NotesNotifier extends StateNotifier<Map<String, String>> {
-  NotesNotifier() : super({});
+  final PersonalToolsRepository _repo;
+  NotesNotifier(this._repo) : super({});
 
-  void saveNote(String stepId, String text) {
-    state = {...state, stepId: text};
+  void _apiCall(
+    Map<String, String> snapshot,
+    Future<void> Function() call,
+  ) {
+    call().catchError((e) {
+      debugPrint('[Notes] API call failed, rolling back: $e');
+      state = snapshot;
+    });
   }
 
-  void deleteNote(String stepId) {
+  Future<void> loadForHobby(String hobbyId) async {
+    try {
+      final notes = await _repo.getNotesForHobby(hobbyId);
+      state = {...state, ...notes};
+    } catch (e) {
+      debugPrint('[Notes] Failed to load for hobby $hobbyId: $e');
+    }
+  }
+
+  void saveNote(String hobbyId, String stepId, String text) {
+    final snapshot = Map<String, String>.from(state);
+    state = {...state, stepId: text};
+    _apiCall(snapshot, () => _repo.saveNote(
+      hobbyId: hobbyId,
+      stepId: stepId,
+      text: text,
+    ));
+  }
+
+  void deleteNote(String hobbyId, String stepId) {
+    final snapshot = Map<String, String>.from(state);
     state = Map.from(state)..remove(stepId);
+    _apiCall(snapshot, () => _repo.deleteNote(
+      hobbyId: hobbyId,
+      stepId: stepId,
+    ));
   }
 }
 
 final notesProvider = StateNotifierProvider<NotesNotifier, Map<String, String>>(
-  (ref) => NotesNotifier(),
+  (ref) => NotesNotifier(ref.watch(personalToolsRepositoryProvider)),
 );
 
 // ═══════════════════════════════════════════════════════

@@ -15,8 +15,13 @@ class ShoppingListScreen extends ConsumerWidget {
 
   const ShoppingListScreen({super.key, required this.hobbyId});
 
+  static final _loadedHobbies = <String>{};
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (_loadedHobbies.add(hobbyId)) {
+      ref.read(shoppingListCheckedProvider.notifier).loadForHobby(hobbyId);
+    }
     final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     final checkedItems = ref.watch(shoppingListCheckedProvider);
 
@@ -88,14 +93,8 @@ class ShoppingListScreen extends ConsumerWidget {
                           item: item,
                           isChecked: isChecked,
                           onToggle: () {
-                            final notifier = ref.read(shoppingListCheckedProvider.notifier);
-                            final current = Set<String>.from(notifier.state);
-                            if (isChecked) {
-                              current.remove(key);
-                            } else {
-                              current.add(key);
-                            }
-                            notifier.state = current;
+                            ref.read(shoppingListCheckedProvider.notifier)
+                                .toggle(hobbyId, item.name, !isChecked);
                           },
                         );
                       },

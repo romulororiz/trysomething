@@ -17,8 +17,14 @@ class PersonalNotesScreen extends ConsumerWidget {
 
   const PersonalNotesScreen({super.key, required this.hobbyId});
 
+  /// Tracks which hobbyIds we've already triggered a load for.
+  static final _loadedHobbies = <String>{};
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (_loadedHobbies.add(hobbyId)) {
+      ref.read(notesProvider.notifier).loadForHobby(hobbyId);
+    }
     final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
     final topPad = MediaQuery.of(context).padding.top;
     final hobbyName = hobby?.title ?? hobbyId;
@@ -113,6 +119,7 @@ class PersonalNotesScreen extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _StepNoteCard(
+                        hobbyId: hobbyId,
                         stepId: step.id,
                         stepNumber: index + 1,
                         stepTitle: step.title,
@@ -134,6 +141,7 @@ class PersonalNotesScreen extends ConsumerWidget {
 
 /// A single roadmap step card with an expandable note editor.
 class _StepNoteCard extends ConsumerStatefulWidget {
+  final String hobbyId;
   final String stepId;
   final int stepNumber;
   final String stepTitle;
@@ -142,6 +150,7 @@ class _StepNoteCard extends ConsumerStatefulWidget {
   final String? milestone;
 
   const _StepNoteCard({
+    required this.hobbyId,
     required this.stepId,
     required this.stepNumber,
     required this.stepTitle,
@@ -205,9 +214,9 @@ class _StepNoteCardState extends ConsumerState<_StepNoteCard>
   void _saveNote() {
     final text = _textController.text.trim();
     if (text.isEmpty) {
-      ref.read(notesProvider.notifier).deleteNote(widget.stepId);
+      ref.read(notesProvider.notifier).deleteNote(widget.hobbyId, widget.stepId);
     } else {
-      ref.read(notesProvider.notifier).saveNote(widget.stepId, text);
+      ref.read(notesProvider.notifier).saveNote(widget.hobbyId, widget.stepId, text);
     }
     setState(() {
       _showSaved = true;
@@ -449,7 +458,7 @@ class _StepNoteCardState extends ConsumerState<_StepNoteCard>
                       if (hasNote)
                         GestureDetector(
                           onTap: () {
-                            ref.read(notesProvider.notifier).deleteNote(widget.stepId);
+                            ref.read(notesProvider.notifier).deleteNote(widget.hobbyId, widget.stepId);
                             _textController.clear();
                             setState(() {
                               _showSaved = false;
