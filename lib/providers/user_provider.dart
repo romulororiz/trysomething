@@ -246,10 +246,10 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   }
 
   void toggleStep(String hobbyId, String stepId) {
-    final snapshot = Map<String, UserHobby>.from(state);
     final existing = state[hobbyId] ?? UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying);
     final steps = Set<String>.from(existing.completedStepIds);
-    if (steps.contains(stepId)) {
+    final wasCompleted = steps.contains(stepId);
+    if (wasCompleted) {
       steps.remove(stepId);
     } else {
       steps.add(stepId);
@@ -259,7 +259,25 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       hobbyId: existing.copyWith(completedStepIds: steps),
     };
     _save();
-    _apiCall(snapshot, () async => _repo.toggleStep(hobbyId, stepId));
+    // Targeted rollback: only undo THIS specific step toggle on failure,
+    // so concurrent toggles don't cascade-wipe each other's changes.
+    _repo.toggleStep(hobbyId, stepId).then((_) {}).catchError((e) {
+      debugPrint('[UserHobbies] toggleStep failed, reverting step $stepId: $e');
+      final current = state[hobbyId];
+      if (current != null) {
+        final revertedSteps = Set<String>.from(current.completedStepIds);
+        if (wasCompleted) {
+          revertedSteps.add(stepId);
+        } else {
+          revertedSteps.remove(stepId);
+        }
+        state = {
+          ...state,
+          hobbyId: current.copyWith(completedStepIds: revertedSteps),
+        };
+        _save();
+      }
+    });
   }
 
   bool isStepCompleted(String hobbyId, String stepId) {

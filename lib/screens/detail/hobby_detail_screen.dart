@@ -216,6 +216,33 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     // Starter Kit
                     SectionHeader(title: 'Starter Kit', rightText: 'Start small.'),
                     ...hobby.starterKit.map((item) => _buildKitItem(item)),
+                    if (hobby.starterKit.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 8),
+                        child: GestureDetector(
+                          onTap: () => context.push('/shopping/${widget.hobbyId}'),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.warmWhite,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.sandDark),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(AppIcons.shoppingList, size: 16, color: AppColors.coral),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Open Shopping Checklist',
+                                  style: AppTypography.sansLabel.copyWith(color: AppColors.coral),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 28),
 
                     // Beginner Pitfalls

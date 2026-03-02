@@ -264,6 +264,13 @@ async function handleHobbyDetail(
     // POST /users/hobbies/:hobbyId/steps/:stepId — toggle step
     const stepId = req.query.stepId as string | undefined;
     if (req.method === "POST" && stepId) {
+      // Ensure hobby exists first (FK constraint on UserCompletedStep)
+      await prisma.userHobby.upsert({
+        where: { userId_hobbyId: { userId, hobbyId } },
+        create: { userId, hobbyId, status: "trying", lastActivityAt: new Date() },
+        update: { lastActivityAt: new Date() },
+      });
+
       const existing = await prisma.userCompletedStep.findUnique({
         where: { userId_hobbyId_stepId: { userId, hobbyId, stepId } },
       });
@@ -277,13 +284,6 @@ async function handleHobbyDetail(
           data: { userId, hobbyId, stepId },
         });
       }
-
-      // Ensure hobby exists + update lastActivityAt
-      await prisma.userHobby.upsert({
-        where: { userId_hobbyId: { userId, hobbyId } },
-        create: { userId, hobbyId, status: "trying", lastActivityAt: new Date() },
-        update: { lastActivityAt: new Date() },
-      });
 
       await prisma.userActivityLog.create({
         data: {
