@@ -21,6 +21,11 @@ import {
   mapBuddyRequest,
   mapSimilarUser,
 } from "../../lib/mappers";
+import {
+  handleChallenges,
+  handleAchievements,
+  checkChallengeProgress,
+} from "../../lib/gamification";
 
 export default async function handler(
   req: VercelRequest,
@@ -69,6 +74,10 @@ export default async function handler(
       return handleBuddyRequestsDetail(req, res);
     case "similar-users":
       return handleSimilarUsers(req, res);
+    case "challenges":
+      return handleChallengesRoute(req, res);
+    case "achievements":
+      return handleAchievementsRoute(req, res);
     default:
       errorResponse(res, 404, `Unknown user path '${path}'`);
   }
@@ -190,6 +199,7 @@ async function handleHobbies(
       await prisma.userActivityLog.create({
         data: { userId, hobbyId, action: "save" },
       });
+      await checkChallengeProgress(userId, "save_hobby");
 
       res.status(201).json(mapUserHobby(hobby));
     }
@@ -311,6 +321,9 @@ async function handleHobbyDetail(
           action: existing ? "step_uncomplete" : "step_complete",
         },
       });
+      if (!existing) {
+        await checkChallengeProgress(userId, "step_complete");
+      }
 
       const hobby = await prisma.userHobby.findUnique({
         where: { userId_hobbyId: { userId, hobbyId } },
@@ -431,6 +444,7 @@ async function handleJournal(
       const entry = await prisma.journalEntry.create({
         data: { userId, hobbyId, text, photoUrl: photoUrl ?? null },
       });
+      await checkChallengeProgress(userId, "journal_entry");
       res.status(201).json(mapJournalEntry(entry));
     }
   } catch (err) {
@@ -670,6 +684,7 @@ async function handleStories(
           reactions: { select: { type: true, userId: true } },
         },
       });
+      await checkChallengeProgress(userId, "share_story");
       res.status(201).json(mapCommunityStory(story, userId));
     }
   } catch (err) {
@@ -1026,5 +1041,45 @@ async function handleSimilarUsers(
   } catch (err) {
     console.error("GET /api/users/similar-users error:", err);
     errorResponse(res, 500, "Failed to get similar users");
+  }
+}
+
+// ── /users/challenges ──────────────────────────────
+
+async function handleChallengesRoute(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const data = await handleChallenges(userId);
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("GET /api/users/challenges error:", err);
+    errorResponse(res, 500, "Failed to get challenges");
+  }
+}
+
+// ── /users/achievements ────────────────────────────
+
+async function handleAchievementsRoute(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const data = await handleAchievements(userId);
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("GET /api/users/achievements error:", err);
+    errorResponse(res, 500, "Failed to get achievements");
   }
 }

@@ -28,6 +28,8 @@
     { "src": "/api/users/buddy-requests/([^/]+)", "dest": "/api/users/[path].ts?path=buddy-requests-detail&requestId=$1" },
     { "src": "/api/users/buddy-requests", "dest": "/api/users/[path].ts?path=buddy-requests" },
     { "src": "/api/users/similar-users", "dest": "/api/users/[path].ts?path=similar-users" },
+    { "src": "/api/users/challenges", "dest": "/api/users/[path].ts?path=challenges" },
+    { "src": "/api/users/achievements", "dest": "/api/users/[path].ts?path=achievements" },
     { "src": "/api/users/(me|preferences)", "dest": "/api/users/[path].ts?path=$1" },
     { "src": "/api/categories", "dest": "/api/categories/index.ts" },
     { "src": "/api/hobbies/search", "dest": "/api/hobbies/search.ts" },
