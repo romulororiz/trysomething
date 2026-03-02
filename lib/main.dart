@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,6 +92,8 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
 
 // ═══════════════════════════════════════════════════════
 //  SPLASH OVERLAY — shown during session restore
+//  Refined Midnight Neon: gradient mesh + coral logo +
+//  progress sweep + floating particles
 // ═══════════════════════════════════════════════════════
 
 class _SplashOverlay extends StatefulWidget {
@@ -103,8 +106,9 @@ class _SplashOverlay extends StatefulWidget {
 class _SplashOverlayState extends State<_SplashOverlay>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
-  late AnimationController _glowController;
-  late AnimationController _dotController;
+  late AnimationController _meshController;
+  late AnimationController _progressController;
+  late AnimationController _particleController;
   late Animation<double> _fadeIn;
 
   @override
@@ -114,12 +118,16 @@ class _SplashOverlayState extends State<_SplashOverlay>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     )..forward();
-    _glowController = AnimationController(
-      duration: const Duration(milliseconds: 2400),
+    _meshController = AnimationController(
+      duration: const Duration(milliseconds: 6000),
       vsync: this,
     )..repeat(reverse: true);
-    _dotController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    )..repeat();
+    _particleController = AnimationController(
+      duration: const Duration(milliseconds: 4000),
       vsync: this,
     )..repeat();
     _fadeIn = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
@@ -128,8 +136,9 @@ class _SplashOverlayState extends State<_SplashOverlay>
   @override
   void dispose() {
     _fadeController.dispose();
-    _glowController.dispose();
-    _dotController.dispose();
+    _meshController.dispose();
+    _progressController.dispose();
+    _particleController.dispose();
     super.dispose();
   }
 
@@ -142,78 +151,19 @@ class _SplashOverlayState extends State<_SplashOverlay>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background glow — indigo top-right
-            Positioned(
-              top: -100,
-              right: -80,
-              child: AnimatedBuilder(
-                animation: _glowController,
-                builder: (_, __) => Opacity(
-                  opacity: 0.08 + _glowController.value * 0.12,
-                  child: Container(
-                    width: 360,
-                    height: 360,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppColors.indigo,
-                          AppColors.indigo.withValues(alpha: 0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            // Animated gradient mesh background
+            AnimatedBuilder(
+              animation: _meshController,
+              builder: (_, __) => CustomPaint(
+                painter: _GradientMeshPainter(_meshController.value),
               ),
             ),
 
-            // Background glow — coral bottom-left
-            Positioned(
-              bottom: -80,
-              left: -80,
-              child: AnimatedBuilder(
-                animation: _glowController,
-                builder: (_, __) => Opacity(
-                  opacity: 0.06 + (1 - _glowController.value) * 0.10,
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppColors.coral,
-                          AppColors.coral.withValues(alpha: 0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Background glow — sage accent mid-right
-            Positioned(
-              top: 300,
-              right: -60,
-              child: AnimatedBuilder(
-                animation: _glowController,
-                builder: (_, __) => Opacity(
-                  opacity: 0.03 + _glowController.value * 0.06,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppColors.sage,
-                          AppColors.sage.withValues(alpha: 0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            // Floating particles
+            AnimatedBuilder(
+              animation: _particleController,
+              builder: (_, __) => CustomPaint(
+                painter: _ParticlePainter(_particleController.value),
               ),
             ),
 
@@ -222,25 +172,18 @@ class _SplashOverlayState extends State<_SplashOverlay>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo with alternating indigo ↔ coral glow
+                  // Logo — 80x80 coral gradient rounded square
                   AnimatedBuilder(
-                    animation: _glowController,
+                    animation: _meshController,
                     builder: (_, child) => Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.indigo.withValues(
-                              alpha: 0.20 + _glowController.value * 0.40,
-                            ),
-                            blurRadius: 32 + _glowController.value * 20,
-                            spreadRadius: 4,
-                          ),
-                          BoxShadow(
                             color: AppColors.coral.withValues(
-                              alpha: (1 - _glowController.value) * 0.25,
+                              alpha: 0.25 + _meshController.value * 0.15,
                             ),
-                            blurRadius: 28,
+                            blurRadius: 40,
                             spreadRadius: 0,
                           ),
                         ],
@@ -248,31 +191,32 @@ class _SplashOverlayState extends State<_SplashOverlay>
                       child: child,
                     ),
                     child: Container(
-                      width: 92,
-                      height: 92,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [AppColors.indigo, AppColors.coral],
+                          colors: [AppColors.coral, AppColors.coralDeep],
                         ),
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
                           'T',
-                          style: TextStyle(
-                            fontSize: 48,
+                          style: AppTypography.serifTitle.copyWith(
+                            fontSize: 42,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
-                            letterSpacing: -1.5,
+                            letterSpacing: -1,
+                            height: 1,
                           ),
                         ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
 
                   Text(
                     'TrySomething',
@@ -286,38 +230,25 @@ class _SplashOverlayState extends State<_SplashOverlay>
                   Text(
                     'Discover what you love.',
                     style: AppTypography.sansBodySmall.copyWith(
-                      color: AppColors.warmGray,
+                      color: AppColors.driftwood,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
 
-                  const SizedBox(height: 56),
+                  const SizedBox(height: 48),
 
-                  // Sequentially pulsing coral dots
-                  AnimatedBuilder(
-                    animation: _dotController,
-                    builder: (_, __) {
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(3, (i) {
-                          final t = (_dotController.value + i / 3) % 1.0;
-                          final wave = t < 0.5 ? t * 2 : (1 - t) * 2;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color.lerp(
-                                AppColors.warmGray.withValues(alpha: 0.25),
-                                AppColors.coral,
-                                wave,
-                              ),
-                            ),
-                          );
-                        }),
-                      );
-                    },
+                  // Thin coral progress sweep line
+                  SizedBox(
+                    width: 120,
+                    height: 2,
+                    child: AnimatedBuilder(
+                      animation: _progressController,
+                      builder: (_, __) => CustomPaint(
+                        painter: _ProgressSweepPainter(
+                          _progressController.value,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -327,4 +258,146 @@ class _SplashOverlayState extends State<_SplashOverlay>
       ),
     );
   }
+}
+
+/// Paints soft gradient orbs that drift slowly across the background.
+class _GradientMeshPainter extends CustomPainter {
+  final double t;
+  _GradientMeshPainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Indigo orb — drifts from top-right
+    _drawOrb(
+      canvas,
+      Offset(w * (0.75 + 0.08 * _sin(t)), h * (0.15 + 0.06 * _cos(t))),
+      w * 0.5,
+      AppColors.indigo.withValues(alpha: 0.07 + 0.04 * _sin(t)),
+    );
+
+    // Coral orb — drifts from bottom-left
+    _drawOrb(
+      canvas,
+      Offset(w * (0.2 - 0.06 * _cos(t)), h * (0.78 + 0.05 * _sin(t))),
+      w * 0.45,
+      AppColors.coral.withValues(alpha: 0.06 + 0.03 * _cos(t)),
+    );
+
+    // Sage orb — drifts mid-right
+    _drawOrb(
+      canvas,
+      Offset(w * (0.85 + 0.05 * _sin(t * 0.7)), h * (0.48 - 0.04 * _cos(t))),
+      w * 0.3,
+      AppColors.sage.withValues(alpha: 0.04 + 0.02 * _sin(t * 1.3)),
+    );
+  }
+
+  void _drawOrb(Canvas canvas, Offset center, double radius, Color color) {
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [color, color.withValues(alpha: 0)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  double _sin(double t) => math.sin(t * math.pi * 2);
+  double _cos(double t) => math.cos(t * math.pi * 2);
+
+  @override
+  bool shouldRepaint(_GradientMeshPainter old) => old.t != t;
+}
+
+/// Paints subtle floating sparkle particles.
+class _ParticlePainter extends CustomPainter {
+  final double t;
+  _ParticlePainter(this.t);
+
+  // 8 particles with fixed seed positions
+  static const _seeds = [
+    [0.15, 0.25, 0.0],
+    [0.82, 0.18, 0.12],
+    [0.35, 0.72, 0.25],
+    [0.68, 0.55, 0.37],
+    [0.9, 0.82, 0.50],
+    [0.22, 0.45, 0.62],
+    [0.55, 0.12, 0.75],
+    [0.78, 0.38, 0.87],
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final seed in _seeds) {
+      final phase = (t + seed[2]) % 1.0;
+      // Each particle fades in-out over its cycle
+      final fade = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
+      final alpha = fade * 0.35;
+      if (alpha < 0.01) continue;
+
+      final x = size.width * (seed[0] + 0.02 * _sin(phase + seed[2]));
+      final y = size.height * (seed[1] - 0.03 * phase); // drift upward
+      final radius = 1.2 + fade * 1.0;
+
+      canvas.drawCircle(
+        Offset(x, y),
+        radius,
+        Paint()..color = AppColors.coral.withValues(alpha: alpha),
+      );
+    }
+  }
+
+  double _sin(double t) => math.sin(t * math.pi * 2);
+
+  @override
+  bool shouldRepaint(_ParticlePainter old) => old.t != t;
+}
+
+/// Paints a thin coral progress line that sweeps left-to-right.
+class _ProgressSweepPainter extends CustomPainter {
+  final double t;
+  _ProgressSweepPainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Background track
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, w, h),
+        const Radius.circular(1),
+      ),
+      Paint()..color = AppColors.sandDark,
+    );
+
+    // Sweep highlight — 30% width, slides across
+    final sweepWidth = w * 0.3;
+    final sweepStart = -sweepWidth + (w + sweepWidth) * t;
+    final rect = Rect.fromLTWH(
+      sweepStart.clamp(0.0, w),
+      0,
+      (sweepStart + sweepWidth).clamp(0.0, w) - sweepStart.clamp(0.0, w),
+      h,
+    );
+
+    if (rect.width > 0) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(1)),
+        Paint()
+          ..shader = const LinearGradient(
+            colors: [
+              Color(0x00FF6B6B),
+              AppColors.coral,
+              Color(0x00FF6B6B),
+            ],
+          ).createShader(Rect.fromLTWH(sweepStart, 0, sweepWidth, h)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ProgressSweepPainter old) => old.t != t;
 }

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
@@ -39,21 +40,23 @@ class _ShimmerSkeletonState extends State<ShimmerSkeleton>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
+        // Sine-based offset for smoother wave motion
+        final wave = (math.sin(_controller.value * math.pi * 2 - math.pi / 2) + 1) / 2;
         return ShaderMask(
           blendMode: BlendMode.srcATop,
           shaderCallback: (bounds) {
             return LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              colors: [
+              colors: const [
                 AppColors.sand,
-                AppColors.sandDark.withValues(alpha: 0.5),
+                AppColors.sandDark,
                 AppColors.sand,
               ],
               stops: [
-                (_controller.value - 0.3).clamp(0.0, 1.0),
-                _controller.value,
-                (_controller.value + 0.3).clamp(0.0, 1.0),
+                (wave - 0.3).clamp(0.0, 1.0),
+                wave,
+                (wave + 0.3).clamp(0.0, 1.0),
               ],
             ).createShader(bounds);
           },
@@ -206,6 +209,52 @@ class DetailContentSkeleton extends StatelessWidget {
             ShimmerBone(height: 50, borderRadius: 12),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Detail screen hero + content skeleton — full page loading state.
+class DetailHeroSkeleton extends StatelessWidget {
+  const DetailHeroSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerSkeleton(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Hero image placeholder
+          const ShimmerBone(height: Spacing.heroHeight, borderRadius: 0),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                ShimmerBone(width: 220, height: 24, borderRadius: 6),
+                SizedBox(height: 12),
+                ShimmerBone(height: 14, borderRadius: 4),
+                SizedBox(height: 8),
+                ShimmerBone(width: 180, height: 14, borderRadius: 4),
+                SizedBox(height: 24),
+                // Spec badges row
+                Row(
+                  children: [
+                    ShimmerBone(width: 70, height: 30, borderRadius: 15),
+                    SizedBox(width: 8),
+                    ShimmerBone(width: 80, height: 30, borderRadius: 15),
+                    SizedBox(width: 8),
+                    ShimmerBone(width: 65, height: 30, borderRadius: 15),
+                  ],
+                ),
+                SizedBox(height: 28),
+                ShimmerBone(height: 56, borderRadius: 12),
+                SizedBox(height: 16),
+                ShimmerBone(height: 56, borderRadius: 12),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

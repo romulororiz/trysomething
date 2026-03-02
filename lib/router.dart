@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'components/page_transitions.dart';
 import 'providers/user_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
@@ -140,7 +140,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             child: HobbyDetailScreen(hobbyId: id),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return _buildSlideRightTransition(animation, child);
+              return buildSlideRightTransition(animation, child);
             },
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
@@ -154,40 +154,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
-          return CustomTransitionPage(
-            opaque: false,
-            barrierColor: Colors.transparent,
+          return modalSlideUpTransitionPage(
             child: QuickstartScreen(hobbyId: hobbyId),
-            transitionsBuilder: (context, animation, _, child) {
-              final slideUp = Tween<Offset>(
-                begin: const Offset(0, 1),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Motion.normalCurve,
-              ));
-
-              // Backdrop blur + scrim that fades in with the animation
-              final scrimOpacity = Tween<double>(begin: 0, end: 1).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOut),
-              );
-
-              return Stack(
-                children: [
-                  // Scrim + blur behind the sheet
-                  FadeTransition(
-                    opacity: scrimOpacity,
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Container(color: const Color(0x60000000)),
-                    ),
-                  ),
-                  // Sliding sheet
-                  SlideTransition(position: slideUp, child: child),
-                ],
-              );
-            },
-            transitionDuration: Motion.bottomSheet,
           );
         },
       ),
@@ -200,7 +168,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             child: const SettingsScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return _buildSlideRightTransition(animation, child);
+              return buildSlideRightTransition(animation, child);
             },
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
@@ -218,7 +186,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const MoodMatchScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -228,7 +196,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const SeasonalPicksScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -240,7 +208,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final hobbyId = state.pathParameters['hobbyId']!;
           return CustomTransitionPage(
             child: BeginnerFaqScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
           );
@@ -253,7 +221,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final hobbyId = state.pathParameters['hobbyId']!;
           return CustomTransitionPage(
             child: PersonalNotesScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
           );
@@ -266,7 +234,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final hobbyId = state.pathParameters['hobbyId']!;
           return CustomTransitionPage(
             child: BudgetAlternativesScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
           );
@@ -279,7 +247,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const HobbyCombosScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -291,7 +259,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final hobbyId = state.pathParameters['hobbyId']!;
           return CustomTransitionPage(
             child: CostCalculatorScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
           );
@@ -302,7 +270,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const CompareModeScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -314,7 +282,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final hobbyId = state.pathParameters['hobbyId']!;
           return CustomTransitionPage(
             child: ShoppingListScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
             transitionDuration: Motion.navForward,
             reverseTransitionDuration: Motion.navBack,
           );
@@ -325,7 +293,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const WeeklyChallengeScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -335,7 +303,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const HobbyJournalScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -345,7 +313,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const HobbySchedulerScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -357,7 +325,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const BuddyModeScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -367,7 +335,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const CommunityStoriesScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -377,7 +345,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const LocalDiscoveryScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -387,7 +355,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const YearInReviewScreen(),
-          transitionsBuilder: (_, a, __, c) => _buildSlideRightTransition(a, c),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,
         ),
@@ -427,39 +395,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
   );
 });
-
-// ═══════════════════════════════════════════════════════
-//  TRANSITION HELPERS
-// ═══════════════════════════════════════════════════════
-
-/// Slide-from-right transition with backdrop scrim that dims the old page.
-/// Forward: new page slides in from right, scrim dims old page to 95% opacity
-///          + old page shifts left by 30%.
-/// Back: reverses automatically.
-Widget _buildSlideRightTransition(Animation<double> animation, Widget child) {
-  // New page slides in from right
-  final slideIn = Tween<Offset>(
-    begin: const Offset(1, 0),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(
-    parent: animation,
-    curve: Curves.easeInOutCubic,
-  ));
-
-  // Scrim that sits behind the new page, dimming the old page
-  final scrimOpacity = Tween<double>(begin: 0, end: 0.05).animate(
-    CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-  );
-
-  return Stack(
-    children: [
-      // Dim scrim over old page (visible through the gap as new page slides in)
-      FadeTransition(
-        opacity: scrimOpacity,
-        child: Container(color: Colors.black),
-      ),
-      // New page sliding in
-      SlideTransition(position: slideIn, child: child),
-    ],
-  );
-}
