@@ -27,4 +27,12 @@ class ApiConstants {
   static String cost(String hobbyId) => '/hobbies/$hobbyId/cost';
   static String budget(String hobbyId) => '/hobbies/$hobbyId/budget';
   static const mood = '/hobbies/mood';
+
+  // User progress
+  static const usersHobbies = '/users/hobbies';
+  static const usersHobbiesSync = '/users/hobbies-sync';
+  static String userHobby(String hobbyId) => '/users/hobbies/$hobbyId';
+  static String userHobbyStep(String hobbyId, String stepId) =>
+      '/users/hobbies/$hobbyId/steps/$stepId';
+  static const usersActivity = '/users/activity';
 }
