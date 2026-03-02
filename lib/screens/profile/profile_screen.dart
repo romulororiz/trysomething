@@ -730,7 +730,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ══════════════════════════════════════════════════════════
 
   Widget _buildHeatmap() {
-    final data = FeatureSeedData.generateHeatmapData(days: 112);
+    final data = ref.watch(activityHeatmapProvider);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -1250,9 +1250,9 @@ class _HeatmapTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tooltip = FeatureSeedData.heatmapTooltip(date, level);
     final dateStr = DateFormat('MMM d').format(date);
     final levelText = ['No activity', 'Light', 'Moderate', 'Heavy'][level];
+    final actionCount = level == 0 ? null : '$level action${level > 1 ? 's' : ''}';
 
     return Material(
       color: Colors.transparent,
@@ -1278,10 +1278,10 @@ class _HeatmapTooltip extends StatelessWidget {
               style: AppTypography.sansTiny.copyWith(
                   color: AppColors.nearBlack, fontWeight: FontWeight.w600),
             ),
-            if (tooltip != null) ...[
+            if (actionCount != null) ...[
               const SizedBox(height: 2),
               Text(
-                tooltip,
+                actionCount,
                 style: AppTypography.sansTiny
                     .copyWith(color: AppColors.driftwood, fontSize: 10),
               ),

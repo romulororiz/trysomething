@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/activity_log.dart';
 import '../models/features.dart';
 import '../models/social.dart';
 import '../models/feature_seed_data.dart';
 import 'repository_providers.dart';
+import 'user_provider.dart';
 
 // ═══════════════════════════════════════════════════════
 //  FEATURE DATA PROVIDERS (via FeatureRepository)
@@ -171,4 +173,51 @@ final nearbyUsersProvider = Provider<List<NearbyUser>>((ref) {
 
 final combosProvider = FutureProvider<List<HobbyCombo>>((ref) {
   return ref.watch(featureRepositoryProvider).getCombos();
+});
+
+// ═══════════════════════════════════════════════════════
+//  ACTIVITY LOG (for profile heatmap)
+// ═══════════════════════════════════════════════════════
+
+/// Fetches activity log entries from the server (last 112 days for heatmap).
+final activityLogProvider = FutureProvider<List<ActivityLogEntry>>((ref) async {
+  final repo = ref.watch(userProgressRepositoryProvider);
+  final raw = await repo.getActivityLog(days: 112);
+  return raw.map((e) => ActivityLogEntry.fromJson(e)).toList();
+});
+
+/// Converts activity log entries into heatmap data: Map<DateTime, int>
+/// where value is activity level (0=none, 1=light, 2=medium, 3=heavy).
+final activityHeatmapProvider = Provider<Map<DateTime, int>>((ref) {
+  final logAsync = ref.watch(activityLogProvider);
+  return logAsync.when(
+    data: (entries) {
+      final counts = <DateTime, int>{};
+      for (final entry in entries) {
+        final day = DateTime(
+          entry.createdAt.year,
+          entry.createdAt.month,
+          entry.createdAt.day,
+        );
+        counts[day] = (counts[day] ?? 0) + 1;
+      }
+      // Convert raw counts to levels: 0=none, 1=1 action, 2=2-3, 3=4+
+      final result = <DateTime, int>{};
+      for (final entry in counts.entries) {
+        final count = entry.value;
+        if (count == 0) {
+          result[entry.key] = 0;
+        } else if (count == 1) {
+          result[entry.key] = 1;
+        } else if (count <= 3) {
+          result[entry.key] = 2;
+        } else {
+          result[entry.key] = 3;
+        }
+      }
+      return result;
+    },
+    loading: () => <DateTime, int>{},
+    error: (_, __) => <DateTime, int>{},
+  );
 });
