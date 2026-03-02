@@ -1,10 +1,12 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import '../../core/media/image_upload.dart';
 import '../../models/hobby.dart';
-import '../../models/feature_seed_data.dart';
 import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
@@ -27,6 +29,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   DateTime? _hoveredDate;
   int _hoveredLevel = 0;
   Offset _tooltipOffset = Offset.zero;
+
+  // Photo upload
+  bool _uploading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +93,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         .where((e) => e.photoUrl != null)
         .map((e) => e.photoUrl!)
         .toList();
-    final allPhotos = [...journalPhotos, ...FeatureSeedData.profilePhotos];
+    final allPhotos = journalPhotos;
 
     return SafeArea(
       bottom: false,
@@ -184,6 +189,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       )
                                     : null,
                               ),
+                              // Upload spinner overlay
+                              if (_uploading)
+                                Container(
+                                  width: 96,
+                                  height: 96,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0x88000000),
+                                  ),
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               // Camera badge
                               Positioned(
                                 bottom: 0,
@@ -483,6 +508,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                 ),
+              ] else ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.warmWhite,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(AppIcons.image, size: 32, color: AppColors.sand),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No photos yet',
+                            style: AppTypography.sansLabel
+                                .copyWith(color: AppColors.driftwood),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Add photos in your hobby journal',
+                            style: AppTypography.sansTiny
+                                .copyWith(color: AppColors.warmGray),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (allPhotos.isNotEmpty) ...[
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverGrid(
@@ -1058,17 +1116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               label: 'Take Photo',
               onTap: () {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Camera coming soon!',
-                        style: AppTypography.sansLabel
-                            .copyWith(color: Colors.white)),
-                    backgroundColor: AppColors.coral,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
+                _pickAndUpload(ImageSource.camera);
               },
             ),
             const SizedBox(height: 10),
@@ -1077,23 +1125,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               label: 'Choose from Library',
               onTap: () {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Gallery coming soon!',
-                        style: AppTypography.sansLabel
-                            .copyWith(color: Colors.white)),
-                    backgroundColor: AppColors.coral,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
+                _pickAndUpload(ImageSource.gallery);
               },
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _pickAndUpload(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+
+    setState(() => _uploading = true);
+    final url = await ImageUpload.uploadImage(File(picked.path));
+    if (!mounted) return;
+    setState(() => _uploading = false);
+
+    if (url != null) {
+      ref.read(profileProvider.notifier).updateAvatar(url);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to upload photo',
+              style: AppTypography.sansLabel.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.coral,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   void _showPhotoViewer(
