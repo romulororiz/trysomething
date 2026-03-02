@@ -38,6 +38,9 @@ model Hobby {
   difficultyExplain String
   pitfalls          String[]
   sortOrder         Int      @default(0)
+  isAiGenerated     Boolean  @default(false)
+  generatedBy       String?
+  createdAt         DateTime @default(now())
 
   category       Category            @relation(fields: [categoryId], references: [id])
   kitItems       KitItem[]
@@ -367,4 +370,20 @@ model UserAchievement {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, achievementId])
+}
+
+// ═══════════════════════════════════════════════════
+//  AI GENERATION (Phase 9)
+// ═══════════════════════════════════════════════════
+
+model GenerationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  query     String
+  hobbyId   String?
+  status    String   // "success", "rejected", "error"
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
