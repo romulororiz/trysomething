@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/personal_tools_repository.dart';
+import '../data/repositories/social_repository.dart';
 import '../models/activity_log.dart';
 import '../models/features.dart';
 import '../models/social.dart';
@@ -293,9 +294,89 @@ final buddyActivitiesProvider = Provider<List<BuddyActivity>>((ref) {
 //  COMMUNITY STORIES
 // ═══════════════════════════════════════════════════════
 
-final storiesProvider = Provider<List<CommunityStory>>((ref) {
-  return FeatureSeedData.stories;
-});
+class StoriesNotifier extends StateNotifier<List<CommunityStory>> {
+  final SocialRepository _repo;
+  StoriesNotifier(this._repo) : super([]);
+
+  void _apiCall(
+    List<CommunityStory> snapshot,
+    Future<void> Function() call,
+  ) {
+    call().catchError((e) {
+      debugPrint('[Stories] API call failed, rolling back: $e');
+      state = snapshot;
+    });
+  }
+
+  Future<void> loadFromServer() async {
+    try {
+      state = await _repo.getStories();
+    } catch (e) {
+      debugPrint('[Stories] Failed to load from server: $e');
+    }
+  }
+
+  void createStory(String quote, String hobbyId) {
+    final snapshot = List<CommunityStory>.from(state);
+    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+    final temp = CommunityStory(
+      id: tempId,
+      authorName: '',
+      authorInitial: '',
+      quote: quote,
+      hobbyId: hobbyId,
+    );
+    state = [temp, ...state];
+    _apiCall(snapshot, () async {
+      final created = await _repo.createStory(quote: quote, hobbyId: hobbyId);
+      state = [created, ...state.where((s) => s.id != tempId).toList()];
+    });
+  }
+
+  void deleteStory(String storyId) {
+    final snapshot = List<CommunityStory>.from(state);
+    state = state.where((s) => s.id != storyId).toList();
+    _apiCall(snapshot, () => _repo.deleteStory(storyId));
+  }
+
+  void toggleReaction(String storyId, String type) {
+    final snapshot = List<CommunityStory>.from(state);
+    final idx = state.indexWhere((s) => s.id == storyId);
+    if (idx == -1) return;
+
+    final story = state[idx];
+    final hasReacted = story.userReactions.contains(type);
+    final newReactions = Map<String, int>.from(story.reactions);
+    final newUserReactions = List<String>.from(story.userReactions);
+
+    if (hasReacted) {
+      newUserReactions.remove(type);
+      newReactions[type] = (newReactions[type] ?? 1) - 1;
+    } else {
+      newUserReactions.add(type);
+      newReactions[type] = (newReactions[type] ?? 0) + 1;
+    }
+
+    final updated = story.copyWith(
+      reactions: newReactions,
+      userReactions: newUserReactions,
+    );
+    state = [...state.sublist(0, idx), updated, ...state.sublist(idx + 1)];
+
+    _apiCall(snapshot, () async {
+      if (hasReacted) {
+        await _repo.removeReaction(storyId: storyId, type: type);
+      } else {
+        await _repo.addReaction(storyId: storyId, type: type);
+      }
+    });
+  }
+}
+
+final storiesProvider =
+    StateNotifierProvider<StoriesNotifier, List<CommunityStory>>(
+  (ref) => StoriesNotifier(ref.watch(socialRepositoryProvider)),
+);
 
 // ═══════════════════════════════════════════════════════
 //  NEARBY USERS

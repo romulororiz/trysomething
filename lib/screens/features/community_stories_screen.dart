@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/social.dart';
 import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -26,6 +27,11 @@ class CommunityStoriesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.cream,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.coral,
+        onPressed: () => _showCreateStorySheet(context, ref),
+        child: const Icon(Icons.edit_rounded, color: Colors.white),
+      ),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -48,30 +54,64 @@ class CommunityStoriesScreen extends ConsumerWidget {
 
             // ── Stories list ────────────────────────────
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                itemCount: stories.length,
-                itemBuilder: (context, index) {
-                  final tint = _tintColors[index % _tintColors.length];
-                  return _StoryCard(
-                    story: stories[index],
-                    backgroundColor: tint,
-                  );
-                },
-              ),
+              child: stories.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(AppIcons.heartOutline,
+                              size: 48, color: AppColors.warmGray),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No stories yet',
+                            style: AppTypography.sansSection
+                                .copyWith(color: AppColors.warmGray),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Be the first to share your hobby journey!',
+                            style: AppTypography.sansBodySmall
+                                .copyWith(color: AppColors.stone),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                      itemCount: stories.length,
+                      itemBuilder: (context, index) {
+                        final tint = _tintColors[index % _tintColors.length];
+                        return _StoryCard(
+                          story: stories[index],
+                          backgroundColor: tint,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
       ),
     );
   }
+
+  void _showCreateStorySheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.warmWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (_) => _CreateStorySheet(ref: ref),
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════
-//  STORY CARD (with local reaction state)
+//  STORY CARD (provider-driven reactions)
 // ═══════════════════════════════════════════════════════
 
-class _StoryCard extends ConsumerStatefulWidget {
+class _StoryCard extends ConsumerWidget {
   final CommunityStory story;
   final Color backgroundColor;
 
@@ -81,32 +121,20 @@ class _StoryCard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_StoryCard> createState() => _StoryCardState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hobby = ref.watch(hobbyByIdProvider(story.hobbyId)).valueOrNull;
+    final hobbyName = hobby?.title ?? story.hobbyId;
 
-class _StoryCardState extends ConsumerState<_StoryCard> {
-  late int _heartCount;
-  late int _fireCount;
-  bool _heartTapped = false;
-  bool _fireTapped = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _heartCount = widget.story.reactions['heart'] ?? 0;
-    _fireCount = widget.story.reactions['fire'] ?? 0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hobby = ref.watch(hobbyByIdProvider(widget.story.hobbyId)).valueOrNull;
-    final hobbyName = hobby?.title ?? widget.story.hobbyId;
+    final heartCount = story.reactions['heart'] ?? 0;
+    final fireCount = story.reactions['fire'] ?? 0;
+    final heartTapped = story.userReactions.contains('heart');
+    final fireTapped = story.userReactions.contains('fire');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: widget.backgroundColor,
+        color: backgroundColor,
         borderRadius: Spacing.cardBorderRadius,
         boxShadow: Spacing.subtleShadow,
       ),
@@ -130,7 +158,7 @@ class _StoryCardState extends ConsumerState<_StoryCard> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  widget.story.authorInitial,
+                  story.authorInitial,
                   style: AppTypography.sansSection.copyWith(
                     color: Colors.white,
                     fontSize: 18,
@@ -138,14 +166,14 @@ class _StoryCardState extends ConsumerState<_StoryCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(widget.story.authorName, style: AppTypography.sansSection),
+              Text(story.authorName, style: AppTypography.sansSection),
             ],
           ),
           const SizedBox(height: 20),
 
           // ── Quote ─────────────────────────────────
           Text(
-            '\u201C${widget.story.quote}\u201D',
+            '\u201C${story.quote}\u201D',
             style: GoogleFonts.sourceSerif4(
               fontSize: 17,
               fontWeight: FontWeight.w400,
@@ -178,21 +206,14 @@ class _StoryCardState extends ConsumerState<_StoryCard> {
 
               // Heart reaction
               _ReactionChip(
-                icon: _heartTapped
+                icon: heartTapped
                     ? AppIcons.heartFilled
                     : AppIcons.heartOutline,
-                count: _heartCount,
-                color: _heartTapped ? AppColors.coral : AppColors.warmGray,
+                count: heartCount,
+                color: heartTapped ? AppColors.coral : AppColors.warmGray,
                 onTap: () {
-                  setState(() {
-                    if (!_heartTapped) {
-                      _heartCount++;
-                      _heartTapped = true;
-                    } else {
-                      _heartCount--;
-                      _heartTapped = false;
-                    }
-                  });
+                  ref.read(storiesProvider.notifier)
+                      .toggleReaction(story.id, 'heart');
                 },
               ),
               const SizedBox(width: 12),
@@ -200,18 +221,11 @@ class _StoryCardState extends ConsumerState<_StoryCard> {
               // Fire reaction
               _ReactionChip(
                 icon: AppIcons.fire,
-                count: _fireCount,
-                color: _fireTapped ? AppColors.amber : AppColors.warmGray,
+                count: fireCount,
+                color: fireTapped ? AppColors.amber : AppColors.warmGray,
                 onTap: () {
-                  setState(() {
-                    if (!_fireTapped) {
-                      _fireCount++;
-                      _fireTapped = true;
-                    } else {
-                      _fireCount--;
-                      _fireTapped = false;
-                    }
-                  });
+                  ref.read(storiesProvider.notifier)
+                      .toggleReaction(story.id, 'fire');
                 },
               ),
             ],
@@ -251,6 +265,130 @@ class _ReactionChip extends StatelessWidget {
           Text(
             '$count',
             style: AppTypography.monoBadge.copyWith(color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CREATE STORY BOTTOM SHEET
+// ═══════════════════════════════════════════════════════
+
+class _CreateStorySheet extends StatefulWidget {
+  final WidgetRef ref;
+  const _CreateStorySheet({required this.ref});
+
+  @override
+  State<_CreateStorySheet> createState() => _CreateStorySheetState();
+}
+
+class _CreateStorySheetState extends State<_CreateStorySheet> {
+  final _quoteCtrl = TextEditingController();
+  String? _selectedHobbyId;
+
+  @override
+  void dispose() {
+    _quoteCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userHobbies = widget.ref.read(userHobbiesProvider);
+    final hobbyIds = userHobbies.keys.toList();
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Share Your Story', style: AppTypography.serifSubheading),
+          const SizedBox(height: 8),
+          Text(
+            'Inspire others with your hobby journey',
+            style: AppTypography.sansBodySmall
+                .copyWith(color: AppColors.warmGray),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Hobby picker ──
+          DropdownButtonFormField<String>(
+            initialValue: _selectedHobbyId,
+            decoration: InputDecoration(
+              labelText: 'Hobby',
+              labelStyle: AppTypography.sansCaption
+                  .copyWith(color: AppColors.driftwood),
+              filled: true,
+              fillColor: AppColors.sand,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(Spacing.radiusInput),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            dropdownColor: AppColors.sand,
+            style: AppTypography.sansBody.copyWith(color: AppColors.nearBlack),
+            items: hobbyIds.map((id) {
+              final hobby = widget.ref
+                  .read(hobbyByIdProvider(id))
+                  .valueOrNull;
+              return DropdownMenuItem(
+                value: id,
+                child: Text(hobby?.title ?? id),
+              );
+            }).toList(),
+            onChanged: (v) => setState(() => _selectedHobbyId = v),
+          ),
+          const SizedBox(height: 14),
+
+          // ── Quote text field ──
+          TextField(
+            controller: _quoteCtrl,
+            maxLines: 3,
+            style: AppTypography.sansBody.copyWith(color: AppColors.nearBlack),
+            decoration: InputDecoration(
+              hintText: 'What\u2019s your hobby story?',
+              hintStyle: AppTypography.sansBody
+                  .copyWith(color: AppColors.stone),
+              filled: true,
+              fillColor: AppColors.sand,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(Spacing.radiusInput),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Submit button ──
+          GestureDetector(
+            onTap: () {
+              final quote = _quoteCtrl.text.trim();
+              if (quote.isEmpty || _selectedHobbyId == null) return;
+              widget.ref
+                  .read(storiesProvider.notifier)
+                  .createStory(quote, _selectedHobbyId!);
+              Navigator.of(context).pop();
+            },
+            child: Container(
+              height: Spacing.buttonPrimaryHeight,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.coral, AppColors.coralDeep],
+                ),
+                borderRadius: BorderRadius.circular(Spacing.radiusButton),
+              ),
+              child: Center(
+                child: Text('Share Story', style: AppTypography.sansCta),
+              ),
+            ),
           ),
         ],
       ),

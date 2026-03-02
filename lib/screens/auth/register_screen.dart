@@ -48,6 +48,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ref.read(userHobbiesProvider.notifier).syncFromServer();
       ref.read(journalProvider.notifier).loadFromServer();
       ref.read(scheduleProvider.notifier).loadFromServer();
+      ref.read(storiesProvider.notifier).loadFromServer();
       context.go('/onboarding');
     }
   }
@@ -58,6 +59,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ref.read(userHobbiesProvider.notifier).syncFromServer();
       ref.read(journalProvider.notifier).loadFromServer();
       ref.read(scheduleProvider.notifier).loadFromServer();
+      ref.read(storiesProvider.notifier).loadFromServer();
       context.go('/onboarding');
     }
   }
