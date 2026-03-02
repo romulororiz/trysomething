@@ -35,4 +35,15 @@ class ApiConstants {
   static String userHobbyStep(String hobbyId, String stepId) =>
       '/users/hobbies/$hobbyId/steps/$stepId';
   static const usersActivity = '/users/activity';
+
+  // Personal tools
+  static const usersJournal = '/users/journal';
+  static String usersJournalEntry(String entryId) => '/users/journal/$entryId';
+  static String usersNotes(String hobbyId) => '/users/notes/$hobbyId';
+  static String usersNoteStep(String hobbyId, String stepId) =>
+      '/users/notes/$hobbyId/$stepId';
+  static const usersSchedule = '/users/schedule';
+  static String usersScheduleEvent(String eventId) =>
+      '/users/schedule/$eventId';
+  static String usersShopping(String hobbyId) => '/users/shopping/$hobbyId';
 }
