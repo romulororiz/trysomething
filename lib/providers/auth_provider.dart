@@ -47,14 +47,19 @@ class AuthState {
 //  AUTH NOTIFIER
 // ═══════════════════════════════════════════════════
 
-// Shared GoogleSignIn instance — must be reused across sign-in/sign-out.
+// Primary GoogleSignIn — with serverClientId to request idToken (Android/iOS).
 final _googleSignIn = GoogleSignIn(
   scopes: ['email', 'profile'],
-  // On Android, serverClientId makes the plugin request an idToken
-  // your server can verify. Empty string means "not set".
   serverClientId: const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID') != ''
       ? const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')
       : null,
+);
+
+// Fallback GoogleSignIn — without serverClientId. Used when idToken flow
+// fails (ApiException 10 = SHA-1 mismatch or propagation delay). Gets an
+// accessToken instead, which the server verifies via Google userinfo endpoint.
+final _googleSignInFallback = GoogleSignIn(
+  scopes: ['email', 'profile'],
 );
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -131,17 +136,33 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> loginWithGoogle() async {
     state = state.copyWith(status: AuthStatus.loading, error: null, loadingMethod: AuthMethod.google);
     try {
-      // Sign out first to clear cached session and force account picker.
+      // Try primary flow (idToken via serverClientId).
       await _googleSignIn.signOut().catchError((_) => null);
-      final account = await _googleSignIn.signIn();
+      debugPrint('[GoogleAuth] Attempting sign-in with serverClientId...');
+      GoogleSignInAccount? account;
+      try {
+        account = await _googleSignIn.signIn();
+      } catch (e) {
+        // ApiException 10 = DEVELOPER_ERROR (SHA-1 mismatch or propagation).
+        // Fall back to accessToken-only flow.
+        debugPrint('[GoogleAuth] Primary failed: $e');
+        debugPrint('[GoogleAuth] Falling back to accessToken-only flow...');
+        await _googleSignInFallback.signOut().catchError((_) => null);
+        account = await _googleSignInFallback.signIn();
+      }
+
       if (account == null) {
-        // User cancelled
+        debugPrint('[GoogleAuth] User cancelled');
         state = const AuthState(status: AuthStatus.unauthenticated);
         return false;
       }
+      debugPrint('[GoogleAuth] Got account: ${account.email}');
+
       final googleAuth = await account.authentication;
       final idToken = googleAuth.idToken;
       final accessToken = googleAuth.accessToken;
+      debugPrint('[GoogleAuth] idToken: ${idToken != null ? "present" : "NULL"}');
+      debugPrint('[GoogleAuth] accessToken: ${accessToken != null ? "present" : "NULL"}');
 
       if (idToken == null && accessToken == null) {
         state = const AuthState(
@@ -151,7 +172,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return false;
       }
 
-      // Prefer idToken (Android/iOS), fall back to accessToken (Windows/web).
+      debugPrint('[GoogleAuth] Calling server...');
       final response = await _repo.loginWithGoogle(
         idToken: idToken,
         accessToken: accessToken,
@@ -160,10 +181,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       );
+      debugPrint('[GoogleAuth] Success!');
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
       return true;
-    } catch (e) {
-      debugPrint('Google sign-in error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('══════════════════════════════════════════');
+      debugPrint('Google sign-in FAILED');
+      debugPrint('Type: ${e.runtimeType}');
+      debugPrint('Error: $e');
+      debugPrint('Stack: $stackTrace');
+      debugPrint('══════════════════════════════════════════');
       state = AuthState(
         status: AuthStatus.unauthenticated,
         error: _extractError(e),
