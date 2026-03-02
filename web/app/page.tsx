@@ -6,7 +6,7 @@ import { SolutionSection } from "@/components/sections/SolutionSection";
 import { FeedShowcase } from "@/components/sections/FeedShowcase";
 import { DetailShowcase } from "@/components/sections/DetailShowcase";
 import { ProgressShowcase } from "@/components/sections/ProgressShowcase";
-import { CategoryOrbit } from "@/components/sections/CategoryOrbit";
+
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTA } from "@/components/sections/FinalCTA";
 import { Footer } from "@/components/sections/Footer";
@@ -28,8 +28,6 @@ export default function LandingPage() {
         <DetailShowcase />
 
         <ProgressShowcase />
-
-        <CategoryOrbit />
 
         <SocialProofSection />
 
