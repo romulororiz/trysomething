@@ -8,13 +8,28 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 
-/// Nearby hobbyists — map placeholder + list of nearby users.
-class LocalDiscoveryScreen extends ConsumerWidget {
+/// Similar Hobbyists — find people who share your hobbies.
+class LocalDiscoveryScreen extends ConsumerStatefulWidget {
   const LocalDiscoveryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final nearbyUsers = ref.watch(nearbyUsersProvider);
+  ConsumerState<LocalDiscoveryScreen> createState() =>
+      _LocalDiscoveryScreenState();
+}
+
+class _LocalDiscoveryScreenState extends ConsumerState<LocalDiscoveryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(similarUsersProvider.notifier).loadFromServer(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final users = ref.watch(similarUsersProvider);
+    final buddyState = ref.watch(buddyProvider);
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -45,19 +60,19 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                     const SizedBox(width: 14),
                     Icon(AppIcons.local, size: 20, color: AppColors.indigo),
                     const SizedBox(width: 8),
-                    Text('Nearby Hobbyists',
+                    Text('Similar Hobbyists',
                         style: AppTypography.serifHeading),
                   ],
                 ),
               ),
             ),
 
-            // Map placeholder
+            // Intro card
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                 child: Container(
-                  height: 180,
+                  height: 100,
                   decoration: BoxDecoration(
                     color: AppColors.indigoPale,
                     borderRadius: BorderRadius.circular(22),
@@ -68,18 +83,12 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(AppIcons.local,
-                            size: 36, color: AppColors.indigo.withAlpha(120)),
-                        const SizedBox(height: 10),
+                            size: 28, color: AppColors.indigo.withAlpha(120)),
+                        const SizedBox(height: 8),
                         Text(
-                          'Map view coming soon',
+                          'People who share your hobbies',
                           style: AppTypography.sansLabel
                               .copyWith(color: AppColors.indigo),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Find hobby partners near you',
-                          style: AppTypography.sansCaption
-                              .copyWith(color: AppColors.warmGray),
                         ),
                       ],
                     ),
@@ -97,7 +106,7 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                     Text('People Nearby', style: AppTypography.sansSection),
                     const Spacer(),
                     Text(
-                      '${nearbyUsers.length} found',
+                      '${users.length} found',
                       style: AppTypography.monoCaption
                           .copyWith(color: AppColors.warmGray),
                     ),
@@ -106,14 +115,34 @@ class LocalDiscoveryScreen extends ConsumerWidget {
               ),
             ),
 
-            // Nearby user cards
+            // Empty state
+            if (users.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(48),
+                  child: Center(
+                    child: Text(
+                      'No similar hobbyists found yet.\nStart trying hobbies to discover others!',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.sansBodySmall
+                          .copyWith(color: AppColors.warmGray),
+                    ),
+                  ),
+                ),
+              ),
+
+            // User cards
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final user = nearbyUsers[index];
-                    final hobby = ref.watch(hobbyByIdProvider(user.hobbyId)).valueOrNull;
+                    final user = users[index];
+                    final hobby = ref
+                        .watch(hobbyByIdProvider(user.hobbyId))
+                        .valueOrNull;
+                    final alreadyRequested = buddyState.pendingRequests
+                        .any((r) => r.userId == user.id);
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -131,7 +160,10 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(
-                                colors: [AppColors.indigo, AppColors.indigoDeep],
+                                colors: [
+                                  AppColors.indigo,
+                                  AppColors.indigoDeep
+                                ],
                               ),
                               border: Border.all(
                                   color: AppColors.indigo.withAlpha(40)),
@@ -151,8 +183,8 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(user.name,
-                                    style: AppTypography.sansLabel
-                                        .copyWith(fontWeight: FontWeight.w700)),
+                                    style: AppTypography.sansLabel.copyWith(
+                                        fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 2),
                                 Row(
                                   children: [
@@ -163,7 +195,8 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                                       Text(
                                         hobby.title,
                                         style: AppTypography.sansCaption
-                                            .copyWith(color: AppColors.driftwood),
+                                            .copyWith(
+                                                color: AppColors.driftwood),
                                       ),
                                       const SizedBox(width: 8),
                                     ],
@@ -177,55 +210,57 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          // Distance + connect
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppColors.indigoPale,
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Text(
-                                  user.distance,
-                                  style: AppTypography.monoBadgeSmall
-                                      .copyWith(color: AppColors.indigo),
-                                ),
+                          // Connect / Requested
+                          if (alreadyRequested)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: AppColors.sand,
+                                borderRadius: BorderRadius.circular(100),
                               ),
-                              const SizedBox(height: 6),
-                              GestureDetector(
-                                onTap: () {
+                              child: Text(
+                                'Requested',
+                                style: AppTypography.sansCaption
+                                    .copyWith(color: AppColors.warmGray),
+                              ),
+                            )
+                          else
+                            GestureDetector(
+                              onTap: () async {
+                                await ref
+                                    .read(buddyProvider.notifier)
+                                    .sendRequest(user.id,
+                                        hobbyId: user.hobbyId);
+                                if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                          'Connect with ${user.name} coming soon!',
+                                          'Buddy request sent to ${user.name}!',
                                           style: AppTypography.sansLabel
                                               .copyWith(color: Colors.white)),
-                                      backgroundColor: AppColors.coral,
+                                      backgroundColor: AppColors.sage,
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(12)),
                                     ),
                                   );
-                                },
-                                child: Text(
-                                  'Connect',
-                                  style: AppTypography.sansCaption.copyWith(
-                                    color: AppColors.coral,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                }
+                              },
+                              child: Text(
+                                'Connect',
+                                style: AppTypography.sansCaption.copyWith(
+                                  color: AppColors.coral,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
                         ],
                       ),
                     );
                   },
-                  childCount: nearbyUsers.length,
+                  childCount: users.length,
                 ),
               ),
             ),

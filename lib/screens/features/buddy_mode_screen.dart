@@ -15,8 +15,12 @@ class BuddyModeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final buddies = ref.watch(buddyProfilesProvider);
-    final activities = ref.watch(buddyActivitiesProvider);
+    final buddyState = ref.watch(buddyProvider);
+    final buddies = buddyState.profiles;
+    final activities = buddyState.activities;
+    final received = buddyState.pendingRequests
+        .where((r) => r.direction == 'received')
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -42,30 +46,36 @@ class BuddyModeScreen extends ConsumerWidget {
 
             // ── Scrollable content ──────────────────────
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
-                children: [
-                  // ── Section: Current Buddies ───────────
-                  Text(
-                    'YOUR BUDDIES',
-                    style: AppTypography.overline,
-                  ),
-                  const SizedBox(height: 16),
-                  ...buddies.map((buddy) => _BuddyCard(buddy: buddy)),
+              child: buddies.isEmpty && received.isEmpty
+                  ? _EmptyState()
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+                      children: [
+                        // ── Section: Pending Requests ───────
+                        if (received.isNotEmpty) ...[
+                          Text('BUDDY REQUESTS', style: AppTypography.overline),
+                          const SizedBox(height: 16),
+                          ...received.map((r) => _RequestCard(request: r)),
+                          const SizedBox(height: 32),
+                        ],
 
-                  const SizedBox(height: 32),
+                        // ── Section: Current Buddies ────────
+                        if (buddies.isNotEmpty) ...[
+                          Text('YOUR BUDDIES', style: AppTypography.overline),
+                          const SizedBox(height: 16),
+                          ...buddies.map((buddy) => _BuddyCard(buddy: buddy)),
+                          const SizedBox(height: 32),
+                        ],
 
-                  // ── Section: Activity Feed ────────────
-                  Text(
-                    'ACTIVITY FEED',
-                    style: AppTypography.overline,
-                  ),
-                  const SizedBox(height: 16),
-                  ...activities.map(
-                    (activity) => _ActivityTile(activity: activity),
-                  ),
-                ],
-              ),
+                        // ── Section: Activity Feed ──────────
+                        if (activities.isNotEmpty) ...[
+                          Text('ACTIVITY FEED', style: AppTypography.overline),
+                          const SizedBox(height: 16),
+                          ...activities
+                              .map((a) => _ActivityTile(activity: a)),
+                        ],
+                      ],
+                    ),
             ),
           ],
         ),
@@ -90,11 +100,7 @@ class BuddyModeScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: Spacing.buttonBorderRadius,
               ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Coming soon!')),
-                );
-              },
+              onPressed: () => context.push('/local'),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -106,6 +112,137 @@ class BuddyModeScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  EMPTY STATE
+// ═══════════════════════════════════════════════════════
+
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(AppIcons.buddy, size: 48, color: AppColors.warmGray),
+          const SizedBox(height: 16),
+          Text(
+            'No buddies yet',
+            style: AppTypography.sansSection
+                .copyWith(color: AppColors.warmGray),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Find your first hobby buddy!',
+            style: AppTypography.sansBodySmall
+                .copyWith(color: AppColors.stone),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  REQUEST CARD (Accept / Reject)
+// ═══════════════════════════════════════════════════════
+
+class _RequestCard extends ConsumerWidget {
+  final BuddyRequest request;
+  const _RequestCard({required this.request});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.indigoPale,
+        borderRadius: Spacing.cardBorderRadius,
+        border: Border.all(color: AppColors.indigo.withAlpha(30)),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.indigo, AppColors.coral],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              request.avatarInitial,
+              style: AppTypography.sansSection
+                  .copyWith(color: Colors.white, fontSize: 18),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Name
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(request.name, style: AppTypography.sansSection),
+                const SizedBox(height: 2),
+                Text(
+                  'Wants to be your buddy',
+                  style: AppTypography.sansCaption
+                      .copyWith(color: AppColors.warmGray),
+                ),
+              ],
+            ),
+          ),
+
+          // Accept button
+          GestureDetector(
+            onTap: () =>
+                ref.read(buddyProvider.notifier).acceptRequest(request.id),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.sage,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                'Accept',
+                style: AppTypography.sansCaption
+                    .copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Reject button
+          GestureDetector(
+            onTap: () =>
+                ref.read(buddyProvider.notifier).rejectRequest(request.id),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.sand,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                'Decline',
+                style: AppTypography.sansCaption
+                    .copyWith(color: AppColors.warmGray),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -206,8 +343,9 @@ class _ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isYou = activity.userId == 'you';
-    final initial = isYou ? 'Y' : activity.userId[0].toUpperCase();
+    final initial = activity.userName.isNotEmpty
+        ? activity.userName[0].toUpperCase()
+        : '?';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -218,14 +356,12 @@ class _ActivityTile extends StatelessWidget {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isYou
-                    ? [AppColors.amber, AppColors.coral]
-                    : [AppColors.coral, AppColors.indigo],
+                colors: [AppColors.coral, AppColors.indigo],
               ),
             ),
             alignment: Alignment.center,

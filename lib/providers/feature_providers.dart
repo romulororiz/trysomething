@@ -282,13 +282,108 @@ final selectedCompareProvider = StateProvider<List<String>>((ref) => []);
 //  BUDDY MODE
 // ═══════════════════════════════════════════════════════
 
-final buddyProfilesProvider = Provider<List<BuddyProfile>>((ref) {
-  return FeatureSeedData.buddyProfiles;
-});
+class BuddyState {
+  final List<BuddyProfile> profiles;
+  final List<BuddyActivity> activities;
+  final List<BuddyRequest> pendingRequests;
+  const BuddyState({
+    this.profiles = const [],
+    this.activities = const [],
+    this.pendingRequests = const [],
+  });
+  BuddyState copyWith({
+    List<BuddyProfile>? profiles,
+    List<BuddyActivity>? activities,
+    List<BuddyRequest>? pendingRequests,
+  }) =>
+      BuddyState(
+        profiles: profiles ?? this.profiles,
+        activities: activities ?? this.activities,
+        pendingRequests: pendingRequests ?? this.pendingRequests,
+      );
+}
 
-final buddyActivitiesProvider = Provider<List<BuddyActivity>>((ref) {
-  return FeatureSeedData.buddyActivities;
-});
+class BuddyNotifier extends StateNotifier<BuddyState> {
+  final SocialRepository _repo;
+  BuddyNotifier(this._repo) : super(const BuddyState());
+
+  Future<void> loadFromServer() async {
+    try {
+      final data = await _repo.getBuddiesWithActivity();
+      final profiles = (data['profiles'] as List<dynamic>)
+          .map((e) => BuddyProfile.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final activities = (data['activities'] as List<dynamic>)
+          .map((e) => BuddyActivity.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final requests = await _repo.getBuddyRequests();
+      state = BuddyState(
+        profiles: profiles,
+        activities: activities,
+        pendingRequests: requests,
+      );
+    } catch (e) {
+      debugPrint('[Buddy] Failed to load from server: $e');
+    }
+  }
+
+  Future<void> sendRequest(String targetUserId, {String? hobbyId}) async {
+    try {
+      final request = await _repo.sendBuddyRequest(
+        targetUserId: targetUserId,
+        hobbyId: hobbyId,
+      );
+      state = state.copyWith(
+        pendingRequests: [...state.pendingRequests, request],
+      );
+    } catch (e) {
+      debugPrint('[Buddy] Failed to send request: $e');
+    }
+  }
+
+  Future<void> acceptRequest(String requestId) async {
+    try {
+      await _repo.respondToRequest(requestId: requestId, status: 'active');
+      await loadFromServer();
+    } catch (e) {
+      debugPrint('[Buddy] Failed to accept request: $e');
+    }
+  }
+
+  void rejectRequest(String requestId) {
+    final snapshot = state;
+    state = state.copyWith(
+      pendingRequests:
+          state.pendingRequests.where((r) => r.id != requestId).toList(),
+    );
+    _repo
+        .respondToRequest(requestId: requestId, status: 'rejected')
+        .catchError((e) {
+      debugPrint('[Buddy] Reject failed, rolling back: $e');
+      state = snapshot;
+    });
+  }
+
+  void cancelRequest(String requestId) {
+    final snapshot = state;
+    state = state.copyWith(
+      pendingRequests:
+          state.pendingRequests.where((r) => r.id != requestId).toList(),
+    );
+    _repo.cancelRequest(requestId).catchError((e) {
+      debugPrint('[Buddy] Cancel failed, rolling back: $e');
+      state = snapshot;
+    });
+  }
+
+  bool hasRequestFor(String userId) {
+    return state.pendingRequests.any((r) => r.userId == userId);
+  }
+}
+
+final buddyProvider = StateNotifierProvider<BuddyNotifier, BuddyState>(
+  (ref) => BuddyNotifier(ref.watch(socialRepositoryProvider)),
+);
 
 // ═══════════════════════════════════════════════════════
 //  COMMUNITY STORIES
@@ -379,12 +474,26 @@ final storiesProvider =
 );
 
 // ═══════════════════════════════════════════════════════
-//  NEARBY USERS
+//  SIMILAR USERS (formerly "Nearby Users")
 // ═══════════════════════════════════════════════════════
 
-final nearbyUsersProvider = Provider<List<NearbyUser>>((ref) {
-  return FeatureSeedData.nearbyUsers;
-});
+class SimilarUsersNotifier extends StateNotifier<List<NearbyUser>> {
+  final SocialRepository _repo;
+  SimilarUsersNotifier(this._repo) : super([]);
+
+  Future<void> loadFromServer({String? hobbyId}) async {
+    try {
+      state = await _repo.getSimilarUsers(hobbyId: hobbyId);
+    } catch (e) {
+      debugPrint('[SimilarUsers] Failed to load from server: $e');
+    }
+  }
+}
+
+final similarUsersProvider =
+    StateNotifierProvider<SimilarUsersNotifier, List<NearbyUser>>(
+  (ref) => SimilarUsersNotifier(ref.watch(socialRepositoryProvider)),
+);
 
 // ═══════════════════════════════════════════════════════
 //  HOBBY COMBOS
