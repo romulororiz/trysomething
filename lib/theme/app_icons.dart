@@ -59,6 +59,35 @@ class AppIcons {
   static final IconData packBudget = MdiIcons.cashMultiple;
   static final IconData packCommunity = MdiIcons.handshake;
 
+  // ── Category Lookup ───────────────────────────────
+  /// Returns category icon by category ID string.
+  /// Mirrors AppColors.categoryColor(String).
+  static IconData categoryIcon(String categoryId) {
+    switch (categoryId.toLowerCase()) {
+      case 'creative':
+        return catCreative;
+      case 'outdoors':
+        return catOutdoors;
+      case 'fitness':
+        return catFitness;
+      case 'maker':
+      case 'maker/diy':
+        return catMaker;
+      case 'music':
+        return catMusic;
+      case 'food':
+        return catFood;
+      case 'collecting':
+        return catCollecting;
+      case 'mind':
+        return catMind;
+      case 'social':
+        return catSocial;
+      default:
+        return MdiIcons.helpCircleOutline;
+    }
+  }
+
   // ── Onboarding ─────────────────────────────────────
   static final IconData solo = MdiIcons.accountOutline;
   static final IconData group = MdiIcons.accountMultipleOutline;

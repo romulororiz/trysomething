@@ -1,6 +1,9 @@
 # Reference docs (local only)
 reference/
 
+# Claude Code project instructions (local only)
+CLAUDE.md
+
 # Miscellaneous
 *.class
 *.log
@@ -50,3 +53,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Server
+server/node_modules/
+server/.env
+server/.vercel/
+server/dist/

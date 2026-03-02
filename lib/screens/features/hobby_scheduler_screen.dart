@@ -225,7 +225,7 @@ class HobbySchedulerScreen extends ConsumerWidget {
   // ═══════════════════════════════════════════════════════
 
   void _showAddSessionSheet(BuildContext context, WidgetRef ref) {
-    final hobbies = ref.read(hobbyListProvider);
+    final hobbies = ref.read(hobbyListProvider).valueOrNull ?? [];
     String? selectedHobbyId = hobbies.isNotEmpty ? hobbies.first.id : null;
     int selectedDay = 1; // Monday
     int selectedHour = 18;
@@ -234,6 +234,7 @@ class HobbySchedulerScreen extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: AppColors.cream,
       shape: const RoundedRectangleBorder(
@@ -568,7 +569,7 @@ class _ScheduleEventBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(event.hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(event.hobbyId)).valueOrNull;
     final hobbyName = hobby?.title ?? event.hobbyId;
 
     // Parse start time

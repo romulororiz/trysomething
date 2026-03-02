@@ -1,5 +1,3 @@
-import '../theme/app_colors.dart';
-import '../theme/app_icons.dart';
 import 'hobby.dart';
 
 /// TrySomething — Seed Data
@@ -15,15 +13,15 @@ class SeedData {
   // ═══════════════════════════════════════════════════
 
   static final List<HobbyCategory> categories = [
-    HobbyCategory(id: 'creative', name: 'Creative', icon: AppIcons.catCreative, color: AppColors.catCreative, count: 12, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=80'),
-    HobbyCategory(id: 'outdoors', name: 'Outdoors', icon: AppIcons.catOutdoors, color: AppColors.catOutdoors, count: 8, imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'),
-    HobbyCategory(id: 'fitness', name: 'Fitness', icon: AppIcons.catFitness, color: AppColors.catFitness, count: 9, imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80'),
-    HobbyCategory(id: 'maker', name: 'Maker/DIY', icon: AppIcons.catMaker, color: AppColors.catMaker, count: 7, imageUrl: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=600&q=80'),
-    HobbyCategory(id: 'music', name: 'Music', icon: AppIcons.catMusic, color: AppColors.catMusic, count: 6, imageUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'),
-    HobbyCategory(id: 'food', name: 'Food', icon: AppIcons.catFood, color: AppColors.catFood, count: 11, imageUrl: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&q=80'),
-    HobbyCategory(id: 'collecting', name: 'Collecting', icon: AppIcons.catCollecting, color: AppColors.catCollecting, count: 5, imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80'),
-    HobbyCategory(id: 'mind', name: 'Mind', icon: AppIcons.catMind, color: AppColors.catMind, count: 8, imageUrl: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=600&q=80'),
-    HobbyCategory(id: 'social', name: 'Social', icon: AppIcons.catSocial, color: AppColors.catSocial, count: 6, imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80'),
+    HobbyCategory(id: 'creative', name: 'Creative', count: 12, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=80'),
+    HobbyCategory(id: 'outdoors', name: 'Outdoors', count: 8, imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'),
+    HobbyCategory(id: 'fitness', name: 'Fitness', count: 9, imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80'),
+    HobbyCategory(id: 'maker', name: 'Maker/DIY', count: 7, imageUrl: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=600&q=80'),
+    HobbyCategory(id: 'music', name: 'Music', count: 6, imageUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'),
+    HobbyCategory(id: 'food', name: 'Food', count: 11, imageUrl: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&q=80'),
+    HobbyCategory(id: 'collecting', name: 'Collecting', count: 5, imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80'),
+    HobbyCategory(id: 'mind', name: 'Mind', count: 8, imageUrl: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=600&q=80'),
+    HobbyCategory(id: 'social', name: 'Social', count: 6, imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80'),
   ];
 
   // ═══════════════════════════════════════════════════
@@ -36,8 +34,7 @@ class SeedData {
       title: 'Pottery',
       hook: 'Get your hands dirty. Make something real.',
       category: 'Creative',
-      catIcon: AppIcons.catCreative,
-      catColor: AppColors.catCreative,
+
       imageUrl: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'meditative'],
       costText: 'CHF 40–120',
@@ -69,8 +66,7 @@ class SeedData {
       title: 'Bouldering',
       hook: 'Solve puzzles with your body.',
       category: 'Fitness',
-      catIcon: AppIcons.catFitness,
-      catColor: AppColors.catFitness,
+
       imageUrl: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=600&h=800&fit=crop',
       tags: ['physical', 'social', 'competitive'],
       costText: 'CHF 20–60',
@@ -99,8 +95,7 @@ class SeedData {
       title: 'Sourdough Baking',
       hook: 'Flour, water, patience. Insanely rewarding.',
       category: 'Food',
-      catIcon: AppIcons.catFood,
-      catColor: AppColors.catFood,
+
       imageUrl: 'https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'solo'],
       costText: 'CHF 15–50',
@@ -130,8 +125,7 @@ class SeedData {
       title: 'Skateboarding',
       hook: 'Four wheels, infinite possibilities.',
       category: 'Fitness',
-      catIcon: AppIcons.catFitness,
-      catColor: AppColors.catFitness,
+
       imageUrl: 'https://images.unsplash.com/photo-1564982752979-3f7bc974d29a?w=600&h=800&fit=crop',
       tags: ['physical', 'outdoors', 'creative'],
       costText: 'CHF 80–200',
@@ -162,8 +156,7 @@ class SeedData {
       title: 'Chess',
       hook: 'The ultimate thinking game. Infinite depth.',
       category: 'Mind',
-      catIcon: AppIcons.catMind,
-      catColor: AppColors.catMind,
+
       imageUrl: 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=600&h=800&fit=crop',
       tags: ['competitive', 'solo', 'technical'],
       costText: 'CHF 0–30',
@@ -193,8 +186,7 @@ class SeedData {
       title: 'Calligraphy',
       hook: 'Turn words into art. Meditative, beautiful.',
       category: 'Creative',
-      catIcon: AppIcons.catCreative,
-      catColor: AppColors.catCreative,
+
       imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'solo'],
       costText: 'CHF 20–60',
@@ -225,8 +217,7 @@ class SeedData {
       title: 'Hiking',
       hook: 'Step outside. The trail is calling.',
       category: 'Outdoors',
-      catIcon: AppIcons.catOutdoors,
-      catColor: AppColors.catOutdoors,
+
       imageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=800&fit=crop',
       tags: ['physical', 'outdoors', 'relaxing'],
       costText: 'CHF 0–150',
@@ -257,8 +248,7 @@ class SeedData {
       title: 'Guitar',
       hook: 'Six strings. Endless songs. Start tonight.',
       category: 'Music',
-      catIcon: AppIcons.catMusic,
-      catColor: AppColors.catMusic,
+
       imageUrl: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'solo'],
       costText: 'CHF 50–300',

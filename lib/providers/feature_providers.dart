@@ -2,6 +2,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/features.dart';
 import '../models/social.dart';
 import '../models/feature_seed_data.dart';
+import 'repository_providers.dart';
+
+// ═══════════════════════════════════════════════════════
+//  FEATURE DATA PROVIDERS (via FeatureRepository)
+// ═══════════════════════════════════════════════════════
+
+final faqProvider = FutureProvider.family<List<FaqItem>, String>((ref, hobbyId) {
+  return ref.watch(featureRepositoryProvider).getFaqForHobby(hobbyId);
+});
+
+final costBreakdownProvider = FutureProvider.family<CostBreakdown?, String>((ref, hobbyId) {
+  return ref.watch(featureRepositoryProvider).getCostBreakdown(hobbyId);
+});
+
+final budgetAlternativesProvider = FutureProvider.family<List<BudgetAlternative>, String>((ref, hobbyId) {
+  return ref.watch(featureRepositoryProvider).getBudgetAlternatives(hobbyId);
+});
+
+final seasonalHobbiesProvider = FutureProvider<Map<String, List<String>>>((ref) {
+  return ref.watch(featureRepositoryProvider).getSeasonalHobbies();
+});
+
+final moodTagsProvider = FutureProvider<Map<String, List<String>>>((ref) {
+  return ref.watch(featureRepositoryProvider).getMoodTags();
+});
 
 // ═══════════════════════════════════════════════════════
 //  USER PROFILE
@@ -144,6 +169,6 @@ final nearbyUsersProvider = Provider<List<NearbyUser>>((ref) {
 //  HOBBY COMBOS
 // ═══════════════════════════════════════════════════════
 
-final combosProvider = Provider<List<HobbyCombo>>((ref) {
-  return FeatureSeedData.combos;
+final combosProvider = FutureProvider<List<HobbyCombo>>((ref) {
+  return ref.watch(featureRepositoryProvider).getCombos();
 });

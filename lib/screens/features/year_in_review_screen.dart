@@ -16,7 +16,7 @@ class YearInReviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userHobbies = ref.watch(userHobbiesProvider);
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final prefs = ref.watch(userPreferencesProvider);
 
     final tryingCount =

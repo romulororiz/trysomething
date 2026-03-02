@@ -1,29 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/hobby.dart';
-import '../models/seed_data.dart';
+import 'repository_providers.dart';
 
 // ═══════════════════════════════════════════════════════
 //  HOBBY PROVIDERS
 // ═══════════════════════════════════════════════════════
 
 /// All hobbies
-final hobbyListProvider = Provider<List<Hobby>>((ref) {
-  return SeedData.hobbies;
+final hobbyListProvider = FutureProvider<List<Hobby>>((ref) {
+  return ref.watch(hobbyRepositoryProvider).getHobbies();
 });
 
 /// Single hobby by ID
-final hobbyByIdProvider = Provider.family<Hobby?, String>((ref, id) {
-  return SeedData.getHobby(id);
+final hobbyByIdProvider = FutureProvider.family<Hobby?, String>((ref, id) {
+  return ref.watch(hobbyRepositoryProvider).getHobbyById(id);
 });
 
 /// All categories
-final categoriesProvider = Provider<List<HobbyCategory>>((ref) {
-  return SeedData.categories;
+final categoriesProvider = FutureProvider<List<HobbyCategory>>((ref) {
+  return ref.watch(hobbyRepositoryProvider).getCategories();
 });
 
 /// Related hobbies for a given hobby ID
-final relatedHobbiesProvider = Provider.family<List<Hobby>, String>((ref, hobbyId) {
-  return SeedData.getRelated(hobbyId);
+final relatedHobbiesProvider =
+    FutureProvider.family<List<Hobby>, String>((ref, hobbyId) {
+  return ref.watch(hobbyRepositoryProvider).getRelatedHobbies(hobbyId);
 });
 
 // ═══════════════════════════════════════════════════════
@@ -34,10 +35,12 @@ final relatedHobbiesProvider = Provider.family<List<Hobby>, String>((ref, hobbyI
 final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 
 /// Filtered hobbies for the feed
-final filteredHobbiesProvider = Provider<List<Hobby>>((ref) {
+final filteredHobbiesProvider = FutureProvider<List<Hobby>>((ref) async {
   final category = ref.watch(selectedCategoryProvider);
-  final allHobbies = ref.watch(hobbyListProvider);
-  
+  final allHobbies = await ref.watch(hobbyListProvider.future);
+
   if (category == null) return allHobbies;
-  return allHobbies.where((h) => h.category.toLowerCase() == category.toLowerCase()).toList();
+  return allHobbies
+      .where((h) => h.category.toLowerCase() == category.toLowerCase())
+      .toList();
 });

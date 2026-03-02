@@ -36,12 +36,13 @@ dependencies:
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
 
-  # Neon database (Postgres)
-  postgres: ^3.4.5
-
   # Icons
   material_design_icons_flutter: ^7.0.7296
   phosphor_flutter: ^2.1.0
+
+  # Auth
+  flutter_secure_storage: ^9.2.4
+  google_sign_in: ^6.2.2
 
   # Utilities
   uuid: ^4.5.1

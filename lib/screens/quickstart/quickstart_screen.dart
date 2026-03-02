@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
@@ -60,7 +59,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hobby = ref.watch(hobbyByIdProvider(widget.hobbyId));
+    final hobby = ref.watch(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
     if (hobby == null) return const SizedBox.shrink();
 
     final steps = hobby.roadmapSteps.take(3).toList();

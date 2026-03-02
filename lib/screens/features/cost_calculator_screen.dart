@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/feature_seed_data.dart';
 import '../../models/features.dart';
+import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
@@ -18,8 +18,8 @@ class CostCalculatorScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(hobbyId));
-    final costData = FeatureSeedData.costByHobby[hobbyId];
+    final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
+    final costData = ref.watch(costBreakdownProvider(hobbyId)).valueOrNull;
     final hobbyName = hobby?.title ?? hobbyId;
 
     return Scaffold(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
+import '../../theme/category_ui.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -112,7 +113,7 @@ class LocalDiscoveryScreen extends ConsumerWidget {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final user = nearbyUsers[index];
-                    final hobby = ref.watch(hobbyByIdProvider(user.hobbyId));
+                    final hobby = ref.watch(hobbyByIdProvider(user.hobbyId)).valueOrNull;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),

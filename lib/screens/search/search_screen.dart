@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/hobby_provider.dart';
+import '../../theme/category_ui.dart'; // ignore: unused_import
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -27,8 +28,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbiesAsync = ref.watch(hobbyListProvider);
 
+    return allHobbiesAsync.when(
+      loading: () => const SafeArea(child: Center(child: CircularProgressIndicator())),
+      error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
+      data: (allHobbies) {
     // Filter hobbies by query
     final results = _query.isEmpty
         ? <dynamic>[]
@@ -235,6 +240,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

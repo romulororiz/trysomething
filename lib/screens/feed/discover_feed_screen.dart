@@ -44,8 +44,8 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hobbies = ref.watch(filteredHobbiesProvider);
-    final categories = ref.watch(categoriesProvider);
+    final hobbiesAsync = ref.watch(filteredHobbiesProvider);
+    final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
     final selectedCategory = ref.watch(selectedCategoryProvider);
 
     return SafeArea(
@@ -71,7 +71,10 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
 
           // Card feed with dot indicators overlay
           Expanded(
-            child: hobbies.isEmpty
+            child: hobbiesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('$err')),
+              data: (hobbies) => hobbies.isEmpty
                 ? _buildEmptyState()
                 : Stack(
                     children: [
@@ -155,6 +158,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                       ),
                     ],
                   ),
+            ),
           ),
         ],
       ),

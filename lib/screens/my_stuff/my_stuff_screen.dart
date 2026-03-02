@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/hobby.dart';
+import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
@@ -32,7 +33,7 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
   @override
   Widget build(BuildContext context) {
     final userHobbies = ref.watch(userHobbiesProvider);
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbiesAsync = ref.watch(hobbyListProvider);
 
     // Stat counts
     final tryingCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.trying));
@@ -45,6 +46,10 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
         .where((uh) => uh.status == currentStatus)
         .toList();
 
+    return allHobbiesAsync.when(
+      loading: () => const SafeArea(child: Center(child: CircularProgressIndicator())),
+      error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
+      data: (allHobbies) {
     return SafeArea(
       bottom: false,
       child: Column(
@@ -138,6 +143,8 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -319,11 +326,11 @@ class _HobbyListItemState extends State<_HobbyListItem>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.10),
-                      Colors.black.withValues(alpha: 0.25),
-                      Colors.black.withValues(alpha: 0.65),
+                      Colors.black.withValues(alpha: 0.05),
+                      Colors.black.withValues(alpha: 0.30),
+                      Colors.black.withValues(alpha: 0.72),
                     ],
-                    stops: const [0.0, 0.35, 1.0],
+                    stops: const [0.0, 0.40, 1.0],
                   ),
                 ),
               ),
@@ -446,9 +453,9 @@ class _HobbyListItemState extends State<_HobbyListItem>
                               borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                               child: LinearProgressIndicator(
                                 value: progress,
-                                minHeight: 5,
-                                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                minHeight: 4,
+                                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.coral),
                               ),
                             ),
                           ),

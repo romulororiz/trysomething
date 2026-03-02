@@ -16,12 +16,12 @@ class CompareModeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allHobbies = ref.watch(hobbyListProvider);
+    final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final selectedIds = ref.watch(selectedCompareProvider);
 
     // Resolve selected hobbies
     final selectedHobbies = selectedIds
-        .map((id) => ref.watch(hobbyByIdProvider(id)))
+        .map((id) => ref.watch(hobbyByIdProvider(id)).valueOrNull)
         .where((h) => h != null)
         .cast<Hobby>()
         .toList();

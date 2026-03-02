@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../models/hobby.dart';
-import '../../models/seed_data.dart';
+import '../../theme/category_ui.dart';
+import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -250,13 +252,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       prefsNotifier.toggleVibe(vibe);
     }
     ref.read(onboardingCompleteProvider.notifier).complete();
+
+    // Fire-and-forget: sync preferences to server
+    final repo = ref.read(authRepositoryProvider);
+    repo.updatePreferences(
+      hoursPerWeek: _hours,
+      budgetLevel: _budget,
+      preferSocial: _social,
+      vibes: _vibes,
+    );
+
     context.go('/feed');
   }
 
   // ── Matching & Persona ──
 
   List<Hobby> _computeMatchedHobbies() {
-    final all = SeedData.hobbies;
+    final all = ref.read(hobbyListProvider).valueOrNull ?? [];
     if (_vibes.isEmpty) return all.toList();
 
     final scored = all.map((h) {
