@@ -224,7 +224,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Clear preferences & return to onboarding',
+                                'Sign out of your account',
+                                style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // ── Clear data ──
+                  GestureDetector(
+                    onTap: () => _showClearDataDialog(context, ref),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.sand,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.warmGray),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Clear local data',
+                                style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Reset onboarding, preferences & cached hobbies',
                                 style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
                               ),
                             ],
@@ -268,6 +303,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               if (context.mounted) context.go('/login');
             },
             child: Text('Log out', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearDataDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cream,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Clear local data?', style: AppTypography.sansSection),
+        content: Text(
+          'This will reset onboarding, preferences, and cached hobbies. You\'ll go through onboarding again.',
+          style: AppTypography.sansBodySmall.copyWith(color: AppColors.warmGray),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood)),
+          ),
+          TextButton(
+            onPressed: () async {
+              ref.read(onboardingCompleteProvider.notifier).reset();
+              final prefs = ref.read(sharedPreferencesProvider);
+              await prefs.remove('user_hobbies');
+              await prefs.remove('user_preferences');
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (context.mounted) context.go('/onboarding');
+            },
+            child: Text('Clear data', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
           ),
         ],
       ),

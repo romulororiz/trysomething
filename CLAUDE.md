@@ -193,8 +193,8 @@ flutter run             # Hot restart (Shift+R) required after theme/color const
 | 1 | **Foundation** | DONE | Server scaffolding (Prisma, Neon, health endpoint). Flutter repository pattern, Dio/Hive init, model serialization, category UI mapping extraction. |
 | 2 | **Auth & Onboarding** | DONE | Email + Google sign-in, JWT auth, login/register screens, splash screen, profile + preferences sync, router auth guards. |
 | 3 | **Core Content** | DONE | All hobby data from API. 15 screens transitioned from SeedData to async API-backed providers. Loading/error states. Hive caching with SeedData fallback. |
-| 4 | **User Progress** | NEXT | Plan written and approved (`.claude/plans/valiant-sauteeing-sutton.md`). Will persist hobby save/try/complete + step tracking + activity log + streaks to server. |
-| 5 | Personal Tools | Planned | Journal, notes, scheduler, shopping list — full CRUD synced to server. |
+| 4 | **User Progress** | DONE | Hobby save/try/complete + step tracking + activity log + streaks synced to server. Optimistic updates with rollback. SharedPreferences offline cache. |
+| 5 | **Personal Tools** | DONE | Journal, notes, scheduler, shopping list — full CRUD synced to server. 4 Prisma models, 6 handler functions, repository layer, optimistic updates with rollback. 30 unit tests. |
 | 6 | Social | Planned | Buddy pairing, community stories, nearby users. |
 | 7 | Gamification | Planned | Weekly challenges, achievements, year-in-review with real data. |
 | 8 | Polish & Ship | Planned | Push notifications, analytics, crash reporting, tests, CI/CD, app store submission. |
@@ -204,9 +204,9 @@ flutter run             # Hot restart (Shift+R) required after theme/color const
 **Server (11 serverless functions, Vercel Hobby plan limit is 12):**
 
 - URL: `https://server-psi-seven-49.vercel.app/api`
-- 12 Prisma models: 10 content (Hobby, Category, KitItem, RoadmapStep, FaqItem, CostBreakdown, BudgetAlternative, HobbyCombo, SeasonalPick, MoodTag) + User + UserPreference
+- 19 Prisma models: 10 content + User + UserPreference + UserHobby + UserCompletedStep + UserActivityLog + JournalEntry + PersonalNote + ScheduleEvent + ShoppingCheck
 - Auth endpoints: register, login, refresh, google (consolidated into `server/api/auth/[action].ts`)
-- User endpoints: me (GET/PUT), preferences (PUT) (consolidated into `server/api/users/[path].ts`)
+- User endpoints: me, preferences, hobbies, activity, journal, notes, schedule, shopping (all consolidated into `server/api/users/[path].ts`)
 - Content endpoints: hobbies (list, detail, search, combos, seasonal, mood) + categories + per-hobby features (faq, cost, budget)
 - Server accepts both `idToken` and `accessToken` for Google sign-in (Windows/web sends accessToken, Android/iOS sends idToken)
 - JWT pair: access token 15min, refresh token 30 days
@@ -222,19 +222,21 @@ flutter run             # Hot restart (Shift+R) required after theme/color const
 - Animated splash screen overlay during session restore (`AuthStatus.unknown`)
 - Per-button loading spinners (AuthMethod enum) on login/register screens
 - `debugPrint` logging on Google sign-in errors for diagnostics
+- User progress synced to server: save/try/complete hobbies, step tracking, activity log (optimistic updates with rollback, SharedPreferences offline cache)
+- Personal tools synced to server: journal, notes, schedule, shopping list (optimistic updates with rollback, 30 unit tests)
 
 **What's NOT yet server-synced (still local-only):**
 
-- User hobby progress (save/try/complete, step tracking) — SharedPreferences only, Batch 4 will fix this
-- Feature state (journal, schedule, notes, challenges) — in-memory only, resets on restart
-- Activity heatmap — hardcoded seed data
+- Challenges — in-memory seed data only
+- Social features (buddy, stories, nearby) — seed data only
+- Year-in-review — seed data only
 
 ### Key architecture files
 
 **Server:**
 
 - `server/api/auth/[action].ts` — All 4 auth endpoints in one handler (register, login, refresh, google)
-- `server/api/users/[path].ts` — User endpoints (me, preferences) — Batch 4 will add hobbies/activity here
+- `server/api/users/[path].ts` — All user endpoints (me, preferences, hobbies, activity, journal, notes, schedule, shopping)
 - `server/prisma/schema.prisma` — All Prisma models
 - `server/lib/auth.ts` — JWT helpers (hashPassword, comparePassword, generateTokenPair, verifyAccessToken, requireAuth)
 - `server/lib/mappers.ts` — Response mapping (strips sensitive fields)
@@ -249,9 +251,10 @@ flutter run             # Hot restart (Shift+R) required after theme/color const
 - `lib/core/auth/auth_interceptor.dart` — Dio interceptor: attaches JWT, handles 401 refresh with separate Dio instance
 - `lib/providers/auth_provider.dart` — AuthNotifier (register/login/google/logout/restore), AuthState, AuthMethod enum
 - `lib/providers/hobby_provider.dart` — Async hobby providers (API → Hive cache → SeedData fallback)
-- `lib/providers/user_provider.dart` — SharedPreferences-backed onboarding/preferences/userHobbies
+- `lib/providers/user_provider.dart` — SharedPreferences-backed onboarding/preferences/userHobbies + server-synced UserHobbiesNotifier
+- `lib/providers/feature_providers.dart` — Journal, schedule, notes, shopping list (API-backed with optimistic updates)
 - `lib/router.dart` — GoRouter with refreshListenable + auth/onboarding redirect chain
-- `lib/data/repositories/` — Repository pattern (interface + API impl) for auth and hobbies
+- `lib/data/repositories/` — Repository pattern (interface + API impl) for auth, hobbies, user progress, personal tools
 
 ### Build commands
 
@@ -292,12 +295,6 @@ Detailed Batch 4 plan: `.claude/plans/valiant-sauteeing-sutton.md`
 
 ### Remaining batch details
 
-**Batch 4 — User Progress (3 Prisma models, ~7 endpoints, 4 screens)**
-Models: UserHobby, UserCompletedStep, UserActivityLog. Optimistic updates with rollback. SharedPreferences as offline cache. Streak computed server-side from activity log. All endpoints consolidated into existing `users/[path].ts`.
-
-**Batch 5 — Personal Tools (4 models, ~4 endpoints, 4 screens)**
-Full CRUD sync for: Journal, Notes, Scheduler, Shopping list.
-
 **Batch 6 — Social & Community (5 models, ~7 endpoints, 3 screens)**
 Buddy pairing, community stories with reactions, nearby users (earthdistance).
 
@@ -307,4 +304,4 @@ Weekly challenges, achievements (auto-unlock), year-in-review with real data.
 **Batch 8 — Production Polish (1 model, ~2 endpoints, cross-cutting)**
 Push notifications (FCM), analytics, crash reporting, tests, CI/CD, app store submission.
 
-**Totals remaining:** 17 Prisma models, ~25 endpoints across 4 handler files
+**Totals remaining:** 10 Prisma models, ~14 endpoints across 4 handler files
