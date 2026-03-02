@@ -42,4 +42,11 @@ class CacheManager {
     await _dataBox.put(key, jsonString);
     await _metaBox.put(key, DateTime.now().millisecondsSinceEpoch);
   }
+
+  /// Remove a cached entry so the next [get] returns null.
+  /// The data is kept for [getStale] fallback until overwritten.
+  static Future<void> invalidate(String key) async {
+    if (!_initialized) return;
+    await _metaBox.delete(key);
+  }
 }

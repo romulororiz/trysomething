@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
@@ -67,6 +68,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
     final allHobbies = ref.watch(hobbyListProvider).valueOrNull ?? [];
     final searchResults = _getSearchResults(allHobbies);
+
+    // Auto-navigate on successful generation
+    ref.listen<GenerationState>(generationProvider, (prev, next) {
+      if (next.status == GenerationStatus.success && next.hobby != null) {
+        ref.read(generationProvider.notifier).reset();
+        context.push('/hobby/${next.hobby!.id}');
+      }
+    });
 
     return SafeArea(
       bottom: false,
@@ -340,6 +349,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     }
 
     if (results.isEmpty) {
+      final genState = ref.watch(generationProvider);
+      final isGenerating = genState.status == GenerationStatus.generating;
+
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -350,6 +362,56 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               'Nothing found for "$_searchQuery"',
               style: AppTypography.sansBodySmall.copyWith(color: AppColors.driftwood),
             ),
+            const SizedBox(height: 20),
+            if (isGenerating)
+              Column(
+                children: [
+                  const SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
+                  ),
+                  const SizedBox(height: 10),
+                  Text('Generating hobby...', style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood)),
+                ],
+              )
+            else if (genState.status == GenerationStatus.error)
+              Column(
+                children: [
+                  Text('Something went wrong. Try again?', style: AppTypography.sansCaption.copyWith(color: AppColors.warmGray)),
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text('Generate this hobby', style: AppTypography.sansCta.copyWith(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              GestureDetector(
+                onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text('Generate this hobby', style: AppTypography.sansCta.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       );

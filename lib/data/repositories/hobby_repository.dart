@@ -10,4 +10,5 @@ abstract class HobbyRepository {
   Future<List<Hobby>> getRelatedHobbies(String hobbyId, {int limit = 3});
   Future<List<Hobby>> searchHobbies(String query);
   Future<List<CuratedPack>> getCuratedPacks();
+  Future<Hobby> generateHobby(String query);
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/category_ui.dart'; // ignore: unused_import
 import '../../theme/app_colors.dart';
@@ -29,6 +30,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final allHobbiesAsync = ref.watch(hobbyListProvider);
+
+    // Auto-navigate on successful generation
+    ref.listen<GenerationState>(generationProvider, (prev, next) {
+      if (next.status == GenerationStatus.success && next.hobby != null) {
+        ref.read(generationProvider.notifier).reset();
+        context.push('/hobby/${next.hobby!.id}');
+      }
+    });
 
     return allHobbiesAsync.when(
       loading: () => const SafeArea(child: Center(child: CircularProgressIndicator())),
@@ -185,18 +194,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             else if (_query.isNotEmpty && results.isEmpty)
               Expanded(
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Opacity(
-                        opacity: 0.3,
-                        child: Icon(Icons.search, size: 44, color: AppColors.warmGray),
-                      ),
-                      const SizedBox(height: 12),
-                      Text('No results for "$_query"',
-                          style: AppTypography.sansBody.copyWith(color: AppColors.warmGray)),
-                    ],
-                  ),
+                  child: _buildGenerateCta(),
                 ),
               )
             else ...[
@@ -242,6 +240,88 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       ),
     );
       },
+    );
+  }
+
+  Widget _buildGenerateCta() {
+    final genState = ref.watch(generationProvider);
+    final isGenerating = genState.status == GenerationStatus.generating;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Opacity(
+          opacity: 0.3,
+          child: Icon(Icons.search, size: 44, color: AppColors.warmGray),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'No results for "$_query"',
+          style: AppTypography.sansBody.copyWith(color: AppColors.warmGray),
+        ),
+        const SizedBox(height: 20),
+        if (isGenerating)
+          Column(
+            children: [
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.coral,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Generating hobby...',
+                style: AppTypography.sansCaption.copyWith(
+                  color: AppColors.driftwood,
+                ),
+              ),
+            ],
+          )
+        else if (genState.status == GenerationStatus.error)
+          Column(
+            children: [
+              Text(
+                'Something went wrong. Try again?',
+                style: AppTypography.sansCaption.copyWith(
+                  color: AppColors.warmGray,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _generateButton(),
+            ],
+          )
+        else
+          _generateButton(),
+      ],
+    );
+  }
+
+  Widget _generateButton() {
+    return GestureDetector(
+      onTap: () {
+        ref.read(generationProvider.notifier).generate(_query);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.coral,
+          borderRadius: BorderRadius.circular(Spacing.radiusButton),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              'Generate this hobby',
+              style: AppTypography.sansCta.copyWith(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

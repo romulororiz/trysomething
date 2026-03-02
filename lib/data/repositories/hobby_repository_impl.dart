@@ -42,4 +42,9 @@ class HobbyRepositoryImpl implements HobbyRepository {
   Future<List<CuratedPack>> getCuratedPacks() async {
     return []; // No seed data for curated packs
   }
+
+  @override
+  Future<Hobby> generateHobby(String query) {
+    throw UnsupportedError('Generation requires API');
+  }
 }

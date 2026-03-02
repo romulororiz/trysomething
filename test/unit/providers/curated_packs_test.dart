@@ -25,6 +25,8 @@ class MockHobbyRepository implements HobbyRepository {
   Future<List<Hobby>> getRelatedHobbies(String hobbyId, {int limit = 3}) async => [];
   @override
   Future<List<Hobby>> searchHobbies(String query) async => [];
+  @override
+  Future<Hobby> generateHobby(String query) => throw UnimplementedError();
 }
 
 void main() {

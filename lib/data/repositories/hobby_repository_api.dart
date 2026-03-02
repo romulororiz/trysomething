@@ -123,6 +123,23 @@ class HobbyRepositoryApi implements HobbyRepository {
     }
   }
 
+  @override
+  Future<Hobby> generateHobby(String query) async {
+    final response = await _dio.post(
+      ApiConstants.generateHobby,
+      data: {'query': query},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final hobby = Hobby.fromJson(data['hobby'] as Map<String, dynamic>);
+
+    // Invalidate hobbies cache so the new hobby appears in the feed
+    await CacheManager.invalidate('hobbies');
+    // Cache the new hobby individually
+    await CacheManager.put('hobby_${hobby.id}', json.encode(data['hobby']));
+
+    return hobby;
+  }
+
   // ── Helpers ──────────────────────────────────────
 
   List<Hobby> _parseHobbyList(String jsonString) {

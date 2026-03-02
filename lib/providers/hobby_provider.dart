@@ -34,6 +34,69 @@ final curatedPacksProvider = FutureProvider<List<CuratedPack>>((ref) {
 });
 
 // ═══════════════════════════════════════════════════════
+//  AI GENERATION
+// ═══════════════════════════════════════════════════════
+
+enum GenerationStatus { idle, generating, success, error }
+
+class GenerationState {
+  final GenerationStatus status;
+  final Hobby? hobby;
+  final String? error;
+
+  const GenerationState({
+    this.status = GenerationStatus.idle,
+    this.hobby,
+    this.error,
+  });
+
+  GenerationState copyWith({
+    GenerationStatus? status,
+    Hobby? hobby,
+    String? error,
+  }) =>
+      GenerationState(
+        status: status ?? this.status,
+        hobby: hobby ?? this.hobby,
+        error: error ?? this.error,
+      );
+}
+
+class GenerationNotifier extends StateNotifier<GenerationState> {
+  GenerationNotifier(this._ref) : super(const GenerationState());
+
+  final Ref _ref;
+
+  Future<void> generate(String query) async {
+    state = const GenerationState(status: GenerationStatus.generating);
+    try {
+      final hobby =
+          await _ref.read(hobbyRepositoryProvider).generateHobby(query);
+      // Invalidate hobby list so feed picks up the new hobby
+      _ref.invalidate(hobbyListProvider);
+      state = GenerationState(
+        status: GenerationStatus.success,
+        hobby: hobby,
+      );
+    } catch (e) {
+      state = GenerationState(
+        status: GenerationStatus.error,
+        error: e.toString(),
+      );
+    }
+  }
+
+  void reset() {
+    state = const GenerationState();
+  }
+}
+
+final generationProvider =
+    StateNotifierProvider<GenerationNotifier, GenerationState>((ref) {
+  return GenerationNotifier(ref);
+});
+
+// ═══════════════════════════════════════════════════════
 //  FEED PROVIDERS
 // ═══════════════════════════════════════════════════════
 
