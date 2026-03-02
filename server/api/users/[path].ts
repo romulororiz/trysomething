@@ -106,7 +106,7 @@ async function handleMe(
       }
       res.status(200).json(mapUserWithPreferences(user));
     } else {
-      const { displayName, avatarUrl } = req.body ?? {};
+      const { displayName, avatarUrl, bio } = req.body ?? {};
       const user = await prisma.user.update({
         where: { id: userId },
         data: {
@@ -114,6 +114,7 @@ async function handleMe(
             displayName: String(displayName).trim(),
           }),
           ...(avatarUrl !== undefined && { avatarUrl }),
+          ...(bio !== undefined && { bio: String(bio).trim() }),
         },
         include: { preferences: true },
       });

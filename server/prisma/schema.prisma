@@ -153,6 +153,7 @@ model User {
   email        String          @unique
   passwordHash String
   displayName  String
+  bio          String          @default("")
   avatarUrl    String?
   googleId     String?         @unique
   createdAt    DateTime        @default(now())

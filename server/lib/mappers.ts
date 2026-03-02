@@ -188,6 +188,7 @@ type PrismaUser = {
   id: string;
   email: string;
   displayName: string;
+  bio: string;
   avatarUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -208,6 +209,7 @@ export function mapUser(u: PrismaUser) {
     id: u.id,
     email: u.email,
     displayName: u.displayName,
+    bio: u.bio,
     avatarUrl: u.avatarUrl,
     createdAt: u.createdAt.toISOString(),
   };
