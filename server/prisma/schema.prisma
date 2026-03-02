@@ -159,6 +159,8 @@ model User {
   updatedAt    DateTime        @updatedAt
 
   preferences  UserPreference?
+  hobbies      UserHobby[]
+  activityLogs UserActivityLog[]
 }
 
 model UserPreference {
@@ -170,4 +172,57 @@ model UserPreference {
   vibes        String[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ═══════════════════════════════════════════════════
+//  USER PROGRESS MODELS (Phase 3)
+// ═══════════════════════════════════════════════════
+
+enum HobbyStatus {
+  saved
+  trying
+  active
+  done
+}
+
+model UserHobby {
+  id             String      @id @default(uuid())
+  userId         String
+  hobbyId        String
+  status         HobbyStatus @default(saved)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  lastActivityAt DateTime?
+  streakDays     Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completedSteps UserCompletedStep[]
+
+  @@unique([userId, hobbyId])
+}
+
+model UserCompletedStep {
+  id          String   @id @default(uuid())
+  userId      String
+  hobbyId     String
+  stepId      String
+  completedAt DateTime @default(now())
+
+  userHobby   UserHobby @relation(fields: [userId, hobbyId], references: [userId, hobbyId], onDelete: Cascade)
+
+  @@unique([userId, hobbyId, stepId])
+}
+
+model UserActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  hobbyId   String?
+  action    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
