@@ -57,4 +57,8 @@ class ApiConstants {
   static String usersBuddyRequest(String requestId) =>
       '/users/buddy-requests/$requestId';
   static const usersSimilarUsers = '/users/similar-users';
+
+  // Gamification
+  static const usersChallenges = '/users/challenges';
+  static const usersAchievements = '/users/achievements';
 }
