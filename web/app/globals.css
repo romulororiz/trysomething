@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+/* Tell Tailwind v4 where to scan for class names */
+@source "../components";
+@source "../hooks";
+@source "../lib";
+
+/* ═══════════════════════════════════════════════════
+   MIDNIGHT NEON — Theme Tokens
+   Ported from Flutter: app_colors.dart, spacing.dart, motion.dart
+   ═══════════════════════════════════════════════════ */
+
+@theme {
+  /* Neutrals (dark → light) */
+  --color-cream: #0A0A0F;
+  --color-warm-white: #141420;
+  --color-sand: #1E1E2E;
+  --color-sand-dark: #2A2A3C;
+  --color-stone: #363650;
+  --color-warm-gray: #6B6B80;
+  --color-driftwood: #A0A0B8;
+  --color-espresso: #C0C0D0;
+  --color-dark-brown: #D8D8E8;
+  --color-near-black: #F8F8FC;
+
+  /* Accent — Hot Coral */
+  --color-coral: #FF6B6B;
+  --color-coral-light: #FF8A8A;
+  --color-coral-pale: #2E1820;
+  --color-coral-deep: #E55555;
+
+  /* Accent — Gold */
+  --color-amber: #FBBF24;
+  --color-amber-light: #FCD34D;
+  --color-amber-pale: #2E2518;
+
+  /* Accent — Electric Violet */
+  --color-indigo: #7C3AED;
+  --color-indigo-light: #9461F7;
+  --color-indigo-pale: #201540;
+
+  /* Supporting */
+  --color-sage: #06D6A0;
+  --color-sage-pale: #0A2A1A;
+  --color-rose: #FB7185;
+  --color-sky: #38BDF8;
+
+  /* Category colors */
+  --color-cat-creative: #D946EF;
+  --color-cat-outdoors: #06D6A0;
+  --color-cat-fitness: #FF4757;
+  --color-cat-maker: #FBBF24;
+  --color-cat-music: #818CF8;
+  --color-cat-food: #FB923C;
+  --color-cat-collecting: #38BDF8;
+  --color-cat-mind: #7C3AED;
+  --color-cat-social: #F472B6;
+
+  /* Radii */
+  --radius-card: 22px;
+  --radius-tile: 16px;
+  --radius-button: 14px;
+  --radius-input: 12px;
+  --radius-badge: 100px;
+
+  /* Font families — static values only (no var() in @theme) */
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE STYLES
+   Put in @layer base so they don't override Tailwind
+   utilities (unlayered CSS beats @layer utilities)
+   ═══════════════════════════════════════════════════ */
+
+@layer base {
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-near-black);
+    font-family: var(--font-dm-sans, var(--font-sans));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: #FF6B6B4D;
+    color: var(--color-near-black);
+  }
+
+  /* Focus ring — per ui-ux-pro-max */
+  :focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 2px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   NOISE GRAIN TEXTURE
+   ═══════════════════════════════════════════════════ */
+
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ═══════════════════════════════════════════════════
+   GLASSMORPHISM
+   ═══════════════════════════════════════════════════ */
+
+.glass {
+  background: rgba(30, 30, 46, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(42, 42, 60, 0.8);
+  border-radius: var(--radius-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ═══════════════════════════════════════════════════
+   BREATHING GLOW ANIMATION
+   ═══════════════════════════════════════════════════ */
+
+@keyframes breathing-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.3)); }
+  50% { filter: drop-shadow(0 0 18px rgba(255, 107, 107, 0.6)); }
+}
+
+.breathing-glow {
+  animation: breathing-glow 1800ms ease-in-out infinite;
+  will-change: filter;
+}
+
+/* ═══════════════════════════════════════════════════
+   WAVE UNDERLINE
+   ═══════════════════════════════════════════════════ */
+
+.wave-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.wave-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #FF6B6B;
+  opacity: 0.63;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 350ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.wave-underline.visible::after {
+  transform: scaleX(1);
+}
+
+/* ═══════════════════════════════════════════════════
+   GRADIENT SHIFT (footer border)
+   ═══════════════════════════════════════════════════ */
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* ═══════════════════════════════════════════════════
+   SCROLL PROGRESS BAR
+   ═══════════════════════════════════════════════════ */
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: #FF6B6B;
+  z-index: 100;
+  transform-origin: left;
+}
+
+/* ═══════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .breathing-glow {
+    animation: none;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
