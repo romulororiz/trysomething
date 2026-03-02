@@ -9,6 +9,11 @@
   "routes": [
     { "src": "/api/health", "dest": "/api/health.ts" },
     { "src": "/api/auth/(register|login|refresh|google)", "dest": "/api/auth/[action].ts?action=$1" },
+    { "src": "/api/users/hobbies-sync", "dest": "/api/users/[path].ts?path=hobbies-sync" },
+    { "src": "/api/users/hobbies/([^/]+)/steps/([^/]+)", "dest": "/api/users/[path].ts?path=hobbies-detail&hobbyId=$1&stepId=$2" },
+    { "src": "/api/users/hobbies/([^/]+)", "dest": "/api/users/[path].ts?path=hobbies-detail&hobbyId=$1" },
+    { "src": "/api/users/hobbies", "dest": "/api/users/[path].ts?path=hobbies" },
+    { "src": "/api/users/activity", "dest": "/api/users/[path].ts?path=activity" },
     { "src": "/api/users/(me|preferences)", "dest": "/api/users/[path].ts?path=$1" },
     { "src": "/api/categories", "dest": "/api/categories/index.ts" },
     { "src": "/api/hobbies/search", "dest": "/api/hobbies/search.ts" },

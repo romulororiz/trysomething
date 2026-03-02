@@ -229,6 +229,46 @@ export function mapUserPreference(p: PrismaUserPreference) {
   };
 }
 
+// ── User Progress ───────────────────────────────
+
+type PrismaUserHobby = {
+  userId: string;
+  hobbyId: string;
+  status: string;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  lastActivityAt: Date | null;
+  streakDays: number;
+  completedSteps: { stepId: string }[];
+};
+
+type PrismaActivityLog = {
+  id: string;
+  hobbyId: string | null;
+  action: string;
+  createdAt: Date;
+};
+
+export function mapUserHobby(uh: PrismaUserHobby) {
+  return {
+    hobbyId: uh.hobbyId,
+    status: uh.status,
+    completedStepIds: uh.completedSteps.map((s) => s.stepId),
+    startedAt: uh.startedAt?.toISOString() ?? null,
+    lastActivityAt: uh.lastActivityAt?.toISOString() ?? null,
+    streakDays: uh.streakDays,
+  };
+}
+
+export function mapActivityLog(a: PrismaActivityLog) {
+  return {
+    id: a.id,
+    hobbyId: a.hobbyId,
+    action: a.action,
+    createdAt: a.createdAt.toISOString(),
+  };
+}
+
 // ── Aggregation helpers ──────────────────────────
 
 export function groupByField<T extends Record<string, unknown>>(

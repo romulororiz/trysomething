@@ -9,6 +9,8 @@ import { requireAuth } from "../../lib/auth";
 import {
   mapUserWithPreferences,
   mapUserPreference,
+  mapUserHobby,
+  mapActivityLog,
 } from "../../lib/mappers";
 
 export default async function handler(
@@ -24,6 +26,14 @@ export default async function handler(
       return handleMe(req, res);
     case "preferences":
       return handlePreferences(req, res);
+    case "hobbies":
+      return handleHobbies(req, res);
+    case "hobbies-sync":
+      return handleHobbiesSync(req, res);
+    case "hobbies-detail":
+      return handleHobbyDetail(req, res);
+    case "activity":
+      return handleActivity(req, res);
     default:
       errorResponse(res, 404, `Unknown user path '${path}'`);
   }
@@ -106,5 +116,245 @@ async function handlePreferences(
   } catch (err) {
     console.error("PUT /api/users/preferences error:", err);
     errorResponse(res, 500, "Failed to update preferences");
+  }
+}
+
+// ── /users/hobbies ──────────────────────────────
+
+async function handleHobbies(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET", "POST"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    if (req.method === "GET") {
+      const hobbies = await prisma.userHobby.findMany({
+        where: { userId },
+        include: { completedSteps: { select: { stepId: true } } },
+      });
+      res.status(200).json(hobbies.map(mapUserHobby));
+    } else {
+      // POST — save a hobby
+      const { hobbyId } = req.body ?? {};
+      if (!hobbyId) {
+        errorResponse(res, 400, "hobbyId is required");
+        return;
+      }
+
+      const hobby = await prisma.userHobby.upsert({
+        where: { userId_hobbyId: { userId, hobbyId } },
+        create: { userId, hobbyId, status: "saved" },
+        update: {},
+        include: { completedSteps: { select: { stepId: true } } },
+      });
+
+      await prisma.userActivityLog.create({
+        data: { userId, hobbyId, action: "save" },
+      });
+
+      res.status(201).json(mapUserHobby(hobby));
+    }
+  } catch (err) {
+    console.error(`${req.method} /api/users/hobbies error:`, err);
+    errorResponse(res, 500, "Failed to process hobbies request");
+  }
+}
+
+// ── /users/hobbies-sync ─────────────────────────
+
+async function handleHobbiesSync(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["POST"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const { hobbies } = req.body ?? {};
+    if (!Array.isArray(hobbies)) {
+      errorResponse(res, 400, "hobbies array is required");
+      return;
+    }
+
+    // Delete all existing user hobbies, then insert client state
+    await prisma.$transaction(async (tx) => {
+      await tx.userHobby.deleteMany({ where: { userId } });
+
+      for (const h of hobbies) {
+        const userHobby = await tx.userHobby.create({
+          data: {
+            userId,
+            hobbyId: h.hobbyId,
+            status: h.status ?? "saved",
+            startedAt: h.startedAt ? new Date(h.startedAt) : null,
+            completedAt: h.completedAt ? new Date(h.completedAt) : null,
+            lastActivityAt: h.lastActivityAt
+              ? new Date(h.lastActivityAt)
+              : null,
+            streakDays: h.streakDays ?? 0,
+          },
+        });
+
+        // Insert completed steps if provided
+        const stepIds: string[] = h.completedStepIds ?? [];
+        if (stepIds.length > 0) {
+          await tx.userCompletedStep.createMany({
+            data: stepIds.map((stepId: string) => ({
+              userId,
+              hobbyId: h.hobbyId,
+              stepId,
+            })),
+          });
+        }
+      }
+    });
+
+    // Return the synced state
+    const result = await prisma.userHobby.findMany({
+      where: { userId },
+      include: { completedSteps: { select: { stepId: true } } },
+    });
+    res.status(200).json(result.map(mapUserHobby));
+  } catch (err) {
+    console.error("POST /api/users/hobbies-sync error:", err);
+    errorResponse(res, 500, "Failed to sync hobbies");
+  }
+}
+
+// ── /users/hobbies/:hobbyId (+ /steps/:stepId) ─
+
+async function handleHobbyDetail(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["PUT", "DELETE", "POST"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  const hobbyId = req.query.hobbyId as string;
+  if (!hobbyId) {
+    errorResponse(res, 400, "hobbyId is required");
+    return;
+  }
+
+  try {
+    // POST /users/hobbies/:hobbyId/steps/:stepId — toggle step
+    const stepId = req.query.stepId as string | undefined;
+    if (req.method === "POST" && stepId) {
+      const existing = await prisma.userCompletedStep.findUnique({
+        where: { userId_hobbyId_stepId: { userId, hobbyId, stepId } },
+      });
+
+      if (existing) {
+        await prisma.userCompletedStep.delete({
+          where: { id: existing.id },
+        });
+      } else {
+        await prisma.userCompletedStep.create({
+          data: { userId, hobbyId, stepId },
+        });
+      }
+
+      // Update lastActivityAt
+      await prisma.userHobby.update({
+        where: { userId_hobbyId: { userId, hobbyId } },
+        data: { lastActivityAt: new Date() },
+      });
+
+      await prisma.userActivityLog.create({
+        data: {
+          userId,
+          hobbyId,
+          action: existing ? "step_uncomplete" : "step_complete",
+        },
+      });
+
+      const hobby = await prisma.userHobby.findUnique({
+        where: { userId_hobbyId: { userId, hobbyId } },
+        include: { completedSteps: { select: { stepId: true } } },
+      });
+      res.status(200).json(mapUserHobby(hobby!));
+      return;
+    }
+
+    // PUT /users/hobbies/:hobbyId — update status
+    if (req.method === "PUT") {
+      const { status, startedAt, completedAt } = req.body ?? {};
+      const hobby = await prisma.userHobby.update({
+        where: { userId_hobbyId: { userId, hobbyId } },
+        data: {
+          ...(status !== undefined && { status }),
+          ...(startedAt !== undefined && {
+            startedAt: startedAt ? new Date(startedAt) : null,
+          }),
+          ...(completedAt !== undefined && {
+            completedAt: completedAt ? new Date(completedAt) : null,
+          }),
+          lastActivityAt: new Date(),
+        },
+        include: { completedSteps: { select: { stepId: true } } },
+      });
+
+      await prisma.userActivityLog.create({
+        data: { userId, hobbyId, action: `status_${status}` },
+      });
+
+      res.status(200).json(mapUserHobby(hobby));
+      return;
+    }
+
+    // DELETE /users/hobbies/:hobbyId — unsave/remove
+    if (req.method === "DELETE") {
+      await prisma.userHobby.delete({
+        where: { userId_hobbyId: { userId, hobbyId } },
+      });
+
+      await prisma.userActivityLog.create({
+        data: { userId, hobbyId, action: "unsave" },
+      });
+
+      res.status(204).end();
+      return;
+    }
+  } catch (err) {
+    console.error(
+      `${req.method} /api/users/hobbies/${hobbyId} error:`,
+      err
+    );
+    errorResponse(res, 500, "Failed to process hobby request");
+  }
+}
+
+// ── /users/activity ─────────────────────────────
+
+async function handleActivity(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const days = parseInt((req.query.days as string) ?? "365", 10);
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const logs = await prisma.userActivityLog.findMany({
+      where: { userId, createdAt: { gte: since } },
+      orderBy: { createdAt: "desc" },
+    });
+    res.status(200).json(logs.map(mapActivityLog));
+  } catch (err) {
+    console.error("GET /api/users/activity error:", err);
+    errorResponse(res, 500, "Failed to get activity log");
   }
 }
