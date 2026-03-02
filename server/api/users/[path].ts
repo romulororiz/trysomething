@@ -11,6 +11,10 @@ import {
   mapUserPreference,
   mapUserHobby,
   mapActivityLog,
+  mapJournalEntry,
+  mapPersonalNote,
+  mapScheduleEvent,
+  mapShoppingCheck,
 } from "../../lib/mappers";
 
 export default async function handler(
@@ -34,6 +38,18 @@ export default async function handler(
       return handleHobbyDetail(req, res);
     case "activity":
       return handleActivity(req, res);
+    case "journal":
+      return handleJournal(req, res);
+    case "journal-detail":
+      return handleJournalDetail(req, res);
+    case "notes":
+      return handleNotes(req, res);
+    case "schedule":
+      return handleSchedule(req, res);
+    case "schedule-detail":
+      return handleScheduleDetail(req, res);
+    case "shopping":
+      return handleShopping(req, res);
     default:
       errorResponse(res, 404, `Unknown user path '${path}'`);
   }
@@ -356,5 +372,237 @@ async function handleActivity(
   } catch (err) {
     console.error("GET /api/users/activity error:", err);
     errorResponse(res, 500, "Failed to get activity log");
+  }
+}
+
+// ── /users/journal ─────────────────────────────
+
+async function handleJournal(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET", "POST"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    if (req.method === "GET") {
+      const entries = await prisma.journalEntry.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      res.status(200).json(entries.map(mapJournalEntry));
+    } else {
+      const { hobbyId, text, photoUrl } = req.body ?? {};
+      if (!hobbyId || !text) {
+        errorResponse(res, 400, "hobbyId and text are required");
+        return;
+      }
+
+      const entry = await prisma.journalEntry.create({
+        data: { userId, hobbyId, text, photoUrl: photoUrl ?? null },
+      });
+      res.status(201).json(mapJournalEntry(entry));
+    }
+  } catch (err) {
+    console.error(`${req.method} /api/users/journal error:`, err);
+    errorResponse(res, 500, "Failed to process journal request");
+  }
+}
+
+// ── /users/journal/:entryId ────────────────────
+
+async function handleJournalDetail(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["DELETE"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  const entryId = req.query.entryId as string;
+  if (!entryId) {
+    errorResponse(res, 400, "entryId is required");
+    return;
+  }
+
+  try {
+    await prisma.journalEntry.deleteMany({
+      where: { id: entryId, userId },
+    });
+    res.status(204).end();
+  } catch (err) {
+    console.error(`DELETE /api/users/journal/${entryId} error:`, err);
+    errorResponse(res, 500, "Failed to delete journal entry");
+  }
+}
+
+// ── /users/notes/:hobbyId ─────────────────────
+
+async function handleNotes(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET", "PUT", "DELETE"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  const hobbyId = req.query.hobbyId as string;
+  if (!hobbyId) {
+    errorResponse(res, 400, "hobbyId is required");
+    return;
+  }
+
+  try {
+    if (req.method === "GET") {
+      const notes = await prisma.personalNote.findMany({
+        where: { userId, hobbyId },
+      });
+      res.status(200).json(notes.map(mapPersonalNote));
+    } else if (req.method === "PUT") {
+      const { stepId, text } = req.body ?? {};
+      if (!stepId || text === undefined) {
+        errorResponse(res, 400, "stepId and text are required");
+        return;
+      }
+
+      const note = await prisma.personalNote.upsert({
+        where: { userId_hobbyId_stepId: { userId, hobbyId, stepId } },
+        create: { userId, hobbyId, stepId, text },
+        update: { text },
+      });
+      res.status(200).json(mapPersonalNote(note));
+    } else {
+      // DELETE
+      const stepId = req.query.stepId as string;
+      if (!stepId) {
+        errorResponse(res, 400, "stepId is required");
+        return;
+      }
+
+      await prisma.personalNote.deleteMany({
+        where: { userId, hobbyId, stepId },
+      });
+      res.status(204).end();
+    }
+  } catch (err) {
+    console.error(`${req.method} /api/users/notes/${hobbyId} error:`, err);
+    errorResponse(res, 500, "Failed to process notes request");
+  }
+}
+
+// ── /users/schedule ───────────────────────────
+
+async function handleSchedule(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET", "POST"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    if (req.method === "GET") {
+      const events = await prisma.scheduleEvent.findMany({
+        where: { userId },
+      });
+      res.status(200).json(events.map(mapScheduleEvent));
+    } else {
+      const { hobbyId, dayOfWeek, startTime, durationMinutes } =
+        req.body ?? {};
+      if (!hobbyId || dayOfWeek === undefined || !startTime || !durationMinutes) {
+        errorResponse(
+          res,
+          400,
+          "hobbyId, dayOfWeek, startTime, and durationMinutes are required"
+        );
+        return;
+      }
+
+      const event = await prisma.scheduleEvent.create({
+        data: { userId, hobbyId, dayOfWeek, startTime, durationMinutes },
+      });
+      res.status(201).json(mapScheduleEvent(event));
+    }
+  } catch (err) {
+    console.error(`${req.method} /api/users/schedule error:`, err);
+    errorResponse(res, 500, "Failed to process schedule request");
+  }
+}
+
+// ── /users/schedule/:eventId ──────────────────
+
+async function handleScheduleDetail(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["DELETE"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  const eventId = req.query.eventId as string;
+  if (!eventId) {
+    errorResponse(res, 400, "eventId is required");
+    return;
+  }
+
+  try {
+    await prisma.scheduleEvent.deleteMany({
+      where: { id: eventId, userId },
+    });
+    res.status(204).end();
+  } catch (err) {
+    console.error(`DELETE /api/users/schedule/${eventId} error:`, err);
+    errorResponse(res, 500, "Failed to delete schedule event");
+  }
+}
+
+// ── /users/shopping/:hobbyId ──────────────────
+
+async function handleShopping(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET", "PUT"])) return;
+
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  const hobbyId = req.query.hobbyId as string;
+  if (!hobbyId) {
+    errorResponse(res, 400, "hobbyId is required");
+    return;
+  }
+
+  try {
+    if (req.method === "GET") {
+      const checks = await prisma.shoppingCheck.findMany({
+        where: { userId, hobbyId },
+      });
+      res.status(200).json(checks.map(mapShoppingCheck));
+    } else {
+      const { itemName, checked } = req.body ?? {};
+      if (!itemName || checked === undefined) {
+        errorResponse(res, 400, "itemName and checked are required");
+        return;
+      }
+
+      const check = await prisma.shoppingCheck.upsert({
+        where: {
+          userId_hobbyId_itemName: { userId, hobbyId, itemName },
+        },
+        create: { userId, hobbyId, itemName, checked },
+        update: { checked },
+      });
+      res.status(200).json(mapShoppingCheck(check));
+    }
+  } catch (err) {
+    console.error(`${req.method} /api/users/shopping/${hobbyId} error:`, err);
+    errorResponse(res, 500, "Failed to process shopping request");
   }
 }

@@ -269,6 +269,77 @@ export function mapActivityLog(a: PrismaActivityLog) {
   };
 }
 
+// ── Personal Tools ─────────────────────────────
+
+type PrismaJournalEntry = {
+  id: string;
+  userId: string;
+  hobbyId: string;
+  text: string;
+  photoUrl: string | null;
+  createdAt: Date;
+};
+
+type PrismaPersonalNote = {
+  id: string;
+  userId: string;
+  hobbyId: string;
+  stepId: string;
+  text: string;
+};
+
+type PrismaScheduleEvent = {
+  id: string;
+  userId: string;
+  hobbyId: string;
+  dayOfWeek: number;
+  startTime: string;
+  durationMinutes: number;
+};
+
+type PrismaShoppingCheck = {
+  id: string;
+  userId: string;
+  hobbyId: string;
+  itemName: string;
+  checked: boolean;
+};
+
+export function mapJournalEntry(e: PrismaJournalEntry) {
+  return {
+    id: e.id,
+    hobbyId: e.hobbyId,
+    text: e.text,
+    photoUrl: e.photoUrl,
+    createdAt: e.createdAt.toISOString(),
+  };
+}
+
+export function mapPersonalNote(n: PrismaPersonalNote) {
+  return {
+    stepId: n.stepId,
+    text: n.text,
+  };
+}
+
+export function mapScheduleEvent(e: PrismaScheduleEvent) {
+  return {
+    id: e.id,
+    hobbyId: e.hobbyId,
+    dayOfWeek: e.dayOfWeek,
+    startTime: e.startTime,
+    durationMinutes: e.durationMinutes,
+  };
+}
+
+export function mapShoppingCheck(s: PrismaShoppingCheck) {
+  return {
+    hobbyId: s.hobbyId,
+    itemName: s.itemName,
+    checked: s.checked,
+  };
+}
+
 // ── Aggregation helpers ──────────────────────────
 
 export function groupByField<T extends Record<string, unknown>>(
