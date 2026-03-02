@@ -165,6 +165,10 @@ model User {
   personalNotes  PersonalNote[]
   scheduleEvents ScheduleEvent[]
   shoppingChecks ShoppingCheck[]
+  communityStories   CommunityStory[]
+  storyReactions     StoryReaction[]
+  buddyRequestsSent  BuddyPair[] @relation("buddyRequests")
+  buddyRequestsRcvd  BuddyPair[] @relation("buddyAccepts")
 }
 
 model UserPreference {
@@ -283,4 +287,49 @@ model ShoppingCheck {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, hobbyId, itemName])
+}
+
+// ═══════════════════════════════════════════════════
+//  SOCIAL MODELS (Phase 6)
+// ═══════════════════════════════════════════════════
+
+model CommunityStory {
+  id        String   @id @default(uuid())
+  userId    String
+  quote     String
+  hobbyId   String
+  createdAt DateTime @default(now())
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions StoryReaction[]
+
+  @@index([createdAt])
+}
+
+model StoryReaction {
+  id      String @id @default(uuid())
+  userId  String
+  storyId String
+  type    String // "heart" or "fire"
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId, type])
+}
+
+model BuddyPair {
+  id          String   @id @default(uuid())
+  requesterId String
+  accepterId  String
+  hobbyId     String?
+  status      String   @default("pending") // pending, active, rejected
+  createdAt   DateTime @default(now())
+
+  requester User @relation("buddyRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  accepter  User @relation("buddyAccepts", fields: [accepterId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, accepterId])
+  @@index([requesterId])
+  @@index([accepterId])
 }
