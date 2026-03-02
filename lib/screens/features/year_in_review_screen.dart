@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/hobby.dart';
-import '../../models/feature_seed_data.dart';
+import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
@@ -48,8 +48,8 @@ class YearInReviewScreen extends ConsumerWidget {
     final sortedCategories = categoryCount.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Heatmap data
-    final heatmap = FeatureSeedData.generateHeatmapData(days: 56);
+    // Heatmap data (real activity from server)
+    final heatmap = ref.watch(activityHeatmapProvider);
 
     return Scaffold(
       backgroundColor: AppColors.cream,

@@ -2,22 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/features.dart';
+import '../../models/gamification.dart';
 import '../../providers/feature_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 
-/// Weekly Challenge — current active challenge with progress + completed history.
-class WeeklyChallengeScreen extends ConsumerWidget {
+/// Weekly Challenge — current active challenge with progress + completed history + achievements.
+class WeeklyChallengeScreen extends ConsumerStatefulWidget {
   const WeeklyChallengeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WeeklyChallengeScreen> createState() =>
+      _WeeklyChallengeScreenState();
+}
+
+class _WeeklyChallengeScreenState
+    extends ConsumerState<WeeklyChallengeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(challengeProvider.notifier).loadFromServer();
+      ref.read(achievementsProvider.notifier).loadFromServer();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentChallenge = ref.watch(currentChallengeProvider);
     final allChallenges = ref.watch(challengeProvider);
     final completedChallenges =
         allChallenges.where((c) => c.isCompleted).toList();
+    final achievements = ref.watch(achievementsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -50,6 +68,20 @@ class WeeklyChallengeScreen extends ConsumerWidget {
                       ...completedChallenges.map(
                         (c) => _buildCompletedTile(c),
                       ),
+                      const SizedBox(height: 28),
+                    ],
+
+                    // Achievements section
+                    if (achievements.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(AppIcons.trophy, size: 20, color: AppColors.amber),
+                          const SizedBox(width: 8),
+                          Text('Achievements', style: AppTypography.sansSection),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      _buildAchievementsGrid(achievements),
                     ],
                   ],
                 ),
@@ -290,6 +322,91 @@ class WeeklyChallengeScreen extends ConsumerWidget {
 
             // Trophy
             Icon(AppIcons.trophy, size: 18, color: AppColors.amber),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  ACHIEVEMENTS GRID
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildAchievementsGrid(List<Achievement> achievements) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: achievements.map((a) => _buildAchievementBadge(a)).toList(),
+    );
+  }
+
+  Widget _buildAchievementBadge(Achievement achievement) {
+    final unlocked = achievement.unlockedAt != null;
+    final width = (MediaQuery.of(context).size.width - 48 - 24) / 3;
+
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: BoxDecoration(
+          color: unlocked ? AppColors.amberPale : AppColors.warmWhite,
+          borderRadius: BorderRadius.circular(Spacing.radiusTile),
+          border: Border.all(
+            color: unlocked
+                ? AppColors.amber.withValues(alpha: 0.3)
+                : AppColors.sandDark,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Text(
+              achievement.icon,
+              style: TextStyle(
+                fontSize: 28,
+                color: unlocked ? null : AppColors.warmGray,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Title
+            Text(
+              achievement.title,
+              style: AppTypography.sansCaption.copyWith(
+                fontWeight: FontWeight.w700,
+                color: unlocked ? AppColors.nearBlack : AppColors.warmGray,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            // Status
+            if (unlocked)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(AppIcons.check, size: 12, color: AppColors.sage),
+                  const SizedBox(width: 3),
+                  Text(
+                    'Unlocked',
+                    style: AppTypography.sansTiny.copyWith(
+                      color: AppColors.sage,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                achievement.description,
+                style: AppTypography.sansTiny.copyWith(
+                  color: AppColors.warmGray,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
           ],
         ),
       ),

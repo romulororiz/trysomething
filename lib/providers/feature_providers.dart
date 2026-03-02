@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/repositories/gamification_repository.dart';
 import '../data/repositories/personal_tools_repository.dart';
 import '../data/repositories/social_repository.dart';
 import '../models/activity_log.dart';
 import '../models/features.dart';
+import '../models/gamification.dart';
 import '../models/social.dart';
-import '../models/feature_seed_data.dart';
 import 'repository_providers.dart';
 import 'user_provider.dart';
 
@@ -108,9 +109,23 @@ final journalProvider = StateNotifierProvider<JournalNotifier, List<JournalEntry
 //  CHALLENGES
 // ═══════════════════════════════════════════════════════
 
-final challengeProvider = Provider<List<Challenge>>((ref) {
-  return FeatureSeedData.challenges;
-});
+class ChallengeNotifier extends StateNotifier<List<Challenge>> {
+  final GamificationRepository _repo;
+  ChallengeNotifier(this._repo) : super([]);
+
+  Future<void> loadFromServer() async {
+    try {
+      state = await _repo.getChallenges();
+    } catch (e) {
+      debugPrint('[Challenges] Failed to load from server: $e');
+    }
+  }
+}
+
+final challengeProvider =
+    StateNotifierProvider<ChallengeNotifier, List<Challenge>>(
+  (ref) => ChallengeNotifier(ref.watch(gamificationRepositoryProvider)),
+);
 
 final currentChallengeProvider = Provider<Challenge?>((ref) {
   final challenges = ref.watch(challengeProvider);
@@ -120,6 +135,28 @@ final currentChallengeProvider = Provider<Challenge?>((ref) {
     return null;
   }
 });
+
+// ═══════════════════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════
+
+class AchievementsNotifier extends StateNotifier<List<Achievement>> {
+  final GamificationRepository _repo;
+  AchievementsNotifier(this._repo) : super([]);
+
+  Future<void> loadFromServer() async {
+    try {
+      state = await _repo.getAchievements();
+    } catch (e) {
+      debugPrint('[Achievements] Failed to load from server: $e');
+    }
+  }
+}
+
+final achievementsProvider =
+    StateNotifierProvider<AchievementsNotifier, List<Achievement>>(
+  (ref) => AchievementsNotifier(ref.watch(gamificationRepositoryProvider)),
+);
 
 // ═══════════════════════════════════════════════════════
 //  SCHEDULE

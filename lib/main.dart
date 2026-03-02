@@ -56,6 +56,7 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         ref.read(scheduleProvider.notifier).loadFromServer();
         ref.read(storiesProvider.notifier).loadFromServer();
         ref.read(buddyProvider.notifier).loadFromServer();
+        ref.read(challengeProvider.notifier).loadFromServer();
       }
     });
   }
