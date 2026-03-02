@@ -31,6 +31,7 @@
     { "src": "/api/users/challenges", "dest": "/api/users/[path].ts?path=challenges" },
     { "src": "/api/users/achievements", "dest": "/api/users/[path].ts?path=achievements" },
     { "src": "/api/users/(me|preferences)", "dest": "/api/users/[path].ts?path=$1" },
+    { "src": "/api/generate/(hobby|faq|cost|budget)", "dest": "/api/generate/[action].ts?action=$1" },
     { "src": "/api/categories", "dest": "/api/categories/index.ts" },
     { "src": "/api/hobbies/search", "dest": "/api/hobbies/search.ts" },
     { "src": "/api/hobbies/combos", "dest": "/api/hobbies/combos.ts" },
