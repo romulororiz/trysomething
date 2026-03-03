@@ -35,11 +35,6 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
     final userHobbies = ref.watch(userHobbiesProvider);
     final allHobbiesAsync = ref.watch(hobbyListProvider);
 
-    // Stat counts
-    final tryingCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.trying));
-    final activeCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.active));
-    final savedCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.saved));
-
     // Current tab items
     final currentStatus = _statusMap[_tabIndex];
     final filteredUserHobbies = userHobbies.values
@@ -58,19 +53,23 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
           // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
-            child: Text('My Stuff', style: AppTypography.serifHeading),
-          ),
-
-          // Stat chips
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
             child: Row(
               children: [
-                _StatChip(value: '$tryingCount', label: 'Trying', color: AppColors.coral),
-                const SizedBox(width: 8),
-                _StatChip(value: '$activeCount', label: 'Active', color: AppColors.sage),
-                const SizedBox(width: 8),
-                _StatChip(value: '$savedCount', label: 'Saved', color: AppColors.indigo),
+                Text('My Stuff', style: AppTypography.serifHeading),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => context.push('/search'),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.sand,
+                    ),
+                    child: const Icon(Icons.search,
+                        size: 20, color: AppColors.driftwood),
+                  ),
+                ),
               ],
             ),
           ),
@@ -114,6 +113,29 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
                   );
                 }),
               ),
+            ),
+          ),
+
+          // Section header with count
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+            child: Row(
+              children: [
+                Text(
+                  'Currently ${_tabs[_tabIndex]}',
+                  style: AppTypography.sansSection.copyWith(
+                    color: AppColors.nearBlack,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${filteredUserHobbies.length} hobbies',
+                  style: AppTypography.sansCaption.copyWith(
+                    color: AppColors.coral,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -182,44 +204,6 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
 // ═══════════════════════════════════════════════════════
 //  STAT CHIP
 // ═══════════════════════════════════════════════════════
-
-class _StatChip extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-
-  const _StatChip({required this.value, required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.13)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: AppTypography.monoLarge.copyWith(
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ═══════════════════════════════════════════════════════
 //  HOBBY LIST ITEM

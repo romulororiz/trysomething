@@ -82,9 +82,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     // Dynamic identity
     final identity = _deriveIdentity(prefs.vibes, totalTried);
-    final level = _identityLevel(totalTried);
-    final nextLevelNeeded = _nextLevelThreshold(totalTried);
-    final levelProgress = _levelProgress(totalTried);
 
     // Skill categories for radar
     final skillScores = _computeSkillScores(activeHobbies, doneHobbies);
@@ -110,20 +107,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                   child: Row(
                     children: [
-                      Text('Profile', style: AppTypography.serifHeading),
+                      // Back arrow
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.sand,
+                          ),
+                          child: const Icon(Icons.arrow_back,
+                              size: 20, color: AppColors.espresso),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text('Profile', style: AppTypography.sansSection
+                          .copyWith(color: AppColors.nearBlack)),
                       const Spacer(),
                       GestureDetector(
                         onTap: () => context.push('/settings'),
                         child: Container(
                           width: 40,
                           height: 40,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
                             color: AppColors.sand,
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Center(
-                            child: Icon(AppIcons.settings, size: 18, color: AppColors.driftwood),
-                          ),
+                          child: Icon(AppIcons.settings, size: 18, color: AppColors.driftwood),
                         ),
                       ),
                     ],
@@ -231,44 +242,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         const SizedBox(height: 14),
 
-                        // ── Level pill ──
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.sand,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Text(
-                            'LEVEL $level',
-                            style: AppTypography.monoBadgeSmall
-                                .copyWith(color: AppColors.coral, letterSpacing: 2),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        // ── Next level progress ──
-                        SizedBox(
-                          width: 120,
-                          child: Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(3),
-                                child: LinearProgressIndicator(
-                                  value: levelProgress,
-                                  backgroundColor: AppColors.sand,
-                                  color: AppColors.coral,
-                                  minHeight: 3,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                '$nextLevelNeeded more to Level ${level + 1}',
-                                style: AppTypography.sansTiny.copyWith(fontSize: 9),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 14),
 
                         // ── Editable username ──
                         GestureDetector(
@@ -291,7 +265,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         // ── Identity title ──
                         Text(
                           identity,
-                          style: AppTypography.sansCaption.copyWith(color: AppColors.coral),
+                          style: AppTypography.sansCaption.copyWith(
+                            color: AppColors.coral,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
 
@@ -310,6 +287,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // ── Status badges ──
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.sand,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.sage,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text('Online',
+                                      style: AppTypography.sansCaption.copyWith(
+                                          color: AppColors.espresso)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.sand,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text('Since 2025',
+                                  style: AppTypography.sansCaption.copyWith(
+                                      color: AppColors.espresso)),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 14),
 
@@ -1210,27 +1232,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (hasOutdoors) return 'Nature Seeker';
     if (hasTechnical) return 'Builder Tinkerer';
     return 'Curious Explorer';
-  }
-
-  static int _identityLevel(int totalTried) {
-    if (totalTried >= 10) return 4;
-    if (totalTried >= 5) return 3;
-    if (totalTried >= 2) return 2;
-    return 1;
-  }
-
-  static int _nextLevelThreshold(int totalTried) {
-    if (totalTried >= 10) return 0;
-    if (totalTried >= 5) return 10 - totalTried;
-    if (totalTried >= 2) return 5 - totalTried;
-    return 2 - totalTried;
-  }
-
-  static double _levelProgress(int totalTried) {
-    if (totalTried >= 10) return 1.0;
-    if (totalTried >= 5) return (totalTried - 5) / 5.0;
-    if (totalTried >= 2) return (totalTried - 2) / 3.0;
-    return totalTried / 2.0;
   }
 
   static String _budgetLabel(int level) {
