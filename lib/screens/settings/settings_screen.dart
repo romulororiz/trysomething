@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../theme/motion.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -43,18 +44,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   GestureDetector(
                     onTap: () => context.pop(),
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 40,
+                      height: 40,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.sand,
                       ),
-                      child: Center(
-                        child: Icon(AppIcons.arrowBack, size: 16, color: AppColors.driftwood),
-                      ),
+                      child: const Icon(Icons.arrow_back,
+                          size: 20, color: AppColors.espresso),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                   Text('Settings', style: AppTypography.serifHeading),
                 ],
               ),
@@ -152,7 +152,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         onTap: () =>
                             ref.read(userPreferencesProvider.notifier).toggleVibe(vibe),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
+                          duration: Motion.fast,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
                             color: isActive ? AppColors.indigo : AppColors.sand,
@@ -481,7 +481,7 @@ class _BudgetSelector extends StatelessWidget {
         return GestureDetector(
           onTap: () => onChanged(i),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: Motion.fast,
             margin: EdgeInsets.only(left: i > 0 ? 6 : 0),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
@@ -523,7 +523,7 @@ class _ToggleChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Motion.fast,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isOn ? AppColors.coral : AppColors.sand,
