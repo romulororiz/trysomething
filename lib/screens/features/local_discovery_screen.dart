@@ -39,27 +39,23 @@ class _LocalDiscoveryScreenState extends ConsumerState<LocalDiscoveryScreen> {
             // Header
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                 child: Row(
                   children: [
                     GestureDetector(
                       onTap: () => context.pop(),
                       child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
                           color: AppColors.sand,
-                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Center(
-                          child: Icon(AppIcons.arrowBack,
-                              size: 18, color: AppColors.nearBlack),
-                        ),
+                        child: const Icon(Icons.arrow_back,
+                            size: 20, color: AppColors.espresso),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Icon(AppIcons.local, size: 20, color: AppColors.indigo),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                     Text('Similar Hobbyists',
                         style: AppTypography.serifHeading),
                   ],

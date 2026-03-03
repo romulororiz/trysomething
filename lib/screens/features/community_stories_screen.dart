@@ -38,14 +38,23 @@ class CommunityStoriesScreen extends ConsumerWidget {
           children: [
             // ── Header ──────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: Icon(AppIcons.arrowBack, color: AppColors.nearBlack),
-                    onPressed: () => context.pop(),
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.sand,
+                      ),
+                      child: const Icon(Icons.arrow_back,
+                          size: 20, color: AppColors.espresso),
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 16),
                   Text('Community Stories', style: AppTypography.serifHeading),
                 ],
               ),

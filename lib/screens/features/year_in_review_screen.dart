@@ -61,28 +61,23 @@ class YearInReviewScreen extends ConsumerWidget {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                 child: Row(
                   children: [
                     GestureDetector(
                       onTap: () => context.pop(),
                       child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
                           color: AppColors.sand,
-                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Center(
-                          child: Icon(AppIcons.arrowBack,
-                              size: 18, color: AppColors.nearBlack),
-                        ),
+                        child: const Icon(Icons.arrow_back,
+                            size: 20, color: AppColors.espresso),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Icon(AppIcons.yearReview,
-                        size: 20, color: AppColors.amber),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                     Text('Your ${DateTime.now().year}',
                         style: AppTypography.serifHeading),
                   ],
