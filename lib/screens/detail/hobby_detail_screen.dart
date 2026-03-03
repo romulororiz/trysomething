@@ -352,12 +352,34 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xCC1E1E2E),
+                  color: AppColors.sand.withAlpha(220),
                 ),
                 child: const Center(
-                  child: Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.nearBlack),
+                  child: Icon(Icons.arrow_back, size: 20, color: AppColors.espresso),
+                ),
+              ),
+            ),
+          ),
+
+          // Share button (always visible, above AppBar)
+          Positioned(
+            top: topPad + 8,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                // Share hobby
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.sand.withAlpha(220),
+                ),
+                child: Center(
+                  child: Icon(AppIcons.share, size: 18, color: AppColors.espresso),
                 ),
               ),
             ),

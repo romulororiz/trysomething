@@ -60,8 +60,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title
-            Text('Search', style: AppTypography.serifHeading),
+            // Header
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => context.pop(),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.sand,
+                    ),
+                    child: const Icon(Icons.arrow_back,
+                        size: 20, color: AppColors.espresso),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text('Search', style: AppTypography.serifHeading),
+              ],
+            ),
             const SizedBox(height: 14),
 
             // Search input
@@ -289,6 +307,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   color: AppColors.warmGray,
                 ),
               ),
+              if (genState.error != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  genState.error!,
+                  style: AppTypography.monoTiny.copyWith(
+                    color: AppColors.warmGray,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 10),
               _generateButton(),
             ],
@@ -302,6 +330,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _generateButton() {
     return GestureDetector(
       onTap: () {
+        debugPrint('[Search] Generate tapped! query="$_query"');
         ref.read(generationProvider.notifier).generate(_query);
       },
       child: Container(
