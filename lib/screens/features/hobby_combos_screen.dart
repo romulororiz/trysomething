@@ -47,7 +47,7 @@ class HobbyCombosScreen extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
       child: Row(
         children: [
           GestureDetector(
@@ -55,16 +55,15 @@ class HobbyCombosScreen extends ConsumerWidget {
             child: Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.warmWhite,
+                color: AppColors.sand,
               ),
-              child: Center(
-                child: Icon(AppIcons.arrowBack, size: 20, color: AppColors.nearBlack),
-              ),
+              child: const Icon(Icons.arrow_back,
+                  size: 20, color: AppColors.espresso),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Text('Hobby Combos', style: AppTypography.serifHeading),
         ],
       ),

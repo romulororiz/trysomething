@@ -8,8 +8,8 @@ import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
-import '../../theme/app_icons.dart';
 import '../../theme/spacing.dart';
+import '../../theme/motion.dart';
 
 /// Mood-based hobby recommendation screen.
 /// Presents 6 mood cards; on selection, filters hobbies by matching tags.
@@ -62,20 +62,16 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.warmWhite,
-                        border: Border.all(color: AppColors.sandDark),
+                        color: AppColors.sand,
                       ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.nearBlack),
-                      ),
+                      child: const Icon(Icons.arrow_back,
+                          size: 20, color: AppColors.espresso),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Icon(AppIcons.mood, size: 22, color: AppColors.coral),
-                  const SizedBox(width: 8),
-                  Text('Mood Match', style: AppTypography.sansSection),
+                  const SizedBox(width: 16),
+                  Text('Mood Match', style: AppTypography.serifHeading),
                 ],
               ),
             ),
@@ -125,7 +121,7 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
                       });
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
+                      duration: Motion.normal,
                       curve: Curves.easeOut,
                       decoration: BoxDecoration(
                         color: isSelected
