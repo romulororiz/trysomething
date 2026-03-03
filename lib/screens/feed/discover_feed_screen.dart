@@ -55,7 +55,38 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
           // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
-            child: Text('Discover', style: AppTypography.serifHeading),
+            child: Row(
+              children: [
+                Text('Discover', style: AppTypography.serifHeading),
+                const Spacer(),
+                Stack(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.sand,
+                      ),
+                      child: const Icon(Icons.notifications_none_rounded,
+                          size: 20, color: AppColors.driftwood),
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.sage,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
 
           // Category chips

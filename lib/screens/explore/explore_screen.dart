@@ -26,6 +26,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   bool _showFilters = false;
   double _maxCost = 200;
   double _maxHours = 5;
+  int _selectedFilter = 0; // 0=All, 1=Trending, 2=New, 3=For You
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -88,7 +89,39 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Explore', style: AppTypography.serifHeading),
+                Row(
+                  children: [
+                    Text('Explore', style: AppTypography.serifHeading),
+                    const Spacer(),
+                    // Notification bell with green dot
+                    Stack(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.sand,
+                          ),
+                          child: const Icon(Icons.notifications_none_rounded,
+                              size: 20, color: AppColors.driftwood),
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.sage,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -118,6 +151,53 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     : CrossFadeState.showFirst,
                 duration: Motion.filterToggle,
                 sizeCurve: Motion.normalCurve,
+              ),
+            ),
+
+          // Filter chips (only in explore mode)
+          if (!_searchActive)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                height: 36,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  children: ['All', 'Trending', 'New', 'For You']
+                      .asMap()
+                      .entries
+                      .map((e) {
+                    final isActive = _selectedFilter == e.key;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () =>
+                            setState(() => _selectedFilter = e.key),
+                        child: AnimatedContainer(
+                          duration: Motion.fast,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? AppColors.coral
+                                : AppColors.warmWhite,
+                            borderRadius: BorderRadius.circular(
+                                Spacing.radiusBadge),
+                          ),
+                          child: Text(
+                            e.value,
+                            style: AppTypography.sansCaption.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isActive
+                                  ? Colors.white
+                                  : AppColors.driftwood,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
 
@@ -155,7 +235,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               onChanged: (val) => setState(() => _searchQuery = val),
               style: AppTypography.sansBodySmall.copyWith(color: AppColors.nearBlack),
               decoration: InputDecoration(
-                hintText: 'I want something relaxing...',
+                hintText: 'Search hobbies, skills, interests...',
                 hintStyle: AppTypography.sansBodySmall.copyWith(color: AppColors.warmGray),
                 border: InputBorder.none,
                 isDense: true,
@@ -514,58 +594,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Quick picks
-          Text('QUICK PICKS', style: AppTypography.overline),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                (AppIcons.relaxing, 'Relaxing', AppColors.indigo),
-                (AppIcons.social, 'Social', AppColors.coral),
-                (AppIcons.cheap, 'Cheap', AppColors.sage),
-                (AppIcons.quickStart, 'Quick start', AppColors.amber),
-                (AppIcons.outdoors, 'Outdoors', AppColors.catOutdoors),
-              ].map((pick) {
-                return GestureDetector(
-                  onTap: () {
-                    _searchController.text = pick.$2;
-                    _searchFocusNode.requestFocus();
-                    setState(() => _searchQuery = pick.$2);
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.warmWhite,
-                      borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(pick.$1, size: 14, color: pick.$3),
-                        const SizedBox(width: 6),
-                        Text(
-                          pick.$2,
-                          style: AppTypography.sansCaption.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: pick.$3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 24),
-
           // Categories grid
-          Text('CATEGORIES', style: AppTypography.overline),
+          Text('BROWSE CATEGORIES', style: AppTypography.overline),
           const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
@@ -587,6 +617,32 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 },
               );
             },
+          ),
+          const SizedBox(height: 16),
+
+          // Show all link
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                ref.read(selectedCategoryProvider.notifier).state = null;
+                context.go('/feed');
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Show All Categories',
+                    style: AppTypography.sansLabel.copyWith(
+                      color: AppColors.coral,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward,
+                      size: 14, color: AppColors.coral),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 28),
 
