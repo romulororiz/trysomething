@@ -1,9 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
@@ -20,7 +18,6 @@ import '../../theme/spacing.dart';
 //  INTERVAL HELPER
 // ═══════════════════════════════════════════════════════
 
-/// Maps a controller value [v] through an interval [begin..end] with optional curve.
 double _iv(double v, double begin, double end,
     [Curve curve = Curves.easeOut]) {
   if (v <= begin) return 0.0;
@@ -29,10 +26,32 @@ double _iv(double v, double begin, double end,
 }
 
 // ═══════════════════════════════════════════════════════
+//  VIBE GRID DATA
+// ═══════════════════════════════════════════════════════
+
+class _VibeItem {
+  final String label;
+  final String key;
+  final IconData icon;
+  final Color color;
+  const _VibeItem(this.label, this.key, this.icon, this.color);
+}
+
+final _vibeItems = [
+  _VibeItem('Creative', 'creative', AppIcons.catCreative, AppColors.catCreative),
+  _VibeItem('Relaxing', 'relaxing', MdiIcons.meditation, AppColors.sage),
+  _VibeItem('Social', 'social', AppIcons.catSocial, AppColors.catSocial),
+  _VibeItem('Active', 'physical', MdiIcons.flash, AppColors.catMusic),
+  _VibeItem('Intellectual', 'intellectual', MdiIcons.bookOpenVariant, AppColors.amber),
+  _VibeItem('Outdoors', 'outdoors', AppIcons.catOutdoors, AppColors.catOutdoors),
+  _VibeItem('Tech', 'technical', MdiIcons.memory, AppColors.catCollecting),
+  _VibeItem('Culinary', 'culinary', AppIcons.catFood, AppColors.catFood),
+];
+
+// ═══════════════════════════════════════════════════════
 //  ONBOARDING SCREEN
 // ═══════════════════════════════════════════════════════
 
-/// 3-page onboarding: Welcome → Preferences → Results
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -46,156 +65,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   int _currentPage = 0;
 
   // Preferences state
-  int _hours = 3;
+  double _hours = 5;
   int _budget = 1; // 0=low, 1=medium, 2=high
   bool _social = false;
   final Set<String> _vibes = {};
   List<Hobby> _matchedHobbies = [];
 
-  // ── Animation Controllers ──
+  // Animation controllers
   late AnimationController _page1EntryCtrl;
-  late List<AnimationController> _gradientCtrls;
-  late List<AnimationController> _floatCtrls;
-  late List<AnimationController> _iconEntryCtrls;
   late AnimationController _page2EntryCtrl;
   late AnimationController _page3EntryCtrl;
-  late AnimationController _particleCtrl;
   late AnimationController _glowCtrl;
-
-  // ── Derived Animations ──
-  late List<Animation<double>> _floatYAnims;
-  late List<Animation<double>> _floatXAnims;
-  late List<Animation<double>> _iconFadeAnims;
-  late List<Animation<double>> _iconScaleAnims;
-  late List<Animation<Offset>> _blobAnims;
-
-  // ── Particles ──
-  late List<_Particle> _particles;
 
   @override
   void initState() {
     super.initState();
-
-    // Page entry controllers
     _page1EntryCtrl = AnimationController(
-        duration: const Duration(milliseconds: 1200), vsync: this);
+        duration: const Duration(milliseconds: 800), vsync: this);
     _page2EntryCtrl = AnimationController(
         duration: const Duration(milliseconds: 800), vsync: this);
     _page3EntryCtrl = AnimationController(
         duration: const Duration(milliseconds: 1000), vsync: this);
-
-    // CTA glow
     _glowCtrl = AnimationController(
         duration: const Duration(milliseconds: 2000), vsync: this)
       ..repeat(reverse: true);
-
-    // Particle controller (page 3)
-    _particleCtrl = AnimationController(
-        duration: const Duration(milliseconds: 4000), vsync: this);
-
-    // ── Gradient blob controllers (3 blobs, slow drift) ──
-    _gradientCtrls = [
-      AnimationController(
-          duration: const Duration(milliseconds: 22000), vsync: this)
-        ..repeat(reverse: true),
-      AnimationController(
-          duration: const Duration(milliseconds: 28000), vsync: this)
-        ..repeat(reverse: true),
-      AnimationController(
-          duration: const Duration(milliseconds: 25000), vsync: this)
-        ..repeat(reverse: true),
-    ];
-    _blobAnims = [
-      Tween<Offset>(
-              begin: const Offset(0.2, 0.25), end: const Offset(0.4, 0.12))
-          .animate(CurvedAnimation(
-              parent: _gradientCtrls[0], curve: Curves.easeInOut)),
-      Tween<Offset>(
-              begin: const Offset(0.85, 0.15), end: const Offset(0.6, 0.4))
-          .animate(CurvedAnimation(
-              parent: _gradientCtrls[1], curve: Curves.easeInOut)),
-      Tween<Offset>(
-              begin: const Offset(0.25, 0.8), end: const Offset(0.55, 0.62))
-          .animate(CurvedAnimation(
-              parent: _gradientCtrls[2], curve: Curves.easeInOut)),
-    ];
-
-    // ── Floating icon controllers (5 icons) ──
-    const floatDurations = [5200, 6800, 4800, 7000, 5500];
-    _floatCtrls = List.generate(
-        5,
-        (i) => AnimationController(
-            duration: Duration(milliseconds: floatDurations[i]), vsync: this));
-
-    const yRanges = [8.0, -7.0, 6.0, -9.0, 7.0];
-    _floatYAnims = List.generate(
-        5,
-        (i) => Tween<double>(begin: 0, end: yRanges[i]).animate(
-            CurvedAnimation(
-                parent: _floatCtrls[i], curve: Curves.easeInOut)));
-
-    const xRanges = [4.0, -5.0, 3.0, -3.0, 4.0];
-    _floatXAnims = List.generate(
-        5,
-        (i) => Tween<double>(begin: 0, end: xRanges[i]).animate(
-            CurvedAnimation(
-                parent: _floatCtrls[i], curve: Curves.easeInOut)));
-
-    // ── Icon entry (stagger 200ms apart) ──
-    _iconEntryCtrls = List.generate(
-        5,
-        (i) => AnimationController(
-            duration: const Duration(milliseconds: 300), vsync: this));
-    _iconFadeAnims = List.generate(
-        5,
-        (i) => CurvedAnimation(
-            parent: _iconEntryCtrls[i], curve: Curves.easeOut));
-    _iconScaleAnims = List.generate(
-        5,
-        (i) => Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(
-            parent: _iconEntryCtrls[i], curve: Motion.normalCurve)));
-
-    for (int i = 0; i < 5; i++) {
-      Future.delayed(Duration(milliseconds: 200 * i), () {
-        if (mounted) {
-          _iconEntryCtrls[i].forward().then((_) {
-            if (mounted) _floatCtrls[i].repeat(reverse: true);
-          });
-        }
-      });
-    }
-
-    // ── Particles ──
-    final rng = Random(42);
-    final pColors = [
-      AppColors.coral,
-      AppColors.amber,
-      AppColors.indigo,
-      AppColors.sage,
-      AppColors.rose
-    ];
-    // 3 depth bands: far (small/dim/slow), mid, near (large/bright/fast)
-    _particles = List.generate(30, (i) {
-      final depth = i < 10 ? 0 : (i < 20 ? 1 : 2); // far, mid, near
-      final depthScale = [0.3, 0.6, 1.0][depth];
-      final depthAlpha = [0.20, 0.35, 0.50][depth];
-      final depthSpeed = [0.15, 0.30, 0.50][depth];
-      return _Particle(
-        startX: 0.04 + rng.nextDouble() * 0.92,
-        startPhase: rng.nextDouble(),
-        speed: depthSpeed + rng.nextDouble() * 0.2,
-        wobbleAmp: (10 + rng.nextDouble() * 18) * depthScale,
-        wobbleFreq: 1.0 + rng.nextDouble() * 2.5,
-        wobbleAmp2: (5 + rng.nextDouble() * 10) * depthScale,
-        wobbleFreq2: 0.5 + rng.nextDouble() * 1.5,
-        size: (4.0 + rng.nextDouble() * 6.0) * depthScale,
-        color: pColors[rng.nextInt(pColors.length)],
-        maxAlpha: depthAlpha,
-        depth: depth,
-      );
-    });
-
-    // ── Start page 1 entry ──
     _page1EntryCtrl.forward();
   }
 
@@ -206,16 +99,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _page2EntryCtrl.dispose();
     _page3EntryCtrl.dispose();
     _glowCtrl.dispose();
-    _particleCtrl.dispose();
-    for (final c in _gradientCtrls) {
-      c.dispose();
-    }
-    for (final c in _floatCtrls) {
-      c.dispose();
-    }
-    for (final c in _iconEntryCtrls) {
-      c.dispose();
-    }
     super.dispose();
   }
 
@@ -228,24 +111,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           duration: Motion.onboardingPage, curve: Motion.normalCurve);
       setState(() {
         _currentPage = next;
-        if (next == 2) {
-          _matchedHobbies = _computeMatchedHobbies();
-        }
+        if (next == 2) _matchedHobbies = _computeMatchedHobbies();
       });
-      if (next == 1) {
-        _page2EntryCtrl.forward();
-      } else if (next == 2) {
-        _page3EntryCtrl.forward();
-        _particleCtrl.repeat();
-      }
+      if (next == 1) _page2EntryCtrl.forward();
+      if (next == 2) _page3EntryCtrl.forward();
     } else {
       _completeOnboarding();
     }
   }
 
+  void _prevPage() {
+    if (_currentPage > 0) {
+      final prev = _currentPage - 1;
+      _pageController.animateToPage(prev,
+          duration: Motion.onboardingPage, curve: Motion.normalCurve);
+      setState(() => _currentPage = prev);
+    }
+  }
+
+  void _skip() {
+    setState(() {
+      _currentPage = 2;
+      _matchedHobbies = _computeMatchedHobbies();
+    });
+    _pageController.animateToPage(2,
+        duration: Motion.onboardingPage, curve: Motion.normalCurve);
+    _page3EntryCtrl.forward();
+  }
+
   void _completeOnboarding() {
     final prefsNotifier = ref.read(userPreferencesProvider.notifier);
-    prefsNotifier.setHoursPerWeek(_hours);
+    prefsNotifier.setHoursPerWeek(_hours.round());
     prefsNotifier.setBudgetLevel(_budget);
     prefsNotifier.setPreferSocial(_social);
     for (final vibe in _vibes) {
@@ -256,7 +152,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     // Fire-and-forget: sync preferences to server
     final repo = ref.read(authRepositoryProvider);
     repo.updatePreferences(
-      hoursPerWeek: _hours,
+      hoursPerWeek: _hours.round(),
       budgetLevel: _budget,
       preferSocial: _social,
       vibes: _vibes,
@@ -265,7 +161,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     context.go('/feed');
   }
 
-  // ── Matching & Persona ──
+  // ── Matching ──
 
   List<Hobby> _computeMatchedHobbies() {
     final all = ref.read(hobbyListProvider).valueOrNull ?? [];
@@ -284,145 +180,109 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     return filtered.map((e) => e.hobby).toList();
   }
 
-  String _derivePersona() {
-    if (_vibes.contains('creative') && _vibes.contains('relaxing')) {
-      return 'Mindful\nMaker';
-    }
-    if (_vibes.contains('physical') && _vibes.contains('outdoors')) {
-      return 'Wild\nExplorer';
-    }
-    if (_vibes.contains('creative')) return 'Creative\nSoul';
-    if (_vibes.contains('physical')) return 'Active\nSpirit';
-    if (_vibes.contains('technical')) return 'Curious\nBuilder';
-    if (_vibes.contains('competitive')) return 'Bold\nChallenger';
-    if (_vibes.contains('relaxing')) return 'Zen\nSeeker';
-    if (_vibes.contains('outdoors')) return 'Nature\nLover';
-    return 'Open\nExplorer';
-  }
-
-  String _buildSummary() {
-    String identity = 'Explorer';
-    if (_vibes.contains('creative')) {
-      identity = 'Creative';
-    } else if (_vibes.contains('physical')) {
-      identity = 'Active';
-    } else if (_vibes.contains('technical')) {
-      identity = 'Builder';
-    } else if (_vibes.contains('relaxing')) {
-      identity = 'Mindful';
-    } else if (_vibes.contains('outdoors')) {
-      identity = 'Adventurer';
-    } else if (_vibes.contains('competitive')) {
-      identity = 'Competitor';
-    }
-    final style = _social ? 'social' : 'solo';
-    const budgetLabels = ['low', 'mid', 'high'];
-    return '$identity $style · ${_hours}h/wk · ${budgetLabels[_budget]} budget';
-  }
-
   // ── Build ──
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.cream,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Animated gradient background (welcome page only)
-          AnimatedOpacity(
-            opacity: _currentPage == 0 ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 500),
-            child: AnimatedBuilder(
-              animation: Listenable.merge(_gradientCtrls),
-              builder: (context, _) => CustomPaint(
-                painter: _GradientBlobPainter(
-                  positions: _blobAnims.map((a) => a.value).toList(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header (page 2 only: ← Onboarding Skip)
+            if (_currentPage == 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _prevPage,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.sand,
+                        ),
+                        child: const Icon(Icons.arrow_back,
+                            size: 20, color: AppColors.espresso),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text('Onboarding',
+                        style: AppTypography.sansSection
+                            .copyWith(color: AppColors.nearBlack)),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: _skip,
+                      child: Text('Skip',
+                          style: AppTypography.sansLabel
+                              .copyWith(color: AppColors.driftwood)),
+                    ),
+                  ],
                 ),
-                child: const SizedBox.expand(),
+              ),
+
+            // Progress dots
+            _buildProgressDots(),
+
+            // Pages
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                children: [
+                  _VibesPage(
+                    entryCtrl: _page1EntryCtrl,
+                    vibes: _vibes,
+                    onVibeToggled: (key) => setState(() {
+                      _vibes.contains(key)
+                          ? _vibes.remove(key)
+                          : _vibes.add(key);
+                    }),
+                  ),
+                  _TimeBudgetPage(
+                    entryCtrl: _page2EntryCtrl,
+                    hours: _hours,
+                    budget: _budget,
+                    social: _social,
+                    onHoursChanged: (v) => setState(() => _hours = v),
+                    onBudgetChanged: (v) => setState(() => _budget = v),
+                    onSocialChanged: (v) => setState(() => _social = v),
+                  ),
+                  _ReadyPage(
+                    entryCtrl: _page3EntryCtrl,
+                    matchedHobbies: _matchedHobbies,
+                  ),
+                ],
               ),
             ),
-          ),
 
-          // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                _buildProgressBar(),
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (i) => setState(() => _currentPage = i),
-                    children: [
-                      _WelcomePage(
-                        entryCtrl: _page1EntryCtrl,
-                        floatYAnims: _floatYAnims,
-                        floatXAnims: _floatXAnims,
-                        iconFadeAnims: _iconFadeAnims,
-                        iconScaleAnims: _iconScaleAnims,
-                      ),
-                      _PreferencesPage(
-                        entryCtrl: _page2EntryCtrl,
-                        hours: _hours,
-                        budget: _budget,
-                        social: _social,
-                        vibes: _vibes,
-                        summary: _vibes.isEmpty ? '' : _buildSummary(),
-                        onHoursChanged: (v) => setState(() => _hours = v),
-                        onBudgetChanged: (v) => setState(() => _budget = v),
-                        onSocialChanged: (v) => setState(() => _social = v),
-                        onVibeToggled: (v) => setState(() {
-                          _vibes.contains(v)
-                              ? _vibes.remove(v)
-                              : _vibes.add(v);
-                        }),
-                      ),
-                      _ResultsPage(
-                        entryCtrl: _page3EntryCtrl,
-                        particleCtrl: _particleCtrl,
-                        particles: _particles,
-                        matchedHobbies: _matchedHobbies,
-                        persona: _derivePersona(),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildCtaButton(),
-              ],
-            ),
-          ),
-        ],
+            // Bottom CTA
+            _buildBottomCta(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressDots() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(3, (i) {
-          final isActive = i <= _currentPage;
-          return Expanded(
-            child: AnimatedContainer(
-              duration: Motion.progressBar,
-              curve: Motion.normalCurve,
-              height: 4,
-              margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-              decoration: BoxDecoration(
-                gradient: isActive
-                    ? const LinearGradient(
-                        colors: [AppColors.coral, AppColors.coralLight])
-                    : null,
-                color: isActive ? null : AppColors.sandDark,
-                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                boxShadow: isActive
-                    ? [
-                        BoxShadow(
-                            color: AppColors.coral.withAlpha(38), blurRadius: 6)
-                      ]
-                    : null,
-              ),
+          final isActive = i == _currentPage;
+          return AnimatedContainer(
+            duration: Motion.normal,
+            curve: Motion.normalCurve,
+            width: isActive ? 24 : 8,
+            height: 8,
+            margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: isActive ? AppColors.coral : AppColors.sandDark,
             ),
           );
         }),
@@ -430,347 +290,100 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildCtaButton() {
+  Widget _buildBottomCta() {
+    final labels = ['Continue  →', 'Continue  →', 'Start Exploring  →'];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 0, 28, 36),
-      child: AnimatedBuilder(
-        animation: _glowCtrl,
-        builder: (context, child) {
-          final glow = 12.0 + _glowCtrl.value * 8.0;
-          return Container(
-            width: double.infinity,
-            height: Spacing.buttonPrimaryHeight,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Spacing.radiusButton),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.coral.withAlpha(50),
-                  blurRadius: glow,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: child,
-          );
-        },
-        child: SizedBox(
-          width: double.infinity,
-          height: Spacing.buttonPrimaryHeight,
-          child: ElevatedButton(
-            onPressed: _nextPage,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.coral,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(Spacing.radiusButton),
-              ),
-              elevation: 0,
-            ),
-            child: Text(
-              _currentPage == 0
-                  ? "Let's find your thing →"
-                  : _currentPage == 1
-                      ? 'Almost there →'
-                      : "Let's go →",
-              style: AppTypography.sansCta,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  PAGE 1 — WELCOME
-// ═══════════════════════════════════════════════════════
-
-class _WelcomePage extends StatelessWidget {
-  final AnimationController entryCtrl;
-  final List<Animation<double>> floatYAnims;
-  final List<Animation<double>> floatXAnims;
-  final List<Animation<double>> iconFadeAnims;
-  final List<Animation<double>> iconScaleAnims;
-
-  const _WelcomePage({
-    required this.entryCtrl,
-    required this.floatYAnims,
-    required this.floatXAnims,
-    required this.iconFadeAnims,
-    required this.iconScaleAnims,
-  });
-
-  // 5 floating icons: (phosphorIcon, color, containerSize, xPct, yPct, rotDeg)
-  static final _ambientIcons = [
-    (PhosphorIconsDuotone.palette, AppColors.catCreative, 68.0, 0.08, 0.08, -10.0),
-    (PhosphorIconsDuotone.tree, AppColors.catOutdoors, 64.0, 0.80, 0.06, 8.0),
-    (PhosphorIconsDuotone.musicNotes, AppColors.catMusic, 60.0, 0.04, 0.52, 12.0),
-    (PhosphorIconsDuotone.barbell, AppColors.catFitness, 66.0, 0.84, 0.46, -8.0),
-    (PhosphorIconsDuotone.cookingPot, AppColors.catFood, 62.0, 0.12, 0.82, 6.0),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
-
-        return Stack(
-          children: [
-            // Floating glassmorphic icons
-            for (int i = 0; i < _ambientIcons.length; i++)
-              _buildFloatingIcon(i, w, h),
-
-            // Center content with staggered entry
-            Center(
-              child: AnimatedBuilder(
-                animation: entryCtrl,
-                builder: (context, _) {
-                  final v = entryCtrl.value;
-                  final iconOp = _iv(v, 0.0, 0.25);
-                  final iconScale = _iv(v, 0.0, 0.25, Curves.easeOutCubic);
-                  final titleOp = _iv(v, 0.15, 0.42);
-                  final titleSlide =
-                      _iv(v, 0.15, 0.42, Curves.easeOutCubic);
-                  final underline =
-                      _iv(v, 0.38, 0.62, Curves.easeInOut);
-                  final tagOp = _iv(v, 0.48, 0.68);
-                  final stat0 = _iv(v, 0.58, 0.78);
-                  final stat1 = _iv(v, 0.64, 0.84);
-                  final stat2 = _iv(v, 0.70, 0.90);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 36),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 32),
-
-                        // App icon
-                        Opacity(
-                          opacity: iconOp,
-                          child: Transform.scale(
-                            scale: 0.8 + 0.2 * iconScale,
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    AppColors.coral,
-                                    AppColors.coralDeep
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(26),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        AppColors.coral.withAlpha(76),
-                                    blurRadius: 32,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: PhosphorIcon(
-                                  PhosphorIconsDuotone.compassTool,
-                                  size: 46,
-                                  color:
-                                      Colors.white.withAlpha(240),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Title
-                        Transform.translate(
-                          offset: Offset(0, 24 * (1 - titleSlide)),
-                          child: Opacity(
-                            opacity: titleOp,
-                            child: Text(
-                              'TrySomething',
-                              style:
-                                  AppTypography.serifDisplay.copyWith(
-                                fontSize: 36,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Wave underline
-                        SizedBox(
-                          width: 150,
-                          height: 8,
-                          child: CustomPaint(
-                            painter: _WaveUnderlinePainter(
-                              progress: underline,
-                              color: AppColors.coral.withAlpha(160),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Tagline
-                        Opacity(
-                          opacity: tagOp,
-                          child: Text(
-                            'Discover hobbies you\'ll\nactually stick with.',
-                            style: AppTypography.sansBody.copyWith(
-                              color: AppColors.espresso,
-                              fontSize: 16,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        // Three stat-style value props
-                        Row(
-                          children: [
-                            _buildStatCol('30 min', 'to your first\nsession',
-                                AppColors.coral, stat0),
-                            _buildStatCol('CHF 0–30', 'to get\nstarted',
-                                AppColors.amber, stat1),
-                            _buildStatCol('5 steps', 'from zero\nto doing',
-                                AppColors.indigo, stat2),
-                          ],
-                        ),
-
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildStatCol(
-      String value, String label, Color color, double progress) {
-    return Expanded(
-      child: Opacity(
-        opacity: progress,
-        child: Transform.translate(
-          offset: Offset(0, 16 * (1 - progress)),
-          child: Column(
-            children: [
-              Text(
-                value,
-                style: AppTypography.monoLarge.copyWith(
-                  color: color,
-                  fontSize: 20,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: AppTypography.sansTiny.copyWith(
-                  color: AppColors.driftwood,
-                  fontSize: 11,
-                  height: 1.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloatingIcon(int i, double w, double h) {
-    final (icon, color, size, xPct, yPct, rotDeg) = _ambientIcons[i];
-    final baseX = w * xPct;
-    final baseY = h * yPct;
-    final radians = rotDeg * pi / 180;
-    final iconSize = size * 0.42;
-
-    return Positioned(
-      left: baseX,
-      top: baseY,
-      child: FadeTransition(
-        opacity: iconFadeAnims[i],
-        child: ScaleTransition(
-          scale: iconScaleAnims[i],
-          child: AnimatedBuilder(
-            animation: floatYAnims[i],
+      padding: const EdgeInsets.fromLTRB(28, 0, 28, 16),
+      child: Column(
+        children: [
+          // Coral gradient CTA button
+          AnimatedBuilder(
+            animation: _glowCtrl,
             builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(
-                    floatXAnims[i].value, floatYAnims[i].value),
-                child: child,
-              );
-            },
-            child: Transform.rotate(
-              angle: radians,
-              child: Container(
-                width: size,
-                height: size,
+              final glow = 12.0 + _glowCtrl.value * 8.0;
+              return Container(
+                width: double.infinity,
+                height: Spacing.buttonCtaHeight,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E2E).withAlpha(180),
-                  borderRadius: BorderRadius.circular(size * 0.28),
+                  borderRadius: BorderRadius.circular(Spacing.radiusCta),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withAlpha(40),
-                      blurRadius: 24,
-                      spreadRadius: 4,
+                      color: AppColors.coral.withAlpha(50),
+                      blurRadius: glow,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Center(
-                  child: PhosphorIcon(icon,
-                      size: iconSize,
-                      color: color.withAlpha(200)),
+                child: child,
+              );
+            },
+            child: SizedBox(
+              width: double.infinity,
+              height: Spacing.buttonCtaHeight,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.coral, AppColors.coralDeep],
+                  ),
+                  borderRadius: BorderRadius.circular(Spacing.radiusCta),
+                ),
+                child: ElevatedButton(
+                  onPressed: _nextPage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(Spacing.radiusCta),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(labels[_currentPage],
+                      style: AppTypography.sansButton),
                 ),
               ),
             ),
           ),
-        ),
+
+          // Skip text (page 1 only)
+          if (_currentPage == 0) ...[
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _skip,
+              child: Text('Skip for now',
+                  style: AppTypography.sansCaption
+                      .copyWith(color: AppColors.driftwood)),
+            ),
+          ],
+
+          // Social proof (page 3)
+          if (_currentPage == 2) ...[
+            const SizedBox(height: 16),
+            Text('Join 10,000+ hobbyists starting today',
+                style: AppTypography.sansCaption
+                    .copyWith(color: AppColors.warmGray)),
+          ],
+
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════
-//  PAGE 2 — PREFERENCES
+//  PAGE 1 — VIBES GRID
 // ═══════════════════════════════════════════════════════
 
-class _PreferencesPage extends StatelessWidget {
+class _VibesPage extends StatelessWidget {
   final AnimationController entryCtrl;
-  final int hours;
-  final int budget;
-  final bool social;
   final Set<String> vibes;
-  final String summary;
-  final ValueChanged<int> onHoursChanged;
-  final ValueChanged<int> onBudgetChanged;
-  final ValueChanged<bool> onSocialChanged;
   final ValueChanged<String> onVibeToggled;
 
-  const _PreferencesPage({
+  const _VibesPage({
     required this.entryCtrl,
-    required this.hours,
-    required this.budget,
-    required this.social,
     required this.vibes,
-    required this.summary,
-    required this.onHoursChanged,
-    required this.onBudgetChanged,
-    required this.onSocialChanged,
     required this.onVibeToggled,
   });
 
@@ -780,113 +393,223 @@ class _PreferencesPage extends StatelessWidget {
       animation: entryCtrl,
       builder: (context, _) {
         final v = entryCtrl.value;
-        final titleOp = _iv(v, 0.0, 0.2);
-        final titleSlide = _iv(v, 0.0, 0.2, Curves.easeOutCubic);
-        final subOp = _iv(v, 0.05, 0.25);
-        final timeOp = _iv(v, 0.15, 0.4);
-        final timeSlide = _iv(v, 0.15, 0.4, Curves.easeOutCubic);
-        final budgetOp = _iv(v, 0.3, 0.55);
-        final budgetSlide = _iv(v, 0.3, 0.55, Curves.easeOutCubic);
-        final styleOp = _iv(v, 0.45, 0.7);
-        final styleSlide = _iv(v, 0.45, 0.7, Curves.easeOutCubic);
-        final vibeOp = _iv(v, 0.55, 0.8);
-        final vibeSlide = _iv(v, 0.55, 0.8, Curves.easeOutCubic);
-        final summaryOp = _iv(v, 0.7, 1.0);
+        final titleOp = _iv(v, 0.0, 0.3);
+        final titleSlide = _iv(v, 0.0, 0.3, Curves.easeOutCubic);
+        final subOp = _iv(v, 0.1, 0.35);
+        final gridOp = _iv(v, 0.2, 0.5);
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 16),
+
               // Title
               Transform.translate(
                 offset: Offset(0, 20 * (1 - titleSlide)),
                 child: Opacity(
                   opacity: titleOp,
-                  child: Text('Tell us\nabout you.',
-                      style: AppTypography.serifTitle),
+                  child: Text(
+                    'What vibes\nare you into?',
+                    style: AppTypography.serifTitle.copyWith(fontSize: 34),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
+
+              // Subtitle
               Opacity(
                 opacity: subOp,
                 child: Text(
-                  'We\'ll find hobbies that fit your life.',
+                  'Select a few categories to help us\npersonalize your recommendations.',
                   style: AppTypography.sansBody
-                      .copyWith(color: AppColors.driftwood),
+                      .copyWith(color: AppColors.driftwood, height: 1.5),
                 ),
+              ),
+              const SizedBox(height: 32),
+
+              // 2×4 Grid
+              Expanded(
+                child: Opacity(
+                  opacity: gridOp,
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: _vibeItems.map((item) {
+                      final isSelected = vibes.contains(item.key);
+                      return _VibeCard(
+                        item: item,
+                        isSelected: isSelected,
+                        onTap: () => onVibeToggled(item.key),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _VibeCard extends StatelessWidget {
+  final _VibeItem item;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _VibeCard({
+    required this.item,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Motion.fast,
+        decoration: BoxDecoration(
+          color: AppColors.sand,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.sage : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Icon + label
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(item.icon, size: 32, color: item.color),
+                  const SizedBox(height: 10),
+                  Text(
+                    item.label,
+                    style: AppTypography.sansLabel.copyWith(
+                      color: isSelected
+                          ? AppColors.nearBlack
+                          : AppColors.driftwood,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Checkmark badge
+            if (isSelected)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.sage,
+                  ),
+                  child: const Icon(Icons.check,
+                      size: 14, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAGE 2 — TIME & BUDGET
+// ═══════════════════════════════════════════════════════
+
+class _TimeBudgetPage extends StatelessWidget {
+  final AnimationController entryCtrl;
+  final double hours;
+  final int budget;
+  final bool social;
+  final ValueChanged<double> onHoursChanged;
+  final ValueChanged<int> onBudgetChanged;
+  final ValueChanged<bool> onSocialChanged;
+
+  const _TimeBudgetPage({
+    required this.entryCtrl,
+    required this.hours,
+    required this.budget,
+    required this.social,
+    required this.onHoursChanged,
+    required this.onBudgetChanged,
+    required this.onSocialChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: entryCtrl,
+      builder: (context, _) {
+        final v = entryCtrl.value;
+        final titleOp = _iv(v, 0.0, 0.25);
+        final titleSlide = _iv(v, 0.0, 0.25, Curves.easeOutCubic);
+        final sliderOp = _iv(v, 0.15, 0.4);
+        final budgetOp = _iv(v, 0.3, 0.55);
+        final prefOp = _iv(v, 0.45, 0.7);
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(28, 8, 28, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title + subtitle
+              Transform.translate(
+                offset: Offset(0, 16 * (1 - titleSlide)),
+                child: Opacity(
+                  opacity: titleOp,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Time & Budget',
+                          style: AppTypography.serifTitle),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Customize your journey constraints so we can\nfind hobbies that actually fit your life.',
+                        style: AppTypography.sansBody
+                            .copyWith(color: AppColors.driftwood, height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Hours slider
+              Opacity(
+                opacity: sliderOp,
+                child: _buildHoursSection(),
               ),
               const SizedBox(height: 36),
 
-              // ── TIME ──
-              Transform.translate(
-                offset: Offset(0, 16 * (1 - timeSlide)),
-                child: Opacity(
-                  opacity: timeOp,
-                  child: _buildTimeSection(),
-                ),
+              // Budget cards
+              Opacity(
+                opacity: budgetOp,
+                child: _buildBudgetSection(),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 36),
 
-              // ── BUDGET ──
-              Transform.translate(
-                offset: Offset(0, 16 * (1 - budgetSlide)),
-                child: Opacity(
-                  opacity: budgetOp,
-                  child: _buildBudgetSection(),
-                ),
+              // Preference toggle
+              Opacity(
+                opacity: prefOp,
+                child: _buildPreferenceSection(),
               ),
-              const SizedBox(height: 32),
-
-              // ── STYLE ──
-              Transform.translate(
-                offset: Offset(0, 16 * (1 - styleSlide)),
-                child: Opacity(
-                  opacity: styleOp,
-                  child: _buildStyleSection(),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // ── VIBES ──
-              Transform.translate(
-                offset: Offset(0, 16 * (1 - vibeSlide)),
-                child: Opacity(
-                  opacity: vibeOp,
-                  child: _buildVibesSection(),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // ── DYNAMIC SUMMARY ──
-              if (summary.isNotEmpty)
-                Opacity(
-                  opacity: summaryOp,
-                  child: Center(
-                    child: AnimatedSwitcher(
-                      duration: Motion.normal,
-                      child: Container(
-                        key: ValueKey(summary),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.amberPale,
-                          borderRadius:
-                              BorderRadius.circular(Spacing.radiusBadge),
-                          border: Border.all(
-                              color: AppColors.amber.withAlpha(60)),
-                        ),
-                        child: Text(
-                          summary,
-                          style: AppTypography.monoCaption
-                              .copyWith(color: AppColors.amberDeep),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 32),
             ],
           ),
         );
@@ -894,109 +617,56 @@ class _PreferencesPage extends StatelessWidget {
     );
   }
 
-  // ── Time Stepper ──
+  // ── Hours Slider ──
 
-  Widget _buildTimeSection() {
+  Widget _buildHoursSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('HOW MUCH TIME DO YOU HAVE?'),
-        const SizedBox(height: 8),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Minus
-            GestureDetector(
-              onTap: hours > 1 ? () => onHoursChanged(hours - 1) : null,
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: hours > 1 ? AppColors.sand : AppColors.warmWhite,
-                ),
-                child: Center(
-                  child: Icon(Icons.remove,
-                      size: 20,
-                      color: hours > 1
-                          ? AppColors.espresso
-                          : AppColors.stone),
-                ),
-              ),
-            ),
-
-            // Animated number
-            SizedBox(
-              width: 110,
-              child: Center(
-                child: AnimatedSwitcher(
-                  duration: Motion.normal,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      scale: Tween<double>(begin: 0.8, end: 1.0)
-                          .animate(animation),
-                      child: child,
-                    ),
-                  ),
-                  child: Text(
-                    '${hours}h',
-                    key: ValueKey(hours),
-                    style: AppTypography.monoTimer.copyWith(
-                      fontSize: 38,
-                      color: AppColors.coral,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Plus
-            GestureDetector(
-              onTap: hours < 7 ? () => onHoursChanged(hours + 1) : null,
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: hours < 7 ? AppColors.sand : AppColors.warmWhite,
-                ),
-                child: Center(
-                  child: Icon(Icons.add,
-                      size: 20,
-                      color: hours < 7
-                          ? AppColors.espresso
-                          : AppColors.stone),
-                ),
-              ),
-            ),
+            Text('Hours per week',
+                style: AppTypography.sansSection
+                    .copyWith(color: AppColors.nearBlack)),
+            const Spacer(),
+            Text('${hours.round()} hrs',
+                style: AppTypography.sansSection.copyWith(
+                    color: AppColors.coral, fontWeight: FontWeight.w700)),
           ],
         ),
-        const SizedBox(height: 14),
-
-        // Dot scale
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(7, (i) {
-            final active = i < hours;
-            return AnimatedContainer(
-              duration: Motion.fast,
-              width: 8,
-              height: 8,
-              margin: EdgeInsets.only(right: i < 6 ? 8 : 0),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: active ? AppColors.coral : AppColors.sandDark,
-              ),
-            );
-          }),
+        const SizedBox(height: 16),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: AppColors.coral,
+            inactiveTrackColor: AppColors.sandDark,
+            thumbColor: Colors.white,
+            overlayColor: AppColors.coral.withAlpha(30),
+            trackHeight: 6,
+            thumbShape: const RoundSliderThumbShape(
+              enabledThumbRadius: 14,
+              elevation: 4,
+            ),
+          ),
+          child: Slider(
+            value: hours,
+            min: 1,
+            max: 10,
+            divisions: 9,
+            onChanged: onHoursChanged,
+          ),
         ),
-        const SizedBox(height: 4),
-        Center(
-          child: Text(
-            'per week',
-            style: AppTypography.sansTiny
-                .copyWith(color: AppColors.warmGray),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('1h',
+                  style: AppTypography.sansCaption
+                      .copyWith(color: AppColors.warmGray)),
+              Text('10h+',
+                  style: AppTypography.sansCaption
+                      .copyWith(color: AppColors.warmGray)),
+            ],
           ),
         ),
       ],
@@ -1006,77 +676,71 @@ class _PreferencesPage extends StatelessWidget {
   // ── Budget Cards ──
 
   Widget _buildBudgetSection() {
-    const labels = ['Low', 'Medium', 'High'];
-    const costs = ['<CHF 30', 'CHF 30–100', 'CHF 100+'];
+    final items = [
+      (MdiIcons.piggyBank, 'Low', 'Free/Cheap'),
+      (MdiIcons.walletOutline, 'Medium', '\$\$ Occasional'),
+      (MdiIcons.diamondStone, 'High', '\$\$\$ Premium'),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('BUDGET'),
+        Text('Budget Level',
+            style: AppTypography.sansSection
+                .copyWith(color: AppColors.nearBlack)),
+        const SizedBox(height: 16),
         Row(
           children: List.generate(3, (i) {
             final isSelected = budget == i;
+            final (icon, label, subtitle) = items[i];
             return Expanded(
               child: GestureDetector(
                 onTap: () => onBudgetChanged(i),
                 child: AnimatedContainer(
                   duration: Motion.fast,
                   margin: EdgeInsets.only(right: i < 2 ? 10 : 0),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   decoration: BoxDecoration(
-                    color:
-                        isSelected ? AppColors.coralPale : AppColors.sand,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                                color: AppColors.coral.withAlpha(20),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4))
-                          ]
-                        : null,
+                    color: AppColors.sand,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.coral
+                          : Colors.transparent,
+                      width: 1.5,
+                    ),
                   ),
                   child: Column(
                     children: [
-                      // Budget intensity dots
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(i + 1, (j) {
-                          return Container(
-                            width: 6,
-                            height: 6,
-                            margin: EdgeInsets.only(right: j < i ? 3 : 0),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? AppColors.coral
-                                  : AppColors.stone,
-                            ),
-                          );
-                        }),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected
+                              ? AppColors.coralPale
+                              : AppColors.warmWhite,
+                        ),
+                        child: Icon(icon,
+                            size: 22,
+                            color: isSelected
+                                ? AppColors.coral
+                                : AppColors.driftwood),
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        labels[i],
-                        style: AppTypography.sansLabel.copyWith(
-                          color: isSelected
-                              ? AppColors.coral
-                              : AppColors.nearBlack,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w600,
-                        ),
-                      ),
+                      Text(label,
+                          style: AppTypography.sansLabel.copyWith(
+                            color: isSelected
+                                ? AppColors.nearBlack
+                                : AppColors.driftwood,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          )),
                       const SizedBox(height: 4),
-                      Text(
-                        costs[i],
-                        style: AppTypography.monoCaption.copyWith(
-                          color: isSelected
-                              ? AppColors.coral.withAlpha(180)
-                              : AppColors.warmGray,
-                          fontSize: 10,
-                        ),
-                      ),
+                      Text(subtitle,
+                          style: AppTypography.sansTiny
+                              .copyWith(color: AppColors.warmGray)),
                     ],
                   ),
                 ),
@@ -1088,384 +752,353 @@ class _PreferencesPage extends StatelessWidget {
     );
   }
 
-  // ── Segmented Style Toggle ──
+  // ── Solo / Social Toggle ──
 
-  Widget _buildStyleSection() {
+  Widget _buildPreferenceSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('YOUR STYLE'),
-        Container(
-          height: 52,
-          decoration: BoxDecoration(
-            color: AppColors.sand,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Stack(
-            children: [
-              // Sliding indicator
-              AnimatedAlign(
-                duration: Motion.normal,
-                curve: Motion.normalCurve,
-                alignment:
-                    social ? Alignment.centerRight : Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  widthFactor: 0.5,
-                  child: Container(
-                    height: 44,
-                    margin: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.coral,
-                      borderRadius: BorderRadius.circular(11),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.coral.withAlpha(40),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Labels
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => onSocialChanged(false),
-                      behavior: HitTestBehavior.opaque,
-                      child: Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(AppIcons.solo,
-                                size: 16,
-                                color: !social
-                                    ? Colors.white
-                                    : AppColors.driftwood),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Solo',
-                              style: AppTypography.sansButton.copyWith(
-                                color: !social
-                                    ? Colors.white
-                                    : AppColors.driftwood,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => onSocialChanged(true),
-                      behavior: HitTestBehavior.opaque,
-                      child: Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(AppIcons.group,
-                                size: 16,
-                                color: social
-                                    ? Colors.white
-                                    : AppColors.driftwood),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Social',
-                              style: AppTypography.sansButton.copyWith(
-                                color: social
-                                    ? Colors.white
-                                    : AppColors.driftwood,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Vibe Chips ──
-
-  Widget _buildVibesSection() {
-    const vibeList = [
-      'Creative',
-      'Physical',
-      'Relaxing',
-      'Technical',
-      'Outdoors',
-      'Competitive'
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+        Text('Preference',
+            style: AppTypography.sansSection
+                .copyWith(color: AppColors.nearBlack)),
+        const SizedBox(height: 16),
         Row(
           children: [
-            Text('WHAT\'S YOUR VIBE?', style: AppTypography.overline),
-            const SizedBox(width: 8),
-            Text('pick any',
-                style: AppTypography.sansTiny.copyWith(
-                    color: AppColors.stone, fontStyle: FontStyle.italic)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 10,
-          children: vibeList.map((vibe) {
-            final isSelected = vibes.contains(vibe.toLowerCase());
-            return GestureDetector(
-              onTap: () => onVibeToggled(vibe.toLowerCase()),
-              child: AnimatedContainer(
-                duration: Motion.fast,
-                padding: EdgeInsets.only(
-                  left: isSelected ? 12 : 18,
-                  right: 18,
-                  top: 10,
-                  bottom: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.indigo : AppColors.sand,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                              color: AppColors.indigo.withAlpha(30),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2))
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedSize(
-                      duration: Motion.fast,
-                      child: isSelected
-                          ? const Padding(
-                              padding: EdgeInsets.only(right: 6),
-                              child: Icon(Icons.check_rounded,
-                                  size: 14, color: Colors.white),
-                            )
-                          : const SizedBox.shrink(),
+            // Solo
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onSocialChanged(false),
+                child: AnimatedContainer(
+                  duration: Motion.fast,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: !social ? AppColors.sand : AppColors.warmWhite,
+                    borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                    border: Border.all(
+                      color:
+                          !social ? AppColors.sandDark : Colors.transparent,
                     ),
-                    Text(
-                      vibe,
-                      style: AppTypography.sansLabel.copyWith(
-                        color:
-                            isSelected ? Colors.white : AppColors.driftwood,
-                      ),
-                    ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(AppIcons.solo,
+                          size: 18,
+                          color: !social
+                              ? AppColors.nearBlack
+                              : AppColors.driftwood),
+                      const SizedBox(width: 8),
+                      Text('Solo',
+                          style: AppTypography.sansButton.copyWith(
+                            color: !social
+                                ? AppColors.nearBlack
+                                : AppColors.driftwood,
+                          )),
+                    ],
+                  ),
                 ),
               ),
-            );
-          }).toList(),
+            ),
+            const SizedBox(width: 12),
+            // Social
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onSocialChanged(true),
+                child: AnimatedContainer(
+                  duration: Motion.fast,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: social ? AppColors.coral : AppColors.warmWhite,
+                    borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(AppIcons.group,
+                          size: 18,
+                          color:
+                              social ? Colors.white : AppColors.driftwood),
+                      const SizedBox(width: 8),
+                      Text('Social',
+                          style: AppTypography.sansButton.copyWith(
+                            color: social
+                                ? Colors.white
+                                : AppColors.driftwood,
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
+        if (social) ...[
+          const SizedBox(height: 12),
+          Text("We'll prioritize group activities and clubs.",
+              style: AppTypography.sansCaption
+                  .copyWith(color: AppColors.warmGray)),
+        ],
       ],
-    );
-  }
-
-  Widget _sectionLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(text, style: AppTypography.overline),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════
-//  PAGE 3 — RESULTS
+//  PAGE 3 — READY
 // ═══════════════════════════════════════════════════════
 
-class _ResultsPage extends StatelessWidget {
+class _ReadyPage extends StatelessWidget {
   final AnimationController entryCtrl;
-  final AnimationController particleCtrl;
-  final List<_Particle> particles;
   final List<Hobby> matchedHobbies;
-  final String persona;
 
-  const _ResultsPage({
+  const _ReadyPage({
     required this.entryCtrl,
-    required this.particleCtrl,
-    required this.particles,
     required this.matchedHobbies,
-    required this.persona,
   });
+
+  // Card positions: (leftPct, topPct, width, height)
+  static const _cardLayouts = [
+    (0.04, 0.04, 140.0, 130.0), // top-left
+    (0.52, 0.08, 155.0, 140.0), // top-right
+    (0.00, 0.40, 170.0, 150.0), // bottom-left (largest)
+    (0.50, 0.46, 145.0, 130.0), // bottom-right
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final topMatches = matchedHobbies.take(5).toList();
+    final topMatches = matchedHobbies.take(4).toList();
 
-    return Stack(
-      children: [
-        // Celebration particles
-        AnimatedBuilder(
-          animation: particleCtrl,
-          builder: (context, _) => CustomPaint(
-            painter: _ParticlePainter(
-              progress: particleCtrl.value,
-              particles: particles,
-            ),
-            child: const SizedBox.expand(),
-          ),
-        ),
+    return AnimatedBuilder(
+      animation: entryCtrl,
+      builder: (context, _) {
+        final v = entryCtrl.value;
+        final badgeOp = _iv(v, 0.0, 0.2);
+        final cardsOp = _iv(v, 0.1, 0.4);
+        final titleOp = _iv(v, 0.4, 0.65);
+        final titleScale = _iv(v, 0.4, 0.65, Curves.easeOutCubic);
+        final bodyOp = _iv(v, 0.55, 0.8);
 
-        // Content
-        Center(
-          child: AnimatedBuilder(
-            animation: entryCtrl,
-            builder: (context, _) {
-              final v = entryCtrl.value;
-              final badgeOp = _iv(v, 0.0, 0.2);
-              final badgeScale = _iv(v, 0.0, 0.2, Curves.easeOutBack);
-              final personaOp = _iv(v, 0.1, 0.35);
-              final personaScale =
-                  _iv(v, 0.1, 0.35, Curves.easeOutCubic);
-              final countProgress =
-                  _iv(v, 0.25, 0.55, Curves.easeOutCubic);
-              final displayCount =
-                  (matchedHobbies.length * countProgress).round();
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Gradient badge
-                    Opacity(
-                      opacity: badgeOp,
-                      child: Transform.scale(
-                        scale: 0.6 + 0.4 * badgeScale,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 6),
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(Spacing.radiusBadge),
-                            gradient: const LinearGradient(
-                              colors: [AppColors.coral, AppColors.amber],
-                            ),
-                          ),
-                          child: Text(
-                            'YOUR VIBE',
-                            style: AppTypography.categoryLabel.copyWith(
-                              color: Colors.white,
-                              letterSpacing: 3,
-                            ),
-                          ),
-                        ),
-                      ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            children: [
+              // "Curated for you" badge
+              Align(
+                alignment: Alignment.centerRight,
+                child: Opacity(
+                  opacity: badgeOp,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 8, right: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.sagePale,
+                      borderRadius:
+                          BorderRadius.circular(Spacing.radiusBadge),
+                      border:
+                          Border.all(color: AppColors.sage.withAlpha(60)),
                     ),
-                    const SizedBox(height: 20),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(MdiIcons.autoFix,
+                            size: 14, color: AppColors.sage),
+                        const SizedBox(width: 4),
+                        Text('Curated for you',
+                            style: AppTypography.sansCaption.copyWith(
+                                color: AppColors.sage,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
-                    // Persona title
+              // Floating cards area
+              Expanded(
+                flex: 3,
+                child: Opacity(
+                  opacity: cardsOp,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final areaW = constraints.maxWidth;
+                      final areaH = constraints.maxHeight;
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Decorative dots
+                          _dot(areaW * 0.85, areaH * 0.02, 6,
+                              AppColors.coral),
+                          _dot(areaW * 0.08, areaH * 0.30, 4,
+                              AppColors.warmGray),
+                          _dot(areaW * 0.92, areaH * 0.50, 5,
+                              AppColors.amber),
+                          _dot(areaW * 0.45, areaH * 0.70, 3,
+                              AppColors.warmGray),
+
+                          // Hobby cards
+                          for (int i = 0;
+                              i < _cardLayouts.length &&
+                                  i < topMatches.length;
+                              i++)
+                            _buildFloatingCard(
+                                topMatches[i], areaW, areaH, i, v),
+
+                          // "98% Match" badge on bottom-left card
+                          if (topMatches.length > 2)
+                            Positioned(
+                              left: areaW * _cardLayouts[2].$1 +
+                                  _cardLayouts[2].$3 * 0.3,
+                              top: areaH * _cardLayouts[2].$2 - 8,
+                              child: Opacity(
+                                opacity: _iv(v, 0.25, 0.45),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.coral,
+                                    borderRadius: BorderRadius.circular(
+                                        Spacing.radiusBadge),
+                                  ),
+                                  child: Text('98% Match',
+                                      style: AppTypography.monoBadge
+                                          .copyWith(
+                                              color: Colors.white,
+                                              fontSize: 10)),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // Title + body text
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    // "You're ready!" title with wave underline
                     Opacity(
-                      opacity: personaOp,
+                      opacity: titleOp,
                       child: Transform.scale(
-                        scale: 0.85 + 0.15 * personaScale,
-                        child: Text(
-                          persona,
-                          style: AppTypography.serifDisplay,
-                          textAlign: TextAlign.center,
+                        scale: 0.9 + 0.1 * titleScale,
+                        child: Column(
+                          children: [
+                            Text("You're ready!",
+                                style: AppTypography.serifDisplay
+                                    .copyWith(fontSize: 36)),
+                            SizedBox(
+                              width: 180,
+                              height: 8,
+                              child: CustomPaint(
+                                painter: _WaveUnderlinePainter(
+                                  progress: titleOp,
+                                  color:
+                                      AppColors.coral.withAlpha(160),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Animated count
+                    // Body text
                     Opacity(
-                      opacity: _iv(v, 0.25, 0.45),
-                      child: Text(
-                        'We found $displayCount hobbies for you',
-                        style: AppTypography.sansBody.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.coral,
-                          fontSize: 16,
+                      opacity: bodyOp,
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          "We've curated a personalized list of\nhobbies just for you. Dive in and find\nyour next passion.",
+                          textAlign: TextAlign.center,
+                          style: AppTypography.sansBody.copyWith(
+                            color: AppColors.driftwood,
+                            height: 1.6,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 28),
-
-                    // Top 5 matched hobbies
-                    ...List.generate(topMatches.length, (i) {
-                      final hobby = topMatches[i];
-                      final cardOp = _iv(
-                          v, 0.4 + i * 0.08, 0.6 + i * 0.08);
-                      final cardSlide = _iv(v, 0.4 + i * 0.08,
-                          0.6 + i * 0.08, Curves.easeOutCubic);
-
-                      return Opacity(
-                        opacity: cardOp,
-                        child: Transform.translate(
-                          offset: Offset(0, 12 * (1 - cardSlide)),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.warmWhite,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Row(
-                              children: [
-                                // Category dot
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: hobby.catColor,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Title
-                                Expanded(
-                                  child: Text(
-                                    hobby.title,
-                                    style: AppTypography.sansLabel,
-                                  ),
-                                ),
-                                // Matching tag badge
-                                if (hobby.tags.isNotEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.indigoPale,
-                                      borderRadius:
-                                          BorderRadius.circular(100),
-                                    ),
-                                    child: Text(
-                                      hobby.tags.first,
-                                      style: AppTypography.monoBadgeSmall
-                                          .copyWith(
-                                              color: AppColors.indigo),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
                   ],
                 ),
-              );
-            },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFloatingCard(
+      Hobby hobby, double areaW, double areaH, int i, double entryV) {
+    final (leftPct, topPct, cardW, cardH) = _cardLayouts[i];
+    final cardOp =
+        _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
+    final cardSlide =
+        _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06, Curves.easeOutCubic);
+
+    return Positioned(
+      left: areaW * leftPct,
+      top: areaH * topPct + 12 * (1 - cardSlide),
+      child: Opacity(
+        opacity: cardOp,
+        child: Container(
+          width: cardW,
+          height: cardH,
+          decoration: BoxDecoration(
+            color: AppColors.sand,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: AppColors.sandDark.withAlpha(120), width: 0.5),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: hobby.catColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(hobby.catIcon,
+                    size: 24, color: hobby.catColor),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                hobby.title.toUpperCase(),
+                style: AppTypography.sansCaption.copyWith(
+                  color: AppColors.espresso,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _dot(double x, double y, double size, Color color) {
+    return Positioned(
+      left: x,
+      top: y,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withAlpha(120),
+        ),
+      ),
     );
   }
 }
@@ -1474,61 +1107,6 @@ class _ResultsPage extends StatelessWidget {
 //  PAINTERS
 // ═══════════════════════════════════════════════════════
 
-/// Slowly drifting gradient blobs for the welcome page background.
-class _GradientBlobPainter extends CustomPainter {
-  final List<Offset> positions;
-
-  _GradientBlobPainter({required this.positions});
-
-  static const _colors = [
-    Color(0x28FF6B6B), // hot coral at ~16%
-    Color(0x20FBBF24), // gold at ~13%
-    Color(0x187C3AED), // electric violet at ~10%
-  ];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Base warm wash
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0A0A0F),
-            Color(0xFF0E0E18),
-            Color(0xFF121220),
-            Color(0xFF161628),
-          ],
-          stops: [0.0, 0.3, 0.6, 1.0],
-        ).createShader(Offset.zero & size),
-    );
-
-    // Floating blobs
-    for (int i = 0; i < 3; i++) {
-      final center = Offset(
-        size.width * positions[i].dx,
-        size.height * positions[i].dy,
-      );
-      final radius = size.width * 0.55;
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..shader = RadialGradient(
-            colors: [_colors[i], _colors[i].withAlpha(0)],
-          ).createShader(
-              Rect.fromCircle(center: center, radius: radius)),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GradientBlobPainter old) => true;
-}
-
-/// Animated hand-drawn-style wave underline.
 class _WaveUnderlinePainter extends CustomPainter {
   final double progress;
   final Color color;
@@ -1550,8 +1128,8 @@ class _WaveUnderlinePainter extends CustomPainter {
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
-    final drawn = metrics.first.extractPath(
-        0, metrics.first.length * progress);
+    final drawn =
+        metrics.first.extractPath(0, metrics.first.length * progress);
     canvas.drawPath(
       drawn,
       Paint()
@@ -1565,93 +1143,4 @@ class _WaveUnderlinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_WaveUnderlinePainter old) =>
       old.progress != progress;
-}
-
-/// Celebration particles — glowing 3D orbs with depth parallax.
-class _ParticlePainter extends CustomPainter {
-  final double progress;
-  final List<_Particle> particles;
-
-  _ParticlePainter({required this.progress, required this.particles});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final p in particles) {
-      // Y: moves upward, wraps around
-      final yFrac = ((p.startPhase + progress * p.speed) % 1.0);
-      final y = size.height * (1.0 - yFrac);
-
-      // X: dual-sine wobble for organic motion
-      final wobble1 = sin(yFrac * p.wobbleFreq * 2 * pi) * p.wobbleAmp;
-      final wobble2 = sin(yFrac * p.wobbleFreq2 * 2 * pi + 1.7) * p.wobbleAmp2;
-      final x = size.width * p.startX + wobble1 + wobble2;
-
-      // Fade near top and bottom to hide wrap
-      final fadeIn = (yFrac / 0.2).clamp(0.0, 1.0);
-      final fadeOut = ((1.0 - yFrac) / 0.2).clamp(0.0, 1.0);
-      final alpha = (fadeIn * fadeOut * p.maxAlpha).clamp(0.0, 1.0);
-
-      final center = Offset(x.clamp(0, size.width), y);
-      final radius = p.size;
-
-      // Radial gradient: bright center → transparent edge = 3D glowing orb
-      final gradient = RadialGradient(
-        colors: [
-          p.color.withValues(alpha: alpha),
-          p.color.withValues(alpha: alpha * 0.4),
-          p.color.withValues(alpha: 0),
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      );
-
-      final paint = Paint()
-        ..shader = gradient.createShader(
-          Rect.fromCircle(center: center, radius: radius * 1.8),
-        );
-
-      canvas.drawCircle(center, radius * 1.8, paint);
-
-      // Bright inner core for the glow effect
-      canvas.drawCircle(
-        center,
-        radius * 0.4,
-        Paint()..color = p.color.withValues(alpha: (alpha * 0.8).clamp(0.0, 1.0)),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ParticlePainter old) => true;
-}
-
-// ═══════════════════════════════════════════════════════
-//  DATA
-// ═══════════════════════════════════════════════════════
-
-class _Particle {
-  final double startX;
-  final double startPhase;
-  final double speed;
-  final double wobbleAmp;
-  final double wobbleFreq;
-  final double wobbleAmp2;
-  final double wobbleFreq2;
-  final double size;
-  final Color color;
-  final double maxAlpha;
-  final int depth;
-
-  const _Particle({
-    required this.startX,
-    required this.startPhase,
-    required this.speed,
-    required this.wobbleAmp,
-    required this.wobbleFreq,
-    required this.wobbleAmp2,
-    required this.wobbleFreq2,
-    required this.size,
-    required this.color,
-    required this.maxAlpha,
-    required this.depth,
-  });
 }
