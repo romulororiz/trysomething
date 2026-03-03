@@ -7,7 +7,6 @@ import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
-import '../../theme/app_icons.dart';
 import '../../theme/spacing.dart';
 
 /// Beginner FAQ screen for a specific hobby.
@@ -32,7 +31,7 @@ class BeginnerFaqScreen extends ConsumerWidget {
           // ── Header ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.only(top: topPad + 8, left: 16, right: 16),
+              padding: EdgeInsets.only(top: topPad + 8, left: 24, right: 24),
               child: Row(
                 children: [
                   GestureDetector(
@@ -40,22 +39,19 @@ class BeginnerFaqScreen extends ConsumerWidget {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.warmWhite,
+                        color: AppColors.sand,
                       ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.nearBlack),
-                      ),
+                      child: const Icon(Icons.arrow_back,
+                          size: 20, color: AppColors.espresso),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Icon(AppIcons.faq, size: 22, color: AppColors.indigo),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Text(
                       '$hobbyName FAQ',
-                      style: AppTypography.sansSection,
+                      style: AppTypography.serifHeading,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -64,19 +60,10 @@ class BeginnerFaqScreen extends ConsumerWidget {
             ),
           ),
 
-          // ── Title ───────────────────────────────────────
+          // ── Subtitle ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 6),
-              child: Text(
-                '$hobbyName FAQ',
-                style: AppTypography.serifHeading,
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
               child: Text(
                 'Common questions from beginners, answered by the community.',
                 style: AppTypography.sansBodySmall,

@@ -33,7 +33,7 @@ class BudgetAlternativesScreen extends ConsumerWidget {
           // ── Header ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.only(top: topPad + 8, left: 16, right: 16),
+              padding: EdgeInsets.only(top: topPad + 8, left: 24, right: 24),
               child: Row(
                 children: [
                   GestureDetector(
@@ -41,22 +41,19 @@ class BudgetAlternativesScreen extends ConsumerWidget {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.warmWhite,
+                        color: AppColors.sand,
                       ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.nearBlack),
-                      ),
+                      child: const Icon(Icons.arrow_back,
+                          size: 20, color: AppColors.espresso),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Icon(AppIcons.badgeCost, size: 22, color: AppColors.sage),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Text(
                       'Budget Options',
-                      style: AppTypography.sansSection,
+                      style: AppTypography.serifHeading,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -65,19 +62,10 @@ class BudgetAlternativesScreen extends ConsumerWidget {
             ),
           ),
 
-          // ── Title ───────────────────────────────────────
+          // ── Subtitle ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 6),
-              child: Text(
-                'Budget Options \u2014 $hobbyName',
-                style: AppTypography.serifHeading,
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
               child: Text(
                 'Every price tier, so you can start at any budget.',
                 style: AppTypography.sansBodySmall,
