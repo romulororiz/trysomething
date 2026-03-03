@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [master]
 
+# Cancel in-progress runs for the same branch/PR
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   flutter:
     name: Flutter Analyze & Test
@@ -25,10 +30,13 @@ jobs:
         run: flutter analyze lib/
 
       - name: Test
-        run: flutter test
+        run: flutter test --coverage
+
+      - name: Verify build
+        run: flutter build apk --debug
 
   server:
-    name: Server Lint & Type Check
+    name: Server Lint, Type Check & Test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,3 +58,6 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
