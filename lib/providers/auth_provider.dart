@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../core/auth/token_storage.dart';
+import '../core/analytics/analytics_provider.dart';
+import '../core/analytics/analytics_service.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/auth_repository_api.dart';
 import '../models/auth.dart';
@@ -64,8 +66,9 @@ final _googleSignInFallback = GoogleSignIn(
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
+  final AnalyticsService? _analytics;
 
-  AuthNotifier(this._repo) : super(const AuthState());
+  AuthNotifier(this._repo, [this._analytics]) : super(const AuthState());
 
   /// Check for stored token on app startup.
   Future<void> tryRestoreSession() async {
@@ -78,6 +81,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repo.getMe();
       state = AuthState(status: AuthStatus.authenticated, user: user);
+      _analytics?.setUserId(user.id);
     } catch (_) {
       await TokenStorage.clearTokens();
       state = const AuthState(status: AuthStatus.unauthenticated);
@@ -101,6 +105,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         refreshToken: response.refreshToken,
       );
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
+      _analytics?.setUserId(response.user.id);
+      _analytics?.trackEvent('register');
       return true;
     } catch (e) {
       state = AuthState(
@@ -123,6 +129,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         refreshToken: response.refreshToken,
       );
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
+      _analytics?.setUserId(response.user.id);
+      _analytics?.trackEvent('login');
       return true;
     } catch (e) {
       state = AuthState(
@@ -183,6 +191,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       debugPrint('[GoogleAuth] Success!');
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
+      _analytics?.setUserId(response.user.id);
+      _analytics?.trackEvent('login_google');
       return true;
     } catch (e, stackTrace) {
       debugPrint('══════════════════════════════════════════');
@@ -200,6 +210,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    _analytics?.trackEvent('logout');
+    _analytics?.setUserId(null);
     await TokenStorage.clearTokens();
     // Fire-and-forget — signOut hangs on unsupported platforms (Windows/Linux).
     _googleSignIn.signOut().catchError((_) => null);
@@ -253,7 +265,8 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.watch(authRepositoryProvider));
+  final analytics = ref.watch(analyticsProvider);
+  return AuthNotifier(ref.watch(authRepositoryProvider), analytics);
 });
 
 /// Convenience: whether the user is authenticated.

@@ -33,6 +33,7 @@ import 'screens/features/community_stories_screen.dart';
 import 'screens/features/local_discovery_screen.dart';
 import 'screens/features/year_in_review_screen.dart';
 import 'theme/motion.dart';
+import 'core/analytics/analytics_provider.dart';
 
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION KEYS
@@ -52,10 +53,13 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen(authProvider, (_, __) => refreshNotifier.value++);
   ref.listen(onboardingCompleteProvider, (_, __) => refreshNotifier.value++);
 
+  final analytics = ref.watch(analyticsProvider);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/feed',
     refreshListenable: refreshNotifier,
+    observers: [AnalyticsObserver(analytics)],
     routes: [
       // Auth screens (outside shell)
       GoRoute(

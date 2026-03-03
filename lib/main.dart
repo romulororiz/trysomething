@@ -15,6 +15,8 @@ import 'providers/feature_providers.dart';
 import 'core/storage/local_storage.dart';
 import 'core/error/error_reporter.dart';
 import 'core/error/error_provider.dart';
+import 'core/analytics/analytics_service.dart';
+import 'core/analytics/analytics_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,8 +33,9 @@ void main() async {
   await LocalStorage.init();
   final prefs = await SharedPreferences.getInstance();
 
-  // Global error reporter
+  // Global services
   final reporter = ErrorReporter();
+  final analytics = AnalyticsService();
 
   // Capture Flutter framework errors
   FlutterError.onError = (details) {
@@ -57,6 +60,7 @@ void main() async {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             errorReporterProvider.overrideWithValue(reporter),
+            analyticsProvider.overrideWithValue(analytics),
           ],
           observers: [ErrorReporterObserver(reporter)],
           child: const TrySomethingApp(),
