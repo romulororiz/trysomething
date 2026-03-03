@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +13,8 @@ import 'providers/user_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/feature_providers.dart';
 import 'core/storage/local_storage.dart';
+import 'core/error/error_reporter.dart';
+import 'core/error/error_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,13 +31,41 @@ void main() async {
   await LocalStorage.init();
   final prefs = await SharedPreferences.getInstance();
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
-      child: const TrySomethingApp(),
-    ),
+  // Global error reporter
+  final reporter = ErrorReporter();
+
+  // Capture Flutter framework errors
+  FlutterError.onError = (details) {
+    reporter.reportError(
+      details.exception,
+      details.stack,
+      context: details.context?.toString(),
+    );
+  };
+
+  // Capture platform-level errors (e.g. native crashes surfaced to Dart)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    reporter.reportError(error, stack, context: 'PlatformDispatcher');
+    return true;
+  };
+
+  // Run inside a guarded zone to catch uncaught async errors
+  runZonedGuarded(
+    () {
+      runApp(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            errorReporterProvider.overrideWithValue(reporter),
+          ],
+          observers: [ErrorReporterObserver(reporter)],
+          child: const TrySomethingApp(),
+        ),
+      );
+    },
+    (error, stack) {
+      reporter.reportError(error, stack, context: 'runZonedGuarded');
+    },
   );
 }
 
