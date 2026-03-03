@@ -17,6 +17,7 @@ import 'core/error/error_reporter.dart';
 import 'core/error/error_provider.dart';
 import 'core/analytics/analytics_service.dart';
 import 'core/analytics/analytics_provider.dart';
+import 'core/notifications/notification_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -99,6 +100,8 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         ref.read(buddyProvider.notifier).loadFromServer();
         ref.read(challengeProvider.notifier).loadFromServer();
       }
+      // Initialize push notifications (stub until Firebase configured)
+      ref.read(notificationProvider).init();
     });
   }
 
