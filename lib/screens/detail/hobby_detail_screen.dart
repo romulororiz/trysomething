@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
@@ -213,12 +214,17 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     ),
                     const SizedBox(height: 28),
 
-                    // Starter Kit
-                    SectionHeader(title: 'Starter Kit', rightText: 'Start small.'),
-                    ...hobby.starterKit.map((item) => _buildKitItem(item)),
+                    // Starter Kit — 2-column image grid
+                    SectionHeader(
+                      title: 'Starter Kit',
+                      rightText: _kitTotal(hobby.starterKit) > 0
+                          ? '~ CHF ${_kitTotal(hobby.starterKit)}'
+                          : null,
+                    ),
+                    _buildKitGrid(hobby.starterKit, hobby.id),
                     if (hobby.starterKit.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 4, bottom: 8),
+                        padding: const EdgeInsets.only(top: 8, bottom: 8),
                         child: GestureDetector(
                           onTap: () => context.push('/shopping/${widget.hobbyId}'),
                           child: Container(
@@ -385,13 +391,13 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ),
           ),
 
-          // Floating CTA at bottom
+          // Floating CTA at bottom (above 85px nav bar)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 14, 24, 22),
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -482,7 +488,35 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ),
           ),
 
-          // Bottom info: category chip + title + hook
+          // TRENDING badge (top-right, below safe area)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 52,
+            right: 16,
+            child: AnimatedBuilder(
+              animation: _detailsOpacity,
+              builder: (context, child) => Opacity(
+                opacity: _detailsOpacity.value,
+                child: child,
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.coral,
+                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                ),
+                child: Text(
+                  'TRENDING',
+                  style: AppTypography.monoBadgeSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom info: category chip + title + hook + star rating
           Positioned(
             bottom: 16,
             left: 24,
@@ -490,7 +524,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Category chip (animated entry — not a Hero)
+                // Category chip (animated entry)
                 AnimatedBuilder(
                   animation: _detailsOpacity,
                   builder: (context, child) {
@@ -523,12 +557,11 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 ),
                 const SizedBox(height: 8),
 
-                // Title — Hero with flightShuttleBuilder for smooth color transition
+                // Title — Hero with cross-fade
                 Hero(
                   tag: 'hobby_title_${hobby.id}',
                   flightShuttleBuilder: (flightContext, animation, direction,
                       fromHeroContext, toHeroContext) {
-                    // Cross-fade text: use Hero children, not the Hero wrappers
                     final fromChild = (fromHeroContext.widget as Hero).child;
                     final toChild = (toHeroContext.widget as Hero).child;
                     return AnimatedBuilder(
@@ -536,14 +569,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       builder: (context, _) {
                         return Stack(
                           children: [
-                            Opacity(
-                              opacity: 1 - animation.value,
-                              child: fromChild,
-                            ),
-                            Opacity(
-                              opacity: animation.value,
-                              child: toChild,
-                            ),
+                            Opacity(opacity: 1 - animation.value, child: fromChild),
+                            Opacity(opacity: animation.value, child: toChild),
                           ],
                         );
                       },
@@ -556,18 +583,40 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 ),
                 const SizedBox(height: 4),
 
-                // Hook text (animated entry — not a Hero)
+                // Hook + star rating row
                 AnimatedBuilder(
                   animation: _detailsOpacity,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _detailsOpacity.value,
-                      child: child,
-                    );
-                  },
-                  child: Text(
-                    hobby.hook,
-                    style: AppTypography.sansBodySmall.copyWith(color: AppColors.driftwood),
+                  builder: (context, child) => Opacity(
+                    opacity: _detailsOpacity.value,
+                    child: child,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          hobby.hook,
+                          style: AppTypography.sansBodySmall.copyWith(color: AppColors.driftwood),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Star rating
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded, size: 14, color: AppColors.amber),
+                          const SizedBox(width: 3),
+                          Text(
+                            '4.8',
+                            style: AppTypography.monoBadge.copyWith(color: AppColors.amber),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '(1.2k)',
+                            style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -578,82 +627,169 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     );
   }
 
-  Widget _buildKitItem(KitItem item) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.warmWhite,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon circle
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: item.isOptional ? AppColors.sand : AppColors.coralPale,
-            ),
-            child: Center(
-              child: Icon(
-                item.isOptional ? Icons.add : AppIcons.check,
-                size: 14,
-                color: item.isOptional ? AppColors.warmGray : AppColors.coral,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
+  int _kitTotal(List<KitItem> items) {
+    return items.where((i) => !i.isOptional).fold(0, (sum, i) => sum + i.cost);
+  }
 
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+  Widget _buildKitGrid(List<KitItem> items, String hobbyId) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: items.map((item) => _buildKitCard(item, hobbyId)).toList(),
+    );
+  }
+
+  Future<void> _openAffiliateLink(KitItem item) async {
+    final url = item.affiliateUrl ??
+        'https://www.amazon.de/s?k=${Uri.encodeComponent(item.name)}&tag=trysomething-21';
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  String _kitLabel(KitItem item) {
+    final name = item.name.toLowerCase();
+    if (name.contains('tool') || name.contains('saw') || name.contains('knife') ||
+        name.contains('needle') || name.contains('scissors')) return 'TOOLS';
+    if (name.contains('book') || name.contains('app') || name.contains('course') ||
+        name.contains('guide') || name.contains('account')) return 'RESOURCE';
+    if (name.contains('bag') || name.contains('case') || name.contains('pad') ||
+        name.contains('mat') || name.contains('stand')) return 'GEAR';
+    return 'MATERIAL';
+  }
+
+  Widget _buildKitCard(KitItem item, String hobbyId) {
+    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
+    return GestureDetector(
+      onTap: () => _openAffiliateLink(item),
+      child: SizedBox(
+        width: (MediaQuery.of(context).size.width - 24 * 2 - 10) / 2,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.warmWhite,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product image
+              SizedBox(
+                height: 100,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Flexible(
-                      child: Text(
-                        item.name,
-                        style: AppTypography.sansBodySmall.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    if (item.isOptional) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        'OPTIONAL',
-                        style: AppTypography.monoBadgeSmall.copyWith(
-                          color: AppColors.warmGray,
-                          letterSpacing: 1.5,
+                    if (hasImage)
+                      CachedNetworkImage(
+                        imageUrl: item.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(color: AppColors.sand),
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppColors.sand,
+                          child: const Icon(Icons.image, size: 24, color: AppColors.stone),
+                        ),
+                      )
+                    else
+                      Container(
+                        color: AppColors.sand,
+                        child: Center(
+                          child: Icon(
+                            item.isOptional ? Icons.add_circle_outline : AppIcons.check,
+                            size: 24,
+                            color: AppColors.stone,
+                          ),
                         ),
                       ),
-                    ],
+                    // Category label badge (top-left)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(140),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _kitLabel(item),
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: Colors.white,
+                            fontSize: 8,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Optional badge (top-right)
+                    if (item.isOptional)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.warmGray.withAlpha(180),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'OPT',
+                            style: AppTypography.monoBadgeSmall.copyWith(
+                              color: Colors.white,
+                              fontSize: 8,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  item.description,
-                  style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood),
-                ),
-              ],
-            ),
-          ),
-
-          // Cost
-          if (item.cost > 0)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                '~${item.cost}',
-                style: AppTypography.monoMedium.copyWith(
-                  color: AppColors.coral,
-                  fontWeight: FontWeight.w600,
+              ),
+              // Item details
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: AppTypography.sansCaption.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.nearBlack,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (item.cost > 0)
+                          Text(
+                            'CHF ${item.cost}',
+                            style: AppTypography.monoBadge.copyWith(
+                              color: AppColors.coral,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          )
+                        else
+                          Text(
+                            'FREE',
+                            style: AppTypography.monoBadge.copyWith(
+                              color: AppColors.sage,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        const Spacer(),
+                        Icon(Icons.shopping_bag_outlined,
+                            size: 14, color: AppColors.driftwood),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
