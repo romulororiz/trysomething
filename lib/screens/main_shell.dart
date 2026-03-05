@@ -8,7 +8,7 @@ import '../theme/app_typography.dart';
 import '../theme/motion.dart';
 
 /// Bottom navigation shell — wraps all tab screens.
-/// Uses a local fork of curved_navigation_bar with tighter button gap.
+/// 5 tabs: Discover / Explore / Library (center, elevated) / Plan / Profile
 class MainShell extends StatelessWidget {
   final Widget child;
 
@@ -17,7 +17,8 @@ class MainShell extends StatelessWidget {
   static final _tabs = [
     (icon: AppIcons.navDiscover, label: 'Discover'),
     (icon: AppIcons.navExplore, label: 'Explore'),
-    (icon: AppIcons.navMyStuff, label: 'My Stuff'),
+    (icon: AppIcons.navLibrary, label: 'Library'),
+    (icon: AppIcons.navPlan, label: 'Plan'),
     (icon: AppIcons.navProfile, label: 'Profile'),
   ];
 
@@ -25,8 +26,9 @@ class MainShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/feed')) return 0;
     if (location.startsWith('/explore')) return 1;
-    if (location.startsWith('/my')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/library')) return 2;
+    if (location.startsWith('/plan')) return 3;
+    if (location.startsWith('/profile')) return 4;
     return 0;
   }
 
@@ -34,16 +36,14 @@ class MainShell extends StatelessWidget {
     switch (index) {
       case 0:
         context.go('/feed');
-        break;
       case 1:
         context.go('/explore');
-        break;
       case 2:
-        context.go('/my');
-        break;
+        context.go('/library');
       case 3:
+        context.go('/plan');
+      case 4:
         context.go('/profile');
-        break;
     }
   }
 
@@ -57,15 +57,26 @@ class MainShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: CurvedNavigationBar(
         index: currentIndex,
-        items: _tabs
-            .map((tab) => CurvedNavigationBarItem(
-                  child: Icon(tab.icon, size: 24, color: Colors.white),
-                  label: tab.label,
-                  labelStyle: AppTypography.sansNav.copyWith(
-                    color: AppColors.driftwood,
-                  ),
-                ))
-            .toList(),
+        items: _tabs.asMap().entries.map((entry) {
+          final i = entry.key;
+          final tab = entry.value;
+          final isCenter = i == 2;
+          return CurvedNavigationBarItem(
+            child: isCenter
+                ? Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(tab.icon, size: 24, color: Colors.white),
+                  )
+                : Icon(tab.icon, size: 24, color: Colors.white),
+            label: tab.label,
+            labelStyle: AppTypography.sansNav.copyWith(
+              color: AppColors.driftwood,
+            ),
+          );
+        }).toList(),
         color: AppColors.warmWhite,
         buttonBackgroundColor: AppColors.coral,
         backgroundColor: Colors.transparent,

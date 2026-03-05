@@ -10,6 +10,8 @@ class AppIcons {
   static final IconData navDiscover = MdiIcons.compass;
   static final IconData navExplore = MdiIcons.viewGridOutline;
   static final IconData navMyStuff = MdiIcons.folderHeartOutline;
+  static final IconData navLibrary = MdiIcons.bookmarkOutline;
+  static final IconData navPlan = MdiIcons.calendarMonthOutline;
   static final IconData navSearch = MdiIcons.magnify;
   static final IconData navProfile = MdiIcons.accountCircleOutline;
 

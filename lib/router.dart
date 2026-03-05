@@ -9,6 +9,7 @@ import 'screens/auth/register_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/feed/discover_feed_screen.dart';
+import 'screens/plan/plan_screen.dart';
 import 'screens/detail/hobby_detail_screen.dart';
 import 'screens/quickstart/quickstart_screen.dart';
 import 'screens/my_stuff/my_stuff_screen.dart';
@@ -115,9 +116,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/my',
+            path: '/library',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: MyStuffScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/plan',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: PlanScreen(),
             ),
           ),
           GoRoute(
