@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
@@ -189,12 +192,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Header (page 2 only: ← Onboarding Skip)
-            if (_currentPage == 1)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
+            // Header — back on pages 2+, skip on pages 1-2
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  if (_currentPage > 0)
                     GestureDetector(
                       onTap: _prevPage,
                       child: Container(
@@ -207,21 +210,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         child: const Icon(Icons.arrow_back,
                             size: 20, color: AppColors.espresso),
                       ),
-                    ),
-                    const Spacer(),
-                    Text('Onboarding',
-                        style: AppTypography.sansSection
-                            .copyWith(color: AppColors.nearBlack)),
-                    const Spacer(),
+                    )
+                  else
+                    const SizedBox(width: 40),
+                  const Spacer(),
+                  if (_currentPage < 2)
                     GestureDetector(
                       onTap: _skip,
                       child: Text('Skip',
                           style: AppTypography.sansLabel
                               .copyWith(color: AppColors.driftwood)),
-                    ),
-                  ],
-                ),
+                    )
+                  else
+                    const SizedBox(width: 40),
+                ],
               ),
+            ),
 
             // Progress dots
             _buildProgressDots(),
@@ -847,7 +851,7 @@ class _TimeBudgetPage extends StatelessWidget {
 //  PAGE 3 — READY
 // ═══════════════════════════════════════════════════════
 
-class _ReadyPage extends StatelessWidget {
+class _ReadyPage extends StatefulWidget {
   final AnimationController entryCtrl;
   final List<Hobby> matchedHobbies;
 
@@ -856,22 +860,56 @@ class _ReadyPage extends StatelessWidget {
     required this.matchedHobbies,
   });
 
+  @override
+  State<_ReadyPage> createState() => _ReadyPageState();
+}
+
+class _ReadyPageState extends State<_ReadyPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _floatCtrl;
+
   // Card positions: (leftPct, topPct, width, height)
   static const _cardLayouts = [
-    (0.04, 0.04, 140.0, 130.0), // top-left
-    (0.52, 0.08, 155.0, 140.0), // top-right
-    (0.00, 0.40, 170.0, 150.0), // bottom-left (largest)
-    (0.50, 0.46, 145.0, 130.0), // bottom-right
+    (0.04, 0.04, 140.0, 160.0), // top-left
+    (0.52, 0.06, 155.0, 170.0), // top-right
+    (0.00, 0.42, 170.0, 180.0), // bottom-left (largest — top match)
+    (0.50, 0.48, 145.0, 160.0), // bottom-right
+  ];
+
+  // Match percentages per card position
+  static const _matchPcts = [92, 87, 98, 84];
+
+  // Float offsets per card (amplitude, phase)
+  static const _floatParams = [
+    (3.0, 0.0),
+    (2.5, 0.8),
+    (3.5, 1.6),
+    (2.0, 2.4),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _floatCtrl = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final topMatches = matchedHobbies.take(4).toList();
+    final topMatches = widget.matchedHobbies.take(4).toList();
 
     return AnimatedBuilder(
-      animation: entryCtrl,
+      animation: Listenable.merge([widget.entryCtrl, _floatCtrl]),
       builder: (context, _) {
-        final v = entryCtrl.value;
+        final v = widget.entryCtrl.value;
         final badgeOp = _iv(v, 0.0, 0.2);
         final cardsOp = _iv(v, 0.1, 0.4);
         final titleOp = _iv(v, 0.4, 0.65);
@@ -933,7 +971,7 @@ class _ReadyPage extends StatelessWidget {
                               AppColors.warmGray),
                           _dot(areaW * 0.92, areaH * 0.50, 5,
                               AppColors.amber),
-                          _dot(areaW * 0.45, areaH * 0.70, 3,
+                          _dot(areaW * 0.45, areaH * 0.75, 3,
                               AppColors.warmGray),
 
                           // Hobby cards
@@ -943,31 +981,6 @@ class _ReadyPage extends StatelessWidget {
                               i++)
                             _buildFloatingCard(
                                 topMatches[i], areaW, areaH, i, v),
-
-                          // "98% Match" badge on bottom-left card
-                          if (topMatches.length > 2)
-                            Positioned(
-                              left: areaW * _cardLayouts[2].$1 +
-                                  _cardLayouts[2].$3 * 0.3,
-                              top: areaH * _cardLayouts[2].$2 - 8,
-                              child: Opacity(
-                                opacity: _iv(v, 0.25, 0.45),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.coral,
-                                    borderRadius: BorderRadius.circular(
-                                        Spacing.radiusBadge),
-                                  ),
-                                  child: Text('98% Match',
-                                      style: AppTypography.monoBadge
-                                          .copyWith(
-                                              color: Colors.white,
-                                              fontSize: 10)),
-                                ),
-                              ),
-                            ),
                         ],
                       );
                     },
@@ -1041,46 +1054,142 @@ class _ReadyPage extends StatelessWidget {
     final cardSlide =
         _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06, Curves.easeOutCubic);
 
+    // Subtle floating bob per card
+    final (amp, phase) = _floatParams[i];
+    final floatOffset = math.sin(_floatCtrl.value * math.pi + phase) * amp;
+    final matchPct = _matchPcts[i];
+    final isTopMatch = i == 2; // bottom-left card is the top match
+
     return Positioned(
       left: areaW * leftPct,
-      top: areaH * topPct + 12 * (1 - cardSlide),
+      top: areaH * topPct + 12 * (1 - cardSlide) + floatOffset,
       child: Opacity(
         opacity: cardOp,
         child: Container(
           width: cardW,
           height: cardH,
           decoration: BoxDecoration(
-            color: AppColors.sand,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-                color: AppColors.sandDark.withAlpha(120), width: 0.5),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: hobby.catColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(hobby.catIcon,
-                    size: 24, color: hobby.catColor),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                hobby.title.toUpperCase(),
-                style: AppTypography.sansCaption.copyWith(
-                  color: AppColors.espresso,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              color: isTopMatch
+                  ? AppColors.coral.withAlpha(100)
+                  : AppColors.sandDark.withAlpha(120),
+              width: isTopMatch ? 1.5 : 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(40),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background image
+                CachedNetworkImage(
+                  imageUrl: hobby.imageUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: hobby.catColor.withAlpha(30),
+                    child: Center(
+                      child: Icon(hobby.catIcon,
+                          size: 28, color: hobby.catColor),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: hobby.catColor.withAlpha(30),
+                    child: Center(
+                      child: Icon(hobby.catIcon,
+                          size: 28, color: hobby.catColor),
+                    ),
+                  ),
+                ),
+
+                // Gradient overlay for text readability
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withAlpha(10),
+                        Colors.black.withAlpha(40),
+                        Colors.black.withAlpha(170),
+                      ],
+                      stops: const [0.0, 0.4, 1.0],
+                    ),
+                  ),
+                ),
+
+                // Match % badge (top-right)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isTopMatch
+                          ? AppColors.coral
+                          : Colors.black.withAlpha(120),
+                      borderRadius:
+                          BorderRadius.circular(Spacing.radiusBadge),
+                    ),
+                    child: Text(
+                      '$matchPct%',
+                      style: AppTypography.monoBadgeSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Category icon + title (bottom)
+                Positioned(
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: hobby.catColor.withAlpha(60),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(hobby.catIcon,
+                            size: 16, color: Colors.white),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        hobby.title,
+                        style: AppTypography.sansLabel.copyWith(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 6,
+                              color: Colors.black.withAlpha(120),
+                            ),
+                          ],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

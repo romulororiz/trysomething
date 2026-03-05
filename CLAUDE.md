@@ -146,12 +146,6 @@ This is a UI REFACTOR, not a rewrite. Backend, data models, state management, an
 | 18 | Onboarding: Budget | /onboarding/2 | Auth flow | Hours/week slider, Budget cards (Low/Med/High), Solo/Social toggle |
 | 19 | Onboarding: Ready | /onboarding/3 | Auth flow | "You're ready!" — floating category cards with match %, Start Exploring CTA |
 
-### Navigation — 5 Bottom Tabs
-1. **Discover** (Compass) — Feed, Mood Match, Seasonal, Combos
-2. **Explore** (Grid) — Category grid, Search, Hobby Battle
-3. **Library** (Bookmark, center/elevated) — My Stuff tabs, Journal
-4. **Plan** (Calendar) — Weekly Planner
-5. **Profile** (Person) — Stats, Trophies, Settings
 
 ### Transitions
 - Auth screens: fade
@@ -163,8 +157,8 @@ This is a UI REFACTOR, not a rewrite. Backend, data models, state management, an
 
 ## v3 Redesign — What Changes
 
-### Bottom Nav
-4 tabs → 5 tabs. Add Plan tab, rename My Stuff → Library, elevate center tab with accent background.
+### Bottom Nav — NO CHANGES
+Keep the current curved navigation bar exactly as it is. Do not modify tabs, styling, or structure.
 
 ### Discovery Feed
 Current parallax cards → full-screen TikTok-style. Right side: heart with count (2.4k), bookmark, share. Top-left: category badge ("CREATIVE"). Bottom-left: title, hook, spec badges (COST/TIME/LEVEL). Bottom: floating "TRY TODAY →" CTA with coral glow.
@@ -213,6 +207,53 @@ Type badges (COURSE/WORKSHOP/KIT+CLASS), star ratings, prices, arrow icons. "You
 
 ---
 
+## Monetization — Affiliate Starter Kits
+
+### The Concept
+Every starter kit item links to where the user can actually buy it. This removes the biggest friction point: "I decided to try pottery... now where do I buy stoneware clay?" The affiliate link is a service, not an ad — the user was going to search for this product anyway.
+
+### Data Model Change
+Add two nullable fields to KitItem in Prisma:
+```
+affiliateUrl      String?   // product link with affiliate tag appended
+affiliateSource   String?   // "amazon_de", "galaxus", "digitec", "amazon_br", "mercado_livre"
+imageUrl          String?   // product image URL (Unsplash or product photo)
+```
+The `imageUrl` field is REQUIRED for all kit items. The Hobby Detail mockup shows product images for every starter kit item (e.g., bag of stoneware clay, carving set, split-leg apron). Every kit item must have a visible product image — never show a kit item as text-only.
+
+### Affiliate Programs by Market
+- **Switzerland:** Amazon.de Associates (covers CH delivery, 3-5% commission), Galaxus/Digitec partner program
+- **Brazil:** Amazon.com.br Associados, Mercado Livre affiliate program
+- **US:** Amazon.com, etc..
+- **Fallback:** If no affiliate link exists for an item, show a "Search on Amazon" button that opens a pre-filled Amazon search with the item name + affiliate tag
+
+### UI Implementation
+On the Hobby Detail page Starter Kit section:
+- Each kit item card shows: product IMAGE (required), category label (MATERIAL/TOOLS/GEAR), item name, price in CHF, and a subtle shopping bag icon or "Buy →" link
+- Tapping the card opens the affiliate URL in system browser (url_launcher)
+- If no affiliateUrl exists, tap opens Amazon search: `https://www.amazon.de/s?tag=YOUR_TAG&k={item_name}`
+- Track affiliate clicks in analytics (PostHog event: `kit_item_clicked`)
+
+### Shopping List Screen
+The Shopping List feature screen (`lib/screens/features/shopping_screen.dart`) aggregates kit items across all saved hobbies into one checklist. Each item in the shopping list MUST also show:
+- Product image (from KitItem.imageUrl)
+- Item name and hobby it belongs to
+- Price estimate
+- "Buy →" affiliate link button
+- Checkbox for marking as purchased
+Never show shopping list items as text-only. Every item needs its product image.
+
+### Revenue Projection
+At 1,000 MAU × 1.5 hobbies tried × 30% buy-through rate × CHF 40 avg cart × 4% commission = ~CHF 720/month. Scales linearly. Covers Claude API costs 10x over.
+
+### Seeding Affiliate Data
+When seeding the 150 hobbies (task 1.4), each kit item needs:
+- A real product image URL (Unsplash search or actual product photo)
+- An affiliate URL for Amazon.de with your Associates tag (prioritize Swiss-available products)
+- Realistic CHF pricing verified against actual Amazon.de listings
+
+---
+
 ## 150 Hobby Seeding
 
 | Category | Count | Examples |
@@ -227,7 +268,7 @@ Type badges (COURSE/WORKSHOP/KIT+CLASS), star ratings, prices, arrow icons. "You
 | Mind | 14 | Chess, Journaling, Meditation, Language Learning, Puzzles, Reading Challenges, Philosophy, Creative Writing, Astronomy, Brain Teasers, Speed Cubing, Memory Training, Calligraphy, Lucid Dreaming |
 | Social | 14 | Board Game Nights, Improv, Volunteering, Book Club, Trivia, Community Theater, Wine Tasting, Hiking Clubs, Cooking Classes, Dance Socials, Language Exchange, Toastmasters, Potluck Clubs, Running Groups |
 
-Each hobby needs: title, hook, description, whyPeopleLoveIt, 3-5 kitItems (CHF), 5 roadmapSteps (minutes), 3+ pitfalls, difficulty explanation. Swiss market pricing. Unsplash images.
+Each hobby needs: title, hook, description, whyPeopleLoveIt, 3-5 kitItems (CHF prices, product imageUrl, affiliateUrl for Amazon.de), 5 roadmapSteps (minutes), 3+ pitfalls, difficulty explanation. Swiss market pricing. Unsplash images for hobby hero AND for each kit item product photo.
 
 ---
 
@@ -260,7 +301,7 @@ cd server && npm test    # All 32 tests pass
 ## Task Queue
 
 See `CLAUDE_TASKS_v3.md` for full checklist. Sprint order:
-1. **Foundation** — bottom nav, feed cards, onboarding, seed 150 hobbies
-2. **Core Screens** — detail, explore, library, quickstart, search
-3. **Rich Features** — profile, mood match, battle, journal/planner, AI search + onboarding
+1. **Foundation** — affiliate model migration, feed cards, onboarding, seed 150 hobbies with product images + affiliate links
+2. **Core Screens** — detail page with buy buttons, explore, library, quickstart, search
+3. **Rich Features** — profile, mood match, battle, journal/planner, shopping list with images, AI search + onboarding
 4. **Polish & Ship** — "Surprise Me", Firebase, analytics, app store, performance, beta

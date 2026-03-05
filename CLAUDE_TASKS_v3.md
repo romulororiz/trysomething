@@ -12,21 +12,24 @@
 - Flutter 3.6.0 + Riverpod 2.6.1 + GoRouter 14.8.1 + Freezed
 - Node.js + Express + Prisma 6.4.1 on Vercel + Neon Postgres
 - Existing 40+ API endpoints, 25 Prisma models, auth system — all stay as-is
+- **Bottom navigation bar: KEEP AS-IS.** Do not change tabs, structure, or the curved_nav component.
 - This is a UI REFACTOR, not a rewrite. Same backend, same state management.
 
 ---
 
 ## Sprint 1: Foundation (Week 1-2)
 
-- [ ] **1.1 — Update bottom nav: 4 tabs → 5 tabs**
-  - Current: curved_nav with Feed/Explore/My Stuff/Profile
-  - Target: Discover / Explore / Library (center, elevated) / Plan / Profile
-  - Update `lib/components/curved_nav/` or replace with standard BottomNavigationBar
-  - Update `lib/router.dart` — add /plan route, rename /my-stuff → /library
-  - Center tab (Library) gets accent background matching mockup
-  - **Test:** all 5 tabs navigate correctly, deep links work
+- [ X ] **1.1 — Add affiliate fields + imageUrl to KitItem model**
+  - Add to KitItem in `server/prisma/schema.prisma`:
+    - `affiliateUrl String?` — product link with affiliate tag
+    - `affiliateSource String?` — "amazon_de", "galaxus", "amazon_br"
+    - `imageUrl String?` — product image URL (REQUIRED for all items in practice)
+  - Run `npx prisma migrate dev --name add-kit-item-affiliate`
+  - Update KitItem Freezed model in `lib/models/hobby.dart` to include new fields
+  - Run `dart run build_runner build` to regenerate
+  - **Test:** `flutter analyze` clean, `dart test` passes, migration runs
 
-- [ ] **1.2 — Redesign Discovery Feed cards**
+- [ X ] **1.2 — Redesign Discovery Feed cards**
   - Current: parallax HobbyCards (480px) with save button
   - Target: Full-screen TikTok-style cards (match mockup image_copy.png)
   - Right side column: heart icon with count (2.4k), bookmark/save, share
@@ -37,7 +40,7 @@
   - Edit `lib/components/hobby_card.dart` and `lib/screens/feed/`
   - **Test:** feed scrolls at 60fps, save animation works, card tap → detail
 
-- [ ] **1.3 — Redesign Onboarding (3 pages)**
+- [ X ] **1.3 — Redesign Onboarding (3 pages)**
   - Page 1 "What vibes are you into?": 2x4 grid of category tiles with custom icons
     - Teal (#06D6A0) border + checkmark on selection (multi-select)
     - Categories: Creative, Relaxing, Social, Active, Intellectual, Outdoors, Tech, Culinary
@@ -51,14 +54,19 @@
   - Edit `lib/screens/onboarding/`
   - **Test:** onboarding completes, preferences saved to SharedPrefs + API
 
-- [ ] **1.4 — Seed 150 hobbies into Prisma**
+- [ ] **1.4 — Seed 150 hobbies into Prisma (with affiliate data)**
   - Create `server/prisma/seed.ts` with 150 hobbies across 9 categories:
     - Creative (22), Outdoors (18), Fitness (18), Maker (16), Music (16), Food (18), Collecting (14), Mind (14), Social (14)
-  - Each hobby needs: title, hook, description, whyPeopleLoveIt, 3-5 kitItems with CHF costs, 5 roadmapSteps with estimatedMinutes, 3+ beginnerPitfalls, difficulty explanation
-  - Use real Unsplash image URLs (search by hobby name)
+  - Each hobby needs: title, hook, description, whyPeopleLoveIt, 5 roadmapSteps with estimatedMinutes, 3+ beginnerPitfalls, difficulty explanation
+  - Each kit item (3-5 per hobby) MUST have:
+    - `imageUrl`: real product photo (Unsplash search or product image URL) — NEVER leave blank
+    - `affiliateUrl`: Amazon.de link with Associates tag (search for actual products, use realistic URLs)
+    - `affiliateSource`: "amazon_de" for Swiss market
+    - `cost`: verified against actual Amazon.de listing price in CHF
+  - Use real Unsplash image URLs for hobby hero images
   - Costs calibrated for Swiss market (CHF)
   - Also seed: HobbyCombo pairs (20+), SeasonalPick entries, MoodTag mappings
-  - **Test:** `npx prisma db seed` runs clean, GET /api/hobbies returns 150+, all categories have 14+ hobbies
+  - **Test:** `npx prisma db seed` runs clean, GET /api/hobbies returns 150+, all kit items have imageUrl
 
 ---
 
@@ -67,7 +75,15 @@
 - [ ] **2.1 — Redesign Hobby Detail page**
   - Hero image with TRENDING badge (top-right), "4 weeks to master" overlay, star rating with count
   - "Why you'll love it" section with body text
-  - Starter Kit: PRODUCT IMAGES (not just text) in 2-column grid, category labels (MATERIAL, TOOLS, GEAR), individual prices + total
+  - Starter Kit: PRODUCT IMAGES (required, from KitItem.imageUrl) in 2-column grid, category labels (MATERIAL, TOOLS, GEAR), individual prices + "~ $XX Total"
+    - Each kit item card is tappable → opens affiliateUrl in system browser (url_launcher)
+    - If no affiliateUrl, tap opens Amazon.de search: `https://www.amazon.de/s?tag=YOUR_TAG&k={item_name}`
+    - Subtle shopping bag icon or "Buy →" indicator on each card
+    - Track taps: PostHog event `kit_item_clicked` with hobbyId + itemName
+  - Roadmap: green checkmarks for completed, coral for active, MILESTONE badges, time per step
+  - Floating "TRY TODAY →" CTA at bottom (sticky, coral glow)
+  - Edit `lib/screens/detail/`
+  - **Test:** detail loads with all sections, kit item images display, affiliate links open correctly
   - Roadmap: green checkmarks for completed steps, coral for active step, MILESTONE badges, estimated time per step
   - Floating "TRY TODAY →" CTA at bottom (sticky, with coral glow)
   - Share icon in top-right header
@@ -146,6 +162,16 @@
   - Planner: week strip calendar with active day circle, session cards with category color bar + time + location
   - Edit `lib/screens/features/journal_screen.dart` and `scheduler_screen.dart`
   - **Test:** entries display, new entry creation works, calendar navigation works
+
+- [ ] **3.4b — Shopping List with product images + affiliate links**
+  - The shopping list screen aggregates kit items from all saved hobbies
+  - Each item MUST show: product image (KitItem.imageUrl), item name, which hobby it belongs to, price
+  - "Buy →" button on each item → opens affiliateUrl in browser (or Amazon search fallback)
+  - Checkbox for marking items as purchased (already exists in ShoppingCheck model)
+  - Group items by hobby with hobby name as section header
+  - Never show text-only items — every item needs its product image
+  - Edit `lib/screens/features/shopping_screen.dart`
+  - **Test:** shopping list shows images for all items, affiliate links open, checkboxes persist
 
 - [ ] **3.5 — AI: Smart Search Fallback**
   - When search returns <3 results from pre-seeded hobbies:
