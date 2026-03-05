@@ -55,13 +55,16 @@ model Hobby {
 }
 
 model KitItem {
-  id          String  @id @default(cuid())
-  hobbyId     String
-  name        String
-  description String
-  cost        Int
-  isOptional  Boolean @default(false)
-  sortOrder   Int     @default(0)
+  id              String  @id @default(cuid())
+  hobbyId         String
+  name            String
+  description     String
+  cost            Int
+  isOptional      Boolean @default(false)
+  sortOrder       Int     @default(0)
+  imageUrl        String?
+  affiliateUrl    String?
+  affiliateSource String?
 
   hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
 }

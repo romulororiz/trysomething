@@ -55,6 +55,9 @@ class KitItem with _$KitItem {
     required String description,
     required int cost,
     @Default(false) bool isOptional,
+    String? imageUrl,
+    String? affiliateUrl,
+    String? affiliateSource,
   }) = _KitItem;
 
   factory KitItem.fromJson(Map<String, dynamic> json) => _$KitItemFromJson(json);

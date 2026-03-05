@@ -52,6 +52,9 @@ _$KitItemImpl _$$KitItemImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String,
       cost: (json['cost'] as num).toInt(),
       isOptional: json['isOptional'] as bool? ?? false,
+      imageUrl: json['imageUrl'] as String?,
+      affiliateUrl: json['affiliateUrl'] as String?,
+      affiliateSource: json['affiliateSource'] as String?,
     );
 
 Map<String, dynamic> _$$KitItemImplToJson(_$KitItemImpl instance) =>
@@ -60,6 +63,9 @@ Map<String, dynamic> _$$KitItemImplToJson(_$KitItemImpl instance) =>
       'description': instance.description,
       'cost': instance.cost,
       'isOptional': instance.isOptional,
+      'imageUrl': instance.imageUrl,
+      'affiliateUrl': instance.affiliateUrl,
+      'affiliateSource': instance.affiliateSource,
     };
 
 _$RoadmapStepImpl _$$RoadmapStepImplFromJson(Map<String, dynamic> json) =>

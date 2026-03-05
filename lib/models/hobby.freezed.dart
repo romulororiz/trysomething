@@ -483,6 +483,9 @@ mixin _$KitItem {
   String get description => throw _privateConstructorUsedError;
   int get cost => throw _privateConstructorUsedError;
   bool get isOptional => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
+  String? get affiliateUrl => throw _privateConstructorUsedError;
+  String? get affiliateSource => throw _privateConstructorUsedError;
 
   /// Serializes this KitItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -498,7 +501,14 @@ abstract class $KitItemCopyWith<$Res> {
   factory $KitItemCopyWith(KitItem value, $Res Function(KitItem) then) =
       _$KitItemCopyWithImpl<$Res, KitItem>;
   @useResult
-  $Res call({String name, String description, int cost, bool isOptional});
+  $Res call(
+      {String name,
+      String description,
+      int cost,
+      bool isOptional,
+      String? imageUrl,
+      String? affiliateUrl,
+      String? affiliateSource});
 }
 
 /// @nodoc
@@ -520,6 +530,9 @@ class _$KitItemCopyWithImpl<$Res, $Val extends KitItem>
     Object? description = null,
     Object? cost = null,
     Object? isOptional = null,
+    Object? imageUrl = freezed,
+    Object? affiliateUrl = freezed,
+    Object? affiliateSource = freezed,
   }) {
     return _then(_value.copyWith(
       name: null == name
@@ -538,6 +551,18 @@ class _$KitItemCopyWithImpl<$Res, $Val extends KitItem>
           ? _value.isOptional
           : isOptional // ignore: cast_nullable_to_non_nullable
               as bool,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      affiliateUrl: freezed == affiliateUrl
+          ? _value.affiliateUrl
+          : affiliateUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      affiliateSource: freezed == affiliateSource
+          ? _value.affiliateSource
+          : affiliateSource // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -549,7 +574,14 @@ abstract class _$$KitItemImplCopyWith<$Res> implements $KitItemCopyWith<$Res> {
       __$$KitItemImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String name, String description, int cost, bool isOptional});
+  $Res call(
+      {String name,
+      String description,
+      int cost,
+      bool isOptional,
+      String? imageUrl,
+      String? affiliateUrl,
+      String? affiliateSource});
 }
 
 /// @nodoc
@@ -569,6 +601,9 @@ class __$$KitItemImplCopyWithImpl<$Res>
     Object? description = null,
     Object? cost = null,
     Object? isOptional = null,
+    Object? imageUrl = freezed,
+    Object? affiliateUrl = freezed,
+    Object? affiliateSource = freezed,
   }) {
     return _then(_$KitItemImpl(
       name: null == name
@@ -587,6 +622,18 @@ class __$$KitItemImplCopyWithImpl<$Res>
           ? _value.isOptional
           : isOptional // ignore: cast_nullable_to_non_nullable
               as bool,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      affiliateUrl: freezed == affiliateUrl
+          ? _value.affiliateUrl
+          : affiliateUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      affiliateSource: freezed == affiliateSource
+          ? _value.affiliateSource
+          : affiliateSource // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -598,7 +645,10 @@ class _$KitItemImpl implements _KitItem {
       {required this.name,
       required this.description,
       required this.cost,
-      this.isOptional = false});
+      this.isOptional = false,
+      this.imageUrl,
+      this.affiliateUrl,
+      this.affiliateSource});
 
   factory _$KitItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$KitItemImplFromJson(json);
@@ -612,10 +662,16 @@ class _$KitItemImpl implements _KitItem {
   @override
   @JsonKey()
   final bool isOptional;
+  @override
+  final String? imageUrl;
+  @override
+  final String? affiliateUrl;
+  @override
+  final String? affiliateSource;
 
   @override
   String toString() {
-    return 'KitItem(name: $name, description: $description, cost: $cost, isOptional: $isOptional)';
+    return 'KitItem(name: $name, description: $description, cost: $cost, isOptional: $isOptional, imageUrl: $imageUrl, affiliateUrl: $affiliateUrl, affiliateSource: $affiliateSource)';
   }
 
   @override
@@ -628,13 +684,19 @@ class _$KitItemImpl implements _KitItem {
                 other.description == description) &&
             (identical(other.cost, cost) || other.cost == cost) &&
             (identical(other.isOptional, isOptional) ||
-                other.isOptional == isOptional));
+                other.isOptional == isOptional) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.affiliateUrl, affiliateUrl) ||
+                other.affiliateUrl == affiliateUrl) &&
+            (identical(other.affiliateSource, affiliateSource) ||
+                other.affiliateSource == affiliateSource));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, name, description, cost, isOptional);
+  int get hashCode => Object.hash(runtimeType, name, description, cost,
+      isOptional, imageUrl, affiliateUrl, affiliateSource);
 
   /// Create a copy of KitItem
   /// with the given fields replaced by the non-null parameter values.
@@ -657,7 +719,10 @@ abstract class _KitItem implements KitItem {
       {required final String name,
       required final String description,
       required final int cost,
-      final bool isOptional}) = _$KitItemImpl;
+      final bool isOptional,
+      final String? imageUrl,
+      final String? affiliateUrl,
+      final String? affiliateSource}) = _$KitItemImpl;
 
   factory _KitItem.fromJson(Map<String, dynamic> json) = _$KitItemImpl.fromJson;
 
@@ -669,6 +734,12 @@ abstract class _KitItem implements KitItem {
   int get cost;
   @override
   bool get isOptional;
+  @override
+  String? get imageUrl;
+  @override
+  String? get affiliateUrl;
+  @override
+  String? get affiliateSource;
 
   /// Create a copy of KitItem
   /// with the given fields replaced by the non-null parameter values.
