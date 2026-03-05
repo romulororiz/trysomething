@@ -29,6 +29,9 @@ type PrismaKitItem = {
   cost: number;
   isOptional: boolean;
   sortOrder: number;
+  imageUrl?: string | null;
+  affiliateUrl?: string | null;
+  affiliateSource?: string | null;
 };
 
 type PrismaRoadmapStep = {
@@ -118,6 +121,9 @@ function mapKitItem(k: PrismaKitItem) {
     description: k.description,
     cost: k.cost,
     isOptional: k.isOptional,
+    imageUrl: k.imageUrl ?? null,
+    affiliateUrl: k.affiliateUrl ?? null,
+    affiliateSource: k.affiliateSource ?? null,
   };
 }
 

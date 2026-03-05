@@ -171,11 +171,11 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
         shape: BoxShape.circle,
         color: Color.lerp(
           Colors.transparent,
-          AppColors.coral,
+          widget.isCurrent ? AppColors.coral : AppColors.sage,
           _activeFill,
         ),
         border: Border.all(
-          color: widget.isCompleted ? AppColors.coral : AppColors.sandDark,
+          color: widget.isCompleted ? AppColors.sage : (widget.isCurrent ? AppColors.coral : AppColors.sandDark),
           width: 1.5,
         ),
       ),

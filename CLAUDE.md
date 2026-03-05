@@ -105,6 +105,57 @@ server/
 
 **Aesthetic:** Deep dark space with glowing neon accents. Frosted glass containers. Parallax feed cards. Coral CTAs with glow effect.
 
+### Spec Badge Rules (IMPORTANT)
+- **Style:** ALL spec badges use the SAME muted treatment — `sand` (#1E1E2E) background with `driftwood` (#A0A0B8) text and subtle monochrome icon. Do NOT use different saturated colors per badge (no yellow/teal/purple rainbow). Only coral (#FF6B6B) should pop on any screen — everything else stays restrained and sophisticated.
+- **Cost badge:** Always a CHF range representing starter cost. Format: "CHF 40–120". Never a single number.
+- **Time badge:** Always weekly commitment with explicit "/week" suffix. Format: "2h/week". NEVER "3h" alone (reads as total time, which is misleading and kills credibility).
+- **Difficulty badge:** One of Easy / Medium / Hard. Never a time estimate. Never "X hours to master."
+- These rules apply everywhere badges appear: feed cards, detail page, search results, compare screen.
+
+---
+
+## UI Mockups — Source of Truth
+
+**CRITICAL: Before implementing or modifying ANY screen, Claude Code MUST first view the corresponding mockup image in `docs/mockups/`. The mockup is the source of truth for layout, spacing, component design, and visual hierarchy. Do not rely on text descriptions alone.**
+
+Mockup files are in `docs/mockups/` with these names:
+
+| File | Screen |
+|------|--------|
+| `01_discover_feed.png` | Discovery Feed — TikTok-style full-bleed cards with side action icons |
+| `02_hobby_detail.png` | Hobby Detail — hero, starter kit with product images, roadmap with milestones |
+| `03_library.png` | Library / My Stuff — Saved/Trying/Active/Done tabs with progress cards |
+| `04_profile.png` | Profile — stats grid, radar chart, activity heatmap, trophies |
+| `05_mood_match.png` | Mood Match — 4 photo-backed mood tiles, Popular Today list |
+| `06_journal.png` | Hobby Journal — timeline with entries, photos, tags, filters |
+| `07_weekly_plan.png` | Weekly Planner — calendar strip, session timeline cards |
+| `08_login.png` | Login — logo, email/password, Google + Apple social auth |
+| `09_onboarding_vibes.png` | Onboarding Page 1 — "What vibes are you into?" category grid |
+| `10_onboarding_ready.png` | Onboarding Page 3 — "You're ready!" floating cards with match % |
+| `11_onboarding_budget.png` | Onboarding Page 2 — hours slider, budget cards, solo/social |
+| `12_hobby_combos.png` | Hobby Combos — paired cards with reasons, filter chips |
+| `13_seasonal_picks.png` | Seasonal Picks — featured collection, horizontal cards, trending |
+| `14_hobby_battle.png` | Hobby Battle — side-by-side comparison, Head-to-Head grid |
+| `15_cost_projection.png` | Cost Projection — year 1 total, bar chart, savings tips |
+| `16_mood_match_alt.png` | Mood Match (alternate view, confirms design) |
+| `17_quickstart.png` | Quickstart bottom sheet — beginner badge, roadmap preview |
+| `18_search.png` | Search — type badges, ratings, prices, "you might also like" |
+| `19_settings.png` | Settings — account, preferences, theme, log out |
+| `20_explore.png` | Explore — photo-backed category grid with count badges |
+
+### How to use mockups when implementing:
+```
+# Before working on any screen, ALWAYS view the mockup first:
+view docs/mockups/02_hobby_detail.png
+
+# Then implement to match what you see. The mockup defines:
+# - Layout structure and component hierarchy
+# - Spacing, sizing, and visual proportions
+# - Color usage and accent placement
+# - Typography scale and weight
+# - Which elements exist and where they're positioned
+```
+
 ---
 
 ## v3 Redesign — Vision
@@ -146,6 +197,8 @@ This is a UI REFACTOR, not a rewrite. Backend, data models, state management, an
 | 18 | Onboarding: Budget | /onboarding/2 | Auth flow | Hours/week slider, Budget cards (Low/Med/High), Solo/Social toggle |
 | 19 | Onboarding: Ready | /onboarding/3 | Auth flow | "You're ready!" — floating category cards with match %, Start Exploring CTA |
 
+### Bottom Navigation — KEEP AS-IS
+**DO NOT change the bottom nav bar.** The current curved navigation bar with its existing tab structure stays exactly as it is. Do not add tabs, remove tabs, or modify the curved_nav component. All new screens (Plan, etc.) are accessed via push navigation from existing tabs, not as new tabs.
 
 ### Transitions
 - Auth screens: fade
@@ -224,7 +277,6 @@ The `imageUrl` field is REQUIRED for all kit items. The Hobby Detail mockup show
 ### Affiliate Programs by Market
 - **Switzerland:** Amazon.de Associates (covers CH delivery, 3-5% commission), Galaxus/Digitec partner program
 - **Brazil:** Amazon.com.br Associados, Mercado Livre affiliate program
-- **US:** Amazon.com, etc..
 - **Fallback:** If no affiliate link exists for an item, show a "Search on Amazon" button that opens a pre-filled Amazon search with the item name + affiliate tag
 
 ### UI Implementation

@@ -488,7 +488,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ),
           ),
 
-          // TRENDING badge (top-right, below safe area)
+          // TRENDING badge + mastery time (top-right, below safe area)
           Positioned(
             top: MediaQuery.of(context).padding.top + 52,
             right: 16,
@@ -498,20 +498,40 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 opacity: _detailsOpacity.value,
                 child: child,
               ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.coral,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                ),
-                child: Text(
-                  'TRENDING',
-                  style: AppTypography.monoBadgeSmall.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.coral,
+                      borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                    ),
+                    child: Text(
+                      'TRENDING',
+                      style: AppTypography.monoBadgeSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.sand.withAlpha(200),
+                      borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                    ),
+                    child: Text(
+                      _masteryTimeText(hobby.roadmapSteps),
+                      style: AppTypography.monoBadgeSmall.copyWith(
+                        color: AppColors.driftwood,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -625,6 +645,14 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         ],
       ),
     );
+  }
+
+  String _masteryTimeText(List<RoadmapStep> steps) {
+    final totalMinutes = steps.fold(0, (sum, s) => sum + s.estimatedMinutes);
+    final totalHours = totalMinutes / 60;
+    if (totalHours < 10) return '${totalHours.round()} hours to master';
+    final weeks = (totalHours / 5).ceil(); // ~5 hrs/week
+    return '$weeks weeks to master';
   }
 
   int _kitTotal(List<KitItem> items) {

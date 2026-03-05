@@ -132,8 +132,8 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
 
 // ═══════════════════════════════════════════════════════
 //  SPLASH OVERLAY — shown during session restore
-//  Refined Midnight Neon: gradient mesh + coral logo +
-//  progress sweep + floating particles
+//  Midnight Neon: drifting gradient blobs, glass logo,
+//  staggered fade-slide-up, indigo→coral progress bar
 // ═══════════════════════════════════════════════════════
 
 class _SplashOverlay extends StatefulWidget {
@@ -145,299 +145,362 @@ class _SplashOverlay extends StatefulWidget {
 
 class _SplashOverlayState extends State<_SplashOverlay>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _meshController;
-  late AnimationController _progressController;
-  late AnimationController _particleController;
-  late Animation<double> _fadeIn;
+  // Blob drift controllers (long, looping)
+  late AnimationController _blobCoralCtrl;
+  late AnimationController _blobIndigoCtrl;
+  late AnimationController _blobSageCtrl;
+
+  // Staggered fade-slide-up for title / tagline
+  late AnimationController _titleCtrl;
+  late AnimationController _taglineCtrl;
+
+  // One-shot progress bar (fills 0→100% then stays)
+  late AnimationController _progressCtrl;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+
+    // ── Blob drift (matches CSS: 15s / 18s-reverse / 20s) ──
+    _blobCoralCtrl = AnimationController(
+      duration: const Duration(seconds: 15),
       vsync: this,
-    )..forward();
-    _meshController = AnimationController(
-      duration: const Duration(milliseconds: 6000),
+    )..repeat();
+    _blobIndigoCtrl = AnimationController(
+      duration: const Duration(seconds: 18),
       vsync: this,
     )..repeat(reverse: true);
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 1800),
+    _blobSageCtrl = AnimationController(
+      duration: const Duration(seconds: 20),
       vsync: this,
     )..repeat();
-    _particleController = AnimationController(
-      duration: const Duration(milliseconds: 4000),
+
+    // ── Staggered fade-slide-up (1.2s each, cubic) ──
+    _titleCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
-    )..repeat();
-    _fadeIn = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
+    );
+    _taglineCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    // Stagger: title @ 500ms, tagline @ 800ms
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _titleCtrl.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) _taglineCtrl.forward();
+    });
+
+    // ── Progress bar: 0→100% in 3.5s, one shot ──
+    _progressCtrl = AnimationController(
+      duration: const Duration(milliseconds: 3500),
+      vsync: this,
+    )..forward();
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _meshController.dispose();
-    _progressController.dispose();
-    _particleController.dispose();
+    _blobCoralCtrl.dispose();
+    _blobIndigoCtrl.dispose();
+    _blobSageCtrl.dispose();
+    _titleCtrl.dispose();
+    _taglineCtrl.dispose();
+    _progressCtrl.dispose();
     super.dispose();
+  }
+
+  // CSS cubic-bezier(0.22, 1, 0.36, 1) ≈ easeOutExpo
+  static const _fadeSlideUpCurve = Cubic(0.22, 1.0, 0.36, 1.0);
+
+  Widget _fadeSlideUp({
+    required AnimationController controller,
+    required Widget child,
+  }) {
+    final curved = CurvedAnimation(
+      parent: controller,
+      curve: _fadeSlideUpCurve,
+    );
+    return AnimatedBuilder(
+      animation: curved,
+      builder: (_, __) {
+        return Opacity(
+          opacity: curved.value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - curved.value)),
+            child: child,
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeIn,
+    return DefaultTextStyle(
+      style: const TextStyle(decoration: TextDecoration.none),
       child: Container(
-        color: AppColors.cream,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Animated gradient mesh background
-            AnimatedBuilder(
-              animation: _meshController,
-              builder: (_, __) => CustomPaint(
-                painter: _GradientMeshPainter(_meshController.value),
-              ),
-            ),
+      color: AppColors.cream,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Drifting gradient blobs ──
+          _DriftingBlobs(
+            coralCtrl: _blobCoralCtrl,
+            indigoCtrl: _blobIndigoCtrl,
+            sageCtrl: _blobSageCtrl,
+          ),
 
-            // Floating particles
-            AnimatedBuilder(
-              animation: _particleController,
-              builder: (_, __) => CustomPaint(
-                painter: _ParticlePainter(_particleController.value),
-              ),
-            ),
-
-            // Center content
-            Center(
+          // ── Centered brand section ──
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 96),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo — 80x80 coral gradient rounded square
-                  AnimatedBuilder(
-                    animation: _meshController,
-                    builder: (_, child) => Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.coral.withValues(
-                              alpha: 0.25 + _meshController.value * 0.15,
+                  // App name: "Try" in coral, "Something" in white
+                  _fadeSlideUp(
+                    controller: _titleCtrl,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Try',
+                            style: AppTypography.serifDisplay.copyWith(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.5,
+                              color: AppColors.coral,
                             ),
-                            blurRadius: 40,
-                            spreadRadius: 0,
+                          ),
+                          TextSpan(
+                            text: 'Something',
+                            style: AppTypography.serifDisplay.copyWith(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.5,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
-                      child: child,
                     ),
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [AppColors.coral, AppColors.coralDeep],
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'T',
-                          style: AppTypography.serifTitle.copyWith(
-                            fontSize: 42,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -1,
-                            height: 1,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Tagline: "Stop scrolling." white, "Start something." coral
+                  _fadeSlideUp(
+                    controller: _taglineCtrl,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Stop scrolling. ',
+                            style: AppTypography.sansCaption.copyWith(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.70),
+                              letterSpacing: 1.2,
+                            ),
                           ),
-                        ),
+                          TextSpan(
+                            text: 'Start something.',
+                            style: AppTypography.sansCaption.copyWith(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.coral,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  Text(
-                    'TrySomething',
-                    style: AppTypography.serifTitle.copyWith(
-                      color: AppColors.nearBlack,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    'Discover what you love.',
-                    style: AppTypography.sansBodySmall.copyWith(
-                      color: AppColors.driftwood,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  // Thin coral progress sweep line
-                  SizedBox(
-                    width: 120,
-                    height: 2,
-                    child: AnimatedBuilder(
-                      animation: _progressController,
-                      builder: (_, __) => CustomPaint(
-                        painter: _ProgressSweepPainter(
-                          _progressController.value,
-                        ),
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
+
+          // ── Bottom progress bar ──
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 64,
+            child: Center(
+              child: SizedBox(
+                width: 240,
+                height: 3,
+                child: AnimatedBuilder(
+                  animation: _progressCtrl,
+                  builder: (_, __) {
+                    final progress = Curves.easeInOut.transform(
+                      _progressCtrl.value,
+                    );
+                    return CustomPaint(
+                      painter: _ProgressBarPainter(progress),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  DRIFTING BLOBS — three color orbs that float around
+//  Matches the HTML: coral top-left, indigo bottom-right,
+//  sage center — each with distinct drift period
+// ═══════════════════════════════════════════════════════
+
+class _DriftingBlobs extends StatelessWidget {
+  final AnimationController coralCtrl;
+  final AnimationController indigoCtrl;
+  final AnimationController sageCtrl;
+
+  const _DriftingBlobs({
+    required this.coralCtrl,
+    required this.indigoCtrl,
+    required this.sageCtrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([coralCtrl, indigoCtrl, sageCtrl]),
+      builder: (_, __) => CustomPaint(
+        painter: _BlobPainter(
+          coralT: coralCtrl.value,
+          indigoT: indigoCtrl.value,
+          sageT: sageCtrl.value,
         ),
       ),
     );
   }
 }
 
-/// Paints soft gradient orbs that drift slowly across the background.
-class _GradientMeshPainter extends CustomPainter {
-  final double t;
-  _GradientMeshPainter(this.t);
+class _BlobPainter extends CustomPainter {
+  final double coralT;
+  final double indigoT;
+  final double sageT;
+
+  _BlobPainter({
+    required this.coralT,
+    required this.indigoT,
+    required this.sageT,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    // Indigo orb — drifts from top-right
-    _drawOrb(
+    // Coral blob: top-1/4 left side, w-80 h-80 → ~320px radius blur
+    _drawBlob(
       canvas,
-      Offset(w * (0.75 + 0.08 * _sin(t)), h * (0.15 + 0.06 * _cos(t))),
-      w * 0.5,
-      AppColors.indigo.withValues(alpha: 0.07 + 0.04 * _sin(t)),
+      Offset(
+        -80 + 30 * _driftX(coralT),
+        h * 0.25 - 50 * _driftY(coralT),
+      ),
+      w * 0.8,
+      AppColors.coral.withValues(alpha: 0.20),
     );
 
-    // Coral orb — drifts from bottom-left
-    _drawOrb(
+    // Indigo blob: bottom-1/4 right side, w-96 → ~384px radius blur
+    _drawBlob(
       canvas,
-      Offset(w * (0.2 - 0.06 * _cos(t)), h * (0.78 + 0.05 * _sin(t))),
-      w * 0.45,
-      AppColors.coral.withValues(alpha: 0.06 + 0.03 * _cos(t)),
+      Offset(
+        w + 80 + 30 * _driftX(indigoT),
+        h * 0.75 - 50 * _driftY(indigoT),
+      ),
+      w * 0.96,
+      AppColors.indigo.withValues(alpha: 0.20),
     );
 
-    // Sage orb — drifts mid-right
-    _drawOrb(
+    // Sage blob: center, w-64 → ~256px radius blur
+    _drawBlob(
       canvas,
-      Offset(w * (0.85 + 0.05 * _sin(t * 0.7)), h * (0.48 - 0.04 * _cos(t))),
-      w * 0.3,
-      AppColors.sage.withValues(alpha: 0.04 + 0.02 * _sin(t * 1.3)),
+      Offset(
+        w * 0.5 - 20 * _driftX(sageT),
+        h * 0.5 + 20 * _driftY(sageT),
+      ),
+      w * 0.64,
+      AppColors.sage.withValues(alpha: 0.10),
     );
   }
 
-  void _drawOrb(Canvas canvas, Offset center, double radius, Color color) {
+  // Emulates the CSS drift keyframes:
+  // 0%: (0, 0) scale(1), 33%: (30, -50) scale(1.1), 66%: (-20, 20) scale(0.9)
+  double _driftX(double t) {
+    final cycle = t * math.pi * 2;
+    return math.sin(cycle) + 0.3 * math.sin(cycle * 2);
+  }
+
+  double _driftY(double t) {
+    final cycle = t * math.pi * 2;
+    return math.cos(cycle) + 0.4 * math.cos(cycle * 1.5);
+  }
+
+  void _drawBlob(Canvas canvas, Offset center, double radius, Color color) {
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [color, color.withValues(alpha: 0)],
+        stops: const [0.0, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
     canvas.drawCircle(center, radius, paint);
   }
 
-  double _sin(double t) => math.sin(t * math.pi * 2);
-  double _cos(double t) => math.cos(t * math.pi * 2);
-
   @override
-  bool shouldRepaint(_GradientMeshPainter old) => old.t != t;
+  bool shouldRepaint(_BlobPainter old) =>
+      coralT != old.coralT ||
+      indigoT != old.indigoT ||
+      sageT != old.sageT;
 }
 
-/// Paints subtle floating sparkle particles.
-class _ParticlePainter extends CustomPainter {
-  final double t;
-  _ParticlePainter(this.t);
+// ═══════════════════════════════════════════════════════
+//  PROGRESS BAR — indigo→coral gradient, fills 0→100%
+// ═══════════════════════════════════════════════════════
 
-  // 8 particles with fixed seed positions
-  static const _seeds = [
-    [0.15, 0.25, 0.0],
-    [0.82, 0.18, 0.12],
-    [0.35, 0.72, 0.25],
-    [0.68, 0.55, 0.37],
-    [0.9, 0.82, 0.50],
-    [0.22, 0.45, 0.62],
-    [0.55, 0.12, 0.75],
-    [0.78, 0.38, 0.87],
-  ];
+class _ProgressBarPainter extends CustomPainter {
+  final double progress; // 0.0 → 1.0
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final seed in _seeds) {
-      final phase = (t + seed[2]) % 1.0;
-      // Each particle fades in-out over its cycle
-      final fade = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
-      final alpha = fade * 0.35;
-      if (alpha < 0.01) continue;
-
-      final x = size.width * (seed[0] + 0.02 * _sin(phase + seed[2]));
-      final y = size.height * (seed[1] - 0.03 * phase); // drift upward
-      final radius = 1.2 + fade * 1.0;
-
-      canvas.drawCircle(
-        Offset(x, y),
-        radius,
-        Paint()..color = AppColors.coral.withValues(alpha: alpha),
-      );
-    }
-  }
-
-  double _sin(double t) => math.sin(t * math.pi * 2);
-
-  @override
-  bool shouldRepaint(_ParticlePainter old) => old.t != t;
-}
-
-/// Paints a thin coral progress line that sweeps left-to-right.
-class _ProgressSweepPainter extends CustomPainter {
-  final double t;
-  _ProgressSweepPainter(this.t);
+  _ProgressBarPainter(this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    final radius = Radius.circular(h / 2);
 
-    // Background track
+    // Track: white 10% opacity
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, w, h),
-        const Radius.circular(1),
-      ),
-      Paint()..color = AppColors.sandDark,
+      RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, w, h), radius),
+      Paint()..color = Colors.white.withValues(alpha: 0.10),
     );
 
-    // Sweep highlight — 30% width, slides across
-    final sweepWidth = w * 0.3;
-    final sweepStart = -sweepWidth + (w + sweepWidth) * t;
-    final rect = Rect.fromLTWH(
-      sweepStart.clamp(0.0, w),
-      0,
-      (sweepStart + sweepWidth).clamp(0.0, w) - sweepStart.clamp(0.0, w),
-      h,
-    );
-
-    if (rect.width > 0) {
+    // Fill: indigo → coral gradient
+    final fillWidth = w * progress;
+    if (fillWidth > 0) {
       canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(1)),
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, fillWidth, h),
+          radius,
+        ),
         Paint()
           ..shader = const LinearGradient(
-            colors: [
-              Color(0x00FF6B6B),
-              AppColors.coral,
-              Color(0x00FF6B6B),
-            ],
-          ).createShader(Rect.fromLTWH(sweepStart, 0, sweepWidth, h)),
+            colors: [AppColors.indigo, AppColors.coral],
+          ).createShader(Rect.fromLTWH(0, 0, w, h)),
       );
     }
   }
 
   @override
-  bool shouldRepaint(_ProgressSweepPainter old) => old.t != t;
+  bool shouldRepaint(_ProgressBarPainter old) => progress != old.progress;
 }

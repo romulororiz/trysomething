@@ -129,9 +129,13 @@ class HobbyMiniCard extends StatelessWidget {
                     children: [
                       Icon(catIcon, size: 11, color: catColor),
                       const SizedBox(width: 4),
-                      Text(
-                        category,
-                        style: AppTypography.sansTiny.copyWith(color: catColor),
+                      Flexible(
+                        child: Text(
+                          category,
+                          style: AppTypography.sansTiny.copyWith(color: catColor),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
                       if (cost != null) ...[
                         const SizedBox(width: 8),

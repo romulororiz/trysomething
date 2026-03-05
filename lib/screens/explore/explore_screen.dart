@@ -612,7 +612,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 category: categories[i],
                 onTap: () {
                   ref.read(selectedCategoryProvider.notifier).state =
-                      categories[i].name;
+                      categories[i].id;
                   context.go('/feed');
                 },
               );

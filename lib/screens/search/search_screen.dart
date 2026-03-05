@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../theme/category_ui.dart'; // ignore: unused_import
 import '../../theme/app_colors.dart';
@@ -45,7 +46,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       data: (allHobbies) {
     // Filter hobbies by query
     final results = _query.isEmpty
-        ? <dynamic>[]
+        ? <Hobby>[]
         : allHobbies
             .where((h) =>
                 h.title.toLowerCase().contains(_query.toLowerCase()) ||

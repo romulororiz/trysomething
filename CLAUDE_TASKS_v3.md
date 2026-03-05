@@ -6,7 +6,7 @@
 ## Design Reference
 - Theme: "Midnight Neon" — #0A0A0F backgrounds, #FF6B6B coral CTAs with glow, frosted glass
 - Typography: Source Serif 4 headings, DM Sans body, IBM Plex Mono data
-- 20 mockup screenshots are the source of truth for every screen
+- **MOCKUPS ARE IN `docs/mockups/`. BEFORE implementing ANY screen, run `view docs/mockups/<filename>.png` to see the exact target UI. The mockup is the source of truth, not text descriptions.**
 
 ## Architecture (Do Not Change)
 - Flutter 3.6.0 + Riverpod 2.6.1 + GoRouter 14.8.1 + Freezed
@@ -19,7 +19,7 @@
 
 ## Sprint 1: Foundation (Week 1-2)
 
-- [ X ] **1.1 — Add affiliate fields + imageUrl to KitItem model**
+- [X] **1.1 — Add affiliate fields + imageUrl to KitItem model**
   - Add to KitItem in `server/prisma/schema.prisma`:
     - `affiliateUrl String?` — product link with affiliate tag
     - `affiliateSource String?` — "amazon_de", "galaxus", "amazon_br"
@@ -29,7 +29,8 @@
   - Run `dart run build_runner build` to regenerate
   - **Test:** `flutter analyze` clean, `dart test` passes, migration runs
 
-- [ X ] **1.2 — Redesign Discovery Feed cards**
+- [X] **1.2 — Redesign Discovery Feed cards**
+  - **FIRST: `view docs/mockups/01_discover_feed.png` — match this exactly**
   - Current: parallax HobbyCards (480px) with save button
   - Target: Full-screen TikTok-style cards (match mockup image_copy.png)
   - Right side column: heart icon with count (2.4k), bookmark/save, share
@@ -40,7 +41,8 @@
   - Edit `lib/components/hobby_card.dart` and `lib/screens/feed/`
   - **Test:** feed scrolls at 60fps, save animation works, card tap → detail
 
-- [ X ] **1.3 — Redesign Onboarding (3 pages)**
+- [X] **1.3 — Redesign Onboarding (3 pages)**
+  - **FIRST: `view docs/mockups/09_onboarding_vibes.png`, `view docs/mockups/11_onboarding_budget.png`, `view docs/mockups/10_onboarding_ready.png` — match these exactly**
   - Page 1 "What vibes are you into?": 2x4 grid of category tiles with custom icons
     - Teal (#06D6A0) border + checkmark on selection (multi-select)
     - Categories: Creative, Relaxing, Social, Active, Intellectual, Outdoors, Tech, Culinary
@@ -54,7 +56,7 @@
   - Edit `lib/screens/onboarding/`
   - **Test:** onboarding completes, preferences saved to SharedPrefs + API
 
-- [ ] **1.4 — Seed 150 hobbies into Prisma (with affiliate data)**
+- [X] **1.4 — Seed 150 hobbies into Prisma (with affiliate data)**
   - Create `server/prisma/seed.ts` with 150 hobbies across 9 categories:
     - Creative (22), Outdoors (18), Fitness (18), Maker (16), Music (16), Food (18), Collecting (14), Mind (14), Social (14)
   - Each hobby needs: title, hook, description, whyPeopleLoveIt, 5 roadmapSteps with estimatedMinutes, 3+ beginnerPitfalls, difficulty explanation
@@ -72,7 +74,29 @@
 
 ## Sprint 2: Core Screens (Week 3-4)
 
+- [ ] **2.0a — Re-align previously built screens to mockups**
+  - Screens from Sprint 1 were built without mockup reference. Re-align them now:
+  - **Discovery Feed:** `view docs/mockups/01_discover_feed.png` — compare current feed implementation against mockup. Fix layout, spacing, icon placement, badge styling, and visual hierarchy to match EXACTLY. Pay attention to: side action icons positioning, category badge style, spec badge treatment, CTA glow effect.
+  - **Onboarding:** `view docs/mockups/09_onboarding_vibes.png`, `view docs/mockups/11_onboarding_budget.png`, `view docs/mockups/10_onboarding_ready.png` — compare current onboarding against all 3 mockups. Fix category grid tiles, slider styling, budget card design, and "You're ready" screen to match EXACTLY.
+  - **Login:** `view docs/mockups/08_login.png` — compare and fix to match.
+  - For each screen: view the mockup, view the current implementation, identify every visual difference, fix each one.
+  - **Test:** `flutter analyze` clean, screens visually match mockups
+
+- [ ] **2.0 — Fix spec badge styling + seed data formatting**
+  - Spec badges are currently too colorful (different saturated colors per badge = amateur look)
+  - ALL spec badges must use the same muted style: `sand` (#1E1E2E) bg, `driftwood` (#A0A0B8) text, monochrome icons
+  - Do NOT use yellow/teal/purple or any multi-color badge scheme
+  - Only coral (#FF6B6B) should pop on any screen — badges stay restrained
+  - Fix seed data badge values across all 150 hobbies:
+    - Cost: must be CHF range (e.g., "CHF 40–120"), never single number
+    - Time: must include "/week" (e.g., "2h/week"), NEVER bare hours like "3h" (reads as total time)
+    - Difficulty: must be Easy/Medium/Hard, never a time estimate
+  - Update `lib/components/spec_badge.dart` for unified monochrome styling
+  - Update seed data in `server/prisma/seed.ts` where badge values are wrong
+  - **Test:** all badges render in monochrome, no rainbow colors, all time values have "/week"
+
 - [ ] **2.1 — Redesign Hobby Detail page**
+  - **FIRST: `view docs/mockups/02_hobby_detail.png` — match this exactly**
   - Hero image with TRENDING badge (top-right), "4 weeks to master" overlay, star rating with count
   - "Why you'll love it" section with body text
   - Starter Kit: PRODUCT IMAGES (required, from KitItem.imageUrl) in 2-column grid, category labels (MATERIAL, TOOLS, GEAR), individual prices + "~ $XX Total"
@@ -91,6 +115,7 @@
   - **Test:** detail loads with all sections, roadmap steps toggle correctly
 
 - [ ] **2.2 — Redesign Explore grid**
+  - **FIRST: `view docs/mockups/20_explore.png` — match this exactly**
   - 2-column photo-backed category cards with gradient overlay
   - Hobby count badges (124+, 86+) in top-right corner
   - Category icon overlaid on image
@@ -100,6 +125,7 @@
   - **Test:** category tap filters correctly, search navigates to search screen
 
 - [ ] **2.3 — Redesign Library (My Stuff) cards**
+  - **FIRST: `view docs/mockups/03_library.png` — match this exactly**
   - Full-bleed hobby images (like feed cards but shorter)
   - Category badge pill (bottom-left on image)
   - Streak flame icon + day count (bottom-right on image)
@@ -110,6 +136,7 @@
   - **Test:** tab switching works, progress displays correctly
 
 - [ ] **2.4 — Add Quickstart bottom sheet**
+  - **FIRST: `view docs/mockups/17_quickstart.png` — match this exactly**
   - Bottom sheet (modalSlideUp) triggered from Detail page
   - BEGINNER badge, hobby title, description, small image
   - Roadmap preview: 3 steps with icons and descriptions
@@ -118,6 +145,7 @@
   - **Test:** sheet opens from detail, Start Now navigates correctly
 
 - [ ] **2.5 — Redesign Search results**
+  - **FIRST: `view docs/mockups/18_search.png` — match this exactly**
   - Search input with clear button
   - Category filter chips below search (All, Arts & Crafts, Outdoor, Culinary...)
   - Result cards: hobby image (square), type badge (COURSE/WORKSHOP/KIT+CLASS), star rating, price
@@ -131,6 +159,7 @@
 ## Sprint 3: Rich Features (Week 5-6)
 
 - [ ] **3.1 — Profile overhaul**
+  - **FIRST: `view docs/mockups/04_profile.png` — match this exactly**
   - Avatar with edit badge, display name, title ("Hobby Explorer"), bio
   - "Online" + "Since 2023" badges
   - Stats grid (2x2): Tried (count), Active (count), Hours (total), Streak (days) — each with colored icon
@@ -142,6 +171,7 @@
   - **Test:** stats calculate correctly, radar chart renders, heatmap shows data
 
 - [ ] **3.2 — Polish Mood Match**
+  - **FIRST: `view docs/mockups/05_mood_match.png` — match this exactly**
   - "How are you feeling?" header
   - 4 photo-backed mood tiles in 2x2 grid: Energetic, Zen, Curious, Creative
   - Each tile: real photo background, mood icon (colored circle), mood name, subtitle with hobby examples
@@ -150,6 +180,7 @@
   - **Test:** mood selection filters hobbies correctly
 
 - [ ] **3.3 — Polish Hobby Battle / Compare**
+  - **FIRST: `view docs/mockups/14_hobby_battle.png` — match this exactly**
   - Two hobby images side-by-side with "VS" badge in center
   - Head-to-Head comparison grid: Cost, Time, Difficulty — each row with icons and labels
   - "Community Winner" section: progress bar with percentage, hobby name
@@ -158,6 +189,7 @@
   - **Test:** comparison data loads, CTAs save/start correctly
 
 - [ ] **3.4 — Polish Journal & Weekly Planner**
+  - **FIRST: `view docs/mockups/06_journal.png` and `view docs/mockups/07_weekly_plan.png` — match these exactly**
   - Journal: colored timeline dots, photo grid (2-column), tag pills, filter bar
   - Planner: week strip calendar with active day circle, session cards with category color bar + time + location
   - Edit `lib/screens/features/journal_screen.dart` and `scheduler_screen.dart`
