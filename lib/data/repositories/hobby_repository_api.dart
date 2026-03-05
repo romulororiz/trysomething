@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
@@ -125,12 +126,15 @@ class HobbyRepositoryApi implements HobbyRepository {
 
   @override
   Future<Hobby> generateHobby(String query) async {
+    debugPrint('[GenerateHobby] POST ${ApiConstants.generateHobby} query="$query"');
     final response = await _dio.post(
       ApiConstants.generateHobby,
       data: {'query': query},
     );
+    debugPrint('[GenerateHobby] Response status: ${response.statusCode}');
     final data = response.data as Map<String, dynamic>;
     final hobby = Hobby.fromJson(data['hobby'] as Map<String, dynamic>);
+    debugPrint('[GenerateHobby] Parsed hobby: ${hobby.title}');
 
     // Invalidate hobbies cache so the new hobby appears in the feed
     await CacheManager.invalidate('hobbies');

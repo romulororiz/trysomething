@@ -20,42 +20,43 @@ import 'core/analytics/analytics_provider.dart';
 import 'core/notifications/notification_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // System UI style — match Midnight Neon dark theme
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF141420), // warmWhite (dark)
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
-
-  // Initialize local storage
-  await LocalStorage.init();
-  final prefs = await SharedPreferences.getInstance();
-
-  // Global services
+  // Global services (created before zone so they're accessible everywhere)
   final reporter = ErrorReporter();
   final analytics = AnalyticsService();
 
-  // Capture Flutter framework errors
-  FlutterError.onError = (details) {
-    reporter.reportError(
-      details.exception,
-      details.stack,
-      context: details.context?.toString(),
-    );
-  };
-
-  // Capture platform-level errors (e.g. native crashes surfaced to Dart)
-  PlatformDispatcher.instance.onError = (error, stack) {
-    reporter.reportError(error, stack, context: 'PlatformDispatcher');
-    return true;
-  };
-
-  // Run inside a guarded zone to catch uncaught async errors
+  // Run inside a guarded zone to catch uncaught async errors.
+  // Binding must be initialized inside the same zone as runApp.
   runZonedGuarded(
-    () {
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // System UI style — match Midnight Neon dark theme
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFF141420), // warmWhite (dark)
+        systemNavigationBarIconBrightness: Brightness.light,
+      ));
+
+      // Initialize local storage
+      await LocalStorage.init();
+      final prefs = await SharedPreferences.getInstance();
+
+      // Capture Flutter framework errors
+      FlutterError.onError = (details) {
+        reporter.reportError(
+          details.exception,
+          details.stack,
+          context: details.context?.toString(),
+        );
+      };
+
+      // Capture platform-level errors (e.g. native crashes surfaced to Dart)
+      PlatformDispatcher.instance.onError = (error, stack) {
+        reporter.reportError(error, stack, context: 'PlatformDispatcher');
+        return true;
+      };
+
       runApp(
         ProviderScope(
           overrides: [

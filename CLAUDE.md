@@ -1,307 +1,266 @@
-# TrySomething — Project Context
+# TrySomething — CLAUDE.md
 
-A hobby discovery app ("helps you actually start") built with Flutter. Dark-mode-first "Midnight Neon" design. Backend is live (Node.js + Express on Vercel, Neon Postgres). Architecture is Riverpod + GoRouter with API-backed repositories, Hive caching, and SharedPreferences persistence.
+> This is the single source of truth for Claude Code working on this project.
+> It contains: project overview, architecture, design system, v3 redesign plan, AI strategy, and task queue.
+
+---
+
+## Project Overview
+
+TrySomething is an AI-powered hobby discovery mobile app. Tagline: "helps you actually start." It bridges the gap between "I want a hobby" and "I'm actually doing one" with curated content, step-by-step roadmaps, starter kits, cost breakdowns, and progress tracking.
+
+**Target user:** Adults 18–45 who want new hobbies but are overwhelmed by options or don't know the first practical step.
+
+**Current state:** Late MVP — 7 of 8 dev batches complete. Full API backend live on Vercel. 26 screens implemented. Auth, content, progress tracking, personal tools, social features, gamification all working. Now undergoing v3 redesign to match new mockups and add AI-powered dynamic hobby generation.
+
+---
 
 ## Tech Stack
 
-### Flutter Client
-- **Framework:** Flutter (Dart ^3.6.0)
-- **State:** flutter_riverpod ^2.6.1 — `StateNotifierProvider` for mutable state, `Provider` for derived
-- **Routing:** go_router ^14.8.1 — 26 routes, auth + onboarding redirect guards
-- **Fonts:** google_fonts ^6.2.1 — Source Serif 4 (headings), DM Sans (body), IBM Plex Mono (data)
-- **Icons:** material_design_icons_flutter, phosphor_flutter
-- **Images:** cached_network_image + dio
-- **HTTP:** Dio with AuthInterceptor (auto-attaches JWT, handles 401 refresh)
-- **Auth:** flutter_secure_storage (tokens), google_sign_in (Google OAuth)
-- **Caching:** Hive (hobby content cache), SharedPreferences (onboarding, user prefs, hobby statuses)
-- **Serialization:** Freezed + json_annotation with build_runner code generation
-- **Animations:** flutter_animate, plus many custom AnimationController/CustomPainter animations
-- **Bottom nav:** Local fork of `curved_navigation_bar` in `lib/components/curved_nav/` (5 files, customized `buttonElevation` parameter)
+```
+Frontend:   Flutter 3.6.0 + Riverpod 2.6.1 + GoRouter 14.8.1 + Freezed + google_fonts
+Backend:    Node.js + Express (TypeScript) + Prisma 6.4.1 + bcryptjs + jsonwebtoken
+Database:   Neon Postgres (serverless) with 25 Prisma models
+Infra:      Vercel (serverless functions) + GitHub Actions CI
+APIs:       REST (JSON) — 40+ endpoints in 11 serverless functions
+External:   Google OAuth (3 client IDs), Claude API (AI hobby generation)
+```
 
-### Backend (live)
-- **Server:** Node.js + Express (TypeScript), deployed to Vercel (serverless functions)
-- **URL:** `https://server-psi-seven-49.vercel.app/api`
-- **Database:** Neon Postgres (serverless)
-- **ORM:** Prisma (12 models: 10 content + User + UserPreference)
-- **Auth:** Email + password + Google sign-in (JWT pair: access 15min, refresh 30 days)
-- **Server directory:** `server/` (within main repo)
+**Architecture:** Client-server with offline-first caching. Repository pattern with three fallback layers: API → Hive cache → static SeedData. Optimistic updates with rollback on all mutations.
 
-## Architecture
+---
+
+## Project Structure
 
 ```
 lib/
-├── main.dart                    # Bootstrap, ProviderScope, SharedPreferences init
-├── router.dart                  # GoRouter: 26 routes, auth + onboarding redirect guards
-├── models/
-│   ├── hobby.dart               # Hobby, KitItem, RoadmapStep, HobbyCategory, UserHobby, UserPreferences
-│   ├── features.dart            # UserProfile, Challenge, ScheduleEvent, HobbyCombo, FaqItem, CostBreakdown
-│   ├── social.dart              # JournalEntry, BuddyProfile, BuddyActivity, CommunityStory, NearbyUser
-│   ├── seed_data.dart           # Static SeedData: 9 categories, all hobbies with full content
-│   └── feature_seed_data.dart   # Static FeatureSeedData: journals, buddies, challenges, etc.
+├── main.dart                 # Bootstrap: bindings, error handler, runZonedGuarded, ProviderScope
+├── router.dart               # GoRouter: 26 routes, auth/onboarding redirect chain
+├── models/                   # Freezed data classes (8 files + generated)
+│   ├── hobby.dart            # Hobby, KitItem, RoadmapStep, HobbyCategory, UserHobby, UserPreferences
+│   ├── auth.dart             # AuthUser, AuthResponse
+│   ├── features.dart         # UserProfile, Challenge, ScheduleEvent, HobbyCombo, FaqItem, CostBreakdown
+│   ├── social.dart           # JournalEntry, BuddyProfile, BuddyActivity, CommunityStory
+│   ├── gamification.dart     # Achievement model
+│   ├── seed_data.dart        # Static offline fallback data (9 categories)
+│   └── feature_seed_data.dart
 ├── core/
-│   ├── api/
-│   │   ├── api_client.dart      # Dio singleton with AuthInterceptor
-│   │   └── api_constants.dart   # All endpoint path constants
-│   └── auth/
-│       ├── auth_interceptor.dart # Attaches JWT, handles 401 auto-refresh
-│       └── token_storage.dart   # flutter_secure_storage wrapper
-├── data/
-│   └── repositories/
-│       ├── auth_repository.dart          # Auth interface
-│       ├── auth_repository_api.dart      # Auth API implementation
-│       ├── hobby_repository.dart         # Hobby interface
-│       └── hobby_repository_api.dart     # Hobby API implementation (Hive cache + SeedData fallback)
-├── providers/
-│   ├── auth_provider.dart       # AuthNotifier (register/login/google/logout/restore), AuthState, AuthMethod
-│   ├── hobby_provider.dart      # Async hobby providers (API → Hive cache → SeedData fallback)
-│   ├── user_provider.dart       # onboardingComplete, userPreferences, userHobbies (SharedPrefs-persisted)
-│   └── feature_providers.dart   # profile, journal, challenge, schedule, shoppingList, notes, compare, buddy, stories
-├── screens/
-│   ├── main_shell.dart          # ShellRoute with 4-tab bottom nav (Discover, Explore, My Stuff, Profile)
-│   ├── auth/
-│   │   ├── login_screen.dart    # Email/password + Google sign-in
-│   │   └── register_screen.dart # Registration with Google sign-up
-│   ├── onboarding/              # 3-page animated onboarding (vibes, budget, time, solo/social)
-│   ├── feed/                    # Vertical discovery feed with category chip filter
-│   ├── explore/                 # 2-column category grid with filter panel
-│   ├── search/                  # Full-text search across hobbies
-│   ├── my_stuff/                # Personal library segmented by status (Saved/Trying/Active/Done)
-│   ├── profile/                 # User profile, stats, activity heatmap, skills radar
-│   ├── settings/                # Settings + onboarding reset + logout
-│   ├── detail/                  # Full hobby detail: hero, specs, starter kit, roadmap checklist
-│   ├── quickstart/              # Modal slide-up hobby starter sheet
-│   └── features/                # 16 feature screens (see Routes below)
-├── components/
-│   ├── hobby_card.dart          # Main feed card (parallax, Hero tags, particle burst save animation)
-│   ├── shared_widgets.dart      # SectionHeader, OverlineLabel, HobbyMiniCard
-│   ├── spec_badge.dart          # Cost/time/difficulty pills (glass + solid styles)
-│   ├── category_tile.dart       # CategoryTile (grid) + CategoryChipBar (filter)
-│   ├── roadmap_step_tile.dart   # Animated checklist step (elastic spring check animation)
-│   ├── try_today_button.dart    # Breathing-glow coral CTA button
-│   ├── shimmer_skeleton.dart    # Loading skeletons (feed, explore, detail)
-│   ├── glass_container.dart     # Frosted dark glass surface with noise grain texture
-│   └── curved_nav/              # Local fork of curved_labeled_navigation_bar
-│       ├── curved_navigation_bar.dart      # Main widget (custom buttonElevation param)
-│       ├── curved_navigation_bar_item.dart # Item data class (label + labelStyle)
-│       ├── nav_bar_item_widget.dart        # Individual nav item (icon + label layout)
-│       ├── nav_custom_painter.dart         # Paints curved bar background
-│       └── nav_custom_clipper.dart         # Clips overflow
-└── theme/
-    ├── app_colors.dart          # Midnight Neon palette (all color constants)
-    ├── app_theme.dart           # Material 3 ThemeData.dark
-    ├── app_typography.dart      # Type scale (serif/sans/mono)
-    ├── app_icons.dart           # All icon constants (MDI)
-    ├── spacing.dart             # 4px grid, radii, sizes, shadows, gradients
-    ├── motion.dart              # Animation tokens (durations, curves, scale, physics)
-    └── scroll_physics.dart      # Custom rubber-band overscroll physics
+│   ├── api/                  # Dio singleton, endpoint constants
+│   ├── auth/                 # AuthInterceptor (JWT), TokenStorage (flutter_secure_storage)
+│   ├── error/                # ErrorReporter (ring buffer), ErrorProvider (Riverpod observer)
+│   ├── analytics/            # AnalyticsService (console stub — wire to PostHog)
+│   ├── notifications/        # NotificationService (FCM stub — wire to Firebase)
+│   └── storage/              # Hive initialization
+├── data/repositories/        # Interface + API implementation pairs (7 repos)
+├── providers/                # Riverpod providers for auth, hobbies, user, features
+├── screens/                  # 26 screen files
+│   ├── auth/                 # login, register
+│   ├── onboarding/           # 3-page vibes/budget/social
+│   ├── feed/                 # vertical card discovery feed
+│   ├── explore/              # 2-column category grid
+│   ├── search/               # full-text search
+│   ├── my_stuff/             # Saved/Trying/Active/Done tabs
+│   ├── profile/              # stats, heatmap, radar
+│   ├── settings/
+│   ├── detail/               # full hobby detail with roadmap
+│   ├── quickstart/           # modal slide-up starter
+│   └── features/             # 16 feature screens
+├── components/               # Shared widgets (hobby_card, spec_badge, page_transitions, curved_nav)
+└── theme/                    # "Midnight Neon" design tokens
+    ├── app_colors.dart       # 37+ color tokens
+    ├── app_typography.dart   # 20+ named text styles
+    ├── spacing.dart          # 4px grid system
+    └── motion.dart           # Animation durations and curves
+
+server/
+├── api/                      # 11 serverless handler files
+├── lib/                      # auth, mappers, middleware, db, gamification
+├── prisma/schema.prisma      # 25 models, 390 lines
+└── test/                     # 32 tests
 ```
 
-## Routes
+---
 
-| Path | Screen | Notes |
-|---|---|---|
-| `/onboarding` | OnboardingScreen | Guarded — redirects away once complete |
-| `/feed` | DiscoverFeedScreen | Shell tab 0 |
-| `/explore` | ExploreScreen | Shell tab 1 |
-| `/my` | MyStuffScreen | Shell tab 2 |
-| `/profile` | ProfileScreen | Shell tab 3 |
-| `/hobby/:id` | HobbyDetailScreen | Slide-right push |
-| `/quickstart/:hobbyId` | QuickstartScreen | Slide-up modal with backdrop blur |
-| `/settings` | SettingsScreen | Slide-right push |
-| `/mood-match` | MoodMatchScreen | Discovery |
-| `/seasonal` | SeasonalPicksScreen | Discovery |
-| `/faq/:hobbyId` | BeginnerFaqScreen | Per-hobby FAQ |
-| `/notes/:hobbyId` | PersonalNotesScreen | Per-step notes |
-| `/budget/:hobbyId` | BudgetAlternativesScreen | DIY/budget/premium alternatives |
-| `/combos` | HobbyCombosScreen | Complementary hobby pairs |
-| `/cost/:hobbyId` | CostCalculatorScreen | 3-tier cost projection |
-| `/compare` | CompareModeScreen | Side-by-side comparison |
-| `/shopping/:hobbyId` | ShoppingListScreen | Checkable starter kit list |
-| `/challenge` | WeeklyChallengeScreen | Gamification |
-| `/journal` | HobbyJournalScreen | Photo journal |
-| `/scheduler` | HobbySchedulerScreen | Weekly session planner |
-| `/buddy` | BuddyModeScreen | Friend activity feed |
-| `/stories` | CommunityStoriesScreen | Success stories |
-| `/local` | LocalDiscoveryScreen | Nearby users |
-| `/year-review` | YearInReviewScreen | Annual stats |
+## Design System — "Midnight Neon"
 
-## Theme System — "Midnight Neon"
+**Color Tokens:**
+| Token | Hex | Role |
+|-------|-----|------|
+| cream | #0A0A0F | App background (darkest) |
+| warmWhite | #141420 | Surface/card bg |
+| sand | #1E1E2E | Elevated surface |
+| coral | #FF6B6B | CTA, primary accent |
+| amber | #FBBF24 | Gold, badges |
+| indigo | #7C3AED | Brand secondary |
+| sage | #06D6A0 | Success, mint, selection accent |
+| nearBlack | #F8F8FC | Headings (lightest) |
 
-Dark-mode-first. Token-based: 37+ files reference `AppColors` tokens by name. Changing values in `app_colors.dart` auto-propagates everywhere.
+**Category colors:** Creative=#D946EF, Outdoors=#06D6A0, Fitness=#FF4757, Maker=#FBBF24, Music=#818CF8, Food=#FB923C, Collecting=#38BDF8, Mind=#7C3AED, Social=#F472B6
 
-### Color Tokens
-**Neutrals (dark → light):** cream `#0A0A0F` (bg) → warmWhite `#141420` (surface) → sand `#1E1E2E` (elevated) → sandDark `#2A2A3C` (border) → stone `#363650` → warmGray `#6B6B80` (muted) → driftwood `#A0A0B8` (secondary text) → espresso `#C0C0D0` → darkBrown `#D8D8E8` → nearBlack `#F8F8FC` (headings)
+**Typography:** Source Serif 4 (headings), DM Sans (body), IBM Plex Mono (data/badges)
 
-**Accents:** coral `#FF6B6B` (CTA), amber `#FBBF24` (gold/badges), indigo `#7C3AED` (electric violet brand), sage `#06D6A0` (mint/success)
+**Spacing:** 4px grid. Card radius=22, tile=16, button=14.
 
-**`*Pale` tokens** are dark-tinted backgrounds for selected states (e.g., coralPale `#2A1215`).
+**Motion:** fast=150ms, normal=250ms, slow=350ms
 
-**9 category colors:** catCreative=#D946EF, catOutdoors=#06D6A0, catFitness=#FF4757, catMaker=#FBBF24, catMusic=#818CF8, catFood=#FB923C, catCollecting=#38BDF8, catMind=#7C3AED, catSocial=#F472B6
+**Aesthetic:** Deep dark space with glowing neon accents. Frosted glass containers. Parallax feed cards. Coral CTAs with glow effect.
 
-### Typography
-- **Serif** (Source Serif 4): serifDisplay(38), serifHero(36), serifTitle(32), serifHeading(26), serifSubheading(22), serifCardTitle(30, white on images)
-- **Sans** (DM Sans): sansSection(19), sansBody(15), sansBodySmall(14), sansLabel(13), sansCaption(12), sansTiny(11), sansNav(10), sansCta(14), sansButton(15), overline(11), categoryLabel(10)
-- **Mono** (IBM Plex Mono): monoTimer(40), monoLarge(18), monoMedium(16), monoBadge(11), monoCaption(12), monoTiny(11)
+---
 
-### Spacing (4px grid)
-xs=4, sm=8, md=12, lg=16, xl=24, xxl=32, xxxl=48. Card radius=22, tile=16, button=14, input=12, badge=100(pill).
+## v3 Redesign — Vision
 
-### Motion Tokens
-fast=150ms, normal=250ms, slow=350ms, hero=500ms, spring=400ms. breathingGlow=1800ms. navForward=350ms, navBack=300ms.
+### The Three Pillars
 
-## Key Patterns
+1. **150 Pre-Seeded Hobbies** — Rich curated content with roadmaps, starter kits, cost breakdowns. The reliable foundation that serves 90%+ of users at zero API cost.
 
-- **Token architecture:** Never use raw hex in screens. Use `AppColors.*`, `AppTypography.*`, `Spacing.*`, `Motion.*`.
-- **Hardcoded `Colors.white`:** 100+ usages across screens — these are intentional (text/icons on image overlays or colored buttons). Do NOT convert to tokens.
-- **Hardcoded hex in spacing.dart:** Shadows use `#000000`, gradients use `#0A0A0F` (cream bg). Must be updated manually if palette changes.
-- **Hardcoded hex in onboarding_screen.dart:** `_GradientBlobPainter` has blob accent colors and wash gradient stops. Must be updated manually if palette changes.
-- **Hero animations:** Tagged `hobby_image_{id}` and `hobby_title_{id}` on feed cards → detail screen.
-- **Custom painters:** Gradient blob bg (onboarding), wave underline (onboarding), celebration particles (onboarding), action button particle burst (hobby_card), noise grain (glass_container).
-- **Riverpod:** `StateNotifierProvider` for mutable state with persistence. `.family` for per-ID lookups. Derived `Provider` for filtered/computed values.
-- **GoRouter redirect:** `_redirectGuard` in router.dart checks onboarding completion.
-- **Animations:** Mix of `flutter_animate` package and raw `AnimationController` + `CurvedAnimation`. Onboarding uses `_iv()` helper for interval calculations.
-- **Category pills (neutral style):** `AppColors.sand` bg, no border, `AppColors.driftwood` text, icon keeps `hobby.catColor`. Applied across: detail, search, explore, seasonal_picks, year_in_review, hobby_journal, local_discovery. Exception: my_stuff image overlay badges use colored bg + white text (for contrast on photos).
-- **Bottom nav (curved):** Local fork in `lib/components/curved_nav/`. Uses `defaultTargetPlatform` instead of `dart:io Platform` for web compatibility. Key params in main_shell.dart: `height: 85`, `buttonElevation: 115`, `iconPadding: 10`. Label bottom padding: `20.0` (both platforms, in nav_bar_item_widget.dart).
-- **Feed card sizing:** Fixed `height: Spacing.cardHeight` (480px) with `bottom: 90` padding on each PageView item to clear the bottom nav (since `extendBody: true`).
-- **Search input:** No focused border (set to `BorderSide.none` in app_theme.dart global InputDecoration).
-- **Heatmap tooltip:** Uses `AppColors.sand` bg (NOT nearBlack — that's #F8F8FC, the lightest color in dark theme!).
+2. **AI-Generated Hobbies** — On-demand generation when pre-seeded content doesn't satisfy. Fires at 3 specific touchpoints only. Uses Claude Haiku 3.5 at ~$0.003/call. Every generated hobby cached to Postgres so the catalog grows organically.
 
-## Data Flow
+3. **Personal Journey** — Journal, progress tracking, buddy system, weekly planner. The reason users return daily.
 
-1. `main.dart` initializes SharedPreferences, overrides `sharedPreferencesProvider`, shows splash overlay during auth restore
-2. `AuthNotifier.tryRestoreSession()` checks for stored JWT tokens, calls `/users/me` to verify
-3. `router.dart` redirect chain: auth status (unauthenticated → `/login`) → onboarding check (→ `/onboarding`) → normal routing
-4. Router uses `refreshListenable` pattern (ValueNotifier + `ref.listen`) — NOT `ref.watch` (which would recreate the router)
-5. Onboarding collects preferences → persisted locally via `userPreferencesProvider`, synced to server fire-and-forget
-6. Feed reads `hobbyListProvider` (API → Hive cache → SeedData fallback) filtered by `selectedCategoryProvider`
-7. Detail screen reads `hobbyByIdProvider`, user progress from `userHobbiesProvider` (SharedPreferences only — not yet synced to server)
-8. Feature screens read from `feature_providers.dart` (mostly in-memory, backed by `FeatureSeedData`)
+### Design Philosophy
+This is a UI REFACTOR, not a rewrite. Backend, data models, state management, and API all stay as-is. Only UI components update to match the 20 new mockup screens.
 
-## Commands
+---
 
+## v3 Screen Map
+
+| # | Screen | Route | Tab/Parent | Key Elements |
+|---|--------|-------|------------|--------------|
+| 1 | Discovery Feed | /discover | Discover (Tab 1) | Full-bleed TikTok cards, side action icons (heart/save/share), category badge, spec badges, TRY TODAY CTA |
+| 2 | Hobby Detail | /hobby/:id | Push from Feed | Hero + TRENDING badge, star rating, Starter Kit with PRODUCT IMAGES + prices, Roadmap with checkmarks + MILESTONE badges, floating TRY TODAY |
+| 3 | Quickstart Modal | /hobby/:id/start | Sheet from Detail | Bottom sheet, BEGINNER badge, roadmap preview, Start Now, "Free for first 3 lessons" |
+| 4 | Explore Grid | /explore | Explore (Tab 2) | Photo-backed category cards with count badges (124+), filter chips (All/Trending/New/For You) |
+| 5 | Search | /search | Push from Explore | Category chips, result cards with type badges (COURSE/WORKSHOP), star ratings, prices, "You might also like" |
+| 6 | Library | /library | Library (Tab 3) | Segmented: Saved/Trying/Active/Done. Cards with image, progress %, streak days, Continue button |
+| 7 | Journal | /journal/:hobbyId | Push from Library | Timeline entries with photos, tags. Filter: All/Photos/Notes/Milestones. FAB to add |
+| 8 | Weekly Planner | /plan | Plan (Tab 4) | Calendar week strip, session cards with category colors, time + location |
+| 9 | Profile | /profile | Profile (Tab 5) | Stats grid, Skill Balance radar, Activity heatmap, Recent Trophies |
+| 10 | Settings | /settings | Push from Profile | Account, Preferences (budget, theme), Log Out |
+| 11 | Mood Match | /mood | Push from Discover | "How are you feeling?" — 4 photo-backed mood tiles, Popular Today list |
+| 12 | Hobby Combos | /combos | Push from Discover | Paired hobby cards with reasons, filter chips, user counts |
+| 13 | Seasonal Picks | /seasonal | Push from Discover | Featured collection hero, horizontal cards, Trending in Community |
+| 14 | Hobby Battle | /compare | Push from Explore | Side-by-side comparison, Head-to-Head grid, Community Winner poll, dual CTAs |
+| 15 | Cost Projection | /hobby/:id/cost | Push from Detail | Year 1 total, bar chart, Smart Savings tips |
+| 16 | Login | /login | Auth | Logo, email/password, Google + Apple social auth, Terms/Privacy links |
+| 17 | Onboarding: Vibes | /onboarding/1 | Auth flow | "What vibes are you into?" — 2x4 category grid with icons, teal checkmarks |
+| 18 | Onboarding: Budget | /onboarding/2 | Auth flow | Hours/week slider, Budget cards (Low/Med/High), Solo/Social toggle |
+| 19 | Onboarding: Ready | /onboarding/3 | Auth flow | "You're ready!" — floating category cards with match %, Start Exploring CTA |
+
+### Navigation — 5 Bottom Tabs
+1. **Discover** (Compass) — Feed, Mood Match, Seasonal, Combos
+2. **Explore** (Grid) — Category grid, Search, Hobby Battle
+3. **Library** (Bookmark, center/elevated) — My Stuff tabs, Journal
+4. **Plan** (Calendar) — Weekly Planner
+5. **Profile** (Person) — Stats, Trophies, Settings
+
+### Transitions
+- Auth screens: fade
+- Push navigation: slideRight (350ms)
+- Modals (Quickstart): modalSlideUp (300ms)
+- Back: slideRight reverse (300ms)
+
+---
+
+## v3 Redesign — What Changes
+
+### Bottom Nav
+4 tabs → 5 tabs. Add Plan tab, rename My Stuff → Library, elevate center tab with accent background.
+
+### Discovery Feed
+Current parallax cards → full-screen TikTok-style. Right side: heart with count (2.4k), bookmark, share. Top-left: category badge ("CREATIVE"). Bottom-left: title, hook, spec badges (COST/TIME/LEVEL). Bottom: floating "TRY TODAY →" CTA with coral glow.
+
+### Hobby Detail
+Add TRENDING badge on hero, star rating (1.2k). Starter Kit: PRODUCT IMAGES in 2-column grid with category labels (MATERIAL/TOOLS/GEAR) and individual prices + total. Roadmap: green checkmarks completed, coral active, MILESTONE badges. Floating sticky TRY TODAY at bottom.
+
+### Explore Grid
+Photo-backed category cards with gradient overlays. Hobby count badges (124+, 86+) top-right. Category icons overlaid. Filter chips: All/Trending/New/For You.
+
+### Library Cards
+Full-bleed hobby images with category badge (bottom-left), streak flame + day count (bottom-right). Progress bar with percentage, "Continue Learning" CTA. Coral accent for top/active card.
+
+### Profile
+Stats grid (2x2): Tried/Active/Hours/Streak with colored icons. Skill Balance radar chart (6 axes: Creative/Physical/Culinary/Intellectual/Social/Technical). Activity heatmap (GitHub-style, 5 months). Recent Trophies list. Settings moved to separate screen via gear icon.
+
+### Onboarding
+Page 1: 2x4 category grid with custom icons, teal border + checkmark on multi-select. Page 2: Hours slider with coral track, budget cards with icons, Solo/Social toggle. Page 3: Floating animated category cards with match %, "Curated for you" badge, "Start Exploring →".
+
+### Search
+Type badges (COURSE/WORKSHOP/KIT+CLASS), star ratings, prices, arrow icons. "You might also like" section with horizontal scroll.
+
+---
+
+## AI Strategy
+
+### When AI Fires (3 Touchpoints Only)
+
+1. **Smart Search Fallback** — Search returns <3 pre-seeded results → show those instantly → shimmer + "Finding more..." → fire POST /api/generate/hobby → animate AI results into list
+2. **Onboarding Personalization** — "You're ready!" screen shows 3 pre-seeded matches + 1 AI "Made for you" hobby with sparkle badge
+3. **"Surprise Me" FAB** — Floating button on Discover → text prompt → AI generates full hobby → navigate to detail
+
+### AI Details
+- Model: Claude Haiku 3.5 (~$0.003/call)
+- Endpoint: POST /api/generate/hobby (already exists)
+- Caching: Every generated hobby saved to Postgres (isAiGenerated=true). Catalog grows from 150 → 500+ organically.
+- Budget: ~$3-6/month at 1,000 MAU
+
+### What NOT to Build (v1)
+- AI Coach/Chat (v2+)
+- Admin panel (use Prisma Studio)
+- Content moderation (curated content only at launch)
+- Email notifications (push is enough)
+- Offline sync queue (optimistic updates sufficient)
+- Custom landing page (use Carrd)
+
+---
+
+## 150 Hobby Seeding
+
+| Category | Count | Examples |
+|----------|-------|---------|
+| Creative | 22 | Pottery, Watercolor, Sketching, Calligraphy, Knitting, Crochet, Embroidery, Photography, Digital Art, Woodburning, Origami, Scrapbooking, Jewelry Making, Resin Art, Screen Printing, Macramé, Collage, Sewing, Tie-Dye, Mosaic, Stained Glass, Candle Decorating |
+| Outdoors | 18 | Hiking, Birdwatching, Kayaking, Gardening, Stargazing, Geocaching, Trail Running, Rock Climbing, Surfing, Camping, Fishing, Mountain Biking, Foraging, Nature Photography, Sailing, Skiing, Horseback Riding, Beach Volleyball |
+| Fitness | 18 | Bouldering, Yoga, Swimming, Martial Arts, Dance, CrossFit, Boxing, Pilates, Cycling, Skateboarding, Parkour, Fencing, Archery, Rowing, Jump Rope, Aerial Silks, Ice Skating, Tai Chi |
+| Maker | 16 | Woodworking, 3D Printing, Electronics, Leathercraft, Candle Making, Soap Making, Metalworking, Model Building, Bookbinding, Furniture Restoration, Knife Making, Pottery Wheel, Glassblowing, Loom Weaving, Clock Repair, Drone Building |
+| Music | 16 | Guitar, Ukulele, Piano, Drumming, Singing, Violin, DJ/Mixing, Music Production, Harmonica, Bass Guitar, Flute, Saxophone, Cajon, Beatboxing, Songwriting, Music Theory |
+| Food | 18 | Sourdough, Fermentation, Coffee Roasting, Pasta Making, Sushi, Smoking/BBQ, Bread Baking, Cocktails, Cheese Making, Chocolate, Pickling, Hot Sauce, Korean Cooking, Indian Curry, Pizza, Pastry, Tea Ceremony, Kombucha |
+| Collecting | 14 | Vinyl Records, Vintage Cameras, Plants, Coins, Stamps, Sneakers, Watches, Antique Books, Crystals, Postcards, Board Games, Pokémon Cards, Vintage Posters, Enamel Pins |
+| Mind | 14 | Chess, Journaling, Meditation, Language Learning, Puzzles, Reading Challenges, Philosophy, Creative Writing, Astronomy, Brain Teasers, Speed Cubing, Memory Training, Calligraphy, Lucid Dreaming |
+| Social | 14 | Board Game Nights, Improv, Volunteering, Book Club, Trivia, Community Theater, Wine Tasting, Hiking Clubs, Cooking Classes, Dance Socials, Language Exchange, Toastmasters, Potluck Clubs, Running Groups |
+
+Each hobby needs: title, hook, description, whyPeopleLoveIt, 3-5 kitItems (CHF), 5 roadmapSteps (minutes), 3+ pitfalls, difficulty explanation. Swiss market pricing. Unsplash images.
+
+---
+
+## Backend Reference
+
+### Key Endpoints (No Changes Needed)
+- **Auth:** POST /api/auth/register, /login, /refresh, /google
+- **Content:** GET /api/hobbies, /hobbies/:id, /hobbies/search, /categories, /hobbies/combos, /hobbies/seasonal, /hobbies/mood
+- **User:** CRUD /api/users/hobbies, /journal, /notes, /schedule, /shopping, /stories, /buddies, /challenges, /achievements
+- **AI:** POST /api/generate/hobby, /generate/faq, /generate/cost, /generate/budget
+
+### State Pattern
+```
+User action → snapshot → update UI immediately → save SharedPrefs → fire API → on fail: restore snapshot
+```
+
+---
+
+## Testing
+
+After every change:
 ```bash
-flutter analyze lib/    # Should show 0 errors (info-level prefer_const_constructors warnings are expected)
-flutter run             # Hot restart (Shift+R) required after theme/color constant changes
+flutter analyze          # Zero issues
+dart test                # All 158 tests pass
+cd server && npm test    # All 32 tests pass
 ```
 
-## Current State
+---
 
-### Batch Progress
+## Task Queue
 
-| Batch | Name | Status | What shipped |
-| --- | --- | --- | --- |
-| 1 | **Foundation** | DONE | Server scaffolding (Prisma, Neon, health endpoint). Flutter repository pattern, Dio/Hive init, model serialization, category UI mapping extraction. |
-| 2 | **Auth & Onboarding** | DONE | Email + Google sign-in, JWT auth, login/register screens, splash screen, profile + preferences sync, router auth guards. |
-| 3 | **Core Content** | DONE | All hobby data from API. 15 screens transitioned from SeedData to async API-backed providers. Loading/error states. Hive caching with SeedData fallback. |
-| 4 | **User Progress** | DONE | Hobby save/try/complete + step tracking + activity log + streaks synced to server. Optimistic updates with rollback. SharedPreferences offline cache. |
-| 5 | **Personal Tools** | DONE | Journal, notes, scheduler, shopping list — full CRUD synced to server. 4 Prisma models, 6 handler functions, repository layer, optimistic updates with rollback. 30 unit tests. |
-| 6 | Social | Planned | Buddy pairing, community stories, nearby users. |
-| 7 | Gamification | Planned | Weekly challenges, achievements, year-in-review with real data. |
-| 8 | Polish & Ship | Planned | Push notifications, analytics, crash reporting, tests, CI/CD, app store submission. |
-
-### What's live now
-
-**Server (11 serverless functions, Vercel Hobby plan limit is 12):**
-
-- URL: `https://server-psi-seven-49.vercel.app/api`
-- 19 Prisma models: 10 content + User + UserPreference + UserHobby + UserCompletedStep + UserActivityLog + JournalEntry + PersonalNote + ScheduleEvent + ShoppingCheck
-- Auth endpoints: register, login, refresh, google (consolidated into `server/api/auth/[action].ts`)
-- User endpoints: me, preferences, hobbies, activity, journal, notes, schedule, shopping (all consolidated into `server/api/users/[path].ts`)
-- Content endpoints: hobbies (list, detail, search, combos, seasonal, mood) + categories + per-hobby features (faq, cost, budget)
-- Server accepts both `idToken` and `accessToken` for Google sign-in (Windows/web sends accessToken, Android/iOS sends idToken)
-- JWT pair: access token 15min, refresh token 30 days
-- Google OAuth: 3 client IDs (Android, iOS, Web) — server checks `GOOGLE_CLIENT_IDS` env var
-
-**Flutter client:**
-
-- All 26 screens + login/register screens implemented with full Midnight Neon dark theme
-- API-backed repositories with Hive caching and SeedData fallback for hobby content
-- Auth: email + password + Google sign-in with flutter_secure_storage token persistence
-- Dio AuthInterceptor: auto-attaches Bearer token, catches 401, refreshes, retries
-- GoRouter redirect chain using `refreshListenable` pattern (stable router, no recreation)
-- Animated splash screen overlay during session restore (`AuthStatus.unknown`)
-- Per-button loading spinners (AuthMethod enum) on login/register screens
-- `debugPrint` logging on Google sign-in errors for diagnostics
-- User progress synced to server: save/try/complete hobbies, step tracking, activity log (optimistic updates with rollback, SharedPreferences offline cache)
-- Personal tools synced to server: journal, notes, schedule, shopping list (optimistic updates with rollback, 30 unit tests)
-
-**What's NOT yet server-synced (still local-only):**
-
-- Challenges — in-memory seed data only
-- Social features (buddy, stories, nearby) — seed data only
-- Year-in-review — seed data only
-
-### Key architecture files
-
-**Server:**
-
-- `server/api/auth/[action].ts` — All 4 auth endpoints in one handler (register, login, refresh, google)
-- `server/api/users/[path].ts` — All user endpoints (me, preferences, hobbies, activity, journal, notes, schedule, shopping)
-- `server/prisma/schema.prisma` — All Prisma models
-- `server/lib/auth.ts` — JWT helpers (hashPassword, comparePassword, generateTokenPair, verifyAccessToken, requireAuth)
-- `server/lib/mappers.ts` — Response mapping (strips sensitive fields)
-- `server/lib/middleware.ts` — CORS, methodNotAllowed, errorResponse helpers
-- `server/vercel.json` — Route rules mapping URLs to consolidated handler files
-
-**Flutter:**
-
-- `lib/core/api/api_client.dart` — Dio singleton with AuthInterceptor
-- `lib/core/api/api_constants.dart` — All endpoint path constants (baseUrl + paths)
-- `lib/core/auth/token_storage.dart` — flutter_secure_storage wrapper (saveTokens, getAccessToken, clearTokens)
-- `lib/core/auth/auth_interceptor.dart` — Dio interceptor: attaches JWT, handles 401 refresh with separate Dio instance
-- `lib/providers/auth_provider.dart` — AuthNotifier (register/login/google/logout/restore), AuthState, AuthMethod enum
-- `lib/providers/hobby_provider.dart` — Async hobby providers (API → Hive cache → SeedData fallback)
-- `lib/providers/user_provider.dart` — SharedPreferences-backed onboarding/preferences/userHobbies + server-synced UserHobbiesNotifier
-- `lib/providers/feature_providers.dart` — Journal, schedule, notes, shopping list (API-backed with optimistic updates)
-- `lib/router.dart` — GoRouter with refreshListenable + auth/onboarding redirect chain
-- `lib/data/repositories/` — Repository pattern (interface + API impl) for auth, hobbies, user progress, personal tools
-
-### Build commands
-
-```bash
-flutter analyze lib/              # Should show 0 errors
-flutter run                       # Basic run
-flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com  # With Google Sign-In idToken support on Android
-dart run build_runner build --delete-conflicting-outputs  # Regenerate Freezed/JSON files
-cd server && npx vercel --prod    # Deploy server to Vercel
-```
-
-### Google OAuth setup
-
-- **Web client ID:** `973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com` (also used as `serverClientId` on Android via dart-define)
-- **Android client ID:** Bound to debug keystore SHA-1 + `com.example.trysomething`
-- **iOS client ID:** GoogleService-Info.plist in `ios/Runner/`, reversed client ID in Info.plist URL schemes
-- **Vercel env vars:** `GOOGLE_CLIENT_IDS` (all 3 comma-separated), `JWT_SECRET`, `JWT_REFRESH_SECRET`, `DATABASE_URL`
-
-### Known issues / notes
-
-- Vercel Hobby plan allows max 12 serverless functions — currently at 11. All new endpoints must be consolidated into existing handler files.
-- Vercel deployments can go stale/down occasionally — if all endpoints return 404, redeploy with `cd server && npx vercel --prod`
-- On Windows, `google_sign_in` doesn't return `idToken` — uses `accessToken` fallback via Google userinfo endpoint
-- `GoogleSignIn.signOut()` hangs on Windows/Linux — called as fire-and-forget with `.catchError`
-- `String.fromEnvironment` returns `''` not `null` — serverClientId uses ternary null check
-
-## Production Roadmap — Remaining Batches
-
-Detailed Batch 4 plan: `.claude/plans/valiant-sauteeing-sutton.md`
-
-### Critical path files (touched in upcoming batches)
-
-- `lib/providers/user_provider.dart` — Batch 4
-- `lib/providers/feature_providers.dart` — Batches 5, 6, 7
-- `lib/router.dart` — Batch 8
-- `server/prisma/schema.prisma` — Every batch adds models
-- `server/api/users/[path].ts` — Batches 4, 5 (add new switch cases, no new serverless functions)
-
-### Remaining batch details
-
-**Batch 6 — Social & Community (5 models, ~7 endpoints, 3 screens)**
-Buddy pairing, community stories with reactions, nearby users (earthdistance).
-
-**Batch 7 — Gamification (4 models, ~5 endpoints, 3 screens)**
-Weekly challenges, achievements (auto-unlock), year-in-review with real data.
-
-**Batch 8 — Production Polish (1 model, ~2 endpoints, cross-cutting)**
-Push notifications (FCM), analytics, crash reporting, tests, CI/CD, app store submission.
-
-**Totals remaining:** 10 Prisma models, ~14 endpoints across 4 handler files
+See `CLAUDE_TASKS_v3.md` for full checklist. Sprint order:
+1. **Foundation** — bottom nav, feed cards, onboarding, seed 150 hobbies
+2. **Core Screens** — detail, explore, library, quickstart, search
+3. **Rich Features** — profile, mood match, battle, journal/planner, AI search + onboarding
+4. **Polish & Ship** — "Surprise Me", Firebase, analytics, app store, performance, beta

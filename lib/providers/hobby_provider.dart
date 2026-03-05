@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/curated_pack.dart';
 import '../models/hobby.dart';
@@ -68,10 +69,12 @@ class GenerationNotifier extends StateNotifier<GenerationState> {
   final Ref _ref;
 
   Future<void> generate(String query) async {
+    debugPrint('[Generation] Starting generation for: "$query"');
     state = const GenerationState(status: GenerationStatus.generating);
     try {
       final hobby =
           await _ref.read(hobbyRepositoryProvider).generateHobby(query);
+      debugPrint('[Generation] Success! Hobby: ${hobby.title} (${hobby.id})');
       // Invalidate hobby list so feed picks up the new hobby
       _ref.invalidate(hobbyListProvider);
       state = GenerationState(
@@ -79,6 +82,7 @@ class GenerationNotifier extends StateNotifier<GenerationState> {
         hobby: hobby,
       );
     } catch (e) {
+      debugPrint('[Generation] Error: $e');
       state = GenerationState(
         status: GenerationStatus.error,
         error: e.toString(),

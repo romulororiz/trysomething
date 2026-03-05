@@ -160,6 +160,139 @@ export const hobbies: HobbyData[] = [
       "Underproofed > overproofed for beginners",
     ],
   },
+  {
+    id: "guitar",
+    name: "Guitar",
+    tagline: "Your first song is closer than you think",
+    hook: "Four chords. That's all it takes to play hundreds of songs. Pick up a guitar and surprise yourself.",
+    category: "music",
+    imageUrl: "/images/hobby-photos/guitar.jpg",
+    cost: "$80-200",
+    time: "20 min/day",
+    difficulty: "Beginner",
+    tags: ["Musical", "Relaxing", "Portable"],
+    kitItems: [
+      { name: "Acoustic guitar (beginner)", price: "$120", essential: true },
+      { name: "Picks (variety pack)", price: "$5", essential: true },
+      { name: "Clip-on tuner", price: "$10", essential: true },
+    ],
+    roadmapSteps: [
+      {
+        id: "guitar-1",
+        title: "Learn your first 4 chords",
+        description: "G, C, D, Em — these unlock hundreds of songs.",
+        timeEstimate: "1 week",
+      },
+      {
+        id: "guitar-2",
+        title: "Strum a full song",
+        description:
+          "Pick an easy song you love and play it start to finish.",
+        timeEstimate: "2 weeks",
+      },
+      {
+        id: "guitar-3",
+        title: "Try fingerpicking",
+        description:
+          "Move beyond strumming with simple fingerpicking patterns.",
+        timeEstimate: "3 weeks",
+      },
+    ],
+    pitfalls: [
+      "Sore fingers are normal for 2 weeks — push through gently",
+      "Don't start with an electric — acoustic builds finger strength",
+      "Practice 20 minutes daily beats 2 hours on weekends",
+    ],
+  },
+  {
+    id: "hiking",
+    name: "Hiking",
+    tagline: "Every trail tells a story",
+    hook: "Step away from screens and into nature. All you need is a pair of shoes and a trail to follow.",
+    category: "outdoors",
+    imageUrl: "/images/hobby-photos/hiking.jpg",
+    cost: "$0-50",
+    time: "2-4 hrs/week",
+    difficulty: "Beginner",
+    tags: ["Nature", "Exercise", "Mindful"],
+    kitItems: [
+      { name: "Trail shoes", price: "$60", essential: true },
+      { name: "Water bottle (1L)", price: "$15", essential: true },
+      { name: "Day pack (20L)", price: "$30", essential: false },
+    ],
+    roadmapSteps: [
+      {
+        id: "hike-1",
+        title: "Find a local trail",
+        description:
+          "Use AllTrails or local park sites to find an easy 2-3 mile loop.",
+        timeEstimate: "30 min",
+      },
+      {
+        id: "hike-2",
+        title: "Complete your first hike",
+        description: "Pack water, wear layers, and take your time.",
+        timeEstimate: "2 hours",
+      },
+      {
+        id: "hike-3",
+        title: "Try a longer trail",
+        description:
+          "Graduate to a 5+ mile hike with some elevation gain.",
+        timeEstimate: "Half day",
+      },
+    ],
+    pitfalls: [
+      "Cotton kills — wear moisture-wicking layers",
+      "Start earlier than you think to avoid afternoon heat",
+      "Tell someone your trail plan before heading out",
+    ],
+  },
+  {
+    id: "chess",
+    name: "Chess",
+    tagline: "The ultimate mental workout",
+    hook: "A 1,500-year-old game that's more popular now than ever. Every game is a new puzzle to solve.",
+    category: "mind",
+    imageUrl: "/images/hobby-photos/chess.jpg",
+    cost: "$0",
+    time: "15-30 min/day",
+    difficulty: "Beginner",
+    tags: ["Strategic", "Competitive", "Free"],
+    kitItems: [
+      { name: "Chess.com account (free)", price: "$0", essential: true },
+      { name: "Physical board & pieces", price: "$20", essential: false },
+      { name: "Tactics trainer app", price: "$0", essential: false },
+    ],
+    roadmapSteps: [
+      {
+        id: "chess-1",
+        title: "Learn the rules",
+        description:
+          "How each piece moves, castling, en passant, checkmate.",
+        timeEstimate: "1 hour",
+      },
+      {
+        id: "chess-2",
+        title: "Play 10 games online",
+        description:
+          "Jump in against other beginners. Lose fast, learn fast.",
+        timeEstimate: "1 week",
+      },
+      {
+        id: "chess-3",
+        title: "Study basic tactics",
+        description:
+          "Forks, pins, skewers — patterns that win you pieces.",
+        timeEstimate: "2 weeks",
+      },
+    ],
+    pitfalls: [
+      "Don't memorize openings — learn principles instead",
+      "Always ask 'what is my opponent threatening?' each move",
+      "Puzzles improve your play faster than just playing games",
+    ],
+  },
 ];
 
 export function getHobbyById(id: string): HobbyData | undefined {

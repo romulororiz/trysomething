@@ -7,237 +7,241 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_icons.dart';
 import '../theme/spacing.dart';
-import '../theme/motion.dart';
 import 'spec_badge.dart';
 
-/// Full-bleed discovery feed card with parallax-ready image,
-/// gradient overlay, category chip, action buttons, and spec shelf.
-class HobbyCard extends StatefulWidget {
+/// Full-screen TikTok-style discovery card.
+/// Full-bleed image, right action column, bottom content shelf, CTA button.
+class HobbyCard extends StatelessWidget {
   final Hobby hobby;
   final VoidCallback? onTap;
   final VoidCallback? onSave;
+  final VoidCallback? onShare;
   final bool isSaved;
-  final double parallaxOffset;
 
   const HobbyCard({
     super.key,
     required this.hobby,
     this.onTap,
     this.onSave,
+    this.onShare,
     this.isSaved = false,
-    this.parallaxOffset = 0,
   });
 
   @override
-  State<HobbyCard> createState() => _HobbyCardState();
-}
-
-class _HobbyCardState extends State<HobbyCard> {
-  bool _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final h = widget.hobby;
-
     return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap?.call();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? Motion.cardPressScale : 1.0,
-        duration: Motion.cardPress,
-        curve: Motion.fastCurve,
-        child: Container(
-          height: Spacing.cardHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          decoration: BoxDecoration(
-            borderRadius: Spacing.cardBorderRadius,
-            boxShadow: Spacing.cardShadow,
-          ),
-          clipBehavior: Clip.hardEdge,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Parallax image
-              _buildImage(h),
-
-              // Gradient overlay
-              const DecoratedBox(
-                decoration: BoxDecoration(gradient: Spacing.cardOverlayGradient),
-              ),
-
-              // Category chip (top-left)
-              Positioned(
-                top: 14,
-                left: 14,
-                child: _buildCategoryChip(h),
-              ),
-
-              // Action buttons (top-right)
-              Positioned(
-                top: 14,
-                right: 14,
-                child: _buildActions(),
-              ),
-
-              // Bottom content
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomContent(h),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImage(Hobby h) {
-    return Hero(
-      tag: 'hobby_image_${h.id}',
-      child: Transform.translate(
-        offset: Offset(0, widget.parallaxOffset * Motion.parallaxFactor),
-        child: CachedNetworkImage(
-          imageUrl: h.imageUrl,
-          fit: BoxFit.cover,
-          height: Spacing.cardHeight + Motion.maxParallaxOffset,
-          width: double.infinity,
-          placeholder: (context, url) => Container(
-            color: AppColors.sand,
-            child: Center(
-              child: Icon(h.catIcon, size: 48, color: AppColors.warmGray),
-            ),
-          ),
-          errorWidget: (context, url, error) => Container(
-            color: AppColors.sand,
-            child: Center(
-              child: Icon(h.catIcon, size: 48, color: AppColors.warmGray),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(Hobby h) {
-    final catColor = AppColors.categoryColor(h.category);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: catColor,
-        borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-        boxShadow: [
-          BoxShadow(
-            color: catColor.withValues(alpha: 0.40),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      onTap: onTap,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Icon(h.catIcon, size: 12, color: Colors.white),
-          const SizedBox(width: 4),
-          Text(
-            h.category.toUpperCase(),
-            style: AppTypography.categoryLabel.copyWith(color: Colors.white),
+          // Full-bleed background image
+          _buildImage(),
+
+          // Gradient overlay (heavier at bottom for readability)
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x00000000),
+                  Color(0x0D000000),
+                  Color(0x80000000),
+                  Color(0xD9000000),
+                ],
+                stops: [0.0, 0.35, 0.65, 1.0],
+              ),
+            ),
+          ),
+
+          // Right side: action column (above nav: 85px + CTA: 56px + content + gap)
+          Positioned(
+            right: 12,
+            bottom: 300,
+            child: _buildActionColumn(),
+          ),
+
+          // Bottom content shelf (above CTA + nav clearance)
+          Positioned(
+            left: 16,
+            right: 72,
+            bottom: 200,
+            child: _buildContentShelf(),
+          ),
+
+          // Bottom CTA (must clear 85px nav bar)
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 120,
+            child: _buildCta(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActions() {
-    return Column(
-      children: [
-        _ActionButton(
-          icon: widget.isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
-          onTap: widget.onSave,
-          isActive: widget.isSaved,
+  Widget _buildImage() {
+    return Hero(
+      tag: 'hobby_image_${hobby.id}',
+      child: CachedNetworkImage(
+        imageUrl: hobby.imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        placeholder: (context, url) => Container(
+          color: AppColors.sand,
+          child: Center(
+            child: Icon(hobby.catIcon, size: 48, color: AppColors.warmGray),
+          ),
         ),
-        const SizedBox(height: 8),
-        _ActionButton(
+        errorWidget: (context, url, error) => Container(
+          color: AppColors.sand,
+          child: Center(
+            child: Icon(hobby.catIcon, size: 48, color: AppColors.warmGray),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionColumn() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _FeedActionButton(
+          icon: isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
+          label: '2.4k',
+          onTap: onSave,
+          isActive: isSaved,
+          activeColor: AppColors.redHeart,
+        ),
+        const SizedBox(height: 20),
+        _FeedActionButton(
           icon: AppIcons.share,
-          onTap: () {}, // Share placeholder
-          showBurst: false,
+          label: 'Share',
+          onTap: onShare ?? () {},
         ),
       ],
     );
   }
 
-  Widget _buildBottomContent(Hobby h) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Tags
-          Text(
-            h.tags.join(' · '),
-            style: AppTypography.sansCaption.copyWith(color: AppColors.amberLight),
-          ),
-          const SizedBox(height: 6),
-
-          // Title
-          Hero(
-            tag: 'hobby_title_${h.id}',
-            child: Material(
-              color: Colors.transparent,
-              child: Text(h.title, style: AppTypography.serifCardTitle),
+  Widget _buildContentShelf() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Hero(
+          tag: 'hobby_title_${hobby.id}',
+          child: Material(
+            color: Colors.transparent,
+            child: Text(
+              hobby.title,
+              style: AppTypography.serifCardTitle.copyWith(
+                fontSize: 28,
+                height: 1.15,
+                shadows: [
+                  Shadow(
+                    blurRadius: 12,
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-
-          // Hook
-          Text(
-            h.hook,
-            style: AppTypography.sansBodySmall.copyWith(
-              color: Colors.white.withValues(alpha: 0.85),
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          hobby.hook,
+          style: AppTypography.sansBodySmall.copyWith(
+            color: Colors.white.withValues(alpha: 0.85),
+            shadows: [
+              Shadow(
+                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.4),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 12),
+        SpecBar(
+          cost: hobby.costText,
+          time: hobby.timeText,
+          difficulty: hobby.difficultyText,
+          small: true,
+          onDark: true,
+        ),
+      ],
+    );
+  }
 
-          // Spec badges
-          SpecBar(
-            cost: h.costText,
-            time: h.timeText,
-            difficulty: h.difficultyText,
-            small: true,
-            onDark: true,
+  Widget _buildCta() {
+    return Container(
+      height: Spacing.buttonCtaHeight,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Spacing.radiusCta),
+        gradient: const LinearGradient(
+          colors: [AppColors.coral, Color(0xFFFF5252)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.coral.withValues(alpha: 0.45),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(Spacing.radiusCta),
+          onTap: onTap,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'TRY TODAY',
+                  style: AppTypography.sansCta.copyWith(
+                    fontSize: 16,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded,
+                    size: 20, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _ActionButton extends StatefulWidget {
+/// TikTok-style action button with icon + label
+class _FeedActionButton extends StatefulWidget {
   final IconData icon;
+  final String label;
   final VoidCallback? onTap;
   final bool isActive;
-  final bool showBurst;
+  final Color? activeColor;
 
-  const _ActionButton({
+  const _FeedActionButton({
     required this.icon,
+    required this.label,
     this.onTap,
     this.isActive = false,
-    this.showBurst = true,
+    this.activeColor,
   });
 
   @override
-  State<_ActionButton> createState() => _ActionButtonState();
+  State<_FeedActionButton> createState() => _FeedActionButtonState();
 }
 
-class _ActionButtonState extends State<_ActionButton>
+class _FeedActionButtonState extends State<_FeedActionButton>
     with TickerProviderStateMixin {
   late AnimationController _popController;
   late Animation<double> _popScale;
@@ -247,7 +251,6 @@ class _ActionButtonState extends State<_ActionButton>
   late AnimationController _particleController;
   late Animation<double> _particleProgress;
 
-  // Particle directions (pre-computed)
   static const int _particleCount = 7;
   static final List<Offset> _particleDirs = List.generate(_particleCount, (i) {
     final angle = (i / _particleCount) * 2 * math.pi - 0.3;
@@ -257,7 +260,6 @@ class _ActionButtonState extends State<_ActionButton>
   @override
   void initState() {
     super.initState();
-    // Main pop bounce
     _popController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -269,7 +271,6 @@ class _ActionButtonState extends State<_ActionButton>
       TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 30),
     ]).animate(CurvedAnimation(parent: _popController, curve: Curves.easeOut));
 
-    // Ring burst effect
     _burstController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -281,7 +282,6 @@ class _ActionButtonState extends State<_ActionButton>
       CurvedAnimation(parent: _burstController, curve: Curves.easeOut),
     );
 
-    // Particle scatter
     _particleController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -302,8 +302,7 @@ class _ActionButtonState extends State<_ActionButton>
 
   void _handleTap() {
     _popController.forward(from: 0);
-    if (widget.showBurst && !widget.isActive) {
-      // Only burst + particles when liking, not unliking
+    if (!widget.isActive && widget.activeColor != null) {
       _burstController.forward(from: 0);
       _particleController.forward(from: 0);
     }
@@ -312,94 +311,100 @@ class _ActionButtonState extends State<_ActionButton>
 
   @override
   Widget build(BuildContext context) {
+    final color = widget.isActive
+        ? (widget.activeColor ?? Colors.white)
+        : Colors.white;
+
     return GestureDetector(
       onTap: _handleTap,
-      child: SizedBox(
-        width: 52,
-        height: 52,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            // Button (rendered first = behind particles)
-            ScaleTransition(
-              scale: _popScale,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: widget.isActive
-                      ? Colors.white.withValues(alpha: 0.85)
-                      : Colors.black.withValues(alpha: 0.35),
-                  shape: BoxShape.circle,
-                  border: widget.isActive
-                      ? null
-                      : Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                        ),
-                ),
-                child: Icon(
-                  widget.icon,
-                  size: 18,
-                  color: widget.isActive ? AppColors.redHeart : Colors.white,
-                ),
-              ),
-            ),
-
-            // Burst ring (on top of button)
-            if (widget.isActive || _burstController.isAnimating)
-              AnimatedBuilder(
-                animation: _burstController,
-                builder: (context, _) {
-                  return Container(
-                    width: _burstRadius.value * 2,
-                    height: _burstRadius.value * 2,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.redHeart.withValues(alpha: _burstOpacity.value),
-                        width: 2.5,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                ScaleTransition(
+                  scale: _popScale,
+                  child: Icon(widget.icon, size: 30, color: color,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 12,
+                        color: Colors.black.withValues(alpha: 0.5),
                       ),
-                    ),
-                  );
-                },
-              ),
-
-            // Particles (on top of everything)
-            AnimatedBuilder(
-              animation: _particleProgress,
-              builder: (context, _) {
-                if (!_particleController.isAnimating && !_particleController.isCompleted) {
-                  return const SizedBox.shrink();
-                }
-                final t = _particleProgress.value;
-                if (t == 0) return const SizedBox.shrink();
-                final opacity = (1.0 - t).clamp(0.0, 1.0);
-                if (opacity < 0.05) return const SizedBox.shrink();
-
-                return SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: CustomPaint(
-                    painter: _ParticlePainter(
-                      progress: t,
-                      opacity: opacity,
-                      color: AppColors.redHeart,
-                      directions: _particleDirs,
-                    ),
+                    ],
                   ),
-                );
-              },
+                ),
+                if (widget.isActive || _burstController.isAnimating)
+                  AnimatedBuilder(
+                    animation: _burstController,
+                    builder: (context, _) {
+                      return Container(
+                        width: _burstRadius.value * 2,
+                        height: _burstRadius.value * 2,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: (widget.activeColor ?? AppColors.coral)
+                                .withValues(alpha: _burstOpacity.value),
+                            width: 2.5,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                AnimatedBuilder(
+                  animation: _particleProgress,
+                  builder: (context, _) {
+                    if (!_particleController.isAnimating &&
+                        !_particleController.isCompleted) {
+                      return const SizedBox.shrink();
+                    }
+                    final t = _particleProgress.value;
+                    if (t == 0) return const SizedBox.shrink();
+                    final opacity = (1.0 - t).clamp(0.0, 1.0);
+                    if (opacity < 0.05) return const SizedBox.shrink();
+
+                    return SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CustomPaint(
+                        painter: _ParticlePainter(
+                          progress: t,
+                          opacity: opacity,
+                          color: widget.activeColor ?? AppColors.coral,
+                          directions: _particleDirs,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            widget.label,
+            style: AppTypography.sansTiny.copyWith(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              shadows: [
+                Shadow(
+                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-//  PARTICLE PAINTER (heart burst particles)
-// ═══════════════════════════════════════════════════════
 
 class _ParticlePainter extends CustomPainter {
   final double progress;
