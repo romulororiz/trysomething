@@ -127,21 +127,43 @@ class HobbyRepositoryApi implements HobbyRepository {
   @override
   Future<Hobby> generateHobby(String query) async {
     debugPrint('[GenerateHobby] POST ${ApiConstants.generateHobby} query="$query"');
-    final response = await _dio.post(
-      ApiConstants.generateHobby,
-      data: {'query': query},
-    );
-    debugPrint('[GenerateHobby] Response status: ${response.statusCode}');
-    final data = response.data as Map<String, dynamic>;
-    final hobby = Hobby.fromJson(data['hobby'] as Map<String, dynamic>);
-    debugPrint('[GenerateHobby] Parsed hobby: ${hobby.title}');
+    try {
+      final response = await _dio.post(
+        ApiConstants.generateHobby,
+        data: {'query': query},
+        options: Options(
+          receiveTimeout: const Duration(seconds: 30),
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+      debugPrint('[GenerateHobby] Response status: ${response.statusCode}');
 
-    // Invalidate hobbies cache so the new hobby appears in the feed
-    await CacheManager.invalidate('hobbies');
-    // Cache the new hobby individually
-    await CacheManager.put('hobby_${hobby.id}', json.encode(data['hobby']));
+      if (response.statusCode == 429) {
+        throw Exception('Generation limit reached (5 per day). Try again tomorrow.');
+      }
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final msg = response.data is Map
+            ? (response.data['error'] ?? 'Request failed')
+            : 'Request failed';
+        throw Exception(msg.toString());
+      }
 
-    return hobby;
+      final data = response.data as Map<String, dynamic>;
+      final hobby = Hobby.fromJson(data['hobby'] as Map<String, dynamic>);
+      debugPrint('[GenerateHobby] Parsed hobby: ${hobby.title}');
+
+      // Invalidate hobbies cache so the new hobby appears in the feed
+      await CacheManager.invalidate('hobbies');
+      // Cache the new hobby individually
+      await CacheManager.put('hobby_${hobby.id}', json.encode(data['hobby']));
+
+      return hobby;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Generation limit reached (5 per day). Try again tomorrow.');
+      }
+      rethrow;
+    }
   }
 
   // ── Helpers ──────────────────────────────────────

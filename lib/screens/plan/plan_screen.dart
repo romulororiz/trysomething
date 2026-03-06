@@ -42,7 +42,7 @@ class PlanScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 90),
+        padding: const EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddSessionSheet(context, ref),
           backgroundColor: AppColors.coral,
@@ -111,7 +111,7 @@ class PlanScreen extends ConsumerWidget {
     const gridHeight = totalHours * _hourHeight;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: const EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: SizedBox(

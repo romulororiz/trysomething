@@ -58,6 +58,34 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
                 Text('My Stuff', style: AppTypography.serifHeading),
                 const Spacer(),
                 GestureDetector(
+                  onTap: () => context.push('/journal'),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.sand,
+                    ),
+                    child: const Icon(Icons.book_outlined,
+                        size: 20, color: AppColors.driftwood),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => context.push('/scheduler'),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.sand,
+                    ),
+                    child: const Icon(Icons.calendar_today_rounded,
+                        size: 18, color: AppColors.driftwood),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
                   onTap: () => context.push('/search'),
                   child: Container(
                     width: 40,
@@ -145,7 +173,7 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
                 ? _buildEmptyState()
                 : ListView.builder(
                     physics: const TryScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(24, 14, 24, Spacing.scrollBottomPadding),
                     itemCount: filteredUserHobbies.length,
                     itemBuilder: (context, index) {
                       final uh = filteredUserHobbies[index];
@@ -157,6 +185,7 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
                         hobby: hobby,
                         userHobby: uh,
                         showProgress: _tabIndex > 0 && _tabIndex < 3,
+                        isFirst: index == 0,
                         onTap: () => context.push('/hobby/${hobby.id}'),
                         delay: index * 60,
                       );
@@ -213,6 +242,7 @@ class _HobbyListItem extends StatefulWidget {
   final Hobby hobby;
   final UserHobby userHobby;
   final bool showProgress;
+  final bool isFirst;
   final VoidCallback onTap;
   final int delay;
 
@@ -220,6 +250,7 @@ class _HobbyListItem extends StatefulWidget {
     required this.hobby,
     required this.userHobby,
     required this.showProgress,
+    this.isFirst = false,
     required this.onTap,
     this.delay = 0,
   });
@@ -264,12 +295,11 @@ class _HobbyListItemState extends State<_HobbyListItem>
     super.dispose();
   }
 
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${(diff.inDays / 7).floor()}w ago';
+  String _stepLabel(Hobby hobby, UserHobby uh) {
+    if (hobby.roadmapSteps.isEmpty) return hobby.hook;
+    final completed = uh.completedStepIds.length;
+    if (completed >= hobby.roadmapSteps.length) return 'All steps completed';
+    return hobby.roadmapSteps[completed].title;
   }
 
   @override
@@ -284,245 +314,188 @@ class _HobbyListItemState extends State<_HobbyListItem>
         child: GestureDetector(
           onTap: widget.onTap,
           child: Container(
-            height: 180,
             margin: const EdgeInsets.only(bottom: 14),
-            child: ClipRRect(
+            decoration: BoxDecoration(
+              color: AppColors.warmWhite,
               borderRadius: BorderRadius.circular(18),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Full background image
-                  Image.network(
-                    widget.hobby.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: catColor.withValues(alpha: 0.2),
-                      child: Center(
-                        child: Icon(widget.hobby.catIcon, size: 36, color: catColor),
-                      ),
-                    ),
-                  ),
-
-              // Dark overlay gradient
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.05),
-                      Colors.black.withValues(alpha: 0.30),
-                      Colors.black.withValues(alpha: 0.72),
-                    ],
-                    stops: const [0.0, 0.40, 1.0],
-                  ),
-                ),
-              ),
-
-              // Category badge — top left
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: catColor.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(widget.hobby.catIcon, size: 12, color: Colors.white),
-                      const SizedBox(width: 5),
-                      Text(
-                        widget.hobby.category,
-                        style: AppTypography.sansTiny.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Streak badge — top right (if trying/active)
-              if (widget.showProgress && widget.userHobby.streakDays > 0)
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image area with badges
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                  child: SizedBox(
+                    height: 140,
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Icon(AppIcons.fire, size: 12, color: AppColors.amberLight),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${widget.userHobby.streakDays}d streak',
-                          style: AppTypography.monoTiny.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                        Image.network(
+                          widget.hobby.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: catColor.withValues(alpha: 0.2),
+                            child: Center(
+                              child: Icon(widget.hobby.catIcon, size: 36, color: catColor),
+                            ),
                           ),
                         ),
+                        // Subtle gradient for badge readability
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.0),
+                                Colors.black.withValues(alpha: 0.25),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Category badge — bottom left
+                        Positioned(
+                          bottom: 10,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: catColor.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(widget.hobby.catIcon, size: 12, color: Colors.white),
+                                const SizedBox(width: 5),
+                                Text(
+                                  widget.hobby.category,
+                                  style: AppTypography.sansTiny.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Streak badge — bottom right (if trying/active)
+                        if (widget.showProgress && widget.userHobby.streakDays > 0)
+                          Positioned(
+                            bottom: 10,
+                            right: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(AppIcons.fire, size: 12, color: AppColors.amberLight),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${widget.userHobby.streakDays} days',
+                                    style: AppTypography.monoTiny.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
                 ),
 
-              // Content — bottom
-              Positioned(
-                left: 14,
-                right: 14,
-                bottom: 14,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title
-                    Text(
-                      widget.hobby.title,
-                      style: AppTypography.sansBody.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 10,
-                            color: Colors.black.withValues(alpha: 0.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-
-                    // Hook
-                    Text(
-                      widget.hobby.hook,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.sansCaption.copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        shadows: [
-                          Shadow(
-                            blurRadius: 6,
-                            color: Colors.black.withValues(alpha: 0.4),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Last activity timestamp
-                    if (widget.userHobby.lastActivityAt != null) ...[
-                      const SizedBox(height: 2),
+                // Content area below image
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'Last active ${_timeAgo(widget.userHobby.lastActivityAt!)}',
-                        style: AppTypography.sansTiny.copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 10,
+                        widget.hobby.title,
+                        style: AppTypography.sansBody.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          color: AppColors.nearBlack,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 3),
+                      Text(
+                        _stepLabel(widget.hobby, widget.userHobby),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.sansCaption.copyWith(
+                          color: AppColors.driftwood,
+                        ),
+                      ),
 
-                    // Progress bar (if trying/active)
-                    if (widget.showProgress) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 4,
-                                backgroundColor: Colors.white.withValues(alpha: 0.15),
-                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.coral),
+                      // Progress bar (if trying/active)
+                      if (widget.showProgress) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 4,
+                                  backgroundColor: AppColors.sand,
+                                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.coral),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '${(progress * 100).round()}%',
+                              style: AppTypography.monoTiny.copyWith(
+                                color: AppColors.driftwood,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      const SizedBox(height: 12),
+
+                      // Continue / View button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: widget.isFirst && widget.showProgress
+                                ? AppColors.coral
+                                : AppColors.sand,
+                            borderRadius: BorderRadius.circular(Spacing.radiusButton),
+                          ),
+                          child: Center(
+                            child: Text(
+                              widget.showProgress ? 'Continue Learning' : 'Continue',
+                              style: AppTypography.sansLabel.copyWith(
+                                color: widget.isFirst && widget.showProgress
+                                    ? Colors.white
+                                    : AppColors.driftwood,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${(progress * 100).round()}%',
-                            style: AppTypography.monoTiny.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
-
-                    // Info pills (saved/done)
-                    if (!widget.showProgress) ...[
-                      Row(
-                        children: [
-                          _InfoPill(
-                            icon: AppIcons.badgeCost,
-                            text: widget.hobby.costText,
-                          ),
-                          const SizedBox(width: 8),
-                          _InfoPill(
-                            icon: AppIcons.badgeTime,
-                            text: widget.hobby.timeText,
-                          ),
-                          const SizedBox(width: 8),
-                          _InfoPill(
-                            icon: AppIcons.badgeDifficulty,
-                            text: widget.hobby.difficultyText,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  INFO PILL (glassmorphic on image overlay)
-// ═══════════════════════════════════════════════════════
-
-class _InfoPill extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _InfoPill({
-    required this.icon,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: Colors.white.withValues(alpha: 0.9)),
-          const SizedBox(width: 5),
-          Text(
-            text,
-            style: AppTypography.monoTiny.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

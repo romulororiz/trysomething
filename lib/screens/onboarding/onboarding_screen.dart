@@ -255,6 +255,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   _ReadyPage(
                     entryCtrl: _page3EntryCtrl,
                     matchedHobbies: _matchedHobbies,
+                    vibes: _vibes,
+                    hours: _hours,
+                    social: _social,
                   ),
                 ],
               ),
@@ -848,21 +851,28 @@ class _TimeBudgetPage extends StatelessWidget {
 //  PAGE 3 — READY
 // ═══════════════════════════════════════════════════════
 
-class _ReadyPage extends StatefulWidget {
+class _ReadyPage extends ConsumerStatefulWidget {
   final AnimationController entryCtrl;
   final List<Hobby> matchedHobbies;
+  final Set<String> vibes;
+  final double hours;
+  final bool social;
 
   const _ReadyPage({
     required this.entryCtrl,
     required this.matchedHobbies,
+    required this.vibes,
+    required this.hours,
+    required this.social,
   });
 
   @override
-  State<_ReadyPage> createState() => _ReadyPageState();
+  ConsumerState<_ReadyPage> createState() => _ReadyPageState();
 }
 
-class _ReadyPageState extends State<_ReadyPage>
+class _ReadyPageState extends ConsumerState<_ReadyPage>
     with SingleTickerProviderStateMixin {
+  bool _aiGenFired = false;
   late AnimationController _floatCtrl;
 
   // Card positions: (leftPct, topPct, width, height)
@@ -891,6 +901,22 @@ class _ReadyPageState extends State<_ReadyPage>
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     )..repeat(reverse: true);
+
+    // Fire AI generation for a personalized 4th hobby
+    _fireAiGeneration();
+  }
+
+  void _fireAiGeneration() {
+    if (_aiGenFired) return;
+    _aiGenFired = true;
+    final vibeList = widget.vibes.join(', ');
+    final socialPref = widget.social ? 'social/group' : 'solo';
+    final prompt =
+        'Suggest a unique hobby for someone who likes $vibeList, '
+        'has ${widget.hours.round()}h/week, prefers $socialPref activities';
+    Future.microtask(() {
+      ref.read(generationProvider.notifier).generate(prompt);
+    });
   }
 
   @override
@@ -901,7 +927,13 @@ class _ReadyPageState extends State<_ReadyPage>
 
   @override
   Widget build(BuildContext context) {
-    final topMatches = widget.matchedHobbies.take(4).toList();
+    final genState = ref.watch(generationProvider);
+    final aiHobby = genState.status == GenerationStatus.success
+        ? genState.hobby
+        : null;
+
+    // 3 pre-seeded + optionally 1 AI-generated
+    final topMatches = widget.matchedHobbies.take(3).toList();
 
     return AnimatedBuilder(
       animation: Listenable.merge([widget.entryCtrl, _floatCtrl]),
@@ -971,13 +1003,20 @@ class _ReadyPageState extends State<_ReadyPage>
                           _dot(areaW * 0.45, areaH * 0.75, 3,
                               AppColors.warmGray),
 
-                          // Hobby cards
+                          // Hobby cards (3 pre-seeded)
                           for (int i = 0;
-                              i < _cardLayouts.length &&
-                                  i < topMatches.length;
+                              i < 3 && i < topMatches.length;
                               i++)
                             _buildFloatingCard(
-                                topMatches[i], areaW, areaH, i, v),
+                                topMatches[i], areaW, areaH, i, v, false),
+
+                          // 4th card — AI generated or placeholder
+                          if (aiHobby != null)
+                            _buildFloatingCard(
+                                aiHobby, areaW, areaH, 3, v, true)
+                          else
+                            _buildAiPlaceholderCard(
+                                areaW, areaH, v, genState.status),
                         ],
                       );
                     },
@@ -1044,7 +1083,7 @@ class _ReadyPageState extends State<_ReadyPage>
   }
 
   Widget _buildFloatingCard(
-      Hobby hobby, double areaW, double areaH, int i, double entryV) {
+      Hobby hobby, double areaW, double areaH, int i, double entryV, bool isAi) {
     final (leftPct, topPct, cardW, cardH) = _cardLayouts[i];
     final cardOp =
         _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
@@ -1131,8 +1170,37 @@ class _ReadyPageState extends State<_ReadyPage>
                       ),
                     ),
 
-                  // Checkmark for non-top match
-                  if (!isTopMatch)
+                  // AI sparkle badge or match % badge
+                  if (isAi)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.indigo,
+                          borderRadius:
+                              BorderRadius.circular(Spacing.radiusBadge),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(MdiIcons.autoFix,
+                                size: 10, color: Colors.white),
+                            const SizedBox(width: 3),
+                            Text(
+                              'AI',
+                              style: AppTypography.monoBadgeSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (!isTopMatch)
                     Positioned(
                       top: 8,
                       right: 8,
@@ -1153,7 +1221,113 @@ class _ReadyPageState extends State<_ReadyPage>
                         ),
                       ),
                     ),
+
+                  // "Made for you" label on AI card
+                  if (isAi)
+                    Positioned(
+                      bottom: 10,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.indigo,
+                          borderRadius:
+                              BorderRadius.circular(Spacing.radiusBadge),
+                        ),
+                        child: Text(
+                          'Made for you',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiPlaceholderCard(
+      double areaW, double areaH, double entryV, GenerationStatus status) {
+    const i = 3;
+    final (leftPct, topPct, cardW, cardH) = _cardLayouts[i];
+    final cardOp = _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
+    final cardSlide =
+        _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06, Curves.easeOutCubic);
+    final (amp, phase) = _floatParams[i];
+    final floatOffset = math.sin(_floatCtrl.value * math.pi + phase) * amp;
+    final isLoading = status == GenerationStatus.generating;
+
+    return Positioned(
+      left: areaW * leftPct,
+      top: areaH * topPct + 12 * (1 - cardSlide) + floatOffset,
+      child: Opacity(
+        opacity: cardOp,
+        child: Container(
+          width: cardW,
+          height: cardH,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.indigo.withAlpha(100),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(40),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              color: AppColors.sand,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isLoading) ...[
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.indigo.withAlpha(180)),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Finding yours...',
+                        style: AppTypography.sansCaption.copyWith(
+                          color: AppColors.driftwood,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ] else ...[
+                      Icon(MdiIcons.autoFix,
+                          size: 32, color: AppColors.indigo),
+                      const SizedBox(height: 10),
+                      Text(
+                        'AI PICK',
+                        style: AppTypography.sansLabel.copyWith(
+                          color: AppColors.nearBlack,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),

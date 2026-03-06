@@ -45,7 +45,11 @@ class Spacing {
   // ═══════════════════════════════════════════════════
   static const double cardHeight = 480;
   static const double heroHeight = 350;
-  static const double bottomNavHeight = 82;
+  static const double bottomNavHeight = 85;
+
+  /// Bottom padding for scrollable content in tab screens.
+  /// Accounts for nav bar + CTA button + breathing room.
+  static const double scrollBottomPadding = 120;
   static const double buttonCtaHeight = 56;
   static const double buttonPrimaryHeight = 54;
   static const double buttonSecondaryHeight = 46;

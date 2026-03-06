@@ -12,7 +12,7 @@ import '../../theme/spacing.dart';
 import '../../theme/motion.dart';
 
 /// Mood-based hobby recommendation screen.
-/// Presents 6 mood cards; on selection, filters hobbies by matching tags.
+/// Presents 4 photo-backed mood tiles; on selection, filters hobbies.
 class MoodMatchScreen extends ConsumerStatefulWidget {
   const MoodMatchScreen({super.key});
 
@@ -23,15 +23,36 @@ class MoodMatchScreen extends ConsumerStatefulWidget {
 class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
   String? _selectedMood;
 
-  // Mood card display data: mood name → (icon, color)
-  static final Map<String, _MoodCardData> _moodCards = {
-    'Stressed': _MoodCardData(MdiIcons.meditation, AppColors.sage),
-    'Bored': _MoodCardData(MdiIcons.flashOutline, AppColors.amber),
-    'Lonely': _MoodCardData(MdiIcons.accountHeartOutline, AppColors.coral),
-    'Creative': _MoodCardData(MdiIcons.palette, AppColors.rose),
-    'Restless': _MoodCardData(MdiIcons.runFast, AppColors.indigo),
-    'Curious': _MoodCardData(MdiIcons.magnify, AppColors.sky),
-  };
+  static final List<_MoodTileData> _moods = [
+    _MoodTileData(
+      mood: 'Energetic',
+      subtitle: 'Climbing, running, dance',
+      color: AppColors.coral,
+      icon: Icons.local_fire_department_rounded,
+      imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
+    ),
+    _MoodTileData(
+      mood: 'Zen',
+      subtitle: 'Yoga, pottery, gardening',
+      color: AppColors.sage,
+      icon: MdiIcons.meditation,
+      imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400',
+    ),
+    _MoodTileData(
+      mood: 'Curious',
+      subtitle: 'Coding, puzzles, trivia',
+      color: AppColors.sky,
+      icon: MdiIcons.magnify,
+      imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400',
+    ),
+    _MoodTileData(
+      mood: 'Creative',
+      subtitle: 'Painting, writing, DIY',
+      color: AppColors.rose,
+      icon: MdiIcons.palette,
+      imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +60,7 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
     final moodTagsData = ref.watch(moodTagsProvider).valueOrNull ?? {};
     final topPad = MediaQuery.of(context).padding.top;
 
-    // Filter hobbies by mood → hobby ID mapping (from API)
+    // Filter hobbies by mood
     final moodHobbyIds = _selectedMood != null
         ? moodTagsData[_selectedMood] ?? <String>[]
         : <String>[];
@@ -47,11 +68,14 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
         ? allHobbies.where((h) => moodHobbyIds.contains(h.id)).toList()
         : <Hobby>[];
 
+    // Popular Today — show a curated selection regardless of mood
+    final popular = allHobbies.take(5).toList();
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: CustomScrollView(
         slivers: [
-          // ── Header ──────────────────────────────────────
+          // Header
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.only(top: topPad + 8, left: 16, right: 16),
@@ -59,28 +83,26 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
                 children: [
                   GestureDetector(
                     onTap: () => context.pop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.sand,
-                      ),
-                      child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.espresso),
-                    ),
+                    child: const Icon(Icons.arrow_back,
+                        size: 20, color: AppColors.espresso),
                   ),
-                  const SizedBox(width: 16),
-                  Text('Mood Match', style: AppTypography.serifHeading),
+                  const Spacer(),
+                  Text('Mood Match', style: AppTypography.sansSection),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => context.push('/search'),
+                    child: const Icon(Icons.search_rounded,
+                        size: 20, color: AppColors.espresso),
+                  ),
                 ],
               ),
             ),
           ),
 
-          // ── Title ───────────────────────────────────────
+          // Title
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 6),
               child: Text(
                 'How are you feeling?',
                 style: AppTypography.serifHeading,
@@ -92,243 +114,290 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               child: Text(
-                'Tap a mood and we\'ll find hobbies that fit.',
+                'Pick a mood to uncover your next obsession.',
                 style: AppTypography.sansBodySmall,
               ),
             ),
           ),
 
-          // ── Mood Grid ───────────────────────────────────
+          // 2x2 Mood grid with photo backgrounds
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
+                crossAxisCount: 2,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 1.0,
+                childAspectRatio: 1.1,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final mood = _moodCards.keys.elementAt(index);
-                  final data = _moodCards[mood]!;
-                  final isSelected = _selectedMood == mood;
+                  final data = _moods[index];
+                  final isSelected = _selectedMood == data.mood;
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        _selectedMood = _selectedMood == mood ? null : mood;
+                        _selectedMood =
+                            _selectedMood == data.mood ? null : data.mood;
                       });
                     },
                     child: AnimatedContainer(
                       duration: Motion.normal,
                       curve: Curves.easeOut,
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? data.color.withValues(alpha: 0.12)
-                            : AppColors.warmWhite,
                         borderRadius: BorderRadius.circular(Spacing.radiusTile),
-                        border: Border.all(
-                          color: isSelected
-                              ? data.color.withValues(alpha: 0.5)
-                              : AppColors.sandDark,
-                          width: isSelected ? 2 : 1,
-                        ),
-                        boxShadow: isSelected ? Spacing.subtleShadow : null,
+                        border: isSelected
+                            ? Border.all(color: data.color, width: 2)
+                            : null,
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            data.icon,
-                            size: 30,
-                            color: isSelected ? data.color : AppColors.driftwood,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            mood,
-                            style: AppTypography.sansLabel.copyWith(
-                              color: isSelected ? data.color : AppColors.espresso,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                            isSelected ? Spacing.radiusTile - 2 : Spacing.radiusTile),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Photo background
+                            Image.network(
+                              data.imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: data.color.withValues(alpha: 0.15),
+                              ),
                             ),
-                          ),
-                        ],
+                            // Dark overlay
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.2),
+                                    Colors.black.withValues(alpha: 0.65),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Content
+                            Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Icon(data.icon, size: 28, color: data.color),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    data.mood,
+                                    style: AppTypography.sansLabel.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    data.subtitle,
+                                    style: AppTypography.sansTiny.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
                 },
-                childCount: _moodCards.length,
+                childCount: _moods.length,
               ),
             ),
           ),
 
-          // ── Results Section ─────────────────────────────
-          if (_selectedMood != null) ...[
+          // Results or Popular Today
+          if (_selectedMood != null && matchedHobbies.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 28, 24, 6),
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
                 child: Text(
-                  'Perfect for your mood',
-                  style: AppTypography.serifSubheading,
+                  'Perfect for "$_selectedMood"',
+                  style: AppTypography.sansSection,
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: Text(
-                  '${matchedHobbies.length} hobbies match "$_selectedMood"',
-                  style: AppTypography.sansCaption,
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final hobby = matchedHobbies[index];
+                    return _PopularCard(
+                      hobby: hobby,
+                      onTap: () => context.push('/hobby/${hobby.id}'),
+                    );
+                  },
+                  childCount: matchedHobbies.length,
                 ),
               ),
             ),
-
-            if (matchedHobbies.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(MdiIcons.emoticonSadOutline, size: 40, color: AppColors.warmGray),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No matches found for this mood yet.',
-                          style: AppTypography.sansBody.copyWith(color: AppColors.driftwood),
-                        ),
-                      ],
+          ] else ...[
+            // Popular Today
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+                child: Row(
+                  children: [
+                    Text('Popular Today', style: AppTypography.sansSection),
+                    const Spacer(),
+                    Text(
+                      'View all',
+                      style: AppTypography.sansLabel
+                          .copyWith(color: AppColors.coral),
                     ),
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final hobby = matchedHobbies[index];
-                      final matchingTags = hobby.tags;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: GestureDetector(
-                          onTap: () => context.push('/hobby/${hobby.id}'),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.warmWhite,
-                              borderRadius: BorderRadius.circular(Spacing.radiusCard),
-                              border: Border.all(color: AppColors.sandDark),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Row(
-                              children: [
-                                // Hobby image
-                                ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(Spacing.radiusCard - 1),
-                                    bottomLeft: Radius.circular(Spacing.radiusCard - 1),
-                                  ),
-                                  child: Image.network(
-                                    hobby.imageUrl,
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      width: 100,
-                                      height: 100,
-                                      color: AppColors.sand,
-                                      child: Icon(hobby.catIcon, color: AppColors.warmGray),
-                                    ),
-                                  ),
-                                ),
-
-                                // Info
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 12,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          hobby.title,
-                                          style: AppTypography.sansSection,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          hobby.hook,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppTypography.sansCaption,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Wrap(
-                                          spacing: 6,
-                                          runSpacing: 4,
-                                          children: matchingTags.map((tag) {
-                                            return Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 10,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: _moodCards[_selectedMood]!
-                                                    .color
-                                                    .withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(
-                                                  Spacing.radiusBadge,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                tag,
-                                                style: AppTypography.sansTiny.copyWith(
-                                                  color: _moodCards[_selectedMood]!.color,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                // Chevron
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 12),
-                                  child: Icon(
-                                    Icons.chevron_right,
-                                    color: AppColors.stone,
-                                    size: 22,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    childCount: matchedHobbies.length,
-                  ),
+                  ],
                 ),
               ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final hobby = popular[index];
+                    return _PopularCard(
+                      hobby: hobby,
+                      onTap: () => context.push('/hobby/${hobby.id}'),
+                    );
+                  },
+                  childCount: popular.length,
+                ),
+              ),
+            ),
           ],
 
           // Bottom padding
-          const SliverToBoxAdapter(child: SizedBox(height: 40)),
+          const SliverToBoxAdapter(
+              child: SizedBox(height: Spacing.scrollBottomPadding)),
         ],
       ),
     );
   }
 }
 
-/// Internal data class for mood card display configuration.
-class _MoodCardData {
-  final IconData icon;
-  final Color color;
+// ═══════════════════════════════════════════════════════
+//  MOOD TILE DATA
+// ═══════════════════════════════════════════════════════
 
-  const _MoodCardData(this.icon, this.color);
+class _MoodTileData {
+  final String mood;
+  final String subtitle;
+  final Color color;
+  final IconData icon;
+  final String imageUrl;
+
+  const _MoodTileData({
+    required this.mood,
+    required this.subtitle,
+    required this.color,
+    required this.icon,
+    required this.imageUrl,
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  POPULAR / RESULT CARD
+// ═══════════════════════════════════════════════════════
+
+class _PopularCard extends StatelessWidget {
+  final Hobby hobby;
+  final VoidCallback onTap;
+
+  const _PopularCard({required this.hobby, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final catColor = hobby.catColor;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.warmWhite,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                hobby.imageUrl,
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 56,
+                  height: 56,
+                  color: AppColors.sand,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: catColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      hobby.category.toUpperCase(),
+                      style: AppTypography.monoBadgeSmall.copyWith(
+                        color: catColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    hobby.title,
+                    style: AppTypography.sansBody.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.nearBlack,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Text(
+                        hobby.timeText,
+                        style: AppTypography.sansCaption
+                            .copyWith(color: AppColors.warmGray),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        hobby.difficultyText,
+                        style: AppTypography.sansCaption
+                            .copyWith(color: AppColors.warmGray),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 12, color: AppColors.stone),
+          ],
+        ),
+      ),
+    );
+  }
 }

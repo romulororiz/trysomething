@@ -107,7 +107,7 @@ Instead:
   - Priority screens to fix first: Hobby Detail (badge hidden), Weekly Planner (times cut off), Discovery Feed (full-bleed cards)
   - **Test:** `dart analyze` on changed files. Must verify on physical Android device — Chrome is NOT sufficient for testing this.
 
-- [ ] **2.0 — Fix spec badge styling + seed data formatting**
+- [X] **2.0 — Fix spec badge styling + seed data formatting**
   - Spec badges are currently too colorful (different saturated colors per badge = amateur look)
   - ALL spec badges must use the same muted style: `sand` (#1E1E2E) bg, `driftwood` (#A0A0B8) text, monochrome icons
   - Do NOT use yellow/teal/purple or any multi-color badge scheme
@@ -125,7 +125,7 @@ Instead:
   - Hero image with TRENDING badge (top-right), "4 weeks to master" overlay, star rating with count
   - "Why you'll love it" section with body text
   - Starter Kit: PRODUCT IMAGES (required, from KitItem.imageUrl) in 2-column grid, category labels (MATERIAL, TOOLS, GEAR), individual prices + "~ $XX Total"
-    - Each kit item card is tappable → opens affiliateUrl in system browser (url_launcher)
+    - Each kit item card is tappable → opens affiliateUrl in system browser (url_launcher)R
     - If no affiliateUrl, tap opens Amazon.de search: `https://www.amazon.de/s?tag=YOUR_TAG&k={item_name}`
     - Subtle shopping bag icon or "Buy →" indicator on each card
     - Track taps: PostHog event `kit_item_clicked` with hobbyId + itemName
@@ -139,7 +139,7 @@ Instead:
   - Edit `lib/screens/detail/`
   - **Test:** detail loads with all sections, roadmap steps toggle correctly
 
-- [ ] **2.2 — Redesign Explore grid**
+- [X] **2.2 — Redesign Explore grid**
   - **FIRST: `view docs/mockups/20_explore.png` — match this exactly**
   - 2-column photo-backed category cards with gradient overlay
   - Hobby count badges (124+, 86+) in top-right corner
@@ -149,7 +149,7 @@ Instead:
   - Edit `lib/screens/explore/`
   - **Test:** category tap filters correctly, search navigates to search screen
 
-- [ ] **2.3 — Redesign Library (My Stuff) cards**
+- [X] **2.3 — Redesign Library (My Stuff) cards**
   - **FIRST: `view docs/mockups/03_library.png` — match this exactly**
   - Full-bleed hobby images (like feed cards but shorter)
   - Category badge pill (bottom-left on image)
@@ -160,7 +160,7 @@ Instead:
   - Edit `lib/screens/my_stuff/`
   - **Test:** tab switching works, progress displays correctly
 
-- [ ] **2.4 — Add Quickstart bottom sheet**
+- [X] **2.4 — Add Quickstart bottom sheet**
   - **FIRST: `view docs/mockups/17_quickstart.png` — match this exactly**
   - Bottom sheet (modalSlideUp) triggered from Detail page
   - BEGINNER badge, hobby title, description, small image
@@ -169,7 +169,7 @@ Instead:
   - Edit `lib/screens/quickstart/` or create new
   - **Test:** sheet opens from detail, Start Now navigates correctly
 
-- [ ] **2.5 — Redesign Search results**
+- [X] **2.5 — Redesign Search results**
   - **FIRST: `view docs/mockups/18_search.png` — match this exactly**
   - Search input with clear button
   - Category filter chips below search (All, Arts & Crafts, Outdoor, Culinary...)
@@ -183,7 +183,7 @@ Instead:
 
 ## Sprint 3: Rich Features (Week 5-6)
 
-- [ ] **3.1 — Profile overhaul**
+- [X] **3.1 — Profile overhaul**
   - **FIRST: `view docs/mockups/04_profile.png` — match this exactly**
   - Avatar with edit badge, display name, title ("Hobby Explorer"), bio
   - "Online" + "Since 2023" badges
@@ -195,7 +195,7 @@ Instead:
   - Edit `lib/screens/profile/`
   - **Test:** stats calculate correctly, radar chart renders, heatmap shows data
 
-- [ ] **3.2 — Polish Mood Match**
+- [X] **3.2 — Polish Mood Match**
   - **FIRST: `view docs/mockups/05_mood_match.png` — match this exactly**
   - "How are you feeling?" header
   - 4 photo-backed mood tiles in 2x2 grid: Energetic, Zen, Curious, Creative
@@ -204,7 +204,7 @@ Instead:
   - Edit `lib/screens/features/mood_match_screen.dart`
   - **Test:** mood selection filters hobbies correctly
 
-- [ ] **3.3 — Polish Hobby Battle / Compare**
+- [X] **3.3 — Polish Hobby Battle / Compare**
   - **FIRST: `view docs/mockups/14_hobby_battle.png` — match this exactly**
   - Two hobby images side-by-side with "VS" badge in center
   - Head-to-Head comparison grid: Cost, Time, Difficulty — each row with icons and labels
@@ -213,14 +213,14 @@ Instead:
   - Edit `lib/screens/features/compare_screen.dart`
   - **Test:** comparison data loads, CTAs save/start correctly
 
-- [ ] **3.4 — Polish Journal & Weekly Planner**
+- [X] **3.4 — Polish Journal & Weekly Planner**
   - **FIRST: `view docs/mockups/06_journal.png` and `view docs/mockups/07_weekly_plan.png` — match these exactly**
   - Journal: colored timeline dots, photo grid (2-column), tag pills, filter bar
   - Planner: week strip calendar with active day circle, session cards with category color bar + time + location
   - Edit `lib/screens/features/journal_screen.dart` and `scheduler_screen.dart`
   - **Test:** entries display, new entry creation works, calendar navigation works
 
-- [ ] **3.4b — Shopping List with product images + affiliate links**
+- [X] **3.4b — Shopping List with product images + affiliate links**
   - The shopping list screen aggregates kit items from all saved hobbies
   - Each item MUST show: product image (KitItem.imageUrl), item name, which hobby it belongs to, price
   - "Buy →" button on each item → opens affiliateUrl in browser (or Amazon search fallback)
@@ -230,7 +230,7 @@ Instead:
   - Edit `lib/screens/features/shopping_screen.dart`
   - **Test:** shopping list shows images for all items, affiliate links open, checkboxes persist
 
-- [ ] **3.5 — AI: Smart Search Fallback**
+- [X] **3.5 — AI: Smart Search Fallback**
   - When search returns <3 results from pre-seeded hobbies:
     - Show pre-seeded results immediately
     - Below: shimmer placeholder + "Finding more for you..."
@@ -240,7 +240,7 @@ Instead:
   - Edit `lib/screens/search/` + `lib/providers/hobby_provider.dart`
   - **Test:** search for obscure term → AI results appear after ~2s
 
-- [ ] **3.6 — AI: Onboarding personalization**
+- [X] **3.6 — AI: Onboarding personalization**
   - On "You're ready!" screen (page 3 of onboarding):
     - Show 3 pre-seeded best-match hobbies based on quiz answers
     - 4th tile has sparkle icon + "Made for you" badge
@@ -253,7 +253,7 @@ Instead:
 
 ## Sprint 4: Polish & Ship (Week 7-8)
 
-- [ ] **4.1 — AI: "Surprise Me" FAB**
+- [X] **4.1 — AI: "Surprise Me" FAB**
   - Floating action button on Discover feed (sparkle icon)
   - Tap → bottom sheet with text input: "What sounds fun right now?"
   - Submit → loading animation → AI generates full hobby → navigate to detail page

@@ -98,6 +98,34 @@ class _CategoryTileState extends State<CategoryTile>
                 ),
               ),
 
+              // Category icon overlay (centered, large, semi-transparent)
+              Center(
+                child: Icon(
+                  cat.icon,
+                  size: 48,
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
+              ),
+
+              // Count badge pill — top right
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                  ),
+                  child: Text(
+                    '${cat.count}+',
+                    style: AppTypography.monoBadgeSmall.copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+              ),
+
               // Text — bottom left
               Positioned(
                 left: 12,
@@ -166,7 +194,7 @@ class CategoryChipBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 36,
+      height: 30,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -220,7 +248,7 @@ class _Chip extends StatelessWidget {
       child: AnimatedContainer(
         duration: Motion.fast,
         curve: Motion.fastCurve,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected ? chipColor : AppColors.warmWhite,
           borderRadius: BorderRadius.circular(Spacing.radiusBadge),
@@ -231,16 +259,16 @@ class _Chip extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon!,
-                size: 13,
+                size: 11,
                 color: isSelected ? Colors.white : chipColor.withValues(alpha: 0.55),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 3),
             ],
             Text(
               label,
               style: AppTypography.sansCaption.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: 11,
                 color: isSelected ? Colors.white : AppColors.driftwood,
               ),
             ),

@@ -27,8 +27,8 @@ import {
 
 const prisma = new PrismaClient();
 
-// Rate limit: 5 generations per user per 24 hours
-const RATE_LIMIT = 5;
+// Rate limit: 20 generations per user per 24 hours
+const RATE_LIMIT = 20;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;

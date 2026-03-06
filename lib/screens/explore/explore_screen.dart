@@ -74,6 +74,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     ref.listen<GenerationState>(generationProvider, (prev, next) {
       if (next.status == GenerationStatus.success && next.hobby != null) {
         ref.read(generationProvider.notifier).reset();
+        // Clear search so user returns to explore grid (hobby is now in the list)
+        _searchController.clear();
+        _searchFocusNode.unfocus();
+        setState(() => _searchQuery = '');
         context.push('/hobby/${next.hobby!.id}');
       }
     });
@@ -433,72 +437,68 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       final isGenerating = genState.status == GenerationStatus.generating;
 
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sentiment_neutral, size: 42, color: AppColors.sand),
-            const SizedBox(height: 12),
-            Text(
-              'Nothing found for "$_searchQuery"',
-              style: AppTypography.sansBodySmall.copyWith(color: AppColors.driftwood),
-            ),
-            const SizedBox(height: 20),
-            if (isGenerating)
-              Column(
-                children: [
-                  const SizedBox(
-                    width: 24, height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
-                  ),
-                  const SizedBox(height: 10),
-                  Text('Generating hobby...', style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood)),
-                ],
-              )
-            else if (genState.status == GenerationStatus.error)
-              Column(
-                children: [
-                  Text('Something went wrong. Try again?', style: AppTypography.sansCaption.copyWith(color: AppColors.warmGray)),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
-                          const SizedBox(width: 8),
-                          Text('Generate this hobby', style: AppTypography.sansCta.copyWith(color: Colors.white)),
-                        ],
-                      ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.sentiment_neutral, size: 42, color: AppColors.sand),
+              const SizedBox(height: 12),
+              Text(
+                'Nothing found for "$_searchQuery"',
+                textAlign: TextAlign.center,
+                style: AppTypography.sansBodySmall.copyWith(color: AppColors.driftwood),
+              ),
+              const SizedBox(height: 20),
+              if (isGenerating) ...[
+                const SizedBox(
+                  width: 24, height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
+                ),
+                const SizedBox(height: 10),
+                Text('Generating hobby...', style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood)),
+              ] else if (genState.status == GenerationStatus.error) ...[
+                Text('Something went wrong. Try again?', style: AppTypography.sansCaption.copyWith(color: AppColors.warmGray)),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text('Generate this hobby', style: AppTypography.sansCta.copyWith(color: Colors.white)),
+                      ],
                     ),
                   ),
-                ],
-              )
-            else
-              GestureDetector(
-                onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Text('Generate this hobby', style: AppTypography.sansCta.copyWith(color: Colors.white)),
-                    ],
+                ),
+              ] else
+                GestureDetector(
+                  onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text('Generate this hobby', style: AppTypography.sansCta.copyWith(color: Colors.white)),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 100),
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, Spacing.scrollBottomPadding),
       itemCount: results.length,
       itemBuilder: (context, i) => _buildSearchTile(results[i]),
     );
@@ -590,7 +590,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget _buildExploreContent(List<HobbyCategory> categories) {
     return SingleChildScrollView(
       physics: const TryScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 100),
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, Spacing.scrollBottomPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -643,6 +643,58 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 28),
+
+          // Quick Actions
+          Text('QUICK ACTIONS', style: AppTypography.overline),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.compare_arrows_rounded,
+                  label: 'Hobby Battle',
+                  subtitle: 'Compare 2 hobbies',
+                  color: AppColors.coral,
+                  onTap: () => context.push('/compare'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.park_rounded,
+                  label: 'Seasonal',
+                  subtitle: 'What\'s trending',
+                  color: AppColors.sage,
+                  onTap: () => context.push('/seasonal'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.local_fire_department_rounded,
+                  label: 'Combos',
+                  subtitle: 'Paired hobbies',
+                  color: AppColors.amber,
+                  onTap: () => context.push('/combos'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.people_outline_rounded,
+                  label: 'Community',
+                  subtitle: 'Stories & tips',
+                  color: AppColors.sky,
+                  onTap: () => context.push('/stories'),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 28),
 
@@ -770,6 +822,70 @@ class _MiniSpec extends StatelessWidget {
       child: Text(
         label,
         style: AppTypography.monoBadgeSmall.copyWith(color: color),
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.warmWhite,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTypography.sansCaption.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.nearBlack,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AppTypography.sansTiny.copyWith(
+                      color: AppColors.warmGray,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

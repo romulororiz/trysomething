@@ -103,6 +103,56 @@ server/
 
 **Motion:** fast=150ms, normal=250ms, slow=350ms
 
+### Responsive & Device Consistency Rules (CRITICAL)
+The app MUST look correct on real Android/iOS devices, not just Chrome. Chrome has no status bar, no notch, no gesture bar — real phones do. Follow these rules on EVERY screen:
+
+**SafeArea:** Wrap every screen's top-level widget in `SafeArea` or manually use `MediaQuery.of(context).padding` to account for status bar (top), home indicator/gesture bar (bottom), and notch/punch-hole camera (top).
+
+**Top insets:** Any content near the top of the screen (hero images, headers, badges) must add `MediaQuery.of(context).padding.top` as top padding/margin. This includes screens with app bars (handled automatically) AND screens without app bars (must be handled manually — e.g., full-bleed feed cards, hobby detail hero).
+
+**Bottom insets:** Any content near the bottom (floating CTAs, bottom sheets, last list items) must add `MediaQuery.of(context).padding.bottom` as bottom padding. Scrollable content should use `SliverPadding` or `ListView(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80))` to ensure the last item isn't hidden behind the nav bar or gesture area.
+
+**Never hardcode pixel values for system UI areas.** Don't use `padding: EdgeInsets.only(top: 44)` — use `MediaQuery.of(context).padding.top` because it varies by device (24px on some Androids, 44px on iPhone notch, 59px on Dynamic Island).
+
+**Test reference device:** Nothing Phone 3a (Android, punch-hole camera, gesture navigation). If it looks correct on this device, it will work on most others.
+
+**Common patterns:**
+```dart
+// Full-bleed screen with content that needs safe areas:
+Scaffold(
+  body: CustomScrollView(
+    slivers: [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          child: HeroImage(), // badge won't be hidden now
+        ),
+      ),
+      // ... content
+      SliverPadding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 80, // 80 for nav bar
+        ),
+      ),
+    ],
+  ),
+)
+
+// Floating CTA at bottom:
+Positioned(
+  bottom: MediaQuery.of(context).padding.bottom + 16,
+  child: TryTodayButton(),
+)
+```
+
+**Bottom Nav Bar Height — ALWAYS ACCOUNT FOR THIS:**
+The curved bottom navigation bar is 85px tall. EVERY UI element that sits near the bottom of the screen MUST account for this:
+- Bottom sheets: add at least 100px bottom padding so content clears the nav bar
+- Floating CTAs/FABs: position with `bottom: 120+` (85px nav + padding)
+- Scroll content: use `Spacing.scrollBottomPadding` (120px) for ListView/ScrollView bottom padding
+- Positioned overlays: never place interactive elements below `bottom: 100` or they'll overlap the nav
+- `showModalBottomSheet`: always add nav bar clearance to bottom padding (e.g. `viewInsets.bottom + 100`)
+
 **Aesthetic:** Deep dark space with glowing neon accents. Frosted glass containers. Parallax feed cards. Coral CTAs with glow effect.
 
 ### Spec Badge Rules (IMPORTANT)

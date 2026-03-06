@@ -50,7 +50,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final tryingCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.trying));
     final activeCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.active));
     final doneCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.done));
-    final savedCount = ref.watch(hobbyCountByStatusProvider(HobbyStatus.saved));
     final totalTried = tryingCount + activeCount + doneCount;
 
     // Completed steps & longest streak
@@ -390,44 +389,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
 
               // ═══════════════════════════════════════════
-              //  QUICK STATS ROW
+              //  STATS 2x2 GRID
               // ═══════════════════════════════════════════
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: Row(
+                  child: Column(
                     children: [
-                      _QuickStat(
-                          number: '$savedCount',
-                          label: 'Saved',
-                          color: AppColors.indigo),
-                      const SizedBox(width: 10),
-                      _QuickStat(
-                          number: '$tryingCount',
-                          label: 'Trying',
-                          color: AppColors.coral),
-                      const SizedBox(width: 10),
-                      _QuickStat(
-                          number: '$activeCount',
-                          label: 'Active',
-                          color: AppColors.sage),
-                      const SizedBox(width: 10),
-                      _QuickStat(
-                          number: '$doneCount',
-                          label: 'Done',
-                          color: AppColors.amber),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.grid_view_rounded,
+                              iconColor: AppColors.indigo,
+                              label: 'Tried',
+                              value: '$totalTried',
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.local_fire_department_rounded,
+                              iconColor: AppColors.sage,
+                              label: 'Active',
+                              value: '$activeCount',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.schedule_rounded,
+                              iconColor: AppColors.sky,
+                              label: 'Hours',
+                              value: '${prefs.hoursPerWeek * 4}',
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.bolt_rounded,
+                              iconColor: AppColors.amber,
+                              label: 'Streak',
+                              value: '${totalStreak}d',
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
-              ),
-
-              // ═══════════════════════════════════════════
-              //  ACTIVITY HEATMAP (GitHub-style)
-              // ═══════════════════════════════════════════
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
-                  child: _buildHeatmap(),
                 ),
               ),
 
@@ -438,6 +451,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
                   child: _buildSkillsRadar(skillScores),
+                ),
+              ),
+
+              // ═══════════════════════════════════════════
+              //  ACTIVITY HEATMAP (GitHub-style)
+              // ═══════════════════════════════════════════
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                  child: _buildHeatmap(),
                 ),
               ),
 
@@ -779,6 +802,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
 
+              // ═══════════════════════════════════════════
+              //  RECENT TROPHIES
+              // ═══════════════════════════════════════════
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                  child: _buildRecentTrophies(ref),
+                ),
+              ),
+
               // Bottom padding
               const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
@@ -797,6 +830,118 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  RECENT TROPHIES
+  // ══════════════════════════════════════════════════════════
+
+  Widget _buildRecentTrophies(WidgetRef ref) {
+    final achievements = ref.watch(achievementsProvider);
+    final unlocked = achievements
+        .where((a) => a.unlockedAt != null)
+        .toList()
+      ..sort((a, b) => b.unlockedAt!.compareTo(a.unlockedAt!));
+    final recent = unlocked.take(4).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Recent Trophies', style: AppTypography.sansSection),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => context.push('/achievements'),
+              child: Text(
+                'View All',
+                style: AppTypography.sansLabel.copyWith(color: AppColors.coral),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        if (recent.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.warmWhite,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              'Complete hobbies to earn trophies!',
+              textAlign: TextAlign.center,
+              style: AppTypography.sansCaption.copyWith(color: AppColors.warmGray),
+            ),
+          )
+        else
+          ...recent.map((trophy) {
+            final ago = _trophyTimeAgo(trophy.unlockedAt!);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.warmWhite,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.amber.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(trophy.icon, style: const TextStyle(fontSize: 22)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          trophy.title,
+                          style: AppTypography.sansBody.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.nearBlack,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          trophy.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.sansCaption.copyWith(
+                            color: AppColors.driftwood,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    ago,
+                    style: AppTypography.sansCaption.copyWith(
+                      color: AppColors.warmGray,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  String _trophyTimeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${(diff.inDays / 7).floor()}w ago';
   }
 
   // ══════════════════════════════════════════════════════════
@@ -1499,38 +1644,46 @@ class _RadarPainter extends CustomPainter {
 //  QUICK STAT
 // ═══════════════════════════════════════════════════════
 
-class _QuickStat extends StatelessWidget {
-  final String number;
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
   final String label;
-  final Color color;
+  final String value;
 
-  const _QuickStat(
-      {required this.number, required this.label, required this.color});
+  const _StatCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withAlpha(15),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withAlpha(25)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              number,
-              style: AppTypography.monoMedium
-                  .copyWith(fontWeight: FontWeight.w700, color: color),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.warmWhite,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 22, color: iconColor),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: AppTypography.sansCaption.copyWith(
+              color: AppColors.warmGray,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTypography.serifSubheading.copyWith(
+              color: AppColors.nearBlack,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -10,41 +10,92 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 
-/// Hobby Journal — timestamped journal entries with optional photos and add sheet.
-class HobbyJournalScreen extends ConsumerWidget {
+/// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
+class HobbyJournalScreen extends ConsumerStatefulWidget {
   const HobbyJournalScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HobbyJournalScreen> createState() => _HobbyJournalScreenState();
+}
+
+class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
+  int _filterIndex = 0;
+  static const _filters = ['All Entries', 'Photos', 'Notes', 'Milestones'];
+
+  List<JournalEntry> _applyFilter(List<JournalEntry> entries) {
+    switch (_filterIndex) {
+      case 1: return entries.where((e) => e.photoUrl != null).toList();
+      case 2: return entries.where((e) => e.photoUrl == null).toList();
+      case 3: return entries.where((e) => e.text.length > 100).toList();
+      default: return entries;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final entries = ref.watch(journalProvider);
     final sortedEntries = List<JournalEntry>.from(entries)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final filtered = _applyFilter(sortedEntries);
 
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──────────────────────────────
+            // Header
             _buildHeader(context),
 
-            // ── Entry list ──────────────────────────
+            // Filter tabs
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+              child: SizedBox(
+                height: 32,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _filters.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 6),
+                  itemBuilder: (context, i) {
+                    final isSelected = i == _filterIndex;
+                    return GestureDetector(
+                      onTap: () => setState(() => _filterIndex = i),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.coral : AppColors.sand,
+                          borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                        ),
+                        child: Text(
+                          _filters[i],
+                          style: AppTypography.sansCaption.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.driftwood,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // Entry list
             Expanded(
-              child: sortedEntries.isEmpty
+              child: filtered.isEmpty
                   ? _buildEmptyState()
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
-                      itemCount: sortedEntries.length,
+                      itemCount: filtered.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 14),
                       itemBuilder: (context, index) {
-                        return _JournalEntryCard(entry: sortedEntries[index]);
+                        return _JournalEntryCard(entry: filtered[index]);
                       },
                     ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEntrySheet(context, ref),
         backgroundColor: AppColors.coral,
         foregroundColor: Colors.white,
@@ -52,8 +103,7 @@ class HobbyJournalScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
         ),
-        icon: Icon(AppIcons.edit, size: 20),
-        label: Text('Add Entry', style: AppTypography.sansCta),
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
@@ -65,19 +115,13 @@ class HobbyJournalScreen extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () => context.pop(),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.sand,
-              ),
-              child: const Icon(Icons.arrow_back,
-                  size: 20, color: AppColors.espresso),
-            ),
+            child: const Icon(Icons.arrow_back,
+                size: 20, color: AppColors.espresso),
           ),
-          const SizedBox(width: 16),
-          Text('Hobby Journal', style: AppTypography.serifHeading),
+          const Spacer(),
+          Text('Hobby Journal', style: AppTypography.sansSection),
+          const Spacer(),
+          const Icon(Icons.more_vert, size: 20, color: AppColors.espresso),
         ],
       ),
     );
