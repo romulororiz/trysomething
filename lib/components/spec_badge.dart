@@ -75,29 +75,23 @@ class SpecBadge extends StatelessWidget {
   }
 
   _BadgeConfig get _config {
+    // All badges use the same muted monochrome style — sand bg, driftwood text.
+    // Only coral should pop on any screen; badges stay restrained.
+    final IconData icon;
     switch (type) {
       case SpecBadgeType.cost:
-        return _BadgeConfig(
-          icon: AppIcons.badgeCost,
-          backgroundColor: AppColors.coralPale,
-          textColor: AppColors.coralDeep,
-          borderColor: AppColors.costBorder,
-        );
+        icon = AppIcons.badgeCost;
       case SpecBadgeType.time:
-        return _BadgeConfig(
-          icon: AppIcons.badgeTime,
-          backgroundColor: AppColors.amberPale,
-          textColor: AppColors.amberDeep,
-          borderColor: AppColors.timeBorder,
-        );
+        icon = AppIcons.badgeTime;
       case SpecBadgeType.difficulty:
-        return _BadgeConfig(
-          icon: AppIcons.badgeDifficulty,
-          backgroundColor: AppColors.indigoPale,
-          textColor: AppColors.indigoDeep,
-          borderColor: AppColors.diffBorder,
-        );
+        icon = AppIcons.badgeDifficulty;
     }
+    return _BadgeConfig(
+      icon: icon,
+      backgroundColor: AppColors.sand,
+      textColor: AppColors.driftwood,
+      borderColor: AppColors.sandDark,
+    );
   }
 }
 

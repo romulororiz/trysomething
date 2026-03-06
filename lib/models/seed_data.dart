@@ -39,7 +39,7 @@ class SeedData {
       tags: ['creative', 'relaxing', 'meditative'],
       costText: 'CHF 40–120',
       timeText: '2h/week',
-      difficultyText: 'Moderate',
+      difficultyText: 'Medium',
       whyLove: 'The tactile satisfaction is unmatched. You lose track of time, your phone stays in your pocket, and you walk away with something you made with your own hands.',
       difficultyExplain: 'Centering clay on a wheel takes practice. Hand-building is much easier to start with and just as rewarding.',
       starterKit: [
@@ -71,7 +71,7 @@ class SeedData {
       tags: ['physical', 'social', 'competitive'],
       costText: 'CHF 20–60',
       timeText: '3h/week',
-      difficultyText: 'Moderate',
+      difficultyText: 'Medium',
       whyLove: "It's social, physical, and mental all at once. You'll make friends at the gym and surprise yourself with what your body can do.",
       difficultyExplain: 'Technique matters more than strength. Finger strength builds slowly — be patient with yourself.',
       starterKit: [
@@ -100,7 +100,7 @@ class SeedData {
       tags: ['creative', 'relaxing', 'solo'],
       costText: 'CHF 15–50',
       timeText: '2h/week',
-      difficultyText: 'Moderate',
+      difficultyText: 'Medium',
       whyLove: "The smell. The ritual. Pulling a golden loaf from your own oven. You'll never look at supermarket bread the same way again.",
       difficultyExplain: "Timing is everything. Your first few loaves may be flat — that's completely normal and part of the process.",
       starterKit: [
@@ -253,7 +253,7 @@ class SeedData {
       tags: ['creative', 'relaxing', 'solo'],
       costText: 'CHF 50–300',
       timeText: '3h/week',
-      difficultyText: 'Moderate',
+      difficultyText: 'Medium',
       whyLove: "Playing your first full song is one of the most rewarding feelings. Music becomes yours to create, not just consume.",
       difficultyExplain: 'Finger pain goes away after 2 weeks. Chord changes take practice. Use YouTube — there are incredible free teachers.',
       starterKit: [

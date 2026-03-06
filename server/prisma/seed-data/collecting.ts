@@ -31,7 +31,7 @@ export const collectingHobbies = [
     tags: ["creative", "solo", "technical"],
     costText: "CHF 30–200",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Each camera has a soul — mechanical shutters, manual focus, the anticipation of waiting for developed film. You learn photography fundamentals faster when every shot costs money.",
     difficultyExplain: "Understanding exposure (aperture, shutter speed, ISO) takes practice. Start with a fully automatic camera and work backward.",
     pitfalls: [
@@ -126,7 +126,7 @@ export const collectingHobbies = [
     tags: ["technical", "solo"],
     costText: "CHF 50–500",
     timeText: "1h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "A mechanical watch is a tiny universe of gears and springs. Learning about movements, complications, and design history is endlessly fascinating.",
     difficultyExplain: "Understanding movements and brands takes research. Start with affordable automatics (Seiko, Orient) and learn from there.",
     pitfalls: [
@@ -145,7 +145,7 @@ export const collectingHobbies = [
     tags: ["solo", "relaxing"],
     costText: "CHF 10–200",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Holding a book that's a hundred years old connects you to generations of readers. The hunt through bookshops and markets is half the joy.",
     difficultyExplain: "Learning to assess condition, identify first editions, and spot value takes time. Start with authors or topics you already love.",
     pitfalls: [

@@ -95,16 +95,45 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                             padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
                             child: Row(
                               children: [
-                                Text('Discover',
-                                    style: AppTypography.serifHeading.copyWith(
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 10,
-                                          color: Colors.black.withValues(alpha: 0.4),
-                                        ),
-                                      ],
-                                    )),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.coral,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text('TRYSOMETHING',
+                                        style: AppTypography.sansLabel.copyWith(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.2,
+                                          color: Colors.white,
+                                          shadows: [
+                                            Shadow(
+                                              blurRadius: 10,
+                                              color: Colors.black.withValues(alpha: 0.4),
+                                            ),
+                                          ],
+                                        )),
+                                  ],
+                                ),
                                 const Spacer(),
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                  ),
+                                  child: const Icon(Icons.search_rounded,
+                                      size: 20, color: Colors.white),
+                                ),
+                                const SizedBox(width: 8),
                                 Container(
                                   width: 40,
                                   height: 40,

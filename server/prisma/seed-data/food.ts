@@ -13,9 +13,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=600&h=800&fit=crop",
     tags: ["creative", "relaxing", "home-based", "slow"],
-    costText: "CHF 15-50",
+    costText: "CHF 15–50",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "There's nothing like pulling a crackly, golden loaf from the oven that you made with just flour and water. The daily ritual of feeding your starter becomes meditative, and the smell of fresh sourdough filling your kitchen is genuinely addictive.",
     difficultyExplain:
@@ -34,7 +34,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&h=800&fit=crop",
     tags: ["science", "healthy", "home-based", "creative"],
-    costText: "CHF 20-60",
+    costText: "CHF 20–60",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -55,9 +55,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1447933601403-56dc2df6e3f5?w=600&h=800&fit=crop",
     tags: ["craft", "aromatic", "home-based", "morning-routine"],
-    costText: "CHF 40-150",
+    costText: "CHF 40–150",
     timeText: "1h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Once you taste coffee roasted hours ago instead of months ago, there's no going back. You control the roast profile, bringing out fruity, chocolatey, or nutty notes. It transforms your morning ritual into something deeply personal.",
     difficultyExplain:
@@ -76,7 +76,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1556761223-4c4282c73f77?w=600&h=800&fit=crop",
     tags: ["creative", "social", "hands-on", "italian"],
-    costText: "CHF 20-80",
+    costText: "CHF 20–80",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -97,9 +97,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=800&fit=crop",
     tags: ["precision", "social", "japanese", "creative"],
-    costText: "CHF 40-100",
+    costText: "CHF 40–100",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Sushi making is where precision meets artistry. The satisfaction of producing a tight, beautiful maki roll or a glossy piece of nigiri at home is unmatched. Plus, sushi nights become legendary dinner parties.",
     difficultyExplain:
@@ -118,9 +118,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=800&fit=crop",
     tags: ["outdoor", "social", "patience", "weekend"],
-    costText: "CHF 80-300",
+    costText: "CHF 80–300",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "There's a primal satisfaction in tending a fire for hours and producing fall-off-the-bone meat with a perfect smoke ring. BBQ turns cooking into an event, drawing friends and neighbours with irresistible aromas.",
     difficultyExplain:
@@ -139,7 +139,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=800&fit=crop",
     tags: ["comforting", "home-based", "creative", "family"],
-    costText: "CHF 15-50",
+    costText: "CHF 15–50",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -160,9 +160,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&h=800&fit=crop",
     tags: ["social", "creative", "evening", "classy"],
-    costText: "CHF 60-200",
+    costText: "CHF 60–200",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Mixing cocktails is equal parts chemistry and showmanship. Mastering a handful of classic recipes lets you host memorable evenings, and the creative possibilities with syrups, bitters, and garnishes are endless.",
     difficultyExplain:
@@ -181,9 +181,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=600&h=800&fit=crop",
     tags: ["science", "hands-on", "home-based", "rewarding"],
-    costText: "CHF 30-80",
+    costText: "CHF 30–80",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Watching liquid milk transform into stretchy mozzarella or creamy ricotta feels like magic every single time. Cheese making connects you to one of humanity's oldest food traditions, and homemade cheese tastes incomparably fresh.",
     difficultyExplain:
@@ -202,7 +202,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=600&h=800&fit=crop",
     tags: ["creative", "precision", "gift-worthy", "indulgent"],
-    costText: "CHF 40-120",
+    costText: "CHF 40–120",
     timeText: "2h/week",
     difficultyText: "Hard",
     whyLove:
@@ -223,7 +223,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1534483509719-8b078da3e3da?w=600&h=800&fit=crop",
     tags: ["preserving", "seasonal", "home-based", "practical"],
-    costText: "CHF 15-40",
+    costText: "CHF 15–40",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -244,7 +244,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&h=800&fit=crop",
     tags: ["spicy", "creative", "home-based", "gift-worthy"],
-    costText: "CHF 20-50",
+    costText: "CHF 20–50",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -265,9 +265,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=800&fit=crop",
     tags: ["cultural", "flavourful", "social", "home-based"],
-    costText: "CHF 30-80",
+    costText: "CHF 30–80",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Korean cuisine is an explosion of textures and flavours: spicy, sweet, sour, umami, crunchy, and silky all in one meal. Mastering the banchan (side dishes) transforms your table into a colourful feast that feels celebratory every time.",
     difficultyExplain:
@@ -286,9 +286,9 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&h=800&fit=crop",
     tags: ["spicy", "aromatic", "cultural", "home-based"],
-    costText: "CHF 25-60",
+    costText: "CHF 25–60",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Indian curry is the art of layering spices to build depth. Once you learn to bloom cumin, toast coriander, and balance turmeric with heat, you unlock hundreds of regional dishes. The aromas alone are worth the effort.",
     difficultyExplain:
@@ -307,7 +307,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=800&fit=crop",
     tags: ["social", "family", "creative", "italian"],
-    costText: "CHF 25-120",
+    costText: "CHF 25–120",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -328,7 +328,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1483695028939-5bb13f8648b0?w=600&h=800&fit=crop",
     tags: ["precision", "creative", "impressive", "gift-worthy"],
-    costText: "CHF 30-100",
+    costText: "CHF 30–100",
     timeText: "3h/week",
     difficultyText: "Hard",
     whyLove:
@@ -349,7 +349,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&h=800&fit=crop",
     tags: ["mindful", "cultural", "relaxing", "daily-ritual"],
-    costText: "CHF 30-150",
+    costText: "CHF 30–150",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -370,7 +370,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?w=600&h=800&fit=crop",
     tags: ["science", "healthy", "home-based", "fermented"],
-    costText: "CHF 20-50",
+    costText: "CHF 20–50",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:

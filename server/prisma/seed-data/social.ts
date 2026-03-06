@@ -107,7 +107,7 @@ export const socialHobbies = [
     tags: ["social", "creative"],
     costText: "CHF 0–50",
     timeText: "5h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Theater is a team sport for creative people. The rehearsal process builds deep friendships. Opening night adrenaline is unlike anything else.",
     difficultyExplain: "Acting experience is not required. Community theater welcomes beginners in acting, set building, costumes, and tech. There's a role for everyone.",
     pitfalls: [
@@ -221,7 +221,7 @@ export const socialHobbies = [
     tags: ["social", "competitive"],
     costText: "CHF 10–20",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "The fear of public speaking ranks above death for most people. Toastmasters turns that fear into confidence through structured practice and supportive feedback.",
     difficultyExplain: "Your first speech can be 1 minute long. The program is designed for absolute beginners. Everyone there remembers being terrified.",
     pitfalls: [

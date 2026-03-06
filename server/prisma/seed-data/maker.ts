@@ -15,7 +15,7 @@ export const makerHobbies = [
     tags: ["creative", "technical", "hands-on", "functional"],
     costText: "CHF 80\u2013250",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "There is nothing like pulling a finished piece off the bench and knowing every joint, every curve came from your hands. Woodworking teaches patience, geometry, and problem-solving all at once. The smell of fresh-cut timber is its own reward.",
     difficultyExplain: "Basic joinery and hand-tool work are very approachable. Power tools add speed but require safety awareness.",
     pitfalls: [
@@ -34,7 +34,7 @@ export const makerHobbies = [
     tags: ["technical", "digital", "prototyping", "creative"],
     costText: "CHF 200\u2013400",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "You sketch something on Monday, slice it Tuesday, and hold a real object Wednesday morning. 3D printing collapses the gap between imagination and reality. The community shares thousands of free designs online.",
     difficultyExplain: "Entry-level FDM printers are plug-and-play. Learning slicer settings and CAD modelling takes a few weeks of practice.",
     pitfalls: [
@@ -53,7 +53,7 @@ export const makerHobbies = [
     tags: ["technical", "stem", "creative", "arduino"],
     costText: "CHF 40\u2013150",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Blinking your first LED feels trivial, but automating your entire desk setup feels like magic. Electronics bridges the digital and physical worlds in ways no other hobby can. Arduino and Raspberry Pi make the learning curve gentle.",
     difficultyExplain: "Breadboard prototyping requires no soldering. Reading schematics and soldering come with practice.",
     pitfalls: [
@@ -72,7 +72,7 @@ export const makerHobbies = [
     tags: ["creative", "hands-on", "fashion", "traditional"],
     costText: "CHF 60\u2013180",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Leather gets better with age\u2014your wallet or belt develops a unique patina that tells its story. The craft is meditative: cutting, stitching, and burnishing demand focus but reward you with heirloom-quality pieces.",
     difficultyExplain: "Simple card holders and key fobs are beginner-friendly. Bags and shoes require advanced pattern-making.",
     pitfalls: [
@@ -186,7 +186,7 @@ export const makerHobbies = [
     tags: ["creative", "sustainable", "hands-on", "home-decor"],
     costText: "CHF 50\u2013200",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Stripping decades of paint off a mid-century sideboard to reveal gorgeous walnut underneath is pure treasure-hunting. Restoration is sustainable, budget-friendly, and your living room becomes a gallery of comeback stories.",
     difficultyExplain: "Sanding and re-staining are straightforward. Re-upholstery and structural repairs require more skill.",
     pitfalls: [
@@ -224,7 +224,7 @@ export const makerHobbies = [
     tags: ["creative", "meditative", "functional", "artistic"],
     costText: "CHF 100\u2013350",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Throwing on the wheel is hypnotic\u2014your hands shape spinning clay into bowls, mugs, and vases that you eat and drink from every day. No two pieces are identical, and glazing adds an element of happy surprise.",
     difficultyExplain: "Centring clay takes practice but is achievable in 3\u20135 sessions. Trimming and glazing extend the learning curve.",
     pitfalls: [
@@ -262,7 +262,7 @@ export const makerHobbies = [
     tags: ["creative", "textile", "meditative", "traditional"],
     costText: "CHF 50\u2013200",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "The rhythmic clack of the shuttle is deeply calming. Loom weaving lets you create scarves, wall hangings, and table runners with textures and colour gradients that are impossible to replicate in a factory.",
     difficultyExplain: "A rigid-heddle loom is straightforward to warp and weave. Multi-shaft looms open up complex patterns but take longer to master.",
     pitfalls: [

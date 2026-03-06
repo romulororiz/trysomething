@@ -69,7 +69,7 @@ export const mindHobbies = [
     tags: ["social", "solo", "technical"],
     costText: "CHF 0–30",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Speaking another language opens doors you didn't know existed — travel, friendships, career opportunities. The moment someone responds to you in their language is pure joy.",
     difficultyExplain: "Consistency matters more than talent. 15 minutes daily beats 2 hours weekly. Some languages are harder for English speakers than others.",
     pitfalls: [
@@ -126,7 +126,7 @@ export const mindHobbies = [
     tags: ["solo", "social"],
     costText: "CHF 0–20",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Philosophy gives you frameworks for understanding life, ethics, and your own mind. It sharpens critical thinking and makes you a better conversationalist and decision-maker.",
     difficultyExplain: "Start with accessible writers (Alain de Botton, Michael Sandel) before tackling primary texts. YouTube channels like Philosophize This! make it approachable.",
     pitfalls: [
@@ -145,7 +145,7 @@ export const mindHobbies = [
     tags: ["creative", "solo"],
     costText: "CHF 0–15",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Writing is the most accessible creative outlet. A blank page and your imagination are all you need. The stories in your head deserve to exist.",
     difficultyExplain: "First drafts are supposed to be bad. The skill is in revision. Writing daily — even badly — builds the muscle faster than waiting for inspiration.",
     pitfalls: [
@@ -202,7 +202,7 @@ export const mindHobbies = [
     tags: ["competitive", "solo", "technical"],
     costText: "CHF 10–40",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Once you learn the method, every solve is a race against yourself. Watching your times drop from 3 minutes to 30 seconds is incredibly satisfying. People will think you're a genius.",
     difficultyExplain: "The beginner method has ~6 algorithms. Memorizing them takes a week. Speed comes from practice and finger tricks.",
     pitfalls: [
@@ -221,7 +221,7 @@ export const mindHobbies = [
     tags: ["solo", "technical", "competitive"],
     costText: "CHF 0–15",
     timeText: "1h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Memory techniques feel like a superpower. Memorize a deck of cards, long number sequences, or everything you read. These skills transfer to every area of life.",
     difficultyExplain: "The palace technique is learnable in a day. Building speed and capacity takes months of practice. Consistency is key.",
     pitfalls: [
@@ -240,7 +240,7 @@ export const mindHobbies = [
     tags: ["relaxing", "meditative", "solo"],
     costText: "CHF 15–50",
     timeText: "1h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Calligraphy is moving meditation. Each stroke demands full presence. The discipline of form quiets mental noise while producing something beautiful.",
     difficultyExplain: "Traditional scripts (Copperplate, Spencerian) require disciplined practice. Modern calligraphy is more forgiving. Both reward patience.",
     pitfalls: [

@@ -341,11 +341,18 @@ User action → snapshot → update UI immediately → save SharedPrefs → fire
 
 ## Testing
 
-After every change:
+**Do NOT run full `flutter analyze` after every task — it's slow and blocks progress.**
+
+After each task (fast, 2-3 seconds):
 ```bash
-flutter analyze          # Zero issues
-dart test                # All 158 tests pass
-cd server && npm test    # All 32 tests pass
+dart analyze lib/screens/THE_FILE_YOU_CHANGED.dart    # Only analyze changed files
+```
+
+After each sprint (~every 5 tasks, full sweep):
+```bash
+flutter analyze          # Full project analysis
+dart test                # All 158 Flutter tests
+cd server && npm test    # All 32 server tests (only if server files changed)
 ```
 
 ---

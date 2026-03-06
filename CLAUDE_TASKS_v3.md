@@ -15,6 +15,19 @@
 - **Bottom navigation bar: KEEP AS-IS.** Do not change tabs, structure, or the curved_nav component.
 - This is a UI REFACTOR, not a rewrite. Same backend, same state management.
 
+## Testing Strategy (IMPORTANT — Read This)
+**Do NOT run full `flutter analyze` after every task.** It is slow on large codebases and blocks progress.
+
+Instead:
+- **After each task:** Run `dart analyze` on ONLY the files you changed. Example:
+  ```
+  dart analyze lib/screens/detail/hobby_detail_screen.dart lib/components/spec_badge.dart
+  ```
+  This takes 2-3 seconds instead of 30+.
+- **After each sprint (every ~5 tasks):** Run full `flutter analyze` to catch cross-file issues.
+- **Server changes:** Run `cd server && npm test` only when server files were modified.
+- **Dart tests:** Run `dart test` at end of each sprint, not after every task.
+
 ---
 
 ## Sprint 1: Foundation (Week 1-2)
@@ -74,7 +87,7 @@
 
 ## Sprint 2: Core Screens (Week 3-4)
 
-- [ ] **2.0a — Re-align previously built screens to mockups**
+- [X] **2.0a — Re-align previously built screens to mockups**
   - Screens from Sprint 1 were built without mockup reference. Re-align them now:
   - **Discovery Feed:** `view docs/mockups/01_discover_feed.png` — compare current feed implementation against mockup. Fix layout, spacing, icon placement, badge styling, and visual hierarchy to match EXACTLY. Pay attention to: side action icons positioning, category badge style, spec badge treatment, CTA glow effect.
   - **Onboarding:** `view docs/mockups/09_onboarding_vibes.png`, `view docs/mockups/11_onboarding_budget.png`, `view docs/mockups/10_onboarding_ready.png` — compare current onboarding against all 3 mockups. Fix category grid tiles, slider styling, budget card design, and "You're ready" screen to match EXACTLY.
@@ -82,7 +95,7 @@
   - For each screen: view the mockup, view the current implementation, identify every visual difference, fix each one.
   - **Test:** `flutter analyze` clean, screens visually match mockups
 
-- [ ] **2.0 — Fix spec badge styling + seed data formatting**
+- [X] **2.0 — Fix spec badge styling + seed data formatting**
   - Spec badges are currently too colorful (different saturated colors per badge = amateur look)
   - ALL spec badges must use the same muted style: `sand` (#1E1E2E) bg, `driftwood` (#A0A0B8) text, monochrome icons
   - Do NOT use yellow/teal/purple or any multi-color badge scheme

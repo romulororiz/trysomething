@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
 import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
@@ -200,19 +198,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   if (_currentPage > 0)
                     GestureDetector(
                       onTap: _prevPage,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.sand,
-                        ),
-                        child: const Icon(Icons.arrow_back,
-                            size: 20, color: AppColors.espresso),
-                      ),
+                      child: const Icon(Icons.arrow_back_rounded,
+                          size: 24, color: AppColors.nearBlack),
                     )
                   else
-                    const SizedBox(width: 40),
+                    const SizedBox(width: 24),
+                  const Spacer(),
+                  if (_currentPage > 0)
+                    Text('Onboarding',
+                        style: AppTypography.sansLabel.copyWith(
+                          color: AppColors.nearBlack,
+                          fontWeight: FontWeight.w600,
+                        )),
                   const Spacer(),
                   if (_currentPage < 2)
                     GestureDetector(
@@ -222,7 +219,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               .copyWith(color: AppColors.driftwood)),
                     )
                   else
-                    const SizedBox(width: 40),
+                    const SizedBox(width: 24),
                 ],
               ),
             ),
@@ -1086,109 +1083,78 @@ class _ReadyPageState extends State<_ReadyPage>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Background image
-                CachedNetworkImage(
-                  imageUrl: hobby.imageUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: hobby.catColor.withAlpha(30),
-                    child: Center(
-                      child: Icon(hobby.catIcon,
-                          size: 28, color: hobby.catColor),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: hobby.catColor.withAlpha(30),
-                    child: Center(
-                      child: Icon(hobby.catIcon,
-                          size: 28, color: hobby.catColor),
-                    ),
-                  ),
-                ),
-
-                // Gradient overlay for text readability
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withAlpha(10),
-                        Colors.black.withAlpha(40),
-                        Colors.black.withAlpha(170),
+            child: Container(
+              color: AppColors.sand,
+              child: Stack(
+                children: [
+                  // Centered icon + label
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(hobby.catIcon,
+                            size: 36, color: hobby.catColor),
+                        const SizedBox(height: 10),
+                        Text(
+                          hobby.category.toUpperCase(),
+                          style: AppTypography.sansLabel.copyWith(
+                            color: AppColors.nearBlack,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ],
-                      stops: const [0.0, 0.4, 1.0],
                     ),
                   ),
-                ),
 
-                // Match % badge (top-right)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: isTopMatch
-                          ? AppColors.coral
-                          : Colors.black.withAlpha(120),
-                      borderRadius:
-                          BorderRadius.circular(Spacing.radiusBadge),
-                    ),
-                    child: Text(
-                      '$matchPct%',
-                      style: AppTypography.monoBadgeSmall.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Category icon + title (bottom)
-                Positioned(
-                  left: 10,
-                  right: 10,
-                  bottom: 10,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
+                  // Match % badge
+                  if (isTopMatch)
+                    Positioned(
+                      bottom: 10,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: hobby.catColor.withAlpha(60),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.sage,
+                          borderRadius:
+                              BorderRadius.circular(Spacing.radiusBadge),
                         ),
-                        child: Icon(hobby.catIcon,
-                            size: 16, color: Colors.white),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        hobby.title,
-                        style: AppTypography.sansLabel.copyWith(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          shadows: [
-                            Shadow(
-                              blurRadius: 6,
-                              color: Colors.black.withAlpha(120),
-                            ),
-                          ],
+                        child: Text(
+                          '$matchPct% Match',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+
+                  // Checkmark for non-top match
+                  if (!isTopMatch)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(80),
+                          borderRadius:
+                              BorderRadius.circular(Spacing.radiusBadge),
+                        ),
+                        child: Text(
+                          '$matchPct%',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

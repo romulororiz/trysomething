@@ -54,6 +54,13 @@ class HobbyCard extends StatelessWidget {
             ),
           ),
 
+          // Category badge pill (top-left, below safe area)
+          Positioned(
+            left: 16,
+            top: 120,
+            child: _buildCategoryBadge(),
+          ),
+
           // Right side: action column (above nav: 85px + CTA: 56px + content + gap)
           Positioned(
             right: 12,
@@ -105,6 +112,31 @@ class HobbyCard extends StatelessWidget {
     );
   }
 
+  Widget _buildCategoryBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: hobby.catColor.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(hobby.catIcon, size: 12, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            hobby.category.toUpperCase(),
+            style: AppTypography.sansTiny.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionColumn() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -115,6 +147,14 @@ class HobbyCard extends StatelessWidget {
           onTap: onSave,
           isActive: isSaved,
           activeColor: AppColors.redHeart,
+        ),
+        const SizedBox(height: 20),
+        _FeedActionButton(
+          icon: isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+          label: 'Save',
+          onTap: onSave,
+          isActive: isSaved,
+          activeColor: AppColors.amber,
         ),
         const SizedBox(height: 20),
         _FeedActionButton(

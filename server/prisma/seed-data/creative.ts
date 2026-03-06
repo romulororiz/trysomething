@@ -30,7 +30,7 @@ export const creativeHobbies = [
     tags: ["creative", "relaxing", "solo"],
     costText: "CHF 30–80",
     timeText: "1–2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Watercolor is beautifully unpredictable. The way colors bloom and bleed into each other creates effects no other medium can match. It teaches you to embrace happy accidents and find beauty in imperfection.",
     difficultyExplain: "Learning to control water-to-paint ratio takes practice, but simple washes and wet-on-wet techniques produce gorgeous results from day one.",
     pitfalls: [
@@ -68,7 +68,7 @@ export const creativeHobbies = [
     tags: ["creative", "meditative", "solo"],
     costText: "CHF 25–70",
     timeText: "1–2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Calligraphy forces you to slow down in a world that won't stop accelerating. Each stroke demands presence. The result is functional art — envelopes, cards, journals — that makes people stop and stare.",
     difficultyExplain: "Consistent letterforms require muscle memory, which takes a few weeks of regular practice. But even wobbly first attempts look charming.",
     pitfalls: [
@@ -144,7 +144,7 @@ export const creativeHobbies = [
     tags: ["creative", "solo", "technical"],
     costText: "CHF 0–300",
     timeText: "2–3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Photography teaches you to notice light, composition, and moments most people walk right past. Whether you use a phone or a DSLR, that split second when you nail a shot — perfect light, perfect timing — is addictive.",
     difficultyExplain: "Your phone camera is enough to start. Understanding composition rules and light takes practice, but the feedback loop is immediate.",
     pitfalls: [
@@ -163,7 +163,7 @@ export const creativeHobbies = [
     tags: ["creative", "technical", "solo"],
     costText: "CHF 50–200",
     timeText: "2–3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Digital art removes the fear of messing up. Infinite undo, layers, and brushes let you experiment wildly. Sharing your work with millions is one tap away. It's the most democratic art form alive.",
     difficultyExplain: "The drawing tablet learning curve takes about a week. Software like Procreate or Krita are intuitive but deep — you'll keep discovering features for months.",
     pitfalls: [
@@ -239,7 +239,7 @@ export const creativeHobbies = [
     tags: ["creative", "technical", "social"],
     costText: "CHF 30–100",
     timeText: "1–2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Jewelry making gives you wearable proof of your creativity. Every compliment on your earrings becomes 'thanks, I made them.' From simple bead stringing to wire wrapping, each piece is a tiny sculpture you carry everywhere.",
     difficultyExplain: "Bead stringing is instant. Wire wrapping and metalwork take more practice, but beginner kits simplify the learning curve considerably.",
     pitfalls: [
@@ -258,7 +258,7 @@ export const creativeHobbies = [
     tags: ["creative", "technical", "solo"],
     costText: "CHF 50–130",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Resin art is mesmerizing to create and to look at. Watching pigments swirl through crystal-clear resin feels like controlling galaxies. The glass-like finish makes everything look professional, even on your first pour.",
     difficultyExplain: "Mixing ratios must be exact, and curing times require patience. But the pour-and-swirl technique itself is intuitive and forgiving.",
     pitfalls: [
@@ -277,7 +277,7 @@ export const creativeHobbies = [
     tags: ["creative", "technical", "social"],
     costText: "CHF 60–150",
     timeText: "2–3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Screen printing puts a small factory in your hands. Designing a graphic, pulling the squeegee, and peeling back the screen to reveal a perfect print on a t-shirt — that reveal never gets old. You'll want to print on everything you own.",
     difficultyExplain: "Burning screens and registration take practice. But single-color prints with pre-cut stencils are achievable on day one.",
     pitfalls: [
@@ -334,7 +334,7 @@ export const creativeHobbies = [
     tags: ["creative", "technical", "solo"],
     costText: "CHF 50–180",
     timeText: "2–3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Sewing gives you independence from fast fashion. Altering a thrift find to fit perfectly, or making a tote bag from scratch — each project builds a skill that saves money and reduces waste. It's creative, practical, and deeply satisfying.",
     difficultyExplain: "Hand sewing is simple. Machine sewing has a learning curve for tension and seam guides, but a basic straight stitch covers most beginner projects.",
     pitfalls: [
@@ -372,7 +372,7 @@ export const creativeHobbies = [
     tags: ["creative", "meditative", "solo"],
     costText: "CHF 35–90",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Mosaic turns fragments into something permanent and stunning. The meditative process of placing each tessera is deeply absorbing. Your finished piece could last centuries — there's something profound about creating art that outlasts you.",
     difficultyExplain: "Cutting tiles evenly and grouting cleanly take practice. But simple designs with pre-cut tiles are beginner-friendly.",
     pitfalls: [

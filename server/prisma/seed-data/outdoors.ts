@@ -51,7 +51,7 @@ export const outdoorsHobbies = [
     tags: ["physical", "outdoors", "relaxing"],
     costText: "CHF 40–600",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Kayaking gives you access to places you can't reach on foot — quiet coves, riverbanks, the middle of a Swiss lake at dawn. It's a full-body workout that doesn't feel like one, and the rhythm of paddling becomes deeply meditative.",
     difficultyExplain: "Flatwater kayaking is beginner-friendly. Rivers and open water require technique and safety knowledge.",
     pitfalls: [
@@ -127,7 +127,7 @@ export const outdoorsHobbies = [
     tags: ["physical", "outdoors", "solo"],
     costText: "CHF 100–250",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Trail running combines the runner's high with the beauty of nature. Every root, rock, and incline demands your attention — there's no zoning out, which is exactly the point. You'll discover fitness you didn't know you had and trails you never knew existed.",
     difficultyExplain: "Requires baseline running fitness. Technical terrain and elevation make it harder than road running.",
     pitfalls: [
@@ -146,7 +146,7 @@ export const outdoorsHobbies = [
     tags: ["physical", "outdoors", "technical", "social"],
     costText: "CHF 80–400",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Climbing is chess played with your body. Every route is a puzzle — where to place your feet, when to commit, how to rest. The sense of achievement when you top out a route that scared you is unmatched. The community is warm, supportive, and addictive.",
     difficultyExplain: "Indoor bouldering is beginner-friendly. Outdoor climbing and lead climbing require instruction and gear knowledge.",
     pitfalls: [
@@ -203,7 +203,7 @@ export const outdoorsHobbies = [
     tags: ["relaxing", "outdoors", "solo", "meditative"],
     costText: "CHF 80–300",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Fishing is the world's best excuse to sit by water and think about nothing. But beneath that calm surface is deep skill — reading water, choosing lures, playing a fish. The tug on the line sends a jolt of adrenaline every single time, whether it's your first catch or your hundredth.",
     difficultyExplain: "Basic float fishing is easy. Fly fishing and targeting specific species require technique and local knowledge.",
     pitfalls: [
@@ -222,7 +222,7 @@ export const outdoorsHobbies = [
     tags: ["physical", "outdoors", "competitive"],
     costText: "CHF 300–1500",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Mountain biking is freedom on two wheels. You climb through forests, descend singletrack, and cover ground you'd never see on foot. The flow state on a good descent is addictive. Switzerland's trail network is world-class, and every ride ends with a new favourite route.",
     difficultyExplain: "Requires balance and fitness. Technical descents need practice, but fire roads and flow trails are beginner-accessible.",
     pitfalls: [
@@ -241,7 +241,7 @@ export const outdoorsHobbies = [
     tags: ["outdoors", "relaxing", "solo", "meditative"],
     costText: "CHF 20–80",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Foraging reconnects you to the landscape in the most primal way — you learn to see food everywhere. Wild garlic in spring, chanterelles in summer, chestnuts in autumn. Cooking with ingredients you found yourself is deeply satisfying, and it makes every walk feel like a treasure hunt.",
     difficultyExplain: "Safe foraging requires confident plant identification. Start with unmistakable species and join a guided walk first.",
     pitfalls: [
@@ -260,7 +260,7 @@ export const outdoorsHobbies = [
     tags: ["creative", "outdoors", "solo", "meditative"],
     costText: "CHF 0–800",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Nature photography sharpens your eye for beauty in everything — light through leaves, a fox at dusk, morning frost on a spider web. It gives purpose to every outdoor outing and creates a visual diary of the natural world you inhabit. Your phone is enough to start.",
     difficultyExplain: "Anyone can start with a phone camera. Mastering composition, light, and wildlife behaviour takes dedicated practice.",
     pitfalls: [
@@ -298,7 +298,7 @@ export const outdoorsHobbies = [
     tags: ["physical", "outdoors", "social", "competitive"],
     costText: "CHF 200–600",
     timeText: "Full day trips",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Skiing is Switzerland's national pastime for good reason. The sensation of carving turns on fresh snow, the crisp mountain air, the après-ski camaraderie — it's a full sensory experience. Once you link your first turns, you'll understand why people plan entire winters around it.",
     difficultyExplain: "Group lessons get most beginners on blue runs in 2-3 days. Steeper terrain and off-piste require progressive skill building.",
     pitfalls: [
@@ -315,9 +315,9 @@ export const outdoorsHobbies = [
     categoryId: "outdoors",
     imageUrl: "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=600&h=800&fit=crop",
     tags: ["physical", "outdoors", "social"],
-    costText: "CHF 50–120/lesson",
+    costText: "CHF 50–120",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Riding a horse is a conversation without words. You learn to communicate through your seat, hands, and legs — and the horse responds. It builds core strength, confidence, and an extraordinary bond with an animal. Trail rides through Swiss countryside are unforgettable.",
     difficultyExplain: "Walking and basic trotting come quickly. Cantering, jumping, and independent riding take months of consistent lessons.",
     pitfalls: [
@@ -336,7 +336,7 @@ export const outdoorsHobbies = [
     tags: ["physical", "outdoors", "social", "competitive"],
     costText: "CHF 20–60",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove: "Beach volleyball is the most social sport you'll find. Two-on-two means you're always involved, and playing on sand makes every rally feel playful, not pressured. City beach bars across Switzerland run open play nights — show up alone, leave with friends.",
     difficultyExplain: "Basic rallying is easy. Consistent serving, setting, and spiking in sand (which saps your legs) takes regular practice.",
     pitfalls: [

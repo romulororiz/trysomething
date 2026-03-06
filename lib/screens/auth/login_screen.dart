@@ -85,18 +85,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).maybePop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.sand,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new,
-                            size: 16, color: AppColors.nearBlack),
-                      ),
-                    ),
+                    child: const Icon(Icons.arrow_back_rounded,
+                        size: 24, color: AppColors.nearBlack),
                   ),
                   const Spacer(),
                   GestureDetector(
@@ -251,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         // ── Sign in CTA ──
                         PrimaryCtaButton(
-                          label: 'Sign In \u2192',
+                          label: 'Sign In',
                           isLoading: isEmailLoading,
                           onTap: isLoading ? null : _submit,
                         ),

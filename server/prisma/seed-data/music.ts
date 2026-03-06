@@ -13,7 +13,7 @@ export const musicHobbies = [
     tags: ["creative", "relaxing", "solo", "social"],
     costText: "CHF 50–300",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Guitar is the ultimate campfire instrument — within weeks you can strum along to your favourite songs. The tactile feedback of steel or nylon under your fingertips is deeply satisfying, and the instrument travels anywhere you do.",
     difficultyExplain:
@@ -57,7 +57,7 @@ export const musicHobbies = [
     tags: ["creative", "relaxing", "intellectual", "classical"],
     costText: "CHF 150–800",
     timeText: "4h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Piano is the foundation of Western music — learn it and every other instrument makes more sense. The visual layout of keys maps directly to music theory, making it the best instrument for understanding how music works.",
     difficultyExplain:
@@ -79,7 +79,7 @@ export const musicHobbies = [
     tags: ["energetic", "physical", "stress-relief", "social"],
     costText: "CHF 80–600",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Drumming is primal — it connects you to rhythm in a visceral way. It's a full-body workout that melts stress, and every band in the world needs a drummer. The feeling of locking into a groove is pure flow state.",
     difficultyExplain:
@@ -101,7 +101,7 @@ export const musicHobbies = [
     tags: ["creative", "social", "expressive", "zero-cost"],
     costText: "CHF 0–50",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Singing requires zero equipment — just you and air. It releases endorphins, improves breathing, and connects you emotionally to music like nothing else. Choir singing adds a powerful social dimension that's been shown to reduce anxiety.",
     difficultyExplain:
@@ -145,7 +145,7 @@ export const musicHobbies = [
     tags: ["creative", "social", "electronic", "nightlife"],
     costText: "CHF 150–600",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "DJing is part music curation, part performance, part crowd psychology. The thrill of blending two tracks seamlessly while a crowd dances is electric. Modern software makes beatmatching accessible, so you focus on the creative side from day one.",
     difficultyExplain:
@@ -211,7 +211,7 @@ export const musicHobbies = [
     tags: ["creative", "rhythmic", "social", "band-essential"],
     costText: "CHF 100–400",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Bass players are always in demand. You bridge rhythm and melody, and when you lock in with a drummer, the groove is addictive. Bass lines are simpler than guitar solos but more fundamental — you'll feel the music in your chest.",
     difficultyExplain:
@@ -233,7 +233,7 @@ export const musicHobbies = [
     tags: ["classical", "meditative", "portable", "elegant"],
     costText: "CHF 80–400",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "The flute produces some of the purest tones in any orchestra. It's lightweight, elegant, and versatile — equally at home in classical, jazz, Celtic, and Bollywood music. Playing develops extraordinary breath control and focus.",
     difficultyExplain:
@@ -255,7 +255,7 @@ export const musicHobbies = [
     tags: ["jazz", "expressive", "social", "cool"],
     costText: "CHF 200–800",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "The saxophone is the closest instrument to the human voice — breathy, emotional, and effortlessly cool. From smooth jazz to funk to rock, its versatility is unmatched. It's also one of the most visually striking instruments to play live.",
     difficultyExplain:
@@ -299,7 +299,7 @@ export const musicHobbies = [
     tags: ["creative", "zero-cost", "portable", "hip-hop"],
     costText: "CHF 0",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Beatboxing costs nothing, needs no equipment, and can be practised anywhere. The human mouth can produce an astonishing range of percussive and melodic sounds. It's endlessly impressive at parties and a legitimate art form with global competitions.",
     difficultyExplain:
@@ -321,7 +321,7 @@ export const musicHobbies = [
     tags: ["creative", "introspective", "expressive", "literary"],
     costText: "CHF 0–50",
     timeText: "3h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Songwriting is the most personal form of musical expression — you create something that didn't exist before from pure emotion. Whether you write pop hooks, folk ballads, or rap verses, there's nothing like hearing your own song come to life.",
     difficultyExplain:
@@ -343,7 +343,7 @@ export const musicHobbies = [
     tags: ["intellectual", "foundational", "analytical", "solo"],
     costText: "CHF 0–40",
     timeText: "2h/week",
-    difficultyText: "Moderate",
+    difficultyText: "Medium",
     whyLove:
       "Music theory is the 'why' behind every song you love. Understanding scales, chords, and progressions transforms you from someone who plays notes into someone who understands music. It makes learning any instrument dramatically faster.",
     difficultyExplain:
