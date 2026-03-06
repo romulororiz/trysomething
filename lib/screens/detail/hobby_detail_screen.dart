@@ -7,9 +7,7 @@ import '../../models/hobby.dart';
 import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
-import '../../components/spec_badge.dart';
 import '../../components/try_today_button.dart';
-import '../../components/roadmap_step_tile.dart';
 import '../../components/shared_widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
@@ -38,8 +36,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
   /// Entry animation controllers
   late final AnimationController _entryController;
   late final Animation<double> _overlayOpacity;
-  late final Animation<double> _specBadgeOpacity;
-  late final Animation<Offset> _specBadgeSlide;
   late final Animation<double> _detailsOpacity;
   late final Animation<Offset> _detailsSlide;
 
@@ -81,23 +77,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       ),
     );
 
-    // Spec badge: 210ms–480ms (appears after hero lands at ~350ms)
-    _specBadgeOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.35, 0.8, curve: Curves.easeOut),
-      ),
-    );
-    _specBadgeSlide = Tween<Offset>(
-      begin: const Offset(0, 10),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: Interval(0.35, 0.9, curve: Motion.heroCurve),
-      ),
-    );
-
     // Start immediately — no delay so animations stay in sync with the Hero flight
     _entryController.forward();
   }
@@ -113,13 +92,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     setState(() {
       _scrollOffset = _scrollController.offset;
     });
-  }
-
-  /// AppBar opacity: fades in as hero scrolls out of view
-  double get _appBarOpacity {
-    const fadeStart = 180.0; // start fading in
-    const fadeEnd = 300.0; // fully visible
-    return ((_scrollOffset - fadeStart) / (fadeEnd - fadeStart)).clamp(0.0, 1.0);
   }
 
   /// Hero parallax offset: image moves at 0.5x scroll velocity
@@ -158,55 +130,16 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               // Hero image with parallax
               SliverToBoxAdapter(child: _buildHeroImage(context, hobby)),
 
-              // Spec bar (animated entry — no longer a SliverPersistentHeader
-              // because the slide animation was pushing content beyond the
-              // sliver's geometry bounds, causing layoutExtent > paintExtent)
-              SliverToBoxAdapter(
-                child: AnimatedBuilder(
-                  animation: _specBadgeOpacity,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: _specBadgeSlide.value,
-                      child: Opacity(
-                        opacity: _specBadgeOpacity.value,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-                    color: AppColors.cream,
-                    child: SpecBar(
-                      cost: hobby.costText,
-                      time: hobby.timeText,
-                      difficulty: hobby.difficultyText,
-                      withContainer: true,
-                    ),
-                  ),
-                ),
-              ),
-
               // Content sections
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Why people love it
+                    // Why you'll love it
                     const SizedBox(height: 24),
-                    SectionHeader(title: 'Why people love it'),
+                    SectionHeader(title: "Why you'll love it"),
                     Text(
                       hobby.whyLove,
-                      style: AppTypography.sansBody.copyWith(
-                        height: 1.65,
-                        color: AppColors.espresso,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Difficulty explanation
-                    SectionHeader(title: 'What makes it ${hobby.difficultyText.toLowerCase()}'),
-                    Text(
-                      hobby.difficultyExplain,
                       style: AppTypography.sansBody.copyWith(
                         height: 1.65,
                         color: AppColors.espresso,
@@ -218,42 +151,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     SectionHeader(
                       title: 'Starter Kit',
                       rightText: _kitTotal(hobby.starterKit) > 0
-                          ? '~ CHF ${_kitTotal(hobby.starterKit)}'
+                          ? '~ \$${_kitTotal(hobby.starterKit)} Total'
                           : null,
                     ),
                     _buildKitGrid(hobby.starterKit, hobby.id),
-                    if (hobby.starterKit.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 8),
-                        child: GestureDetector(
-                          onTap: () => context.push('/shopping/${widget.hobbyId}'),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.warmWhite,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.sandDark),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(AppIcons.shoppingList, size: 16, color: AppColors.coral),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Open Shopping Checklist',
-                                  style: AppTypography.sansLabel.copyWith(color: AppColors.coral),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 28),
-
-                    // Beginner Pitfalls
-                    SectionHeader(title: 'Beginner Pitfalls'),
-                    ...hobby.pitfalls.map((p) => _buildPitfall(p)),
                     const SizedBox(height: 28),
 
                     // Roadmap
@@ -261,26 +162,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       title: 'Your Roadmap',
                       rightText: '${hobby.roadmapSteps.length} steps',
                     ),
-                    ...hobby.roadmapSteps.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final step = entry.value;
-                      final isCompleted = userHobby?.completedStepIds.contains(step.id) ?? false;
-                      final isCurrent = !isCompleted &&
-                          (index == 0 ||
-                              (userHobby?.completedStepIds.contains(
-                                      hobby.roadmapSteps[index - 1].id) ??
-                                  false));
-
-                      return RoadmapStepTile(
-                        step: step,
-                        stepNumber: index + 1,
-                        isCompleted: isCompleted,
-                        isCurrent: isCurrent,
-                        onToggle: () {
-                          ref.read(userHobbiesProvider.notifier).toggleStep(widget.hobbyId, step.id);
-                        },
-                      );
-                    }),
+                    _buildRoadmapTimeline(hobby, userHobby),
 
                     // Related hobbies
                     if (relatedHobbies.isNotEmpty) ...[
@@ -316,78 +198,36 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ],
           ),
 
-          // Fading AppBar overlay
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              ignoring: _appBarOpacity < 0.1,
-              child: AnimatedOpacity(
-                opacity: _appBarOpacity,
-                duration: const Duration(milliseconds: 50),
-                child: Container(
-                  height: topPad + 56,
-                  padding: EdgeInsets.only(top: topPad),
-                  decoration: BoxDecoration(
-                    color: AppColors.cream,
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.sandDark.withValues(alpha: 0.5)),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      ref.watch(hobbyByIdProvider(widget.hobbyId)).valueOrNull?.title ?? '',
-                      style: AppTypography.sansBodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.nearBlack,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Back button (always visible, above AppBar)
+          // Header: back + title + share (always visible)
           Positioned(
             top: topPad + 8,
             left: 16,
-            child: GestureDetector(
-              onTap: () => context.pop(),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.sand.withAlpha(220),
-                ),
-                child: const Center(
-                  child: Icon(Icons.arrow_back, size: 20, color: AppColors.espresso),
-                ),
-              ),
-            ),
-          ),
-
-          // Share button (always visible, above AppBar)
-          Positioned(
-            top: topPad + 8,
             right: 16,
-            child: GestureDetector(
-              onTap: () {
-                // Share hobby
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.sand.withAlpha(220),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => context.pop(),
+                  child: const Icon(Icons.arrow_back_rounded, size: 24, color: Colors.white),
                 ),
-                child: Center(
-                  child: Icon(AppIcons.share, size: 18, color: AppColors.espresso),
+                Expanded(
+                  child: Text(
+                    hobby.title,
+                    style: AppTypography.sansLabel.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
+                GestureDetector(
+                  onTap: () {
+                    // Share hobby
+                  },
+                  child: Icon(AppIcons.share, size: 20, color: Colors.white),
+                ),
+              ],
             ),
           ),
 
@@ -822,33 +662,162 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     );
   }
 
-  Widget _buildPitfall(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(top: 7),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.amber,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTypography.sansBodySmall.copyWith(
-                height: 1.5,
-                color: AppColors.espresso,
+  Widget _buildRoadmapTimeline(Hobby hobby, UserHobby? userHobby) {
+    final steps = hobby.roadmapSteps;
+    return Column(
+      children: steps.asMap().entries.map((entry) {
+        final index = entry.key;
+        final step = entry.value;
+        final isCompleted = userHobby?.completedStepIds.contains(step.id) ?? false;
+        final isCurrent = !isCompleted &&
+            (index == 0 ||
+                (userHobby?.completedStepIds.contains(steps[index - 1].id) ?? false));
+        final isLast = index == steps.length - 1;
+
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Timeline column: circle + connecting line
+              SizedBox(
+                width: 32,
+                child: Column(
+                  children: [
+                    // Step circle indicator
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(userHobbiesProvider.notifier).toggleStep(widget.hobbyId, step.id);
+                      },
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isCompleted
+                              ? AppColors.sage
+                              : isCurrent
+                                  ? AppColors.coral
+                                  : Colors.transparent,
+                          border: Border.all(
+                            color: isCompleted
+                                ? AppColors.sage
+                                : isCurrent
+                                    ? AppColors.coral
+                                    : AppColors.sandDark,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Center(
+                          child: isCompleted
+                              ? const Icon(Icons.check, size: 16, color: Colors.white)
+                              : Text(
+                                  '${index + 1}',
+                                  style: AppTypography.monoTiny.copyWith(
+                                    color: isCurrent ? Colors.white : AppColors.warmGray,
+                                    fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    // Connecting line
+                    if (!isLast)
+                      Expanded(
+                        child: Container(
+                          width: 1.5,
+                          color: isCompleted ? AppColors.sage.withValues(alpha: 0.4) : AppColors.sandDark,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // Step content
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isCurrent ? AppColors.coralPale : AppColors.warmWhite,
+                    borderRadius: BorderRadius.circular(Spacing.radiusButton),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              step.title,
+                              style: AppTypography.sansLabel.copyWith(
+                                decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                color: isCompleted ? AppColors.warmGray : AppColors.nearBlack,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isCompleted
+                                  ? AppColors.sand.withValues(alpha: 0.5)
+                                  : AppColors.sand,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _formatStepTime(step.estimatedMinutes),
+                              style: AppTypography.monoTiny.copyWith(
+                                color: isCompleted ? AppColors.stone : AppColors.driftwood,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        step.description,
+                        style: AppTypography.sansTiny.copyWith(
+                          color: isCompleted ? AppColors.stone : AppColors.warmGray,
+                        ),
+                      ),
+                      if (step.milestone != null) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.coralPale,
+                            borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(AppIcons.trophy, size: 12, color: AppColors.coral),
+                              const SizedBox(width: 4),
+                              Text(
+                                step.milestone!,
+                                style: AppTypography.monoMilestone.copyWith(
+                                  color: AppColors.coral,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }).toList(),
     );
+  }
+
+  String _formatStepTime(int minutes) {
+    if (minutes >= 60) {
+      final hours = minutes / 60;
+      return '${hours.toStringAsFixed(hours.truncateToDouble() == hours ? 0 : 1)}h';
+    }
+    return '${minutes}min';
   }
 }

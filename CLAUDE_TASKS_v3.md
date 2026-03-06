@@ -93,9 +93,21 @@ Instead:
   - **Onboarding:** `view docs/mockups/09_onboarding_vibes.png`, `view docs/mockups/11_onboarding_budget.png`, `view docs/mockups/10_onboarding_ready.png` — compare current onboarding against all 3 mockups. Fix category grid tiles, slider styling, budget card design, and "You're ready" screen to match EXACTLY.
   - **Login:** `view docs/mockups/08_login.png` — compare and fix to match.
   - For each screen: view the mockup, view the current implementation, identify every visual difference, fix each one.
-  - **Test:** `flutter analyze` clean, screens visually match mockups
+  - **Test:** `dart analyze` on changed files, screens visually match mockups
 
-- [X] **2.0 — Fix spec badge styling + seed data formatting**
+- [ ] **2.0b — Fix device responsiveness across ALL screens**
+  - The app looks correct in Chrome but has overflow/clipping issues on real devices (tested: Nothing Phone 3a).
+  - Known issues: category badge hidden behind status bar on hobby detail, planner times cut off at bottom.
+  - Go through EVERY screen file in `lib/screens/` and apply these fixes:
+    - Wrap screens without AppBar in `SafeArea` OR manually add `MediaQuery.of(context).padding.top` to top content
+    - Add `MediaQuery.of(context).padding.bottom` to bottom padding on all scrollable content and floating CTAs
+    - Replace any hardcoded top/bottom padding values (like `44`, `34`, `24`) with `MediaQuery.of(context).padding` values
+    - Ensure `ListView` and `CustomScrollView` have bottom padding that accounts for nav bar + gesture bar
+    - Check floating/sticky CTAs (like "TRY TODAY") are positioned with `MediaQuery.of(context).padding.bottom + 16`, not hardcoded
+  - Priority screens to fix first: Hobby Detail (badge hidden), Weekly Planner (times cut off), Discovery Feed (full-bleed cards)
+  - **Test:** `dart analyze` on changed files. Must verify on physical Android device — Chrome is NOT sufficient for testing this.
+
+- [ ] **2.0 — Fix spec badge styling + seed data formatting**
   - Spec badges are currently too colorful (different saturated colors per badge = amateur look)
   - ALL spec badges must use the same muted style: `sand` (#1E1E2E) bg, `driftwood` (#A0A0B8) text, monochrome icons
   - Do NOT use yellow/teal/purple or any multi-color badge scheme
@@ -108,7 +120,7 @@ Instead:
   - Update seed data in `server/prisma/seed.ts` where badge values are wrong
   - **Test:** all badges render in monochrome, no rainbow colors, all time values have "/week"
 
-- [ ] **2.1 — Redesign Hobby Detail page**
+- [X] **2.1 — Redesign Hobby Detail page**
   - **FIRST: `view docs/mockups/02_hobby_detail.png` — match this exactly**
   - Hero image with TRENDING badge (top-right), "4 weeks to master" overlay, star rating with count
   - "Why you'll love it" section with body text
