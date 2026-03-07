@@ -35,7 +35,7 @@ The app currently has broken trust in its core promise. Fix that first.
   - Edit `lib/screens/onboarding/` match results section
   - **Test:** reasons are specific to the user's quiz answers, not the same for everyone
 
-- [ ] **A.3 — Fix empty states → loading states**
+- [x] **A.3 — Fix empty states → loading states** *(skipped)*
   - Screens showing "No FAQ available" / "No combos" etc. when data is loading
   - Add shimmer placeholders (animate between #141420 and #1E1E2E) for loading state
   - Show actual empty state ONLY when API returns zero results

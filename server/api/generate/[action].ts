@@ -125,8 +125,24 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
       return errorResponse(res, 500, "Generated content failed validation. Please try a different query.");
     }
 
+    // Post-generation duplicate check: the AI may generate a title that
+    // already exists even though the raw query didn't match
+    const generatedTitle = content.title as string;
+    const postGenDupe = await prisma.hobby.findFirst({
+      where: { title: { equals: generatedTitle, mode: "insensitive" } },
+      include: {
+        kitItems: { orderBy: { sortOrder: "asc" } },
+        roadmapSteps: { orderBy: { sortOrder: "asc" } },
+      },
+    });
+
+    if (postGenDupe) {
+      await logGeneration(userId, trimmed, "success", "Returned existing (post-gen match)", postGenDupe.id);
+      return res.status(200).json({ hobby: mapHobby(postGenDupe), existed: true });
+    }
+
     // Generate slug ID from title
-    const slug = (content.title as string)
+    const slug = generatedTitle
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");

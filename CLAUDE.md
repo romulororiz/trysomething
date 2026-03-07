@@ -1,579 +1,365 @@
-# TrySomething — CLAUDE.md
+# TrySomething — CLAUDE.md (v4 — Focused Redesign)
 
-> This is the single source of truth for Claude Code working on this project.
-> It contains: project overview, architecture, design system, v3 redesign plan, AI strategy, and task queue.
-
----
-
-## Project Overview
-
-TrySomething is an AI-powered hobby discovery mobile app. Tagline: "helps you actually start." It bridges the gap between "I want a hobby" and "I'm actually doing one" with curated content, step-by-step roadmaps, starter kits, cost breakdowns, and progress tracking.
-
-**Target user:** Adults 18–45 who want new hobbies but are overwhelmed by options or don't know the first practical step.
-
-**Current state:** Late MVP — 7 of 8 dev batches complete. Full API backend live on Vercel. 26 screens implemented. Auth, content, progress tracking, personal tools, social features, gamification all working. Now undergoing v3 redesign to match new mockups and add AI-powered dynamic hobby generation.
+> Single source of truth for Claude Code. Read this before every task.
+> This version reflects a strategic refocus: fewer features, stronger core loop.
 
 ---
 
-## Tech Stack
+## Product Thesis
+
+**Old:** "A hobby discovery platform with AI, social, progress, and community features."
+
+**New:** "The best app for helping overwhelmed adults choose one hobby and actually stick with it for 30 days."
+
+Every decision filters through this. If a feature doesn't directly help someone choose a hobby, start it, or keep doing it for 30 days — it's not priority.
+
+---
+
+## Tech Stack (No Changes)
 
 ```
 Frontend:   Flutter 3.6.0 + Riverpod 2.6.1 + GoRouter 14.8.1 + Freezed + google_fonts
-Backend:    Node.js + Express (TypeScript) + Prisma 6.4.1 + bcryptjs + jsonwebtoken
-Database:   Neon Postgres (serverless) with 25 Prisma models
-Infra:      Vercel (serverless functions) + GitHub Actions CI
-APIs:       REST (JSON) — 40+ endpoints in 11 serverless functions
-External:   Google OAuth (3 client IDs), Claude API (AI hobby generation)
-```
-
-**Architecture:** Client-server with offline-first caching. Repository pattern with three fallback layers: API → Hive cache → static SeedData. Optimistic updates with rollback on all mutations.
-
----
-
-## Project Structure
-
-```
-lib/
-├── main.dart                 # Bootstrap: bindings, error handler, runZonedGuarded, ProviderScope
-├── router.dart               # GoRouter: 26 routes, auth/onboarding redirect chain
-├── models/                   # Freezed data classes (8 files + generated)
-│   ├── hobby.dart            # Hobby, KitItem, RoadmapStep, HobbyCategory, UserHobby, UserPreferences
-│   ├── auth.dart             # AuthUser, AuthResponse
-│   ├── features.dart         # UserProfile, Challenge, ScheduleEvent, HobbyCombo, FaqItem, CostBreakdown
-│   ├── social.dart           # JournalEntry, BuddyProfile, BuddyActivity, CommunityStory
-│   ├── gamification.dart     # Achievement model
-│   ├── seed_data.dart        # Static offline fallback data (9 categories)
-│   └── feature_seed_data.dart
-├── core/
-│   ├── api/                  # Dio singleton, endpoint constants
-│   ├── auth/                 # AuthInterceptor (JWT), TokenStorage (flutter_secure_storage)
-│   ├── error/                # ErrorReporter (ring buffer), ErrorProvider (Riverpod observer)
-│   ├── analytics/            # AnalyticsService (console stub — wire to PostHog)
-│   ├── notifications/        # NotificationService (FCM stub — wire to Firebase)
-│   └── storage/              # Hive initialization
-├── data/repositories/        # Interface + API implementation pairs (7 repos)
-├── providers/                # Riverpod providers for auth, hobbies, user, features
-├── screens/                  # 26 screen files
-│   ├── auth/                 # login, register
-│   ├── onboarding/           # 3-page vibes/budget/social
-│   ├── feed/                 # vertical card discovery feed
-│   ├── explore/              # 2-column category grid
-│   ├── search/               # full-text search
-│   ├── my_stuff/             # Saved/Trying/Active/Done tabs
-│   ├── profile/              # stats, heatmap, radar
-│   ├── settings/
-│   ├── detail/               # full hobby detail with roadmap
-│   ├── quickstart/           # modal slide-up starter
-│   └── features/             # 16 feature screens
-├── components/               # Shared widgets (hobby_card, spec_badge, page_transitions, curved_nav)
-└── theme/                    # "Midnight Neon" design tokens
-    ├── app_colors.dart       # 37+ color tokens
-    ├── app_typography.dart   # 20+ named text styles
-    ├── spacing.dart          # 4px grid system
-    └── motion.dart           # Animation durations and curves
-
-server/
-├── api/                      # 11 serverless handler files
-├── lib/                      # auth, mappers, middleware, db, gamification
-├── prisma/schema.prisma      # 25 models, 390 lines
-└── test/                     # 32 tests
+Backend:    Node.js + Express (TypeScript) + Prisma 6.4.1 on Vercel + Neon Postgres
+AI:         Claude Haiku 3.5 via Anthropic API
+Auth:       JWT + Google OAuth
+Payments:   RevenueCat (purchases_flutter)
+Analytics:  PostHog + Sentry
 ```
 
 ---
 
-## Design System — "Midnight Neon"
+## App Structure — 3 Tabs Only
 
-**Color Tokens:**
-| Token | Hex | Role |
-|-------|-----|------|
-| cream | #0A0A0F | App background (darkest) |
-| warmWhite | #141420 | Surface/card bg |
-| sand | #1E1E2E | Elevated surface |
-| coral | #FF6B6B | CTA, primary accent |
-| amber | #FBBF24 | Gold, badges |
-| indigo | #7C3AED | Brand secondary |
-| sage | #06D6A0 | Success, mint, selection accent |
-| nearBlack | #F8F8FC | Headings (lightest) |
+### Tab 1: Home (Active Hobby)
+The user's operating system for their current hobby.
+- Current hobby card with image
+- Next step (one clear action)
+- This week's plan (simple: when, how long, what)
+- Coach entry ("Need help?" with starter chips)
+- Recent progress summary
+- Restart flow if stalled ("Pick up where you left off" or "Try something different")
 
-**Category colors:** Creative=#D946EF, Outdoors=#06D6A0, Fitness=#FF4757, Maker=#FBBF24, Music=#818CF8, Food=#FB923C, Collecting=#38BDF8, Mind=#7C3AED, Social=#F472B6
+### Tab 2: Discover
+Where users find hobbies.
+- Personalized picks (from onboarding)
+- 4 practical rails: For You / Start Cheap / Start This Week / Need a Different Vibe?
+- Category browse (simplified)
+- Search (natural language: "cheap creative hobby", "hobby for couples")
+- Compare tool (secondary, inside Discover, not a separate tab)
 
-**Typography:** Source Serif 4 (headings), DM Sans (body), IBM Plex Mono (data/badges)
+### Tab 3: You
+Utility and personal.
+- Active / Saved / Tried hobbies (3 clear states)
+- Journal archive
+- Profile (simple)
+- Subscription status + Pro screen
+- Settings
+- Basic stats
 
-**Spacing:** 4px grid. Card radius=22, tile=16, button=14.
+### Removed from Primary Navigation
+These features exist in code but are HIDDEN from navigation for now. Do NOT delete the code — just remove routes and nav entries:
+- Buddy mode
+- Community stories
+- Local discovery
+- Hobby passport
+- Year in review
+- Weekly challenge
+- Mood match (fold best parts into Discover rails)
+- Seasonal picks (fold into Discover rails)
+- Hobby battle/compare as standalone (keep as secondary tool inside Discover)
 
-**Motion:** fast=150ms, normal=250ms, slow=350ms
+---
 
-### Responsive & Device Consistency Rules (CRITICAL)
-The app MUST look correct on real Android/iOS devices, not just Chrome. Chrome has no status bar, no notch, no gesture bar — real phones do. Follow these rules on EVERY screen:
+## Core User Journey (North Star)
 
-**SafeArea:** Wrap every screen's top-level widget in `SafeArea` or manually use `MediaQuery.of(context).padding` to account for status bar (top), home indicator/gesture bar (bottom), and notch/punch-hole camera (top).
-
-**Top insets:** Any content near the top of the screen (hero images, headers, badges) must add `MediaQuery.of(context).padding.top` as top padding/margin. This includes screens with app bars (handled automatically) AND screens without app bars (must be handled manually — e.g., full-bleed feed cards, hobby detail hero).
-
-**Bottom insets:** Any content near the bottom (floating CTAs, bottom sheets, last list items) must add `MediaQuery.of(context).padding.bottom` as bottom padding. Scrollable content should use `SliverPadding` or `ListView(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80))` to ensure the last item isn't hidden behind the nav bar or gesture area.
-
-**Never hardcode pixel values for system UI areas.** Don't use `padding: EdgeInsets.only(top: 44)` — use `MediaQuery.of(context).padding.top` because it varies by device (24px on some Androids, 44px on iPhone notch, 59px on Dynamic Island).
-
-**Test reference device:** Nothing Phone 3a (Android, punch-hole camera, gesture navigation). If it looks correct on this device, it will work on most others.
-
-**Common patterns:**
-```dart
-// Full-bleed screen with content that needs safe areas:
-Scaffold(
-  body: CustomScrollView(
-    slivers: [
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-          child: HeroImage(), // badge won't be hidden now
-        ),
-      ),
-      // ... content
-      SliverPadding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 80, // 80 for nav bar
-        ),
-      ),
-    ],
-  ),
-)
-
-// Floating CTA at bottom:
-Positioned(
-  bottom: MediaQuery.of(context).padding.bottom + 16,
-  child: TryTodayButton(),
-)
+```
+Open app → Onboarding → 3 matches → Pick 1 → See easiest version
+→ Start plan → First session → Return next day → Week 1-4 support
+→ Continue or switch
 ```
 
-**Aesthetic:** Deep dark space with glowing neon accents. Frosted glass containers. Parallax feed cards. Coral CTAs with glow effect.
+**North star metric:** User completes first real session AND returns for step 2.
+
+Not "saved hobby." Not "opened app." Not "browsed feed."
+Did they DO the hobby and come back?
 
 ---
 
-## Brand Identity & Logo
+## Design System — "Midnight Neon" (Keep, with tone shift)
 
-### Brand Assets (3 separate items, different contexts)
+**Colors:** Keep the existing palette. #0A0A0F bg, #FF6B6B coral, #06D6A0 sage, etc.
 
-**1. App Icon** — The coral brushstroke "T" on dark background (#0A0A0F). A single handmade-feeling brushstroke that forms the letter T. Represents the first mark someone makes when starting something new. Lives on: home screen, app store, notifications, anywhere the brand appears at small sizes (down to 29x29px).
-- File: `assets/icon/app_icon.png` (1024x1024) — also generate all required sizes
-- iOS: superellipse mask applied automatically
-- Android: adaptive icon with `assets/icon/ic_launcher_foreground.png` + dark background
+**Typography:** Source Serif 4 headings, DM Sans body, IBM Plex Mono data.
 
-**2. Wordmark** — "TrySomething" in Source Serif 4. "Try" in coral (#FF6B6B), "Something" in off-white (#F8F8FC). This is FINAL — do not modify.
-- Lives on: splash screen, login screen, app store screenshots, marketing materials
-- File: render as widget using `google_fonts` — Source Serif 4, 600 weight
-- Tagline: "Stop scrolling. Start something." — used on login screen and marketing only
+**Tone shift:** The visual system stays. But the VOICE of the app shifts:
+- Less: "neon AI lifestyle app"
+- More: "warm, honest, practical guide"
 
-**3. Tagline** — "Stop scrolling. Start something." in DM Sans, lighter weight. "Start something." in coral.
-- Marketing only — does NOT appear in-app beyond the login/splash screen
+**Prefer:** "Start gently" / "Try the easy version" / "Keep it simple" / "Small progress counts"
+**Avoid:** "Crush it" / "Unlock everything" / "Level up" / "Become your best self"
 
-### Where Each Asset Appears in the App
-| Location | Asset | Notes |
-|----------|-------|-------|
-| Home screen / app drawer | App icon | Brushstroke T on dark bg |
-| Splash screen (app launch) | Wordmark + tagline | Centered, dark background, fade out to login or feed |
-| Login screen | App icon (small) + wordmark | Icon above "Welcome back", wordmark below |
-| Push notifications | App icon (small) | System notification icon |
-| In-app header (feed) | "TRYSOMETHING" small caps | Top-left of discover feed, coral dot before text |
-| Settings screen | App icon + version | Bottom of settings, small |
-| App Store listing | Wordmark + screenshots | Store metadata |
-| Nowhere else | — | Do NOT plaster the logo on every screen |
+The app should feel emotionally safe for overwhelmed adults.
+
+### Spec Badge Rules (Unchanged)
+- ALL spec badges: muted `sand` (#1E1E2E) bg, `driftwood` (#A0A0B8) text, monochrome icons
+- Cost: CHF range ("CHF 40–120"), never single number
+- Time: "/week" suffix always ("2h/week"), NEVER bare hours
+- Difficulty: Easy / Medium / Hard
+
+### Responsive Rules (Unchanged)
+- `SafeArea` or `MediaQuery.of(context).padding` on every screen
+- Never hardcode system UI dimensions
+- Test device: Nothing Phone 3a
+- Bottom nav bar = 85px, account for it in all bottom-positioned elements
 
 ---
 
-## Business Model — Freemium with TrySomething Pro
+## UI Mockups
 
-### Free Tier (Generous — complete hobby discovery experience)
-- Full access to all 150+ hobbies with detail pages, roadmaps, starter kits
-- Onboarding quiz with personalized recommendations (pre-seeded matches only)
-- Save hobbies, track progress, complete roadmap steps
-- Starter kit with affiliate buy links (earns revenue regardless of tier)
-- All discovery features: Mood Match, Seasonal Picks, Hobby Combos, Hobby Battle
-- Basic journal (text entries only — no photos)
-- Shopping list with images and buy links
-- Search with results from pre-seeded catalog only
-- Streaks and basic achievements
-- AI hobby coach: browsing/evangelist mode always free, 3 messages per hobby per month for active hobbies
-
-### TrySomething Pro (CHF 4.99/month or CHF 39.99/year)
-- Unlimited AI hobby coaching across all hobbies
-- "Surprise Me" AI generation (custom hobbies from text prompt)
-- AI search fallback (generate results when catalog doesn't match)
-- AI onboarding personalization (4th "Made for you" hobby)
-- Photo journal entries (free = text only, Pro = photos + text)
-- Photo analysis in coach ("what's wrong with my pot?")
-- Proactive coach nudges via push notification
-- Buddy Mode (find + pair with hobby buddies)
-- Advanced profile: detailed radar breakdown, year-in-review, hobby passport stamps
-- Advanced achievements beyond the basic set
-- Export journal as PDF
-- Priority support
-
-### 7-Day Free Trial
-- Offered once, after onboarding completion (before first feed view)
-- Non-aggressive: positioned as "unlock the full experience for your first week"
-- If skipped, app works perfectly on free tier
-- Trial can also be started from any paywall touchpoint or from Settings → "TrySomething Pro"
-- RevenueCat handles trial management, receipt validation, platform subscriptions
-
-### Paywall System — Mixed (Taste-Then-Gate + Soft Locks)
-
-**Taste-then-gate (for AI features — user feels value before being asked to pay):**
-
-| Touchpoint | Free Experience | Gate Moment |
-|------------|----------------|-------------|
-| AI Hobby Coach | 3 messages/hobby/month, fully functional | Message 4 → upgrade bottom sheet with trial offer |
-| AI Search Fallback | See pre-seeded results normally | Below results: "We found 2 more" with blurred cards → upgrade prompt |
-
-**Soft locks (small lock icon, tap shows upgrade sheet):**
-
-| Feature | What Free Users See | Lock Indicator |
-|---------|-------------------|----------------|
-| "Surprise Me" FAB | FAB visible on feed, tap shows preview | "Pro feature" badge below input, "Start trial to generate" |
-| Photo journal | Text entry works, photo button has lock overlay | Tiny lock on camera icon, tap → inline "Add photos with Pro" |
-| Profile radar details | Chart shape visible, "Tap for breakdown" locked | Lock icon on "Details" link |
-| Year-in-Review | Beautiful blurred preview card | "Your 2026 in Hobbies — unlock with Pro" |
-| Hobby Passport | Stamp grid visible but locked | Lock overlay, "Collect stamps with Pro" |
-| Buddy Mode | Feature visible in navigation | Lock icon, "Find hobby buddies with Pro" |
-| Advanced achievements | Basic achievements free, advanced show lock | Lock on locked achievement cards |
-| Export journal | Export button has lock | "Export as PDF with Pro" |
-
-### Upgrade Bottom Sheet Design
-The upgrade sheet appears at every paywall touchpoint. It is NOT a full-screen page — it's a bottom sheet that can be easily dismissed. Design it with the Midnight Neon aesthetic:
-- Context line: what triggered it ("You've used your 3 free coach messages this month")
-- Feature comparison: 5-6 bullet points, Free vs Pro, with checkmarks
-- Trial offer prominent: "Try Pro free for 7 days" in coral
-- Plan toggle: Monthly CHF 4.99 / Annual CHF 39.99 (save 33%) — annual pre-selected
-- CTA: "Start Free Trial" coral button with glow
-- "Restore purchase" link at bottom
-- Easy dismiss (swipe down or tap outside) — NEVER trap the user
-- File: `lib/components/pro_upgrade_sheet.dart` — reusable from any screen
-
-### Settings → TrySomething Pro
-- Row near top of settings with coral accent and sparkle icon
-- Shows: "Free" or "Pro (renews Mar 2027)" or "Trial (5 days left)"
-- Tap → full upgrade screen (not bottom sheet — dedicated screen with all features listed, plan comparison, testimonials placeholder)
-- File: `lib/screens/settings/pro_screen.dart`
-
-### RevenueCat Integration
-- Package: `purchases_flutter` (already in pubspec or add it)
-- Offering IDs: `trysomething_pro_monthly`, `trysomething_pro_annual`
-- Entitlement: `pro`
-- Check entitlement: create `lib/core/subscription/subscription_service.dart`
-  - `isPro` → bool (cached, refreshed on app foreground)
-  - `startTrial()`, `purchase(package)`, `restore()`
-- Riverpod provider: `proStatusProvider` — used by all screens to show/hide locks
-- NEVER hardcode subscription status — always check via RevenueCat
-
-### Spec Badge Rules (IMPORTANT)
-- **Style:** ALL spec badges use the SAME muted treatment — `sand` (#1E1E2E) background with `driftwood` (#A0A0B8) text and subtle monochrome icon. Do NOT use different saturated colors per badge (no yellow/teal/purple rainbow). Only coral (#FF6B6B) should pop on any screen — everything else stays restrained and sophisticated.
-- **Cost badge:** Always a CHF range representing starter cost. Format: "CHF 40–120". Never a single number.
-- **Time badge:** Always weekly commitment with explicit "/week" suffix. Format: "2h/week". NEVER "3h" alone (reads as total time, which is misleading and kills credibility).
-- **Difficulty badge:** One of Easy / Medium / Hard. Never a time estimate. Never "X hours to master."
-- These rules apply everywhere badges appear: feed cards, detail page, search results, compare screen.
+Mockups are in `docs/mockups/`. Before implementing ANY screen, `view docs/mockups/<filename>.png` first. The mockup is source of truth for visual design. HOWEVER — the STRUCTURE and CONTENT of screens now follows this CLAUDE.md, not the old mockup layout. Mockups guide visual style; this document guides what appears on each screen.
 
 ---
 
-## UI Mockups — Source of Truth
+## Screen-by-Screen Blueprint
 
-**CRITICAL: Before implementing or modifying ANY screen, Claude Code MUST first view the corresponding mockup image in `docs/mockups/`. The mockup is the source of truth for layout, spacing, component design, and visual hierarchy. Do not rely on text descriptions alone.**
+### Splash
+- Logo + "Find a hobby you'll actually start" + "Personalized to your time, budget, and energy"
+- CTA: "Get my matches"
+- No vague lifestyle language. No AI framing. This is a guided-start app.
 
-Mockup files are in `docs/mockups/` with these names:
+### Onboarding (CRITICAL — This is the trust engine)
 
-| File | Screen |
-|------|--------|
-| `01_discover_feed.png` | Discovery Feed — TikTok-style full-bleed cards with side action icons |
-| `02_hobby_detail.png` | Hobby Detail — hero, starter kit with product images, roadmap with milestones |
-| `03_library.png` | Library / My Stuff — Saved/Trying/Active/Done tabs with progress cards |
-| `04_profile.png` | Profile — stats grid, radar chart, activity heatmap, trophies |
-| `05_mood_match.png` | Mood Match — 4 photo-backed mood tiles, Popular Today list |
-| `06_journal.png` | Hobby Journal — timeline with entries, photos, tags, filters |
-| `07_weekly_plan.png` | Weekly Planner — calendar strip, session timeline cards |
-| `08_login.png` | Login — logo, email/password, Google + Apple social auth |
-| `09_onboarding_vibes.png` | Onboarding Page 1 — "What vibes are you into?" category grid |
-| `10_onboarding_ready.png` | Onboarding Page 3 — "You're ready!" floating cards with match % |
-| `11_onboarding_budget.png` | Onboarding Page 2 — hours slider, budget cards, solo/social |
-| `12_hobby_combos.png` | Hobby Combos — paired cards with reasons, filter chips |
-| `13_seasonal_picks.png` | Seasonal Picks — featured collection, horizontal cards, trending |
-| `14_hobby_battle.png` | Hobby Battle — side-by-side comparison, Head-to-Head grid |
-| `15_cost_projection.png` | Cost Projection — year 1 total, bar chart, savings tips |
-| `16_mood_match_alt.png` | Mood Match (alternate view, confirms design) |
-| `17_quickstart.png` | Quickstart bottom sheet — beginner badge, roadmap preview |
-| `18_search.png` | Search — type badges, ratings, prices, "you might also like" |
-| `19_settings.png` | Settings — account, preferences, theme, log out |
-| `20_explore.png` | Explore — photo-backed category grid with count badges |
+**Questions (only ones that materially affect recommendations):**
+1. "Why do you want a hobby right now?" — relax / meet people / be creative / get active / reduce screen time / feel progress
+2. "How much can you spend to start?" — free / under CHF 30 / under CHF 75 / under CHF 150 / flexible
+3. "How much time per week?" — under 1h / 1-2h / 2-4h / 5+h
+4. "Where will you mostly do it?" — home / outdoors / anywhere / studio/community
+5. "Solo or social?" — solo / mostly solo / mixed / social
+6. "What describes you right now?" — overwhelmed / curious / bored / burned out / motivated but directionless
 
-### How to use mockups when implementing:
-```
-# Before working on any screen, ALWAYS view the mockup first:
-view docs/mockups/02_hobby_detail.png
+**CRITICAL BACKEND FIX:** The matching logic in `_computeMatchedHobbies()` MUST use ALL of these inputs — especially budget and time. Currently it mostly uses vibe tags. This destroys trust. Fix matching to filter/rank by: budget fit, time fit, indoor/outdoor, solo/social, then emotional intent.
 
-# Then implement to match what you see. The mockup defines:
-# - Layout structure and component hierarchy
-# - Spacing, sizing, and visual proportions
-# - Color usage and accent placement
-# - Typography scale and weight
-# - Which elements exist and where they're positioned
-```
+**Add to results:** "Why this fits you" explanation on each match card.
+- "Fits your CHF 50 budget"
+- "Works in 1-2h/week"
+- "Great for solo evenings at home"
 
----
+**Tone:** "You don't need the perfect hobby. You just need a good one to try."
 
-## v3 Redesign — Vision
+### Match Results
+- Show exactly 3 matches: 1 Best Match + 2 Alternatives
+- Each card: hobby name, one-line promise, starter cost, weekly time, solo/social, where, "why it fits you"
+- CTAs: "Start this hobby" / "See the easiest version" / "Compare matches"
+- This screen should feel decisive, not browsable.
 
-### The Three Pillars
-
-1. **150 Pre-Seeded Hobbies** — Rich curated content with roadmaps, starter kits, cost breakdowns. The reliable foundation that serves 90%+ of users at zero API cost.
-
-2. **AI-Generated Hobbies** — On-demand generation when pre-seeded content doesn't satisfy. Fires at 3 specific touchpoints only. Uses Claude Haiku 3.5 at ~$0.003/call. Every generated hobby cached to Postgres so the catalog grows organically.
-
-3. **Personal Journey** — Journal, progress tracking, buddy system, weekly planner. The reason users return daily.
-
-### Design Philosophy
-This is a UI REFACTOR, not a rewrite. Backend, data models, state management, and API all stay as-is. Only UI components update to match the 20 new mockup screens.
-
----
-
-## v3 Screen Map
-
-| # | Screen | Route | Tab/Parent | Key Elements |
-|---|--------|-------|------------|--------------|
-| 1 | Discovery Feed | /discover | Discover (Tab 1) | Full-bleed TikTok cards, side action icons (heart/save/share), category badge, spec badges, TRY TODAY CTA |
-| 2 | Hobby Detail | /hobby/:id | Push from Feed | Hero + TRENDING badge, star rating, Starter Kit with PRODUCT IMAGES + prices, Roadmap with checkmarks + MILESTONE badges, floating TRY TODAY |
-| 3 | Quickstart Modal | /hobby/:id/start | Sheet from Detail | Bottom sheet, BEGINNER badge, roadmap preview, Start Now, "Free for first 3 lessons" |
-| 4 | Explore Grid | /explore | Explore (Tab 2) | Photo-backed category cards with count badges (124+), filter chips (All/Trending/New/For You) |
-| 5 | Search | /search | Push from Explore | Category chips, result cards with type badges (COURSE/WORKSHOP), star ratings, prices, "You might also like" |
-| 6 | Library | /library | Library (Tab 3) | Segmented: Saved/Trying/Active/Done. Cards with image, progress %, streak days, Continue button |
-| 7 | Journal | /journal/:hobbyId | Push from Library | Timeline entries with photos, tags. Filter: All/Photos/Notes/Milestones. FAB to add |
-| 8 | Weekly Planner | /plan | Plan (Tab 4) | Calendar week strip, session cards with category colors, time + location |
-| 9 | Profile | /profile | Profile (Tab 5) | Stats grid, Skill Balance radar, Activity heatmap, Recent Trophies |
-| 10 | Settings | /settings | Push from Profile | Account, Preferences (budget, theme), Log Out |
-| 11 | Mood Match | /mood | Push from Discover | "How are you feeling?" — 4 photo-backed mood tiles, Popular Today list |
-| 12 | Hobby Combos | /combos | Push from Discover | Paired hobby cards with reasons, filter chips, user counts |
-| 13 | Seasonal Picks | /seasonal | Push from Discover | Featured collection hero, horizontal cards, Trending in Community |
-| 14 | Hobby Battle | /compare | Push from Explore | Side-by-side comparison, Head-to-Head grid, Community Winner poll, dual CTAs |
-| 15 | Cost Projection | /hobby/:id/cost | Push from Detail | Year 1 total, bar chart, Smart Savings tips |
-| 16 | Login | /login | Auth | Logo, email/password, Google + Apple social auth, Terms/Privacy links |
-| 17 | Onboarding: Vibes | /onboarding/1 | Auth flow | "What vibes are you into?" — 2x4 category grid with icons, teal checkmarks |
-| 18 | Onboarding: Budget | /onboarding/2 | Auth flow | Hours/week slider, Budget cards (Low/Med/High), Solo/Social toggle |
-| 19 | Onboarding: Ready | /onboarding/3 | Auth flow | "You're ready!" — floating category cards with match %, Start Exploring CTA |
-
-### Bottom Navigation — KEEP AS-IS
-**DO NOT change the bottom nav bar.** The current curved navigation bar with its existing tab structure stays exactly as it is. Do not add tabs, remove tabs, or modify the curved_nav component. All new screens (Plan, etc.) are accessed via push navigation from existing tabs, not as new tabs.
-
-### Transitions
-- Auth screens: fade
-- Push navigation: slideRight (350ms)
-- Modals (Quickstart): modalSlideUp (300ms)
-- Back: slideRight reverse (300ms)
-
----
-
-## v3 Redesign — What Changes
-
-### Bottom Nav — NO CHANGES
-Keep the current curved navigation bar exactly as it is. Do not modify tabs, styling, or structure.
-
-### Discovery Feed
-Current parallax cards → full-screen TikTok-style. Right side: heart with count (2.4k), bookmark, share. Top-left: category badge ("CREATIVE"). Bottom-left: title, hook, spec badges (COST/TIME/LEVEL). Bottom: floating "TRY TODAY →" CTA with coral glow.
-
-### Hobby Detail
-Add TRENDING badge on hero, star rating (1.2k). Starter Kit: PRODUCT IMAGES in 2-column grid with category labels (MATERIAL/TOOLS/GEAR) and individual prices + total. Roadmap: green checkmarks completed, coral active, MILESTONE badges. Floating sticky TRY TODAY at bottom.
-
-### Explore Grid
-Photo-backed category cards with gradient overlays. Hobby count badges (124+, 86+) top-right. Category icons overlaid. Filter chips: All/Trending/New/For You.
-
-### Library Cards
-Full-bleed hobby images with category badge (bottom-left), streak flame + day count (bottom-right). Progress bar with percentage, "Continue Learning" CTA. Coral accent for top/active card.
-
-### Profile
-Stats grid (2x2): Tried/Active/Hours/Streak with colored icons. Skill Balance radar chart (6 axes: Creative/Physical/Culinary/Intellectual/Social/Technical). Activity heatmap (GitHub-style, 5 months). Recent Trophies list. Settings moved to separate screen via gear icon.
-
-### Onboarding
-Page 1: 2x4 category grid with custom icons, teal border + checkmark on multi-select. Page 2: Hours slider with coral track, budget cards with icons, Solo/Social toggle. Page 3: Floating animated category cards with match %, "Curated for you" badge, "Start Exploring →".
+### Discover (Tab 2)
+- 4 rails: For You / Start Cheap / Start This Week / Need a Different Vibe?
+- Simple category filters: creative / active / mindful / social / outdoors / at home
+- Search bar with natural language support
+- NO excessive novelty modules, social teasers, or browse clutter
 
 ### Search
-Type badges (COURSE/WORKSHOP/KIT+CLASS), star ratings, prices, arrow icons. "You might also like" section with horizontal scroll.
+- Handle natural language: "hobby for anxiety", "cheap creative", "indoor winter hobby", "social but low pressure"
+- Results with "Best fits for your situation" section
+- AI search fallback for Pro users (blurred extra results for free)
+
+### Hobby Detail (CONVERSION SCREEN — Most important after onboarding)
+
+**New section order:**
+1. **Quick start snapshot** — budget, time, difficulty, solo/social, location, setup friction
+2. **Why it fits you** — personalized from onboarding context
+3. **Easiest way to start** — minimum viable kit, first tiny session, under-20-minute option. "Try this in 20 minutes: buy only these 2 things, do this first tiny session, ignore the rest for now"
+4. **Common reasons people quit** — honest. "People overbuy gear early" / "People expect fast visible results" / "Setup feels annoying so people skip practice." THIS BUILDS TRUST.
+5. **Week 1 plan** — not full mastery roadmap. Just week 1.
+6. **Full roadmap** — secondary, expandable
+7. **Starter kit** — minimum / best value / premium tiers. Product images + affiliate buy links.
+8. **Coach teaser** — "Want help starting without overthinking?"
+
+**CTAs:** "Start the easy version" / "Build my week 1 plan" / "Ask the coach how to begin"
+NOT generic "Try Today."
+
+### Commitment Flow (After user chooses a hobby)
+- "Save for later" or "Start now" — two clear options
+- If "Start now":
+  - Choose budget version (minimum / best value)
+  - Pick first session length (15min / 30min / 1hr)
+  - Set preferred day/time
+  - Define one tiny first action
+  - → Generates Week 1 plan
+  - → Hobby moves to "Trying" status
+  - → Navigate to Home tab with active hobby
+
+### Home Tab (Tab 1 — Heart of the app)
+- Current hobby card (image, title, status)
+- **Next step** — one clear action. "Do a 10-minute line practice tonight"
+- **This week's plan** — simple schedule (merged from old planner)
+- **Coach entry** — "Need help?" with starter chips
+- **Recent progress** — last journal entry, streak count
+- **Restart flow** — if stalled: "Pick up where you left off" or "Try something different"
+- NO feed behavior. NO exploration modules. Action-first.
+
+### Roadmap / Progress (Inside Home, not separate)
+- 4 stages: Week 1 (Try it) → Week 2 (Repeat it) → Week 3 (Reduce friction) → Week 4 (Decide if it fits)
+- Show: what to do next, what to ignore, what success looks like this week
+- "Stuck?" button on every stage → routes to coach
+- Do NOT show giant mastery ladder upfront. Show one stage at a time.
+
+### AI Hobby Coach (Premium feature)
+
+**NOT a blank chat.** Opens with starter chips:
+- "Help me start tonight"
+- "Make this cheaper"
+- "What should I do next?"
+- "I'm losing motivation"
+- "I skipped a few days"
+- "Maybe this hobby isn't for me"
+
+**3 modes (determined by user state):**
+- **Start mode** (not started yet): what to buy, how to begin cheap, nervous about starting
+- **Momentum mode** (active): next step, simplify session, maintain consistency
+- **Rescue mode** (stalled): restart, easiest re-entry, maybe switch hobbies
+
+**System prompt:** Include hobby data (roadmap, kit, pitfalls) + user progress (steps completed, journal entries, streak, last active date). See previous CLAUDE.md versions for full template.
+
+**Message limits:**
+- Browsing (unsaved): unlimited but short responses
+- Saved: 5 free messages
+- Active: 3 free messages/month (this is where Pro converts)
+- Pro: unlimited
+
+**Premium framing:** "Personal guidance that helps you keep going when the hobby stops feeling easy."
+
+### Journal
+- Purpose: reflection + friction diagnosis, NOT diary for diary's sake
+- Prompts: "What did you try?" / "What felt good?" / "What was annoying?" / "What should be simpler next time?"
+- Text entries: free. Photo entries: Pro.
+- Premium sell: "Visual proof of progress, your hobby journey, visible momentum"
+
+### Library (Inside "You" tab)
+- 3 states: Active / Saved for Later / Tried Before
+- "Tried Before" is important — gives permission to switch without feeling like failure
+- Active hobby dominates visually
+- Tapping active hobby → Home tab
+
+### Profile / You (Tab 3)
+- Simple, calm, functional
+- Current plan status
+- Subscription management
+- Settings + notification preferences
+- Journal archive
+- Hobby history + basic stats
+- NO ambitious dashboard, radar charts, or heatmaps for now
+
+### Paywall / Pro
+
+**Headline:** "Start hobbies you actually stick with"
+**Subheadline:** "Get step-by-step support for your first 30 days, plus tools to keep momentum when motivation drops."
+
+**3 benefit blocks only:**
+1. Know the next right step
+2. Get unstuck fast
+3. Track real progress with photos and reflections
+
+**DO NOT lead with:** "Unlimited AI" / feature buffet / generic unlock language.
+
+**Plans:** CHF 4.99/month or CHF 39.99/year (save 33%)
+**Trial:** 7-day free, offered once after onboarding
+
+**Free vs Pro boundary:**
+- Free: choose + begin (onboarding, matches, hobby detail, one active hobby, week 1 plan, limited coach, text journal)
+- Pro: continue + recover (adaptive coach, 30-day support, rescue mode, photo journal, advanced planning, multi-hobby)
 
 ---
 
-## AI Strategy
+## Business Model
 
-### When AI Fires (3 Touchpoints Only)
+### Free Tier
+- Onboarding + 3 personalized matches
+- All hobby detail pages with roadmaps and starter kits
+- One active hobby at a time
+- First-week plan
+- Limited coach (3 messages/month for active hobby)
+- Text journal
+- Basic progress tracking
+- Affiliate buy links on all starter kit items (revenue regardless of tier)
 
-1. **Smart Search Fallback** — Search returns <3 pre-seeded results → show those instantly → shimmer + "Finding more..." → fire POST /api/generate/hobby → animate AI results into list
-2. **Onboarding Personalization** — "You're ready!" screen shows 3 pre-seeded matches + 1 AI "Made for you" hobby with sparkle badge
-3. **"Surprise Me" FAB** — Floating button on Discover → text prompt → AI generates full hobby → navigate to detail
+### TrySomething Pro (CHF 4.99/month or CHF 39.99/year)
+- Adaptive coach (unlimited, all 3 modes)
+- 30-day guided support
+- Rescue mode after inactivity
+- Photo journal
+- Advanced weekly planning
+- More than one active hobby
+- Richer progress summaries
+- Deeper personalization
 
-### AI Details
-- Model: Claude Haiku 3.5 (~$0.003/call)
-- Endpoint: POST /api/generate/hobby (already exists)
-- Caching: Every generated hobby saved to Postgres (isAiGenerated=true). Catalog grows from 150 → 500+ organically.
-- Budget: ~$3-6/month at 1,000 MAU
-
-### What NOT to Build (v1)
-- Admin panel (use Prisma Studio)
-- Content moderation (curated content only at launch)
-- Email notifications (push is enough)
-- Offline sync queue (optimistic updates sufficient)
-- Custom landing page (use Carrd)
-
----
-
-## AI Hobby Coach (v1 — Pro Feature)
-
-### Concept
-Every hobby gets a scoped AI coach that ONLY discusses that specific hobby. Not a general chatbot. The coach knows the hobby's roadmap, kit, pitfalls, AND the user's personal progress.
-
-### Three User States
-
-**NOT SAVED (Evangelist Mode):** User is browsing the detail page. Coach answers basic curiosity questions, shares what makes the hobby special, gives a taste. Goal: get them to save/start. Always free, no message limit.
-
-**SAVED (Motivator Mode):** User saved but hasn't started. Coach addresses hesitation, answers pre-start questions ("do I need a wheel?", "can I do this in an apartment?"). Goal: move from Saved → Trying. 5 messages free.
-
-**TRYING/ACTIVE (Full Coach Mode):** User is actively doing the hobby. Coach knows their progress, journal entries, current roadmap step, kit items. Gives specific, personalized guidance. This is the premium experience. 3 messages/month free, unlimited with Pro.
-
-### System Prompt Template
-```
-You are a friendly, encouraging coach for {hobby.title}.
-You ONLY discuss {hobby.title} and directly related topics.
-
-User progress:
-- Started: {userHobby.startedAt}
-- Current step: {currentStep.title} — {currentStep.description}
-- Completed steps: {completedSteps}
-- Streak: {streakDays} days
-- Recent journal entries: {recentJournalEntries}
-
-Hobby context:
-- Starter kit: {kitItems}
-- Common beginner pitfalls: {pitfalls}
-- Full roadmap: {roadmapSteps}
-
-Rules:
-- If asked about anything unrelated to {hobby.title}, politely redirect
-  and suggest they check other hobbies in the app.
-- Keep responses concise (2-3 paragraphs max).
-- Be encouraging but honest.
-- Reference their specific progress when relevant.
-```
-
-### Where It Lives
-- Chat icon on Hobby Detail page (bottom-right, above TRY TODAY CTA)
-- Chat icon on Step View (during active roadmap steps)
-- Conversation UI: bottom sheet or push screen with chat interface
-- Each hobby has its own conversation history (stored locally, Hive)
-
-### Cost
-- Model: Claude Haiku 3.5 ($0.80/1M input, $4.00/1M output)
-- Per 5-message exchange: ~$0.005–0.01
-- Per Pro user per month (3-4 chats): ~$0.02–0.04
-- 80 Pro subscribers: ~$2–3/month total AI cost
-- Conversation cap: 15-20 messages, then start fresh (keep summary)
+### Affiliate Revenue
+- Amazon.de Associates on all starter kit items
+- 24-hour cookie, commission on entire cart
+- Revenue from both free and Pro users
+- Treat as supplementary income, not core revenue
 
 ---
 
-## Monetization — Affiliate Starter Kits
+## What's NOT Being Built Now
 
-### The Concept
-Every starter kit item links to where the user can actually buy it. This removes the biggest friction point: "I decided to try pottery... now where do I buy stoneware clay?" The affiliate link is a service, not an ad — the user was going to search for this product anyway.
+These features exist in code. Do NOT delete them. Just hide from navigation:
+- Buddy mode
+- Community stories
+- Local discovery
+- Hobby passport / Year in review
+- Weekly challenge
+- Compare mode as standalone
+- Mood match as standalone
+- Seasonal picks as standalone
 
-### Data Model Change
-Add two nullable fields to KitItem in Prisma:
-```
-affiliateUrl      String?   // product link with affiliate tag appended
-affiliateSource   String?   // "amazon_de", "galaxus", "digitec", "amazon_br", "mercado_livre"
-imageUrl          String?   // product image URL (Unsplash or product photo)
-```
-The `imageUrl` field is REQUIRED for all kit items. The Hobby Detail mockup shows product images for every starter kit item (e.g., bag of stoneware clay, carving set, split-leg apron). Every kit item must have a visible product image — never show a kit item as text-only.
-
-### Affiliate Programs by Market
-- **Switzerland:** Amazon.de Associates (covers CH delivery, 3-5% commission), Galaxus/Digitec partner program
-- **Brazil:** Amazon.com.br Associados, Mercado Livre affiliate program
-- **Fallback:** If no affiliate link exists for an item, show a "Search on Amazon" button that opens a pre-filled Amazon search with the item name + affiliate tag
-
-### UI Implementation
-On the Hobby Detail page Starter Kit section:
-- Each kit item card shows: product IMAGE (required), category label (MATERIAL/TOOLS/GEAR), item name, price in CHF, and a subtle shopping bag icon or "Buy →" link
-- Tapping the card opens the affiliate URL in system browser (url_launcher)
-- If no affiliateUrl exists, tap opens Amazon search: `https://www.amazon.de/s?tag=YOUR_TAG&k={item_name}`
-- Track affiliate clicks in analytics (PostHog event: `kit_item_clicked`)
-
-### Shopping List Screen
-The Shopping List feature screen (`lib/screens/features/shopping_screen.dart`) aggregates kit items across all saved hobbies into one checklist. Each item in the shopping list MUST also show:
-- Product image (from KitItem.imageUrl)
-- Item name and hobby it belongs to
-- Price estimate
-- "Buy →" affiliate link button
-- Checkbox for marking as purchased
-Never show shopping list items as text-only. Every item needs its product image.
-
-### Revenue Projection
-At 1,000 MAU × 1.5 hobbies tried × 30% buy-through rate × CHF 40 avg cart × 4% commission = ~CHF 720/month. Scales linearly. Covers Claude API costs 10x over.
-
-### Seeding Affiliate Data
-When seeding the 150 hobbies (task 1.4), each kit item needs:
-- A real product image URL (Unsplash search or actual product photo)
-- An affiliate URL for Amazon.de with your Associates tag (prioritize Swiss-available products)
-- Realistic CHF pricing verified against actual Amazon.de listings
+These become relevant AFTER core loop retention is proven.
 
 ---
 
-## 150 Hobby Seeding
+## Analytics Events to Track (CRITICAL)
 
-| Category | Count | Examples |
-|----------|-------|---------|
-| Creative | 22 | Pottery, Watercolor, Sketching, Calligraphy, Knitting, Crochet, Embroidery, Photography, Digital Art, Woodburning, Origami, Scrapbooking, Jewelry Making, Resin Art, Screen Printing, Macramé, Collage, Sewing, Tie-Dye, Mosaic, Stained Glass, Candle Decorating |
-| Outdoors | 18 | Hiking, Birdwatching, Kayaking, Gardening, Stargazing, Geocaching, Trail Running, Rock Climbing, Surfing, Camping, Fishing, Mountain Biking, Foraging, Nature Photography, Sailing, Skiing, Horseback Riding, Beach Volleyball |
-| Fitness | 18 | Bouldering, Yoga, Swimming, Martial Arts, Dance, CrossFit, Boxing, Pilates, Cycling, Skateboarding, Parkour, Fencing, Archery, Rowing, Jump Rope, Aerial Silks, Ice Skating, Tai Chi |
-| Maker | 16 | Woodworking, 3D Printing, Electronics, Leathercraft, Candle Making, Soap Making, Metalworking, Model Building, Bookbinding, Furniture Restoration, Knife Making, Pottery Wheel, Glassblowing, Loom Weaving, Clock Repair, Drone Building |
-| Music | 16 | Guitar, Ukulele, Piano, Drumming, Singing, Violin, DJ/Mixing, Music Production, Harmonica, Bass Guitar, Flute, Saxophone, Cajon, Beatboxing, Songwriting, Music Theory |
-| Food | 18 | Sourdough, Fermentation, Coffee Roasting, Pasta Making, Sushi, Smoking/BBQ, Bread Baking, Cocktails, Cheese Making, Chocolate, Pickling, Hot Sauce, Korean Cooking, Indian Curry, Pizza, Pastry, Tea Ceremony, Kombucha |
-| Collecting | 14 | Vinyl Records, Vintage Cameras, Plants, Coins, Stamps, Sneakers, Watches, Antique Books, Crystals, Postcards, Board Games, Pokémon Cards, Vintage Posters, Enamel Pins |
-| Mind | 14 | Chess, Journaling, Meditation, Language Learning, Puzzles, Reading Challenges, Philosophy, Creative Writing, Astronomy, Brain Teasers, Speed Cubing, Memory Training, Calligraphy, Lucid Dreaming |
-| Social | 14 | Board Game Nights, Improv, Volunteering, Book Club, Trivia, Community Theater, Wine Tasting, Hiking Clubs, Cooking Classes, Dance Socials, Language Exchange, Toastmasters, Potluck Clubs, Running Groups |
-
-Each hobby needs: title, hook, description, whyPeopleLoveIt, 3-5 kitItems (CHF prices, product imageUrl, affiliateUrl for Amazon.de), 5 roadmapSteps (minutes), 3+ pitfalls, difficulty explanation. Swiss market pricing. Unsplash images for hobby hero AND for each kit item product photo.
-
----
-
-## Backend Reference
-
-### Key Endpoints (No Changes Needed)
-- **Auth:** POST /api/auth/register, /login, /refresh, /google
-- **Content:** GET /api/hobbies, /hobbies/:id, /hobbies/search, /categories, /hobbies/combos, /hobbies/seasonal, /hobbies/mood
-- **User:** CRUD /api/users/hobbies, /journal, /notes, /schedule, /shopping, /stories, /buddies, /challenges, /achievements
-- **AI:** POST /api/generate/hobby, /generate/faq, /generate/cost, /generate/budget
-
-### State Pattern
-```
-User action → snapshot → update UI immediately → save SharedPrefs → fire API → on fail: restore snapshot
-```
+These events determine if the product works. Instrument them BEFORE polishing anything else:
+- `onboarding_completed`
+- `match_selected` (which hobby, which position)
+- `hobby_saved`
+- `hobby_started` (tapped "Start now")
+- `first_session_completed`
+- `day_3_return`
+- `day_7_return`
+- `day_30_active`
+- `coach_message_sent`
+- `coach_limit_reached`
+- `paywall_shown` (with trigger context)
+- `trial_started`
+- `subscription_purchased`
+- `hobby_switched`
+- `hobby_abandoned` (no activity 14+ days)
 
 ---
 
 ## Testing
 
-**Do NOT run full `flutter analyze` after every task — it's slow and blocks progress.**
-
-After each task (fast, 2-3 seconds):
-```bash
-dart analyze lib/screens/THE_FILE_YOU_CHANGED.dart    # Only analyze changed files
-```
-
-After each sprint (~every 5 tasks, full sweep):
-```bash
-flutter analyze          # Full project analysis
-dart test                # All 158 Flutter tests
-cd server && npm test    # All 32 server tests (only if server files changed)
-```
+After each task: `dart analyze` on changed files only.
+After each sprint: full `flutter analyze` + `dart test`.
+Server changes: `cd server && npm test`.
 
 ---
 
-## Task Queue
+## Brand Identity
 
-See `CLAUDE_TASKS_v3.md` for full checklist. Sprint order:
-1. **Foundation** — affiliate model, feed cards, onboarding, seed 150 hobbies ✅
-2. **Core Screens** — mockup alignment, responsiveness, badges, detail, explore, library, quickstart, search ✅
-3. **Rich Features** — profile, mood match, battle, journal/planner, shopping list, AI search + onboarding ✅
-4. **Infrastructure** — branding/logo, Firebase, analytics (in progress)
-5. **Monetization & Pro** — RevenueCat, paywall, upgrade sheet, trial screen, Pro locks, AI hobby coach
-6. **Launch** — performance pass, end-to-end testing, app store prep, beta launch
+### App Icon
+Coral brushstroke "T" on dark background (#0A0A0F). File: `assets/icon/app_icon.png`
+
+### Wordmark
+"TrySomething" — Source Serif 4, "Try" in coral, "Something" in off-white. FINAL.
+
+### Tagline
+"Stop scrolling. Start something." — login/splash/marketing only.
+
+### Where assets appear
+- Home screen / notifications: app icon
+- Splash / login: wordmark + tagline
+- Feed header: "TRYSOMETHING" small caps with coral dot
+- Settings footer: small icon + version
+- Nowhere else

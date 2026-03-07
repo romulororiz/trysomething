@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_typography.dart';
+import 'models/hobby.dart';
 import 'router.dart';
 import 'providers/user_provider.dart';
 import 'providers/auth_provider.dart';
@@ -126,6 +127,12 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         ref.read(buddyProvider.notifier).loadFromServer();
         ref.read(challengeProvider.notifier).loadFromServer();
 
+        // Track retention events (day_3_return, day_7_return)
+        _trackRetentionEvents();
+
+        // Track hobby_abandoned (14+ days inactive)
+        _trackAbandonedHobbies();
+
         // Sync FCM token to server (mobile only)
         if (!kIsWeb) _syncFcmToken();
       }
@@ -140,6 +147,49 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         });
       }
     });
+  }
+
+  void _trackRetentionEvents() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final analytics = ref.read(analyticsProvider);
+    const key = 'first_open_date';
+    final stored = prefs.getString(key);
+    final now = DateTime.now();
+
+    if (stored == null) {
+      prefs.setString(key, now.toIso8601String());
+      return;
+    }
+
+    final firstOpen = DateTime.tryParse(stored);
+    if (firstOpen == null) return;
+    final daysSinceFirst = now.difference(firstOpen).inDays;
+
+    // Fire each event at most once
+    if (daysSinceFirst >= 3 && !prefs.containsKey('tracked_day3')) {
+      analytics.trackEvent('day_3_return');
+      prefs.setBool('tracked_day3', true);
+    }
+    if (daysSinceFirst >= 7 && !prefs.containsKey('tracked_day7')) {
+      analytics.trackEvent('day_7_return');
+      prefs.setBool('tracked_day7', true);
+    }
+  }
+
+  void _trackAbandonedHobbies() {
+    final analytics = ref.read(analyticsProvider);
+    final hobbies = ref.read(userHobbiesProvider);
+    final now = DateTime.now();
+
+    for (final entry in hobbies.entries) {
+      final h = entry.value;
+      if (h.status != HobbyStatus.trying && h.status != HobbyStatus.active) continue;
+      final lastActive = h.startedAt;
+      if (lastActive == null) continue;
+      if (now.difference(lastActive).inDays >= 14) {
+        analytics.trackEvent('hobby_abandoned', {'hobby_id': entry.key});
+      }
+    }
   }
 
   Future<void> _syncFcmToken() async {

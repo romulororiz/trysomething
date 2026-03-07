@@ -99,18 +99,6 @@ int computeMatchScore({
 //  MATCH REASONS
 // ═══════════════════════════════════════════════════════
 
-/// Human-readable label for budget level.
-String _budgetLabel(int budgetLevel) {
-  switch (budgetLevel) {
-    case 0:
-      return 'CHF 50';
-    case 1:
-      return 'CHF 150';
-    default:
-      return '';
-  }
-}
-
 /// Vibe key → display label mapping.
 const _vibeLabels = {
   'creative': 'creative',
@@ -127,6 +115,7 @@ const _vibeLabels = {
 
 /// Returns 2-3 specific reasons why a hobby matches the user's preferences.
 /// Reasons are derived from the actual scoring signals, not generic text.
+/// Each reason references concrete hobby data to differentiate between cards.
 List<String> computeMatchReasons({
   required Hobby hobby,
   required double userHours,
@@ -136,17 +125,25 @@ List<String> computeMatchReasons({
 }) {
   final reasons = <String>[];
 
-  // Budget reason
-  final (_, costMax) = parseCostRange(hobby.costText);
+  // Budget reason — show actual hobby cost, not just "fits budget"
+  final (costMin, costMax) = parseCostRange(hobby.costText);
   final maxBudget = budgetThreshold(userBudgetLevel);
   if (costMax <= maxBudget && userBudgetLevel < 2) {
-    reasons.add('Fits your ${_budgetLabel(userBudgetLevel)} budget');
+    if (costMin == 0 && costMax <= 30) {
+      reasons.add('Starts free or under CHF 30');
+    } else {
+      reasons.add('Starter cost: ${hobby.costText}');
+    }
   }
 
-  // Time reason
+  // Time reason — show actual hobby hours
   final hobbyHours = parseWeeklyHours(hobby.timeText);
   if (hobbyHours <= userHours) {
-    reasons.add('Works in ${hobbyHours.round()}h/week');
+    if (hobbyHours <= 1) {
+      reasons.add('Just ${hobbyHours.round()}h/week to start');
+    } else {
+      reasons.add('Fits in ${hobbyHours.round()}h/week');
+    }
   }
 
   // Solo/social reason
@@ -154,6 +151,13 @@ List<String> computeMatchReasons({
     reasons.add('Great for group activities');
   } else if (!userPrefersSocial && hobby.tags.contains('solo')) {
     reasons.add('Perfect for solo time');
+  }
+
+  // Indoor/outdoor context
+  if (hobby.tags.contains('outdoors')) {
+    reasons.add('Gets you outdoors');
+  } else if (hobby.tags.contains('indoor') || hobby.tags.contains('at-home')) {
+    reasons.add('Easy to do at home');
   }
 
   // Vibe reason (first matching vibe)
@@ -173,7 +177,7 @@ List<String> computeMatchReasons({
 // ═══════════════════════════════════════════════════════
 
 /// Returns the top matched hobbies from [allHobbies] based on user preferences.
-/// Always returns at least 3 hobbies (padded with budget-passing hobbies if needed).
+/// Always returns at least 4 hobbies (padded with budget-passing hobbies if needed).
 List<Hobby> computeMatchedHobbies({
   required List<Hobby> allHobbies,
   required double userHours,
@@ -198,8 +202,8 @@ List<Hobby> computeMatchedHobbies({
 
   final top = scored.where((e) => e.score > 0).toList();
 
-  if (top.length >= 3) {
-    return top.take(3).map((e) => e.hobby).toList();
+  if (top.length >= 4) {
+    return top.take(4).map((e) => e.hobby).toList();
   }
 
   // Pad with budget-passing hobbies not already in top
@@ -214,15 +218,15 @@ List<Hobby> computeMatchedHobbies({
 
   final result = top.map((e) => e.hobby).toList();
   for (final h in padding) {
-    if (result.length >= 3) break;
+    if (result.length >= 4) break;
     result.add(h);
   }
 
-  // If still under 3, add any remaining hobbies
-  if (result.length < 3) {
+  // If still under 4, add any remaining hobbies
+  if (result.length < 4) {
     final resultIds = result.map((h) => h.id).toSet();
     for (final h in allHobbies) {
-      if (result.length >= 3) break;
+      if (result.length >= 4) break;
       if (!resultIds.contains(h.id)) result.add(h);
     }
   }

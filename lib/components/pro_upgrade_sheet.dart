@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../core/analytics/analytics_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -37,6 +38,16 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
     _FeatureRow(icon: Icons.people_outline, label: 'Buddy Mode', free: false, pro: true),
     _FeatureRow(icon: Icons.explore_outlined, label: '150+ Curated Hobbies', free: true, pro: true),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(analyticsProvider).trackEvent('paywall_shown', {
+        'trigger': widget.triggerMessage,
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

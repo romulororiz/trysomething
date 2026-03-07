@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import '../../models/hobby.dart';
 import '../../core/hobby_match.dart';
 import '../../theme/category_ui.dart';
+import '../../core/analytics/analytics_provider.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -15,7 +17,6 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
 import '../../theme/spacing.dart';
-import '../../providers/subscription_provider.dart';
 
 // ═══════════════════════════════════════════════════════
 //  INTERVAL HELPER
@@ -153,6 +154,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     }
     ref.read(onboardingCompleteProvider.notifier).complete();
 
+    // Track onboarding completion with quiz answers
+    ref.read(analyticsProvider).trackEvent('onboarding_completed', {
+      'hours_per_week': _hours.round(),
+      'budget_level': _budget,
+      'prefer_social': _social,
+      'vibes': _vibes.toList(),
+      'match_count': _matchedHobbies.length,
+      'top_match': _matchedHobbies.isNotEmpty ? _matchedHobbies.first.id : null,
+    });
+
     // Fire-and-forget: sync preferences to server
     final repo = ref.read(authRepositoryProvider);
     repo.updatePreferences(
@@ -198,6 +209,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Recompute matches when hobby data arrives (if we're on the results page
+    // and matches are empty because hobbies hadn't loaded yet)
+    ref.listen(hobbyListProvider, (prev, next) {
+      if (_currentPage == 2 && _matchedHobbies.isEmpty && next.hasValue) {
+        setState(() {
+          _matchedHobbies = _computeMatchedHobbies();
+        });
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: SafeArea(
@@ -888,19 +909,25 @@ class _ReadyPage extends ConsumerStatefulWidget {
 
 class _ReadyPageState extends ConsumerState<_ReadyPage>
     with SingleTickerProviderStateMixin {
-  bool _aiGenFired = false;
   late AnimationController _floatCtrl;
 
   // Card positions: (leftPct, topPct, width, height)
+  // Mimics mockup: top-left small, top-right medium, bottom-left large (overlaps), bottom-right small
   static const _cardLayouts = [
-    (0.04, 0.04, 140.0, 160.0), // top-left
-    (0.52, 0.06, 155.0, 170.0), // top-right
-    (0.00, 0.42, 170.0, 180.0), // bottom-left (largest — top match)
-    (0.50, 0.48, 145.0, 160.0), // bottom-right
+    (0.06, 0.02, 120.0, 130.0), // top-left — small
+    (0.48, 0.00, 155.0, 175.0), // top-right — taller
+    (-0.02, 0.34, 185.0, 200.0), // bottom-left — largest, top match, overlaps above
+    (0.50, 0.45, 130.0, 140.0), // bottom-right — small
   ];
 
-  // Match percentages per card position
-  static const _matchPcts = [92, 87, 98, 84];
+  // 3D perspective transforms per card: (rotateX, rotateY, rotateZ)
+  // Strong tilts to match the mockup's dramatic 3D-floating look
+  static const _cardTransforms = [
+    (-0.15, 0.10, -0.04),  // top-left: tilts back-right
+    (0.10, -0.15, 0.04),   // top-right: tilts back-left
+    (0.12, 0.10, -0.03),   // bottom-left: tilts forward-right
+    (-0.10, -0.12, 0.05),  // bottom-right: tilts forward-left
+  ];
 
   // Float offsets per card (amplitude, phase)
   static const _floatParams = [
@@ -918,23 +945,6 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
       vsync: this,
     )..repeat(reverse: true);
 
-    // Fire AI generation for a personalized 4th hobby
-    _fireAiGeneration();
-  }
-
-  void _fireAiGeneration() {
-    if (_aiGenFired) return;
-    // Only fire AI generation for Pro/trial users
-    if (!ref.read(isProProvider)) return;
-    _aiGenFired = true;
-    final vibeList = widget.vibes.join(', ');
-    final socialPref = widget.social ? 'social/group' : 'solo';
-    final prompt =
-        'Suggest a unique hobby for someone who likes $vibeList, '
-        'has ${widget.hours.round()}h/week, prefers $socialPref activities';
-    Future.microtask(() {
-      ref.read(generationProvider.notifier).generate(prompt);
-    });
   }
 
   @override
@@ -945,13 +955,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
 
   @override
   Widget build(BuildContext context) {
-    final genState = ref.watch(generationProvider);
-    final aiHobby = genState.status == GenerationStatus.success
-        ? genState.hobby
-        : null;
-
-    // 3 pre-seeded + optionally 1 AI-generated
-    final topMatches = widget.matchedHobbies.take(3).toList();
+    final topMatches = widget.matchedHobbies.take(4).toList();
 
     return AnimatedBuilder(
       animation: Listenable.merge([widget.entryCtrl, _floatCtrl]),
@@ -967,33 +971,41 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             children: [
-              // "Curated for you" badge
+              // "Curated for you" badge — slight tilt for depth
               Align(
                 alignment: Alignment.centerRight,
                 child: Opacity(
                   opacity: badgeOp,
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 8, right: 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.sagePale,
-                      borderRadius:
-                          BorderRadius.circular(Spacing.radiusBadge),
-                      border:
-                          Border.all(color: AppColors.sage.withAlpha(60)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(MdiIcons.autoFix,
-                            size: 14, color: AppColors.sage),
-                        const SizedBox(width: 4),
-                        Text('Curated for you',
-                            style: AppTypography.sansCaption.copyWith(
-                                color: AppColors.sage,
-                                fontWeight: FontWeight.w600)),
-                      ],
+                  child: Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.003)
+                      ..rotateX(-0.08)
+                      ..rotateY(-0.12)
+                      ..rotateZ(0.05),
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8, right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.sagePale.withAlpha(200),
+                        borderRadius:
+                            BorderRadius.circular(Spacing.radiusBadge),
+                        border:
+                            Border.all(color: AppColors.sage.withAlpha(60)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(MdiIcons.autoFix,
+                              size: 14, color: AppColors.sage),
+                          const SizedBox(width: 4),
+                          Text('Curated for you',
+                              style: AppTypography.sansCaption.copyWith(
+                                  color: AppColors.sage,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1011,6 +1023,15 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
+                          // Subtle floating particles
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _ParticlePainter(
+                                progress: _floatCtrl.value,
+                              ),
+                            ),
+                          ),
+
                           // Decorative dots
                           _dot(areaW * 0.85, areaH * 0.02, 6,
                               AppColors.coral),
@@ -1021,9 +1042,9 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                           _dot(areaW * 0.45, areaH * 0.75, 3,
                               AppColors.warmGray),
 
-                          // Hobby cards (3 pre-seeded)
+                          // Hobby cards (4 matched)
                           for (int i = 0;
-                              i < 3 && i < topMatches.length;
+                              i < 4 && i < topMatches.length;
                               i++)
                             _buildFloatingCard(
                                 topMatches[i],
@@ -1031,16 +1052,10 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                                 areaH,
                                 i,
                                 v,
-                                false,
                                 widget.matchReasons[topMatches[i].id] ?? []),
 
-                          // 4th card — AI generated or placeholder
-                          if (aiHobby != null)
-                            _buildFloatingCard(
-                                aiHobby, areaW, areaH, 3, v, true)
-                          else
-                            _buildAiPlaceholderCard(
-                                areaW, areaH, v, genState.status),
+                          // "98% Match" floating badge
+                          _buildMatchBadge(areaW, areaH, v),
                         ],
                       );
                     },
@@ -1107,188 +1122,140 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
   }
 
   Widget _buildFloatingCard(
-      Hobby hobby, double areaW, double areaH, int i, double entryV, bool isAi,
+      Hobby hobby, double areaW, double areaH, int i, double entryV,
       [List<String> reasons = const []]) {
     final (leftPct, topPct, cardW, cardH) = _cardLayouts[i];
-    final cardOp =
-        _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
+    final cardOp = _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
     final cardSlide =
         _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06, Curves.easeOutCubic);
 
     // Subtle floating bob per card
     final (amp, phase) = _floatParams[i];
     final floatOffset = math.sin(_floatCtrl.value * math.pi + phase) * amp;
-    final matchPct = _matchPcts[i];
     final isTopMatch = i == 2; // bottom-left card is the top match
+    final (rx, ry, rz) = _cardTransforms[i];
+
+    final titleSize = isTopMatch ? 14.0 : 11.0;
+
+    // 3D perspective matrix — strong tilted-in-space look matching mockup
+    final matrix = Matrix4.identity()
+      ..setEntry(3, 2, 0.003) // deeper perspective for dramatic 3D
+      ..rotateX(rx)
+      ..rotateY(ry)
+      ..rotateZ(rz);
 
     return Positioned(
       left: areaW * leftPct,
       top: areaH * topPct + 12 * (1 - cardSlide) + floatOffset,
       child: Opacity(
         opacity: cardOp,
-        child: Container(
-          width: cardW,
-          height: cardH,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isTopMatch
-                  ? AppColors.coral.withAlpha(100)
-                  : AppColors.sandDark.withAlpha(120),
-              width: isTopMatch ? 1.5 : 0.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(40),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+        child: Transform(
+          alignment: Alignment.center,
+          transform: matrix,
+          child: Container(
+            width: cardW,
+            height: cardH,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: Colors.white.withAlpha(isTopMatch ? 30 : 18),
+                width: isTopMatch ? 1.0 : 0.5,
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              color: AppColors.sand,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(80),
+                  blurRadius: 32,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  // Centered icon + label + reasons
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(hobby.catIcon,
-                              size: 36, color: hobby.catColor),
-                          const SizedBox(height: 8),
-                          Text(
-                            hobby.category.toUpperCase(),
-                            style: AppTypography.sansLabel.copyWith(
-                              color: AppColors.nearBlack,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          if (reasons.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            for (final reason in reasons.take(2))
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  reason,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.sansTiny.copyWith(
-                                    color: AppColors.driftwood,
-                                    fontSize: 9,
-                                  ),
-                                ),
-                              ),
-                          ],
+                  // Hobby image background
+                  CachedNetworkImage(
+                    imageUrl: hobby.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) =>
+                        Container(color: AppColors.sand),
+                    errorWidget: (_, __, ___) =>
+                        Container(color: AppColors.sand),
+                  ),
+
+                  // Dark gradient overlay for readability
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withAlpha(isTopMatch ? 80 : 100),
+                          Colors.black.withAlpha(isTopMatch ? 180 : 190),
                         ],
                       ),
                     ),
                   ),
 
-                  // Match % badge
-                  if (isTopMatch)
-                    Positioned(
-                      bottom: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.sage,
-                          borderRadius:
-                              BorderRadius.circular(Spacing.radiusBadge),
-                        ),
-                        child: Text(
-                          '$matchPct% Match',
-                          style: AppTypography.monoBadgeSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                  // Semi-transparent glass tint
+                  Container(
+                    color: AppColors.sand.withAlpha(60),
+                  ),
+
+                  // Content: hobby title + match reasons
+                  Padding(
+                    padding: EdgeInsets.all(isTopMatch ? 14.0 : 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Category icon badge
+                        Container(
+                          width: isTopMatch ? 32 : 24,
+                          height: isTopMatch ? 32 : 24,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(80),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            hobby.catIcon,
+                            size: isTopMatch ? 18 : 14,
+                            color: hobby.catColor,
                           ),
                         ),
-                      ),
-                    ),
 
-                  // AI sparkle badge or match % badge
-                  if (isAi)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.indigo,
-                          borderRadius:
-                              BorderRadius.circular(Spacing.radiusBadge),
+                        const Spacer(),
+
+                        // Hobby title
+                        Text(
+                          hobby.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.sansLabel.copyWith(
+                            color: Colors.white,
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(MdiIcons.autoFix,
-                                size: 10, color: Colors.white),
-                            const SizedBox(width: 3),
-                            Text(
-                              'AI',
-                              style: AppTypography.monoBadgeSmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
+
+                        // Match reason (larger cards only)
+                        if (isTopMatch && reasons.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            reasons.first,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.sansTiny.copyWith(
+                              color: Colors.white.withAlpha(180),
+                              fontSize: 10,
+                              height: 1.3,
                             ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (!isTopMatch)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(80),
-                          borderRadius:
-                              BorderRadius.circular(Spacing.radiusBadge),
-                        ),
-                        child: Text(
-                          '$matchPct%',
-                          style: AppTypography.monoBadgeSmall.copyWith(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ),
+                        ],
+                      ],
                     ),
-
-                  // "Made for you" label on AI card
-                  if (isAi)
-                    Positioned(
-                      bottom: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.indigo,
-                          borderRadius:
-                              BorderRadius.circular(Spacing.radiusBadge),
-                        ),
-                        child: Text(
-                          'Made for you',
-                          style: AppTypography.monoBadgeSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
+                  ),
                 ],
               ),
             ),
@@ -1298,97 +1265,36 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
     );
   }
 
-  Widget _buildAiPlaceholderCard(
-      double areaW, double areaH, double entryV, GenerationStatus status) {
-    const i = 3;
-    final (leftPct, topPct, cardW, cardH) = _cardLayouts[i];
-    final cardOp = _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
-    final cardSlide =
-        _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06, Curves.easeOutCubic);
-    final (amp, phase) = _floatParams[i];
+  /// Builds the "98% Match" badge that floats between cards
+  Widget _buildMatchBadge(double areaW, double areaH, double entryV) {
+    final badgeOp = _iv(entryV, 0.25, 0.45);
+    final (amp, phase) = (2.0, 1.2);
     final floatOffset = math.sin(_floatCtrl.value * math.pi + phase) * amp;
-    final isLoading = status == GenerationStatus.generating;
 
     return Positioned(
-      left: areaW * leftPct,
-      top: areaH * topPct + 12 * (1 - cardSlide) + floatOffset,
+      left: areaW * 0.22,
+      top: areaH * 0.30 + floatOffset,
       child: Opacity(
-        opacity: cardOp,
+        opacity: badgeOp,
         child: Container(
-          width: cardW,
-          height: cardH,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.indigo.withAlpha(100),
-              width: 1,
-            ),
+            color: AppColors.coral,
+            borderRadius: BorderRadius.circular(Spacing.radiusBadge),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(40),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: AppColors.coral.withAlpha(80),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              color: AppColors.sand,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isLoading) ...[
-                      SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.indigo.withAlpha(180)),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Finding yours...',
-                        style: AppTypography.sansCaption.copyWith(
-                          color: AppColors.driftwood,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ] else ...[
-                      if (ref.watch(isProProvider)) ...[
-                        Icon(MdiIcons.autoFix,
-                            size: 32, color: AppColors.indigo),
-                        const SizedBox(height: 10),
-                        Text(
-                          'AI PICK',
-                          style: AppTypography.sansLabel.copyWith(
-                            color: AppColors.nearBlack,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ] else ...[
-                        Icon(Icons.lock_rounded,
-                            size: 28, color: AppColors.driftwood.withAlpha(120)),
-                        const SizedBox(height: 10),
-                        Text(
-                          'PRO',
-                          style: AppTypography.sansLabel.copyWith(
-                            color: AppColors.driftwood,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ],
-                ),
-              ),
+          child: Text(
+            '98% Match',
+            style: AppTypography.monoBadgeSmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
             ),
           ),
         ),
@@ -1452,4 +1358,53 @@ class _WaveUnderlinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_WaveUnderlinePainter old) =>
       old.progress != progress;
+}
+
+/// Subtle floating particles that drift slowly across the card area.
+class _ParticlePainter extends CustomPainter {
+  final double progress; // 0..1, oscillates from _floatCtrl
+
+  _ParticlePainter({required this.progress});
+
+  // Pre-defined particle positions and properties (deterministic, no random)
+  static const _particles = [
+    // (xPct, yPct, radius, colorIndex, speedFactor, phaseFactor)
+    (0.12, 0.08, 2.5, 0, 1.0, 0.0),
+    (0.88, 0.15, 1.8, 1, 0.7, 0.5),
+    (0.06, 0.55, 2.0, 2, 1.2, 1.0),
+    (0.94, 0.42, 1.5, 0, 0.8, 1.5),
+    (0.50, 0.85, 2.2, 3, 0.9, 2.0),
+    (0.75, 0.72, 1.6, 1, 1.1, 2.5),
+    (0.20, 0.35, 1.3, 2, 0.6, 3.0),
+    (0.65, 0.05, 1.8, 3, 1.0, 0.8),
+    (0.35, 0.65, 1.4, 0, 0.85, 1.8),
+    (0.82, 0.88, 2.0, 2, 0.75, 2.2),
+  ];
+
+  static const _colors = [
+    Color(0x40FF6B6B), // coral
+    Color(0x30FBBF24), // amber
+    Color(0x307C3AED), // indigo
+    Color(0x3006D6A0), // sage
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (final (xPct, yPct, radius, colorIdx, speed, phase) in _particles) {
+      final drift = math.sin(progress * math.pi * speed + phase) * 6;
+      final driftY = math.cos(progress * math.pi * speed * 0.7 + phase) * 4;
+      final x = size.width * xPct + drift;
+      final y = size.height * yPct + driftY;
+      // Gentle pulse
+      final r = radius + math.sin(progress * math.pi * 2 + phase) * 0.4;
+
+      paint.color = _colors[colorIdx];
+      canvas.drawCircle(Offset(x, y), r, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ParticlePainter old) => old.progress != progress;
 }

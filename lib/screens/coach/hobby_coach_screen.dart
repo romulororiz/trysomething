@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../core/analytics/analytics_provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
 import '../../providers/hobby_provider.dart';
@@ -180,6 +181,10 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
       final text = response.data['response'] as String? ?? '';
       final assistantMsg = ChatMessage(role: 'assistant', content: text);
       state = [...state, assistantMsg];
+
+      ref.read(analyticsProvider).trackEvent('coach_message_sent', {
+        'hobby_id': hobbyId,
+      });
 
       // Increment count after successful exchange (only for non-Pro)
       if (!isPro) {

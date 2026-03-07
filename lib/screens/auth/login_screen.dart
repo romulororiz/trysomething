@@ -70,8 +70,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isLoading = authState.status == AuthStatus.loading;
-    final isEmailLoading = isLoading && authState.loadingMethod == AuthMethod.email;
-    final isGoogleLoading = isLoading && authState.loadingMethod == AuthMethod.google;
+    final isEmailLoading =
+        isLoading && authState.loadingMethod == AuthMethod.email;
+    final isGoogleLoading =
+        isLoading && authState.loadingMethod == AuthMethod.google;
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -127,18 +129,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // ── Logo ──
                         Center(
                           child: Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: AppColors.warmWhite,
-                              borderRadius: BorderRadius.circular(22),
-                            ),
+                            width: 100,
+                            height: 100,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22),
                               child: Image.asset(
                                 'assets/images/app_logo.png',
-                                width: 52,
-                                height: 52,
+                                width: 100,
+                                height: 100,
                               ),
                             ),
                           ),

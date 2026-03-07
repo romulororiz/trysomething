@@ -71,7 +71,7 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> updateProfile({String? displayName, String? bio, String? avatarUrl}) async {
+  Future<AuthUser> updateProfile({String? displayName, String? bio, String? avatarUrl, String? fcmToken}) async {
     calls.add('updateProfile');
     if (shouldFail) throw Exception(failMessage);
     return mockUser.copyWith(

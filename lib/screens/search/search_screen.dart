@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,11 +26,62 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   String? _selectedCategory;
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) setState(() => _query = value);
+    });
+  }
+
+  void _onSearchSubmitted(String value) {
+    _debounce?.cancel();
+    setState(() => _query = value);
+    if (value.trim().isEmpty) return;
+    // On explicit submit with few results, trigger AI generation for Pro users
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeGenerateOnSubmit();
+    });
+  }
+
+  void _maybeGenerateOnSubmit() {
+    if (!mounted) return;
+    final allHobbiesAsync = ref.read(hobbyListProvider);
+    final allHobbies = allHobbiesAsync.valueOrNull ?? [];
+    final results = _filterHobbies(allHobbies);
+    if (results.length < 3) {
+      final isPro = ref.read(isProProvider);
+      final genState = ref.read(generationProvider);
+      if (isPro &&
+          genState.status != GenerationStatus.generating &&
+          genState.status != GenerationStatus.success) {
+        ref.read(generationProvider.notifier).generate(_query);
+      }
+    }
+  }
+
+  List<Hobby> _filterHobbies(List<Hobby> allHobbies) {
+    if (_query.isEmpty) return [];
+    var results = allHobbies
+        .where((h) =>
+            h.title.toLowerCase().contains(_query.toLowerCase()) ||
+            h.category.toLowerCase().contains(_query.toLowerCase()) ||
+            h.tags.any((t) => t.toLowerCase().contains(_query.toLowerCase())))
+        .toList();
+    if (_selectedCategory != null) {
+      results = results
+          .where((h) => h.category.toLowerCase() == _selectedCategory!.toLowerCase())
+          .toList();
+    }
+    return results;
   }
 
   static const _typeLabels = ['COURSE', 'WORKSHOP', 'KIT + CLASS'];
@@ -56,21 +108,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       loading: () => const SafeArea(child: Center(child: CircularProgressIndicator())),
       error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
       data: (allHobbies) {
-    // Filter hobbies by query and category
-    var results = _query.isEmpty
-        ? <Hobby>[]
-        : allHobbies
-            .where((h) =>
-                h.title.toLowerCase().contains(_query.toLowerCase()) ||
-                h.category.toLowerCase().contains(_query.toLowerCase()) ||
-                h.tags.any((t) => t.toLowerCase().contains(_query.toLowerCase())))
-            .toList();
-
-    if (_selectedCategory != null) {
-      results = results
-          .where((h) => h.category.toLowerCase() == _selectedCategory!.toLowerCase())
-          .toList();
-    }
+    final results = _filterHobbies(allHobbies);
 
     // "You might also like" — random hobbies not in results
     final resultIds = results.map((h) => h.id).toSet();
@@ -123,7 +161,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      onChanged: (v) => setState(() => _query = v),
+                      onChanged: _onSearchChanged,
+                      onSubmitted: _onSearchSubmitted,
+                      textInputAction: TextInputAction.search,
                       style: AppTypography.sansBodySmall,
                       decoration: InputDecoration(
                         hintText: 'Search hobbies, categories...',
@@ -138,6 +178,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     GestureDetector(
                       onTap: () {
                         _searchController.clear();
+                        _debounce?.cancel();
                         setState(() => _query = '');
                       },
                       child: Icon(AppIcons.close,
@@ -232,9 +273,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  // Track the last query we auto-fired generation for
-  String? _lastAutoGenQuery;
-
   Widget _buildResultsList(
     BuildContext context,
     WidgetRef ref,
@@ -244,16 +282,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final genState = ref.watch(generationProvider);
     final isGenerating = genState.status == GenerationStatus.generating;
     final fewResults = results.length < 3;
-
-    // Auto-fire AI generation when <3 results (Pro only, once per query)
     final isPro = ref.watch(isProProvider);
-    if (isPro && fewResults && !isGenerating && _lastAutoGenQuery != _query &&
-        genState.status != GenerationStatus.error) {
-      _lastAutoGenQuery = _query;
-      Future.microtask(() {
-        ref.read(generationProvider.notifier).generate(_query);
-      });
-    }
 
     return ListView(
       padding: const EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
@@ -289,6 +318,37 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onTap: () => context.push('/hobby/${hobby.id}'),
         )),
 
+        // Pro: explicit "Find more with AI" button (when <3 results, not yet generating)
+        if (isPro && fewResults && !isGenerating && genState.status != GenerationStatus.error)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+            child: GestureDetector(
+              onTap: () => ref.read(generationProvider.notifier).generate(_query),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.warmWhite,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(MdiIcons.creationOutline, size: 16, color: AppColors.coral),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Find more with AI',
+                      style: AppTypography.sansLabel.copyWith(
+                        color: AppColors.coral,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         // Pro: AI shimmer / generating indicator (when <3 results)
         if (isPro && fewResults && isGenerating)
           Padding(
@@ -308,7 +368,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
             child: GestureDetector(
               onTap: () {
-                _lastAutoGenQuery = null;
                 ref.read(generationProvider.notifier).generate(_query);
               },
               child: Container(
@@ -462,30 +521,36 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _generateButton() {
     final isPro = ref.watch(isProProvider);
+    final isGenerating = ref.watch(generationProvider).status == GenerationStatus.generating;
     return GestureDetector(
-      onTap: () {
-        if (!isPro) {
-          showProUpgrade(context, 'AI hobby generation is a Pro feature.');
-          return;
-        }
-        ref.read(generationProvider.notifier).generate(_query);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.coral,
-          borderRadius: BorderRadius.circular(Spacing.radiusButton),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              'Generate this hobby',
-              style: AppTypography.sansCta.copyWith(color: Colors.white),
-            ),
-          ],
+      onTap: isGenerating
+          ? null
+          : () {
+              if (!isPro) {
+                showProUpgrade(context, 'AI hobby generation is a Pro feature.');
+                return;
+              }
+              ref.read(generationProvider.notifier).generate(_query);
+            },
+      child: Opacity(
+        opacity: isGenerating ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.coral,
+            borderRadius: BorderRadius.circular(Spacing.radiusButton),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                'Generate this hobby',
+                style: AppTypography.sansCta.copyWith(color: Colors.white),
+              ),
+            ],
+          ),
         ),
       ),
     );

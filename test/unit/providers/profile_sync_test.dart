@@ -17,6 +17,7 @@ class MockAuthRepository implements AuthRepository {
     String? displayName,
     String? bio,
     String? avatarUrl,
+    String? fcmToken,
   }) async {
     calls.add('updateProfile');
     lastDisplayName = displayName;

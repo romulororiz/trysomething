@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/analytics/analytics_provider.dart';
+import '../core/analytics/analytics_service.dart';
 import '../data/repositories/user_progress_repository.dart';
 import '../data/repositories/user_progress_repository_api.dart';
 import '../models/hobby.dart';
@@ -109,15 +111,17 @@ final userProgressRepositoryProvider = Provider<UserProgressRepository>((ref) {
 final userHobbiesProvider = StateNotifierProvider<UserHobbiesNotifier, Map<String, UserHobby>>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   final repo = ref.watch(userProgressRepositoryProvider);
-  return UserHobbiesNotifier(prefs, repo);
+  final analytics = ref.watch(analyticsProvider);
+  return UserHobbiesNotifier(prefs, repo, analytics);
 });
 
 class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   final SharedPreferences _prefs;
   final UserProgressRepository _repo;
+  final AnalyticsService _analytics;
   static const _key = 'user_hobbies';
 
-  UserHobbiesNotifier(this._prefs, this._repo) : super(_load(_prefs));
+  UserHobbiesNotifier(this._prefs, this._repo, this._analytics) : super(_load(_prefs));
 
   static Map<String, UserHobby> _load(SharedPreferences prefs) {
     final json = prefs.getString(_key);
@@ -177,6 +181,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       hobbyId: UserHobby(hobbyId: hobbyId, status: HobbyStatus.saved),
     };
     _save();
+    _analytics.trackEvent('hobby_saved', {'hobby_id': hobbyId});
     _apiCall(snapshot, () async => _repo.saveHobby(hobbyId));
   }
 
@@ -202,6 +207,18 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   }
 
   void startTrying(String hobbyId) {
+    // Track hobby_switched if user already has a different active/trying hobby
+    final currentActive = state.entries
+        .where((e) => e.value.status == HobbyStatus.trying || e.value.status == HobbyStatus.active)
+        .map((e) => e.key)
+        .toList();
+    if (currentActive.isNotEmpty && !currentActive.contains(hobbyId)) {
+      _analytics.trackEvent('hobby_switched', {
+        'from_hobby_id': currentActive.first,
+        'to_hobby_id': hobbyId,
+      });
+    }
+
     final snapshot = Map<String, UserHobby>.from(state);
     final existing = state[hobbyId];
     final now = DateTime.now();
@@ -215,6 +232,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       ),
     };
     _save();
+    _analytics.trackEvent('hobby_started', {'hobby_id': hobbyId});
     _apiCall(snapshot, () async =>
       _repo.updateStatus(hobbyId, HobbyStatus.trying, startedAt: now));
   }
@@ -253,6 +271,13 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       steps.remove(stepId);
     } else {
       steps.add(stepId);
+      // First step ever completed for this hobby = first session
+      if (existing.completedStepIds.isEmpty) {
+        _analytics.trackEvent('first_session_completed', {
+          'hobby_id': hobbyId,
+          'step_id': stepId,
+        });
+      }
     }
     state = {
       ...state,
