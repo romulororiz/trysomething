@@ -143,11 +143,10 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       }
     });
 
-    // Reset page controller when category changes
+    // Reset page position when category changes (don't dispose/recreate controller)
     ref.listen<String?>(selectedCategoryProvider, (prev, next) {
-      if (prev != next) {
-        _pageController.dispose();
-        _pageController = PageController();
+      if (prev != next && _pageController.hasClients) {
+        _pageController.jumpToPage(0);
       }
     });
 
@@ -169,7 +168,9 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             children: [
               // Full-screen card PageView with cross-fade on category change
               AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
                 child: PageView.builder(
                   key: ValueKey(selectedCategory),
                   controller: _pageController,

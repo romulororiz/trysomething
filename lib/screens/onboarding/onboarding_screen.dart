@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../models/hobby.dart';
+import '../../core/hobby_match.dart';
 import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
@@ -167,19 +168,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   List<Hobby> _computeMatchedHobbies() {
     final all = ref.read(hobbyListProvider).valueOrNull ?? [];
-    if (_vibes.isEmpty) return all.toList();
+    if (all.isEmpty) return [];
 
-    final scored = all.map((h) {
-      int score = h.tags.where((t) => _vibes.contains(t)).length;
-      if (_social && h.tags.contains('social')) score += 1;
-      if (!_social && h.tags.contains('solo')) score += 1;
-      return (hobby: h, score: score);
-    }).toList();
-
-    scored.sort((a, b) => b.score.compareTo(a.score));
-    final filtered = scored.where((e) => e.score > 0).toList();
-    if (filtered.length < 3) return all.toList();
-    return filtered.map((e) => e.hobby).toList();
+    return computeMatchedHobbies(
+      allHobbies: all,
+      userHours: _hours,
+      userBudgetLevel: _budget,
+      userPrefersSocial: _social,
+      userVibes: _vibes,
+    );
   }
 
   // ── Build ──
