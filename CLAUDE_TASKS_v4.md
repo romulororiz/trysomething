@@ -28,7 +28,7 @@ The app currently has broken trust in its core promise. Fix that first.
   - Result: 3 matches (1 best + 2 alternatives), ordered by composite fit score
   - **Test:** User selects "under CHF 30, 1h/week, solo, at home" → NEVER gets recommended a hobby costing CHF 150+ or requiring 4h/week
 
-- [ ] **A.2 — Add "Why this fits you" to match results**
+- [x] **A.2 — Add "Why this fits you" to match results**
   - On each match card, show 2-3 specific reasons:
     - "Fits your CHF 30 budget" / "Works in 1h/week" / "Great for solo evenings at home"
   - These must come from actual matching logic, not generic text

@@ -73,6 +73,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   bool _social = false;
   final Set<String> _vibes = {};
   List<Hobby> _matchedHobbies = [];
+  Map<String, List<String>> _matchReasons = {};
 
   // Animation controllers
   late AnimationController _page1EntryCtrl;
@@ -170,13 +171,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final all = ref.read(hobbyListProvider).valueOrNull ?? [];
     if (all.isEmpty) return [];
 
-    return computeMatchedHobbies(
+    final matched = computeMatchedHobbies(
       allHobbies: all,
       userHours: _hours,
       userBudgetLevel: _budget,
       userPrefersSocial: _social,
       userVibes: _vibes,
     );
+
+    // Compute reasons for each matched hobby
+    _matchReasons = {
+      for (final h in matched)
+        h.id: computeMatchReasons(
+          hobby: h,
+          userHours: _hours,
+          userBudgetLevel: _budget,
+          userPrefersSocial: _social,
+          userVibes: _vibes,
+        ),
+    };
+
+    return matched;
   }
 
   // ── Build ──
@@ -253,6 +268,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   _ReadyPage(
                     entryCtrl: _page3EntryCtrl,
                     matchedHobbies: _matchedHobbies,
+                    matchReasons: _matchReasons,
                     vibes: _vibes,
                     hours: _hours,
                     social: _social,
@@ -852,6 +868,7 @@ class _TimeBudgetPage extends StatelessWidget {
 class _ReadyPage extends ConsumerStatefulWidget {
   final AnimationController entryCtrl;
   final List<Hobby> matchedHobbies;
+  final Map<String, List<String>> matchReasons;
   final Set<String> vibes;
   final double hours;
   final bool social;
@@ -859,6 +876,7 @@ class _ReadyPage extends ConsumerStatefulWidget {
   const _ReadyPage({
     required this.entryCtrl,
     required this.matchedHobbies,
+    required this.matchReasons,
     required this.vibes,
     required this.hours,
     required this.social,
@@ -1008,7 +1026,13 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                               i < 3 && i < topMatches.length;
                               i++)
                             _buildFloatingCard(
-                                topMatches[i], areaW, areaH, i, v, false),
+                                topMatches[i],
+                                areaW,
+                                areaH,
+                                i,
+                                v,
+                                false,
+                                widget.matchReasons[topMatches[i].id] ?? []),
 
                           // 4th card — AI generated or placeholder
                           if (aiHobby != null)
@@ -1083,7 +1107,8 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
   }
 
   Widget _buildFloatingCard(
-      Hobby hobby, double areaW, double areaH, int i, double entryV, bool isAi) {
+      Hobby hobby, double areaW, double areaH, int i, double entryV, bool isAi,
+      [List<String> reasons = const []]) {
     final (leftPct, topPct, cardW, cardH) = _cardLayouts[i];
     final cardOp =
         _iv(entryV, 0.1 + i * 0.06, 0.35 + i * 0.06);
@@ -1126,24 +1151,44 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
               color: AppColors.sand,
               child: Stack(
                 children: [
-                  // Centered icon + label
+                  // Centered icon + label + reasons
                   Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(hobby.catIcon,
-                            size: 36, color: hobby.catColor),
-                        const SizedBox(height: 10),
-                        Text(
-                          hobby.category.toUpperCase(),
-                          style: AppTypography.sansLabel.copyWith(
-                            color: AppColors.nearBlack,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(hobby.catIcon,
+                              size: 36, color: hobby.catColor),
+                          const SizedBox(height: 8),
+                          Text(
+                            hobby.category.toUpperCase(),
+                            style: AppTypography.sansLabel.copyWith(
+                              color: AppColors.nearBlack,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                      ],
+                          if (reasons.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            for (final reason in reasons.take(2))
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  reason,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.sansTiny.copyWith(
+                                    color: AppColors.driftwood,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
 

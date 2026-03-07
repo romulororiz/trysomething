@@ -95,6 +95,83 @@ int computeMatchScore({
   return score;
 }
 
+// ═══════════════════════════════════════════════════════
+//  MATCH REASONS
+// ═══════════════════════════════════════════════════════
+
+/// Human-readable label for budget level.
+String _budgetLabel(int budgetLevel) {
+  switch (budgetLevel) {
+    case 0:
+      return 'CHF 50';
+    case 1:
+      return 'CHF 150';
+    default:
+      return '';
+  }
+}
+
+/// Vibe key → display label mapping.
+const _vibeLabels = {
+  'creative': 'creative',
+  'relaxing': 'relaxing',
+  'social': 'social',
+  'physical': 'active',
+  'intellectual': 'intellectual',
+  'outdoors': 'outdoor',
+  'technical': 'technical',
+  'culinary': 'culinary',
+  'meditative': 'meditative',
+  'competitive': 'competitive',
+};
+
+/// Returns 2-3 specific reasons why a hobby matches the user's preferences.
+/// Reasons are derived from the actual scoring signals, not generic text.
+List<String> computeMatchReasons({
+  required Hobby hobby,
+  required double userHours,
+  required int userBudgetLevel,
+  required bool userPrefersSocial,
+  required Set<String> userVibes,
+}) {
+  final reasons = <String>[];
+
+  // Budget reason
+  final (_, costMax) = parseCostRange(hobby.costText);
+  final maxBudget = budgetThreshold(userBudgetLevel);
+  if (costMax <= maxBudget && userBudgetLevel < 2) {
+    reasons.add('Fits your ${_budgetLabel(userBudgetLevel)} budget');
+  }
+
+  // Time reason
+  final hobbyHours = parseWeeklyHours(hobby.timeText);
+  if (hobbyHours <= userHours) {
+    reasons.add('Works in ${hobbyHours.round()}h/week');
+  }
+
+  // Solo/social reason
+  if (userPrefersSocial && hobby.tags.contains('social')) {
+    reasons.add('Great for group activities');
+  } else if (!userPrefersSocial && hobby.tags.contains('solo')) {
+    reasons.add('Perfect for solo time');
+  }
+
+  // Vibe reason (first matching vibe)
+  for (final vibe in userVibes) {
+    if (hobby.tags.contains(vibe)) {
+      final label = _vibeLabels[vibe] ?? vibe;
+      reasons.add('Matches your $label vibe');
+      break;
+    }
+  }
+
+  return reasons.take(3).toList();
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOP MATCHES
+// ═══════════════════════════════════════════════════════
+
 /// Returns the top matched hobbies from [allHobbies] based on user preferences.
 /// Always returns at least 3 hobbies (padded with budget-passing hobbies if needed).
 List<Hobby> computeMatchedHobbies({
