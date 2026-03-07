@@ -110,7 +110,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       // Back arrow
                       GestureDetector(
-                        onTap: () => context.pop(),
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/feed');
+                          }
+                        },
                         child: Container(
                           width: 40,
                           height: 40,
