@@ -50,7 +50,7 @@ The app currently has broken trust in its core promise. Fix that first.
   - Filter chips stay pinned/static — only card list below animates
   - **Test:** category switching is smooth, no black flash
 
-- [ ] **A.5 — Instrument core analytics events**
+- [x] **A.5 — Instrument core analytics events**
   - Set up PostHog tracking for these events BEFORE any other work:
     - `onboarding_completed` (with quiz answers as properties)
     - `match_selected` (hobbyId, position: best/alt1/alt2)

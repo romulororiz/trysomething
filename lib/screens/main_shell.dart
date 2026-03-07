@@ -1,49 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../components/curved_nav/curved_navigation_bar.dart';
 import '../components/curved_nav/curved_navigation_bar_item.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_icons.dart';
 import '../theme/app_typography.dart';
 import '../theme/motion.dart';
 
 /// Bottom navigation shell — wraps all tab screens.
-/// 5 tabs: Discover / Explore / Library (center, elevated) / Plan / Profile
+/// 3 tabs: Home / Discover / You
 class MainShell extends StatelessWidget {
   final Widget child;
 
   const MainShell({super.key, required this.child});
 
   static final _tabs = [
-    (icon: AppIcons.navDiscover, label: 'Discover'),
-    (icon: AppIcons.navExplore, label: 'Explore'),
-    (icon: AppIcons.navLibrary, label: 'Library'),
-    (icon: AppIcons.navPlan, label: 'Plan'),
-    (icon: AppIcons.navProfile, label: 'Profile'),
+    (icon: MdiIcons.homeVariant, label: 'Home'),
+    (icon: MdiIcons.compass, label: 'Discover'),
+    (icon: MdiIcons.accountCircleOutline, label: 'You'),
   ];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    if (location.startsWith('/feed')) return 0;
-    if (location.startsWith('/explore')) return 1;
-    if (location.startsWith('/library')) return 2;
-    if (location.startsWith('/plan')) return 3;
-    if (location.startsWith('/profile')) return 4;
+    if (location.startsWith('/home')) return 0;
+    if (location.startsWith('/discover') || location.startsWith('/search')) return 1;
+    if (location.startsWith('/you')) return 2;
     return 0;
   }
 
   void _onTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go('/feed');
+        context.go('/home');
       case 1:
-        context.go('/explore');
+        context.go('/discover');
       case 2:
-        context.go('/library');
-      case 3:
-        context.go('/plan');
-      case 4:
-        context.go('/profile');
+        context.go('/you');
     }
   }
 
@@ -60,7 +52,7 @@ class MainShell extends StatelessWidget {
         items: _tabs.asMap().entries.map((entry) {
           final i = entry.key;
           final tab = entry.value;
-          final isCenter = i == 2;
+          final isCenter = i == 1;
           return CurvedNavigationBarItem(
             child: isCenter
                 ? Container(
@@ -77,7 +69,7 @@ class MainShell extends StatelessWidget {
             ),
           );
         }).toList(),
-        color: AppColors.warmWhite,
+        color: const Color(0xFF0E0E1A),
         buttonBackgroundColor: AppColors.coral,
         backgroundColor: Colors.transparent,
         animationCurve: Motion.navNotchCurve,

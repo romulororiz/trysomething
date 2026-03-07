@@ -114,7 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           if (context.canPop()) {
                             context.pop();
                           } else {
-                            context.go('/feed');
+                            context.go('/home');
                           }
                         },
                         child: Container(

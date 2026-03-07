@@ -47,7 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ref.read(storiesProvider.notifier).loadFromServer();
       ref.read(buddyProvider.notifier).loadFromServer();
       ref.read(challengeProvider.notifier).loadFromServer();
-      context.go('/feed');
+      context.go('/home');
     }
   }
 
@@ -62,7 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ref.read(storiesProvider.notifier).loadFromServer();
       ref.read(buddyProvider.notifier).loadFromServer();
       ref.read(challengeProvider.notifier).loadFromServer();
-      context.go('/feed');
+      context.go('/home');
     }
   }
 

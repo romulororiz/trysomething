@@ -215,7 +215,7 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
           ),
           const SizedBox(height: 10),
           GestureDetector(
-            onTap: () => context.go('/feed'),
+            onTap: () => context.go('/discover'),
             child: Text(
               'Start discovering →',
               style: AppTypography.sansCaption.copyWith(

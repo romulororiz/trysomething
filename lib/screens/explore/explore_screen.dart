@@ -613,7 +613,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 onTap: () {
                   ref.read(selectedCategoryProvider.notifier).state =
                       categories[i].id;
-                  context.go('/feed');
+                  context.go('/discover');
                 },
               );
             },
@@ -625,7 +625,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             child: GestureDetector(
               onTap: () {
                 ref.read(selectedCategoryProvider.notifier).state = null;
-                context.go('/feed');
+                context.go('/discover');
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,

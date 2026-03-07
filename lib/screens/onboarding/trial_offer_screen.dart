@@ -292,7 +292,7 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
   Future<void> _markShownAndNavigate() async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setBool('trialOfferShown', true);
-    if (mounted) context.go('/feed');
+    if (mounted) context.go('/home');
   }
 }
 

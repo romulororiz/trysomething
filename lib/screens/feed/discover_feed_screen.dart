@@ -257,20 +257,6 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                                         size: 20, color: Colors.white),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => context.push('/mood-match'),
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.black.withValues(alpha: 0.3),
-                                    ),
-                                    child: Icon(MdiIcons.emoticon,
-                                        size: 20, color: Colors.white),
-                                  ),
-                                ),
                               ],
                             ),
                           ),
@@ -288,20 +274,8 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                             child: Row(
                               children: [
                                 _QuickLink(
-                                  icon: Icons.local_fire_department_rounded,
-                                  label: 'Combos',
-                                  onTap: () => context.push('/combos'),
-                                ),
-                                const SizedBox(width: 8),
-                                _QuickLink(
-                                  icon: Icons.park_rounded,
-                                  label: 'Seasonal',
-                                  onTap: () => context.push('/seasonal'),
-                                ),
-                                const SizedBox(width: 8),
-                                _QuickLink(
                                   icon: Icons.compare_arrows_rounded,
-                                  label: 'Battle',
+                                  label: 'Compare',
                                   onTap: () => context.push('/compare'),
                                 ),
                               ],
