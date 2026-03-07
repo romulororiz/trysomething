@@ -10,6 +10,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../providers/subscription_provider.dart';
+import '../../components/pro_upgrade_sheet.dart';
 
 /// Search screen — search bar, category chips, result cards with badges.
 class SearchScreen extends ConsumerStatefulWidget {
@@ -243,8 +245,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final isGenerating = genState.status == GenerationStatus.generating;
     final fewResults = results.length < 3;
 
-    // Auto-fire AI generation when <3 results (only once per query)
-    if (fewResults && !isGenerating && _lastAutoGenQuery != _query &&
+    // Auto-fire AI generation when <3 results (Pro only, once per query)
+    final isPro = ref.watch(isProProvider);
+    if (isPro && fewResults && !isGenerating && _lastAutoGenQuery != _query &&
         genState.status != GenerationStatus.error) {
       _lastAutoGenQuery = _query;
       Future.microtask(() {
@@ -286,15 +289,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onTap: () => context.push('/hobby/${hobby.id}'),
         )),
 
-        // AI shimmer / generating indicator (when <3 results)
-        if (fewResults && isGenerating)
+        // Pro: AI shimmer / generating indicator (when <3 results)
+        if (isPro && fewResults && isGenerating)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
             child: _AiSearchingTile(),
           ),
 
-        // AI generation error with retry
-        if (fewResults && genState.status == GenerationStatus.error)
+        // Free users: blurred "unlock AI search" card when few results
+        if (!isPro && fewResults)
+          _AiSearchLockedTile(
+            onTap: () => showProUpgrade(context, 'AI Search finds custom hobbies when results are limited.'),
+          ),
+
+        // Pro: AI generation error with retry
+        if (isPro && fewResults && genState.status == GenerationStatus.error)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
             child: GestureDetector(
@@ -452,8 +461,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _generateButton() {
+    final isPro = ref.watch(isProProvider);
     return GestureDetector(
       onTap: () {
+        if (!isPro) {
+          showProUpgrade(context, 'AI hobby generation is a Pro feature.');
+          return;
+        }
         ref.read(generationProvider.notifier).generate(_query);
       },
       child: Container(
@@ -732,6 +746,86 @@ class _AiSearchingTileState extends State<_AiSearchingTile>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  AI SEARCH LOCKED TILE — shown to free users
+// ═══════════════════════════════════════════════════════
+
+class _AiSearchLockedTile extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AiSearchLockedTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.warmWhite,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.sandDark),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.sand,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(width: 120, height: 12,
+                            decoration: BoxDecoration(color: AppColors.sand, borderRadius: BorderRadius.circular(4))),
+                          const SizedBox(height: 8),
+                          Container(width: 80, height: 10,
+                            decoration: BoxDecoration(color: AppColors.sand, borderRadius: BorderRadius.circular(4))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cream.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.lock_rounded, size: 14, color: AppColors.coral),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Unlock AI search',
+                        style: AppTypography.sansLabel.copyWith(
+                          color: AppColors.coral, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

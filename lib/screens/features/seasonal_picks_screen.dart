@@ -8,6 +8,7 @@ import '../../theme/category_ui.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/shimmer_skeleton.dart';
 
 /// Seasonal hobby picks screen.
 /// Auto-detects the current season and highlights it at top with coral accent.
@@ -33,12 +34,9 @@ class SeasonalPicksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seasonalData = ref.watch(seasonalHobbiesProvider).valueOrNull ?? {};
+    final seasonalAsync = ref.watch(seasonalHobbiesProvider);
     final topPad = MediaQuery.of(context).padding.top;
     final currentKey = _currentSeasonKey(DateTime.now().month);
-    final allKeys = seasonalData.keys.toList();
-    allKeys.remove(currentKey);
-    final orderedSeasons = [currentKey, ...allKeys];
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -82,21 +80,38 @@ class SeasonalPicksScreen extends ConsumerWidget {
           ),
 
           // ── Season Sections ─────────────────────────────
-          ...orderedSeasons.map((seasonKey) {
-            final isCurrent = seasonKey == currentKey;
-            final meta = _seasonMeta[seasonKey] ??
-                _SeasonData(MdiIcons.calendarBlank, AppColors.warmGray, AppColors.sand);
-            final hobbyIds = seasonalData[seasonKey] ?? [];
-
-            return SliverToBoxAdapter(
-              child: _SeasonSection(
-                seasonKey: seasonKey,
-                isCurrent: isCurrent,
-                meta: meta,
-                hobbyIds: hobbyIds,
+          ...seasonalAsync.when(
+            loading: () => [const SliverToBoxAdapter(child: SeasonalSkeleton())],
+            error: (err, _) => [
+              SliverToBoxAdapter(
+                child: ErrorRetryWidget(
+                  error: err,
+                  onRetry: () => ref.invalidate(seasonalHobbiesProvider),
+                ),
               ),
-            );
-          }),
+            ],
+            data: (seasonalData) {
+              final allKeys = seasonalData.keys.toList();
+              allKeys.remove(currentKey);
+              final orderedSeasons = [currentKey, ...allKeys];
+
+              return orderedSeasons.map((seasonKey) {
+                final isCurrent = seasonKey == currentKey;
+                final meta = _seasonMeta[seasonKey] ??
+                    _SeasonData(MdiIcons.calendarBlank, AppColors.warmGray, AppColors.sand);
+                final hobbyIds = seasonalData[seasonKey] ?? [];
+
+                return SliverToBoxAdapter(
+                  child: _SeasonSection(
+                    seasonKey: seasonKey,
+                    isCurrent: isCurrent,
+                    meta: meta,
+                    hobbyIds: hobbyIds,
+                  ),
+                );
+              }).toList();
+            },
+          ),
 
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 40)),

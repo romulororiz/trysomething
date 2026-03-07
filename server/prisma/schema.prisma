@@ -165,6 +165,12 @@ model User {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
+  // Subscription
+  subscriptionTier   String    @default("free") // "free", "trial", "pro"
+  proSince           DateTime?
+  proExpiresAt       DateTime?
+  revenuecatId       String?   @unique
+
   preferences    UserPreference?
   hobbies        UserHobby[]
   activityLogs   UserActivityLog[]

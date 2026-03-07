@@ -249,7 +249,7 @@ class HobbySchedulerScreen extends ConsumerWidget {
                 24,
                 20,
                 24,
-                MediaQuery.of(context).viewInsets.bottom + 24,
+                MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

@@ -145,15 +145,124 @@ Positioned(
 )
 ```
 
-**Bottom Nav Bar Height — ALWAYS ACCOUNT FOR THIS:**
-The curved bottom navigation bar is 85px tall. EVERY UI element that sits near the bottom of the screen MUST account for this:
-- Bottom sheets: add at least 100px bottom padding so content clears the nav bar
-- Floating CTAs/FABs: position with `bottom: 120+` (85px nav + padding)
-- Scroll content: use `Spacing.scrollBottomPadding` (120px) for ListView/ScrollView bottom padding
-- Positioned overlays: never place interactive elements below `bottom: 100` or they'll overlap the nav
-- `showModalBottomSheet`: always add nav bar clearance to bottom padding (e.g. `viewInsets.bottom + 100`)
-
 **Aesthetic:** Deep dark space with glowing neon accents. Frosted glass containers. Parallax feed cards. Coral CTAs with glow effect.
+
+---
+
+## Brand Identity & Logo
+
+### Brand Assets (3 separate items, different contexts)
+
+**1. App Icon** — The coral brushstroke "T" on dark background (#0A0A0F). A single handmade-feeling brushstroke that forms the letter T. Represents the first mark someone makes when starting something new. Lives on: home screen, app store, notifications, anywhere the brand appears at small sizes (down to 29x29px).
+- File: `assets/icon/app_icon.png` (1024x1024) — also generate all required sizes
+- iOS: superellipse mask applied automatically
+- Android: adaptive icon with `assets/icon/ic_launcher_foreground.png` + dark background
+
+**2. Wordmark** — "TrySomething" in Source Serif 4. "Try" in coral (#FF6B6B), "Something" in off-white (#F8F8FC). This is FINAL — do not modify.
+- Lives on: splash screen, login screen, app store screenshots, marketing materials
+- File: render as widget using `google_fonts` — Source Serif 4, 600 weight
+- Tagline: "Stop scrolling. Start something." — used on login screen and marketing only
+
+**3. Tagline** — "Stop scrolling. Start something." in DM Sans, lighter weight. "Start something." in coral.
+- Marketing only — does NOT appear in-app beyond the login/splash screen
+
+### Where Each Asset Appears in the App
+| Location | Asset | Notes |
+|----------|-------|-------|
+| Home screen / app drawer | App icon | Brushstroke T on dark bg |
+| Splash screen (app launch) | Wordmark + tagline | Centered, dark background, fade out to login or feed |
+| Login screen | App icon (small) + wordmark | Icon above "Welcome back", wordmark below |
+| Push notifications | App icon (small) | System notification icon |
+| In-app header (feed) | "TRYSOMETHING" small caps | Top-left of discover feed, coral dot before text |
+| Settings screen | App icon + version | Bottom of settings, small |
+| App Store listing | Wordmark + screenshots | Store metadata |
+| Nowhere else | — | Do NOT plaster the logo on every screen |
+
+---
+
+## Business Model — Freemium with TrySomething Pro
+
+### Free Tier (Generous — complete hobby discovery experience)
+- Full access to all 150+ hobbies with detail pages, roadmaps, starter kits
+- Onboarding quiz with personalized recommendations (pre-seeded matches only)
+- Save hobbies, track progress, complete roadmap steps
+- Starter kit with affiliate buy links (earns revenue regardless of tier)
+- All discovery features: Mood Match, Seasonal Picks, Hobby Combos, Hobby Battle
+- Basic journal (text entries only — no photos)
+- Shopping list with images and buy links
+- Search with results from pre-seeded catalog only
+- Streaks and basic achievements
+- AI hobby coach: browsing/evangelist mode always free, 3 messages per hobby per month for active hobbies
+
+### TrySomething Pro (CHF 4.99/month or CHF 39.99/year)
+- Unlimited AI hobby coaching across all hobbies
+- "Surprise Me" AI generation (custom hobbies from text prompt)
+- AI search fallback (generate results when catalog doesn't match)
+- AI onboarding personalization (4th "Made for you" hobby)
+- Photo journal entries (free = text only, Pro = photos + text)
+- Photo analysis in coach ("what's wrong with my pot?")
+- Proactive coach nudges via push notification
+- Buddy Mode (find + pair with hobby buddies)
+- Advanced profile: detailed radar breakdown, year-in-review, hobby passport stamps
+- Advanced achievements beyond the basic set
+- Export journal as PDF
+- Priority support
+
+### 7-Day Free Trial
+- Offered once, after onboarding completion (before first feed view)
+- Non-aggressive: positioned as "unlock the full experience for your first week"
+- If skipped, app works perfectly on free tier
+- Trial can also be started from any paywall touchpoint or from Settings → "TrySomething Pro"
+- RevenueCat handles trial management, receipt validation, platform subscriptions
+
+### Paywall System — Mixed (Taste-Then-Gate + Soft Locks)
+
+**Taste-then-gate (for AI features — user feels value before being asked to pay):**
+
+| Touchpoint | Free Experience | Gate Moment |
+|------------|----------------|-------------|
+| AI Hobby Coach | 3 messages/hobby/month, fully functional | Message 4 → upgrade bottom sheet with trial offer |
+| AI Search Fallback | See pre-seeded results normally | Below results: "We found 2 more" with blurred cards → upgrade prompt |
+
+**Soft locks (small lock icon, tap shows upgrade sheet):**
+
+| Feature | What Free Users See | Lock Indicator |
+|---------|-------------------|----------------|
+| "Surprise Me" FAB | FAB visible on feed, tap shows preview | "Pro feature" badge below input, "Start trial to generate" |
+| Photo journal | Text entry works, photo button has lock overlay | Tiny lock on camera icon, tap → inline "Add photos with Pro" |
+| Profile radar details | Chart shape visible, "Tap for breakdown" locked | Lock icon on "Details" link |
+| Year-in-Review | Beautiful blurred preview card | "Your 2026 in Hobbies — unlock with Pro" |
+| Hobby Passport | Stamp grid visible but locked | Lock overlay, "Collect stamps with Pro" |
+| Buddy Mode | Feature visible in navigation | Lock icon, "Find hobby buddies with Pro" |
+| Advanced achievements | Basic achievements free, advanced show lock | Lock on locked achievement cards |
+| Export journal | Export button has lock | "Export as PDF with Pro" |
+
+### Upgrade Bottom Sheet Design
+The upgrade sheet appears at every paywall touchpoint. It is NOT a full-screen page — it's a bottom sheet that can be easily dismissed. Design it with the Midnight Neon aesthetic:
+- Context line: what triggered it ("You've used your 3 free coach messages this month")
+- Feature comparison: 5-6 bullet points, Free vs Pro, with checkmarks
+- Trial offer prominent: "Try Pro free for 7 days" in coral
+- Plan toggle: Monthly CHF 4.99 / Annual CHF 39.99 (save 33%) — annual pre-selected
+- CTA: "Start Free Trial" coral button with glow
+- "Restore purchase" link at bottom
+- Easy dismiss (swipe down or tap outside) — NEVER trap the user
+- File: `lib/components/pro_upgrade_sheet.dart` — reusable from any screen
+
+### Settings → TrySomething Pro
+- Row near top of settings with coral accent and sparkle icon
+- Shows: "Free" or "Pro (renews Mar 2027)" or "Trial (5 days left)"
+- Tap → full upgrade screen (not bottom sheet — dedicated screen with all features listed, plan comparison, testimonials placeholder)
+- File: `lib/screens/settings/pro_screen.dart`
+
+### RevenueCat Integration
+- Package: `purchases_flutter` (already in pubspec or add it)
+- Offering IDs: `trysomething_pro_monthly`, `trysomething_pro_annual`
+- Entitlement: `pro`
+- Check entitlement: create `lib/core/subscription/subscription_service.dart`
+  - `isPro` → bool (cached, refreshed on app foreground)
+  - `startTrial()`, `purchase(package)`, `restore()`
+- Riverpod provider: `proStatusProvider` — used by all screens to show/hide locks
+- NEVER hardcode subscription status — always check via RevenueCat
 
 ### Spec Badge Rules (IMPORTANT)
 - **Style:** ALL spec badges use the SAME muted treatment — `sand` (#1E1E2E) background with `driftwood` (#A0A0B8) text and subtle monochrome icon. Do NOT use different saturated colors per badge (no yellow/teal/purple rainbow). Only coral (#FF6B6B) should pop on any screen — everything else stays restrained and sophisticated.
@@ -301,12 +410,64 @@ Type badges (COURSE/WORKSHOP/KIT+CLASS), star ratings, prices, arrow icons. "You
 - Budget: ~$3-6/month at 1,000 MAU
 
 ### What NOT to Build (v1)
-- AI Coach/Chat (v2+)
 - Admin panel (use Prisma Studio)
 - Content moderation (curated content only at launch)
 - Email notifications (push is enough)
 - Offline sync queue (optimistic updates sufficient)
 - Custom landing page (use Carrd)
+
+---
+
+## AI Hobby Coach (v1 — Pro Feature)
+
+### Concept
+Every hobby gets a scoped AI coach that ONLY discusses that specific hobby. Not a general chatbot. The coach knows the hobby's roadmap, kit, pitfalls, AND the user's personal progress.
+
+### Three User States
+
+**NOT SAVED (Evangelist Mode):** User is browsing the detail page. Coach answers basic curiosity questions, shares what makes the hobby special, gives a taste. Goal: get them to save/start. Always free, no message limit.
+
+**SAVED (Motivator Mode):** User saved but hasn't started. Coach addresses hesitation, answers pre-start questions ("do I need a wheel?", "can I do this in an apartment?"). Goal: move from Saved → Trying. 5 messages free.
+
+**TRYING/ACTIVE (Full Coach Mode):** User is actively doing the hobby. Coach knows their progress, journal entries, current roadmap step, kit items. Gives specific, personalized guidance. This is the premium experience. 3 messages/month free, unlimited with Pro.
+
+### System Prompt Template
+```
+You are a friendly, encouraging coach for {hobby.title}.
+You ONLY discuss {hobby.title} and directly related topics.
+
+User progress:
+- Started: {userHobby.startedAt}
+- Current step: {currentStep.title} — {currentStep.description}
+- Completed steps: {completedSteps}
+- Streak: {streakDays} days
+- Recent journal entries: {recentJournalEntries}
+
+Hobby context:
+- Starter kit: {kitItems}
+- Common beginner pitfalls: {pitfalls}
+- Full roadmap: {roadmapSteps}
+
+Rules:
+- If asked about anything unrelated to {hobby.title}, politely redirect
+  and suggest they check other hobbies in the app.
+- Keep responses concise (2-3 paragraphs max).
+- Be encouraging but honest.
+- Reference their specific progress when relevant.
+```
+
+### Where It Lives
+- Chat icon on Hobby Detail page (bottom-right, above TRY TODAY CTA)
+- Chat icon on Step View (during active roadmap steps)
+- Conversation UI: bottom sheet or push screen with chat interface
+- Each hobby has its own conversation history (stored locally, Hive)
+
+### Cost
+- Model: Claude Haiku 3.5 ($0.80/1M input, $4.00/1M output)
+- Per 5-message exchange: ~$0.005–0.01
+- Per Pro user per month (3-4 chats): ~$0.02–0.04
+- 80 Pro subscribers: ~$2–3/month total AI cost
+- Conversation cap: 15-20 messages, then start fresh (keep summary)
 
 ---
 
@@ -410,7 +571,9 @@ cd server && npm test    # All 32 server tests (only if server files changed)
 ## Task Queue
 
 See `CLAUDE_TASKS_v3.md` for full checklist. Sprint order:
-1. **Foundation** — affiliate model migration, feed cards, onboarding, seed 150 hobbies with product images + affiliate links
-2. **Core Screens** — detail page with buy buttons, explore, library, quickstart, search
-3. **Rich Features** — profile, mood match, battle, journal/planner, shopping list with images, AI search + onboarding
-4. **Polish & Ship** — "Surprise Me", Firebase, analytics, app store, performance, beta
+1. **Foundation** — affiliate model, feed cards, onboarding, seed 150 hobbies ✅
+2. **Core Screens** — mockup alignment, responsiveness, badges, detail, explore, library, quickstart, search ✅
+3. **Rich Features** — profile, mood match, battle, journal/planner, shopping list, AI search + onboarding ✅
+4. **Infrastructure** — branding/logo, Firebase, analytics (in progress)
+5. **Monetization & Pro** — RevenueCat, paywall, upgrade sheet, trial screen, Pro locks, AI hobby coach
+6. **Launch** — performance pass, end-to-end testing, app store prep, beta launch

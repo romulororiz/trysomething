@@ -224,12 +224,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> updateProfile({String? displayName, String? bio, String? avatarUrl}) async {
+  Future<void> updateProfile({String? displayName, String? bio, String? avatarUrl, String? fcmToken}) async {
     try {
       final updated = await _repo.updateProfile(
         displayName: displayName,
         bio: bio,
         avatarUrl: avatarUrl,
+        fcmToken: fcmToken,
       );
       state = state.copyWith(user: updated);
     } catch (_) {}

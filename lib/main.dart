@@ -1,10 +1,12 @@
-import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_typography.dart';
@@ -18,61 +20,84 @@ import 'core/error/error_provider.dart';
 import 'core/analytics/analytics_service.dart';
 import 'core/analytics/analytics_provider.dart';
 import 'core/notifications/notification_provider.dart';
+import 'core/notifications/notification_service.dart';
+import 'core/subscription/subscription_service.dart';
+import 'providers/subscription_provider.dart';
 
 void main() async {
-  // Global services (created before zone so they're accessible everywhere)
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Global services
   final reporter = ErrorReporter();
   final analytics = AnalyticsService();
 
-  // Run inside a guarded zone to catch uncaught async errors.
-  // Binding must be initialized inside the same zone as runApp.
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
+  // System UI style — match Midnight Neon dark theme
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Color(0xFF141420),
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
 
-      // System UI style — match Midnight Neon dark theme
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFF141420), // warmWhite (dark)
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
+  // Initialize Firebase (not configured for web yet)
+  if (!kIsWeb) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
 
-      // Initialize local storage
-      await LocalStorage.init();
-      final prefs = await SharedPreferences.getInstance();
+  // Initialize local storage
+  await LocalStorage.init();
+  final prefs = await SharedPreferences.getInstance();
 
-      // Capture Flutter framework errors
-      FlutterError.onError = (details) {
-        reporter.reportError(
-          details.exception,
-          details.stack,
-          context: details.context?.toString(),
-        );
-      };
+  // Initialize notification service (mobile only — FCM not supported on web)
+  final notifications = NotificationService();
+  if (!kIsWeb) {
+    await notifications.init();
+  }
 
-      // Capture platform-level errors (e.g. native crashes surfaced to Dart)
-      PlatformDispatcher.instance.onError = (error, stack) {
-        reporter.reportError(error, stack, context: 'PlatformDispatcher');
-        return true;
-      };
+  // Initialize PostHog analytics (may fail on web — non-fatal)
+  if (!kIsWeb) {
+    await analytics.init();
+  }
 
-      runApp(
-        ProviderScope(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-            errorReporterProvider.overrideWithValue(reporter),
-            analyticsProvider.overrideWithValue(analytics),
-          ],
-          observers: [ErrorReporterObserver(reporter)],
-          child: const TrySomethingApp(),
-        ),
-      );
-    },
-    (error, stack) {
-      reporter.reportError(error, stack, context: 'runZonedGuarded');
-    },
+  // Initialize RevenueCat subscriptions (mobile only — not supported on web)
+  final subscriptions = SubscriptionService();
+  if (!kIsWeb) {
+    await subscriptions.init();
+  }
+
+  // Build the app widget tree
+  final app = ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      errorReporterProvider.overrideWithValue(reporter),
+      analyticsProvider.overrideWithValue(analytics),
+      notificationProvider.overrideWithValue(notifications),
+      subscriptionProvider.overrideWithValue(subscriptions),
+    ],
+    observers: [ErrorReporterObserver(reporter)],
+    child: const TrySomethingApp(),
   );
+
+  // Initialize Sentry on mobile, skip on web (Firebase dependency)
+  if (kIsWeb) {
+    runApp(app);
+  } else {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = const String.fromEnvironment(
+          'SENTRY_DSN',
+          defaultValue: 'https://6e008b52ef2d7b5faa06c5b24015cc63@o4510999072473088.ingest.de.sentry.io/4510999081844816',
+        );
+        options.tracesSampleRate = 0.2;
+        options.replay.sessionSampleRate = 0.1;
+        options.replay.onErrorSampleRate = 1.0;
+        options.sendDefaultPii = true;
+      },
+      appRunner: () => runApp(SentryWidget(child: app)),
+    );
+  }
 }
 
 class TrySomethingApp extends ConsumerStatefulWidget {
@@ -100,10 +125,32 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         ref.read(storiesProvider.notifier).loadFromServer();
         ref.read(buddyProvider.notifier).loadFromServer();
         ref.read(challengeProvider.notifier).loadFromServer();
+
+        // Sync FCM token to server (mobile only)
+        if (!kIsWeb) _syncFcmToken();
       }
-      // Initialize push notifications (stub until Firebase configured)
-      ref.read(notificationProvider).init();
+
+      // Listen for FCM token refreshes and re-sync (mobile only)
+      if (!kIsWeb) {
+        ref.read(notificationProvider).onTokenRefresh((token) {
+          final auth = ref.read(authProvider);
+          if (auth.status == AuthStatus.authenticated) {
+            ref.read(authProvider.notifier).updateProfile(fcmToken: token);
+          }
+        });
+      }
     });
+  }
+
+  Future<void> _syncFcmToken() async {
+    try {
+      final token = await ref.read(notificationProvider).getToken();
+      if (token != null) {
+        await ref.read(authProvider.notifier).updateProfile(fcmToken: token);
+      }
+    } catch (e) {
+      debugPrint('[FCM] Token sync failed: $e');
+    }
   }
 
   @override
@@ -259,6 +306,17 @@ class _SplashOverlayState extends State<_SplashOverlay>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // App icon (brushstroke T)
+                  _fadeSlideUp(
+                    controller: _titleCtrl,
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 72,
+                      height: 72,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
                   // App name: "Try" in coral, "Something" in white
                   _fadeSlideUp(
                     controller: _titleCtrl,

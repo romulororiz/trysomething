@@ -95,7 +95,7 @@ Instead:
   - For each screen: view the mockup, view the current implementation, identify every visual difference, fix each one.
   - **Test:** `dart analyze` on changed files, screens visually match mockups
 
-- [ ] **2.0b — Fix device responsiveness across ALL screens**
+- [X] **2.0b — Fix device responsiveness across ALL screens**
   - The app looks correct in Chrome but has overflow/clipping issues on real devices (tested: Nothing Phone 3a).
   - Known issues: category badge hidden behind status bar on hobby detail, planner times cut off at bottom.
   - Go through EVERY screen file in `lib/screens/` and apply these fixes:
@@ -125,7 +125,7 @@ Instead:
   - Hero image with TRENDING badge (top-right), "4 weeks to master" overlay, star rating with count
   - "Why you'll love it" section with body text
   - Starter Kit: PRODUCT IMAGES (required, from KitItem.imageUrl) in 2-column grid, category labels (MATERIAL, TOOLS, GEAR), individual prices + "~ $XX Total"
-    - Each kit item card is tappable → opens affiliateUrl in system browser (url_launcher)R
+    - Each kit item card is tappable → opens affiliateUrl in system browser (url_launcher)
     - If no affiliateUrl, tap opens Amazon.de search: `https://www.amazon.de/s?tag=YOUR_TAG&k={item_name}`
     - Subtle shopping bag icon or "Buy →" indicator on each card
     - Track taps: PostHog event `kit_item_clicked` with hobbyId + itemName
@@ -261,35 +261,175 @@ Instead:
   - Edit `lib/screens/feed/` + create new widget
   - **Test:** free text → generates hobby → detail page renders correctly
 
-- [ ] **4.2 — Firebase push notifications**
+- [X] **4.2 — Brand assets: app icon + splash + login**
+  - App icon: coral brushstroke "T" on dark background (#0A0A0F)
+    - Place final icon file at `assets/icon/app_icon.png` (1024x1024)
+    - Configure `flutter_launcher_icons` in pubspec.yaml to generate all platform sizes
+    - Android: adaptive icon with foreground layer + #0A0A0F background
+    - iOS: single 1024x1024, superellipse mask applied by system
+  - Splash screen: centered wordmark ("Try" coral + "Something" off-white, Source Serif 4 600wt) + tagline below ("Stop scrolling." off-white + "Start something." coral, DM Sans). Dark background (#0A0A0F). Fade out to login/feed after 2s.
+    - Use `flutter_native_splash` for native splash, then animated Flutter splash
+  - Login screen: small app icon centered above "Welcome back", wordmark not needed (icon is enough)
+  - Feed header: "TRYSOMETHING" in small caps (DM Sans, 10px tracking), coral dot (●) before text, top-left
+  - Settings footer: small app icon + "TrySomething v2.4.1 (Build 890)" centered, muted text
+  - **Test:** icon renders correctly on Android + iOS, splash transitions smoothly
+
+- [X] **4.3 — Firebase push notifications**
   - Replace stubs in `lib/core/notifications/`
   - Add firebase_messaging + firebase_core to pubspec.yaml
   - FCM token → server via PUT /api/users/me
   - Triggers: buddy request, challenge completed, streak milestone (3/7/30 days)
   - **Test:** notification received on physical device
 
-- [ ] **4.3 — Analytics + crash reporting**
+- [X] **4.4 — Analytics + crash reporting**
   - PostHog: replace console logging in analytics_service.dart
   - Sentry: wrap runZonedGuarded in main.dart
   - Key events: hobby_saved, hobby_started, onboarding_completed, ai_hobby_generated
   - **Test:** events visible in PostHog dashboard, forced error in Sentry
 
-- [ ] **4.4 — App store prep**
-  - Create store/metadata.md (title, subtitle, keywords, description)
-  - Create store/privacy-policy.md
-  - iOS: configure signing, TestFlight upload in CI
-  - Android: release signing, Play Console internal track
-  - **Test:** TestFlight + Play Console builds accessible
+---
 
-- [ ] **4.5 — Performance pass**
+## Sprint 5: Monetization & Pro (Week 9-10)
+
+- [X] **5.1 — RevenueCat integration + subscription service**
+  - Add `purchases_flutter` to pubspec.yaml
+  - Create `lib/core/subscription/subscription_service.dart`:
+    - `init()` — configure RevenueCat with API key on app start (main.dart)
+    - `isPro` → bool, cached, refreshed on app foreground
+    - `isTrialing` → bool
+    - `trialDaysRemaining` → int
+    - `startTrial()` → trigger 7-day trial via RevenueCat
+    - `purchase(package)` → monthly or annual
+    - `restore()` → restore previous purchase
+  - Create `lib/providers/subscription_provider.dart`:
+    - `proStatusProvider` — StateNotifier that exposes isPro/isTrialing
+    - Used by ALL screens to conditionally show/hide Pro locks
+  - Set up RevenueCat dashboard:
+    - Offerings: `trysomething_pro_monthly` (CHF 4.99), `trysomething_pro_annual` (CHF 39.99)
+    - Entitlement: `pro`
+    - 7-day free trial on both plans
+  - Add `isPro` field to User Prisma model (synced from RevenueCat webhook or client-side)
+  - **Test:** subscription flow works end-to-end in sandbox mode, `isPro` state updates correctly
+
+- [X] **5.2 — Build upgrade bottom sheet (reusable paywall component)**
+  - Create `lib/components/pro_upgrade_sheet.dart`
+  - Accepts `context` parameter: string explaining what triggered it
+    - e.g., "You've used your 3 free coach messages this month"
+    - e.g., "Generate custom hobbies with Pro"
+  - Layout (Midnight Neon aesthetic, NOT generic):
+    - Context line at top (what triggered it)
+    - Feature comparison: 5-6 rows with checkmarks (Free vs Pro)
+    - Trial offer: "Try Pro free for 7 days" in coral, prominent
+    - Plan toggle: Monthly CHF 4.99 / Annual CHF 39.99 (save 33%) — annual pre-selected
+    - CTA button: "Start Free Trial" coral with glow effect
+    - "Restore purchase" link, muted, at bottom
+    - Dismiss: swipe down or tap outside — NEVER trap the user
+  - Create helper function: `showProUpgrade(context, triggerMessage)` — callable from any screen
+  - **Test:** sheet appears, plans load from RevenueCat, purchase flow works in sandbox
+
+- [X] **5.3 — 7-day trial offer screen (post-onboarding)**
+  - After onboarding page 3 ("You're ready!"), before first feed view, show a one-time trial offer
+  - Full screen (not bottom sheet) with Midnight Neon design:
+    - "Unlock the full experience" heading
+    - 4-5 Pro feature highlights with icons (AI coach, photo journal, Surprise Me, advanced stats)
+    - "Start 7-day free trial" coral CTA
+    - "Maybe later" dismiss link — NOT hidden, easy to find
+    - Save a flag in SharedPreferences: `trialOfferShown = true` — never show again
+  - If dismissed, user goes to feed normally on free tier
+  - Update GoRouter redirect chain to check this flag
+  - **Test:** shows once after onboarding, never again, trial activates correctly
+
+- [X] **5.4 — Add Pro locks to existing features**
+  - Go through all screens and add lock indicators for Pro features:
+  - **"Surprise Me" FAB** (feed): FAB visible, tap shows bottom sheet with preview + "Pro feature" badge + upgrade prompt
+  - **AI Search** (search screen): blurred "2 more results" cards below pre-seeded results + "Unlock AI search" link
+  - **AI Onboarding** (onboarding page 3): 4th hobby tile shows lock if free, sparkle if Pro/trial
+  - **Photo journal** (journal screen): camera/photo button has tiny lock icon overlay, tap → inline "Add photos with Pro" banner
+  - **Profile radar details**: chart shape visible, "Details" link has lock → upgrade sheet
+  - **Year-in-Review**: beautiful blurred preview card in profile → "Your 2026 — unlock with Pro"
+  - **Hobby Passport**: stamp grid visible but stamps locked → "Collect stamps with Pro"
+  - **Buddy Mode**: feature entry point shows lock → upgrade sheet
+  - **Advanced achievements**: beyond basic set, show lock on achievement cards
+  - **Export journal**: export button has lock → "Export as PDF with Pro"
+  - All locks use the same pattern: check `proStatusProvider.isPro`, show lock or feature
+  - All lock taps call `showProUpgrade(context, triggerMessage)` with appropriate context
+  - **Test:** free user sees locks everywhere expected, Pro user sees no locks, trial user sees no locks
+
+- [x] **5.5 — Settings → TrySomething Pro screen**
+  - Add "TrySomething Pro" row near top of settings screen
+    - Coral accent, sparkle icon
+    - Shows current status: "Free Plan" / "Pro (renews Mar 2027)" / "Trial (5 days left)"
+  - Tap → dedicated Pro screen (`lib/screens/settings/pro_screen.dart`)
+    - Full feature comparison (expanded, more detailed than bottom sheet)
+    - Plan selection with pricing
+    - "Start Free Trial" or "Upgrade" CTA
+    - "Restore purchase" button
+    - Manage subscription link (opens platform subscription management)
+  - **Test:** status displays correctly for free/trial/pro states
+
+- [x] **5.6 — AI Hobby Coach: build chat interface**
+  - Create `lib/screens/coach/hobby_coach_screen.dart`
+  - Chat interface scoped to one hobby:
+    - Receives hobbyId as parameter
+    - Loads hobby data (roadmap, kit, pitfalls) + user progress (completedSteps, journal, streak)
+    - Constructs system prompt from template (see CLAUDE.md "AI Hobby Coach" section)
+    - Messages displayed in chat bubbles (user = right/coral, coach = left/surface)
+    - Text input at bottom with send button
+  - API: create POST /api/coach/chat endpoint
+    - Accepts: hobbyId, message, conversationHistory[]
+    - Builds system prompt with hobby data + user progress
+    - Calls Claude Haiku 3.5
+    - Returns: response text
+  - Conversation stored locally in Hive (per hobby, per user)
+  - Chat icon placement: Hobby Detail page (bottom-right, small, above floating CTA) + Step View
+  - **Test:** can send message, receive contextual response, conversation persists
+
+- [x] **5.7 — AI Coach: message limits + paywall integration**
+  - Track message count per hobby per month:
+    - Store in Hive: `{hobbyId}_{yearMonth}_count`
+    - Reset monthly
+  - Free user behavior by state:
+    - NOT SAVED: unlimited evangelist messages (short, encouraging)
+    - SAVED: 5 messages free
+    - TRYING/ACTIVE: 3 messages/month free
+  - On limit reached: show upgrade bottom sheet with context: "You've used your 3 free coach messages for Pottery this month"
+  - Pro/trial users: unlimited, no tracking
+  - Check `proStatusProvider.isPro` before incrementing counter
+  - **Test:** free user hits limit at correct count, upgrade sheet appears, Pro user never limited
+
+---
+
+## Sprint 6: Launch (Week 11-12)
+
+- [ ] **6.1 — Performance pass**
   - Profile feed scroll (target: 60fps)
   - CachedNetworkImage with memCacheWidth
   - flutter build apk --analyze-size (target: <30MB)
   - Riverpod .select() where over-watching
   - **Test:** no jank in profile mode, APK under 30MB
 
-- [ ] **4.6 — Beta launch**
+- [ ] **6.2 — End-to-end Pro flow testing**
+  - Test complete flows on physical device:
+    - Fresh install → onboarding → trial offer → accept trial → all Pro features unlocked → trial expires → features lock → upgrade → Pro unlocked
+    - Fresh install → onboarding → skip trial → free experience → encounter lock → upgrade from lock → Pro unlocked
+    - Pro user → cancel subscription → features lock after period ends
+    - Restore purchase on new device
+  - Verify RevenueCat webhooks (if using server-side validation)
+  - Verify analytics events: trial_started, trial_converted, subscription_purchased, subscription_cancelled
+  - **Test:** all flows work correctly on iOS sandbox + Android test environment
+
+- [ ] **6.3 — App store prep**
+  - Requires: app icon (4.2), all UI finalized, Pro features working
+  - Create store/metadata.md (title, subtitle, keywords, description)
+  - Create store/privacy-policy.md
+  - Take screenshots using final polished app with Pro features visible
+  - iOS: configure signing, TestFlight upload in CI
+  - Android: release signing, Play Console internal track
+  - **Test:** TestFlight + Play Console builds accessible
+
+- [ ] **6.4 — Beta launch**
   - TestFlight invites (10 iOS testers)
   - Play Console internal testing (10 Android testers)
   - In-app feedback shake-to-report
+  - Mix of free and Pro testers to validate both experiences
   - **Test:** testers can install, use, and submit feedback

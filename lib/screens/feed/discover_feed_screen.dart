@@ -11,6 +11,8 @@ import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
 import '../../theme/spacing.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../../providers/subscription_provider.dart';
+import '../../components/pro_upgrade_sheet.dart';
 
 /// Full-screen TikTok-style vertical discovery feed.
 class DiscoverFeedScreen extends ConsumerStatefulWidget {
@@ -41,6 +43,12 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   }
 
   void _showSurpriseMeSheet() {
+    final isPro = ref.read(isProProvider);
+    if (!isPro) {
+      showProUpgrade(context, '"Surprise Me" generates custom hobbies with AI — a Pro feature.');
+      return;
+    }
+
     final textController = TextEditingController();
 
     showModalBottomSheet(
@@ -135,15 +143,35 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       }
     });
 
-    return hobbiesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('$err')),
-      data: (hobbies) => hobbies.isEmpty
-          ? _buildEmptyState()
-          : Stack(
-              children: [
-                // Full-screen card PageView
-                PageView.builder(
+    // Reset page controller when category changes
+    ref.listen<String?>(selectedCategoryProvider, (prev, next) {
+      if (prev != next) {
+        _pageController.dispose();
+        _pageController = PageController();
+      }
+    });
+
+    // Use previous data during loading to avoid black flash on category switch
+    final hobbies = hobbiesAsync.valueOrNull ?? [];
+    final isLoading = hobbiesAsync.isLoading && hobbies.isEmpty;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (hobbiesAsync.hasError && hobbies.isEmpty) {
+      return Center(child: Text('${hobbiesAsync.error}'));
+    }
+
+    return hobbies.isEmpty
+        ? _buildEmptyState()
+        : Stack(
+            children: [
+              // Full-screen card PageView with cross-fade on category change
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: PageView.builder(
+                  key: ValueKey(selectedCategory),
                   controller: _pageController,
                   scrollDirection: Axis.vertical,
                   itemCount: hobbies.length,
@@ -161,6 +189,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                     );
                   },
                 ),
+              ),
 
                 // Overlay: header + category chips (fades over image)
                 Positioned(
@@ -347,8 +376,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                     ),
                   ),
               ],
-            ),
-    );
+            );
   }
 
   Widget _buildEmptyState() {
@@ -381,28 +409,54 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   }
 }
 
-class _SurpriseMeFab extends StatelessWidget {
+class _SurpriseMeFab extends ConsumerWidget {
   final VoidCallback onTap;
 
   const _SurpriseMeFab({required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPro = ref.watch(isProProvider);
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: SizedBox(
         width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.4),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 0.5,
-          ),
-        ),
-        child: Center(
-          child: Icon(MdiIcons.autoFix, size: 22, color: Colors.white),
+        height: 48,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withValues(alpha: 0.4),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+              child: Center(
+                child: Icon(MdiIcons.autoFix, size: 22, color: Colors.white),
+              ),
+            ),
+            if (!isPro)
+              Positioned(
+                right: -2,
+                bottom: 0,
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.coral,
+                    border: Border.all(color: Colors.black54, width: 1),
+                  ),
+                  child: const Icon(Icons.lock, size: 10, color: Colors.white),
+                ),
+              ),
+          ],
         ),
       ),
     );

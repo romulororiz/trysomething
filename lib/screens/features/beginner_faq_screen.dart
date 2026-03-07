@@ -8,6 +8,7 @@ import '../../providers/hobby_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/shimmer_skeleton.dart';
 
 /// Beginner FAQ screen for a specific hobby.
 /// Shows expandable Q&A cards loaded from seed data, with upvote badges
@@ -20,7 +21,7 @@ class BeginnerFaqScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
-    final faqItems = ref.watch(faqProvider(hobbyId)).valueOrNull ?? [];
+    final faqAsync = ref.watch(faqProvider(hobbyId));
     final topPad = MediaQuery.of(context).padding.top;
     final hobbyName = hobby?.title ?? hobbyId;
 
@@ -72,45 +73,59 @@ class BeginnerFaqScreen extends ConsumerWidget {
           ),
 
           // ── FAQ List ────────────────────────────────────
-          if (faqItems.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(MdiIcons.commentQuestionOutline, size: 44, color: AppColors.warmGray),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No FAQs for this hobby yet.',
-                        style: AppTypography.sansBody.copyWith(color: AppColors.driftwood),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Check back soon!',
-                        style: AppTypography.sansCaption,
-                      ),
-                    ],
-                  ),
+          ...faqAsync.when(
+            loading: () => [const SliverToBoxAdapter(child: FaqListSkeleton())],
+            error: (err, _) => [
+              SliverToBoxAdapter(
+                child: ErrorRetryWidget(
+                  error: err,
+                  onRetry: () => ref.invalidate(faqProvider(hobbyId)),
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final faq = faqItems[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _FaqCard(faq: faq, index: index),
-                    );
-                  },
-                  childCount: faqItems.length,
-                ),
-              ),
-            ),
+            ],
+            data: (faqItems) => faqItems.isEmpty
+                ? [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Icon(MdiIcons.commentQuestionOutline, size: 44, color: AppColors.warmGray),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No FAQs for this hobby yet.',
+                                style: AppTypography.sansBody.copyWith(color: AppColors.driftwood),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Check back soon!',
+                                style: AppTypography.sansCaption,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]
+                : [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final faq = faqItems[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _FaqCard(faq: faq, index: index),
+                            );
+                          },
+                          childCount: faqItems.length,
+                        ),
+                      ),
+                    ),
+                  ],
+          ),
         ],
       ),
     );

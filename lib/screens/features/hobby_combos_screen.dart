@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/shimmer_skeleton.dart';
 
 /// Hobby Combos — discover complementary hobby pairs with shared tags.
 class HobbyCombosScreen extends ConsumerWidget {
@@ -16,7 +17,7 @@ class HobbyCombosScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final combos = ref.watch(combosProvider).valueOrNull ?? [];
+    final combosAsync = ref.watch(combosProvider);
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -28,16 +29,23 @@ class HobbyCombosScreen extends ConsumerWidget {
 
             // ── Combo list ──────────────────────────
             Expanded(
-              child: combos.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                      itemCount: combos.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        return _ComboCard(combo: combos[index]);
-                      },
-                    ),
+              child: combosAsync.when(
+                loading: () => const ComboListSkeleton(),
+                error: (err, _) => ErrorRetryWidget(
+                  error: err,
+                  onRetry: () => ref.invalidate(combosProvider),
+                ),
+                data: (combos) => combos.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                        itemCount: combos.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          return _ComboCard(combo: combos[index]);
+                        },
+                      ),
+              ),
             ),
           ],
         ),

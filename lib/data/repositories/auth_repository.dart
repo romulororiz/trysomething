@@ -20,7 +20,7 @@ abstract class AuthRepository {
 
   Future<AuthUser> getMe();
 
-  Future<AuthUser> updateProfile({String? displayName, String? bio, String? avatarUrl});
+  Future<AuthUser> updateProfile({String? displayName, String? bio, String? avatarUrl, String? fcmToken});
 
   Future<UserPreferences> updatePreferences({
     int? hoursPerWeek,

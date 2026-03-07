@@ -8,6 +8,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/onboarding/trial_offer_screen.dart';
 import 'screens/feed/discover_feed_screen.dart';
 import 'screens/plan/plan_screen.dart';
 import 'screens/detail/hobby_detail_screen.dart';
@@ -17,6 +18,8 @@ import 'screens/explore/explore_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/settings/settings_screen.dart';
+import 'screens/settings/pro_screen.dart';
+import 'screens/coach/hobby_coach_screen.dart';
 import 'screens/features/mood_match_screen.dart';
 import 'screens/features/seasonal_picks_screen.dart';
 import 'screens/features/beginner_faq_screen.dart';
@@ -89,6 +92,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const OnboardingScreen(),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: Motion.slow,
+        ),
+      ),
+
+      // Trial offer (post-onboarding, one-time)
+      GoRoute(
+        path: '/trial-offer',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const TrialOfferScreen(),
           transitionsBuilder: (context, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -171,6 +186,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // AI Hobby Coach
+      GoRoute(
+        path: '/coach/:hobbyId',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final hobbyId = state.pathParameters['hobbyId']!;
+          return CustomTransitionPage(
+            child: HobbyCoachScreen(hobbyId: hobbyId),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return buildSlideRightTransition(animation, child);
+            },
+            transitionDuration: Motion.navForward,
+            reverseTransitionDuration: Motion.navBack,
+          );
+        },
+      ),
+
       // Settings (pushed on top)
       GoRoute(
         path: '/settings',
@@ -178,6 +210,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           return CustomTransitionPage(
             child: const SettingsScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return buildSlideRightTransition(animation, child);
+            },
+            transitionDuration: Motion.navForward,
+            reverseTransitionDuration: Motion.navBack,
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/pro',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            child: const ProScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return buildSlideRightTransition(animation, child);
             },
@@ -398,9 +445,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         return onboarded ? '/feed' : '/onboarding';
       }
 
-      // Onboarding guard (existing logic)
+      // Onboarding guard
       if (!onboarded && !isOnboarding) return '/onboarding';
       if (onboarded && isOnboarding) return '/feed';
+
+      // Trial offer guard — show once after onboarding
+      final isTrialOffer = path == '/trial-offer';
+      final trialOfferShown = ref.read(sharedPreferencesProvider).getBool('trialOfferShown') ?? false;
+      if (onboarded && !trialOfferShown && !isTrialOffer && !isAuthRoute && !isOnboarding) {
+        return '/trial-offer';
+      }
+      if (trialOfferShown && isTrialOffer) return '/feed';
 
       return null;
     },

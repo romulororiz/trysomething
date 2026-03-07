@@ -16,6 +16,8 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../providers/subscription_provider.dart';
+import '../../components/pro_upgrade_sheet.dart';
 
 /// Profile tab — photo, editable name/bio, heatmap, radar, gallery, passport.
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -628,11 +630,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           const SizedBox(width: 8),
                           Text('Hobby Passport', style: AppTypography.sansSection),
                           const Spacer(),
-                          Text(
-                            '${doneHobbies.length}/50',
-                            style: AppTypography.monoCaption
-                                .copyWith(color: AppColors.warmGray),
-                          ),
+                          if (!ref.watch(isProProvider))
+                            GestureDetector(
+                              onTap: () => showProUpgrade(context, 'Collect hobby passport stamps with Pro.'),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.lock_rounded, size: 12, color: AppColors.driftwood),
+                                  const SizedBox(width: 4),
+                                  Text('Unlock', style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood)),
+                                ],
+                              ),
+                            )
+                          else
+                            Text(
+                              '${doneHobbies.length}/50',
+                              style: AppTypography.monoCaption
+                                  .copyWith(color: AppColors.warmGray),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -774,7 +789,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: AppIcons.buddy,
                         title: 'Buddy Mode',
                         subtitle: 'Find a hobby partner',
-                        onTap: () => context.push('/buddy'),
+                        locked: !ref.watch(isProProvider),
+                        onTap: () {
+                          if (!ref.read(isProProvider)) {
+                            showProUpgrade(context, 'Find hobby buddies with Pro.');
+                          } else {
+                            context.push('/buddy');
+                          }
+                        },
                       ),
                       const SizedBox(height: 10),
                       _LinkTile(
@@ -788,7 +810,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: AppIcons.yearReview,
                         title: 'Year in Review',
                         subtitle: 'Your hobby journey wrapped',
-                        onTap: () => context.push('/year-review'),
+                        locked: !ref.watch(isProProvider),
+                        onTap: () {
+                          if (!ref.read(isProProvider)) {
+                            showProUpgrade(context, 'Your 2026 in Hobbies — unlock with Pro.');
+                          } else {
+                            context.push('/year-review');
+                          }
+                        },
                       ),
                       const SizedBox(height: 10),
                       _LinkTile(
@@ -852,10 +881,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Text('Recent Trophies', style: AppTypography.sansSection),
             const Spacer(),
             GestureDetector(
-              onTap: () => context.push('/achievements'),
-              child: Text(
-                'View All',
-                style: AppTypography.sansLabel.copyWith(color: AppColors.coral),
+              onTap: () {
+                if (!ref.read(isProProvider)) {
+                  showProUpgrade(context, 'Unlock advanced achievements with Pro.');
+                } else {
+                  context.push('/achievements');
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!ref.watch(isProProvider))
+                    const Icon(Icons.lock_rounded, size: 12, color: AppColors.driftwood),
+                  if (!ref.watch(isProProvider))
+                    const SizedBox(width: 4),
+                  Text(
+                    'View All',
+                    style: AppTypography.sansLabel.copyWith(
+                      color: ref.watch(isProProvider) ? AppColors.coral : AppColors.driftwood,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1141,6 +1187,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Icon(AppIcons.radar, size: 18, color: AppColors.indigo),
             const SizedBox(width: 8),
             Text('Skills Radar', style: AppTypography.sansSection),
+            const Spacer(),
+            GestureDetector(
+              onTap: () {
+                final isPro = ref.read(isProProvider);
+                if (!isPro) {
+                  showProUpgrade(context, 'Unlock detailed skill breakdowns with Pro.');
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!ref.watch(isProProvider))
+                    const Icon(Icons.lock_rounded, size: 12, color: AppColors.driftwood),
+                  if (!ref.watch(isProProvider))
+                    const SizedBox(width: 4),
+                  Text(
+                    'Details',
+                    style: AppTypography.sansLabel.copyWith(
+                      color: ref.watch(isProProvider) ? AppColors.coral : AppColors.driftwood,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -1183,7 +1253,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+            24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 110),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1226,7 +1296,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+            24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 110),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1840,12 +1910,14 @@ class _LinkTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool locked;
 
   const _LinkTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.locked = false,
   });
 
   @override
@@ -1886,8 +1958,11 @@ class _LinkTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: AppColors.warmGray),
+            if (locked)
+              const Icon(Icons.lock_rounded, size: 16, color: AppColors.driftwood)
+            else
+              const Icon(Icons.chevron_right_rounded,
+                  size: 20, color: AppColors.warmGray),
           ],
         ),
       ),

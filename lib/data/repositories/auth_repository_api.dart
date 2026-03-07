@@ -68,11 +68,13 @@ class AuthRepositoryApi implements AuthRepository {
     String? displayName,
     String? bio,
     String? avatarUrl,
+    String? fcmToken,
   }) async {
     final response = await _dio.put(ApiConstants.usersMe, data: {
       if (displayName != null) 'displayName': displayName,
       if (bio != null) 'bio': bio,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      if (fcmToken != null) 'fcmToken': fcmToken,
     });
     return AuthUser.fromJson(response.data as Map<String, dynamic>);
   }

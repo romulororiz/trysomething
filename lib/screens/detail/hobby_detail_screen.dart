@@ -123,7 +123,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             slivers: [
               SliverToBoxAdapter(child: _buildHeroImage(context, hobby)),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + Spacing.scrollBottomPadding),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // Why you will love it
@@ -359,6 +359,32 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       Icon(AppIcons.share, size: 20, color: Colors.white),
                 ),
               ],
+            ),
+          ),
+
+          // Coach chat FAB (above CTA)
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 90,
+            right: 20,
+            child: GestureDetector(
+              onTap: () => context.push('/coach/${widget.hobbyId}'),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.indigo,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.indigo.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.auto_awesome,
+                    size: 22, color: Colors.white),
+              ),
             ),
           ),
 

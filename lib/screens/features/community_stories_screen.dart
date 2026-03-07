@@ -313,7 +313,7 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
         24,
         24,
         24,
-        MediaQuery.of(context).viewInsets.bottom + 24,
+        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

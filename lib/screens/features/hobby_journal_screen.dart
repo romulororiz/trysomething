@@ -9,6 +9,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../providers/subscription_provider.dart';
+import '../../components/pro_upgrade_sheet.dart';
 
 /// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
 class HobbyJournalScreen extends ConsumerStatefulWidget {
@@ -84,7 +86,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
               child: filtered.isEmpty
                   ? _buildEmptyState()
                   : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 14),
                       itemBuilder: (context, index) {
@@ -121,7 +123,35 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
           const Spacer(),
           Text('Hobby Journal', style: AppTypography.sansSection),
           const Spacer(),
-          const Icon(Icons.more_vert, size: 20, color: AppColors.espresso),
+          GestureDetector(
+            onTap: () {
+              final isPro = ref.read(isProProvider);
+              if (!isPro) {
+                showProUpgrade(context, 'Export your journal as PDF with Pro.');
+              }
+              // TODO: implement PDF export for Pro users
+            },
+            child: Stack(
+              children: [
+                const Icon(Icons.ios_share_rounded, size: 20, color: AppColors.espresso),
+                if (!ref.watch(isProProvider))
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.coral,
+                        border: Border.all(color: AppColors.cream, width: 1),
+                      ),
+                      child: const Icon(Icons.lock, size: 7, color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -179,7 +209,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                 24,
                 20,
                 24,
-                MediaQuery.of(context).viewInsets.bottom + 24,
+                MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -284,7 +314,61 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+
+                  // Photo button — locked for free users
+                  GestureDetector(
+                    onTap: () {
+                      final isPro = ref.read(isProProvider);
+                      if (!isPro) {
+                        showProUpgrade(context, 'Add photos to your journal entries with Pro.');
+                      }
+                      // TODO: implement photo picker for Pro users
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.warmWhite,
+                        borderRadius: BorderRadius.circular(Spacing.radiusInput),
+                        border: Border.all(color: AppColors.sandDark),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Stack(
+                            children: [
+                              Icon(AppIcons.camera, size: 18, color: AppColors.driftwood),
+                              if (!ref.read(isProProvider))
+                                Positioned(
+                                  right: -2,
+                                  bottom: -2,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.coral,
+                                      border: Border.all(color: AppColors.warmWhite, width: 1),
+                                    ),
+                                    child: const Icon(Icons.lock, size: 7, color: Colors.white),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Add photo',
+                            style: AppTypography.sansCaption.copyWith(
+                              color: AppColors.driftwood,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Save button
                   SizedBox(

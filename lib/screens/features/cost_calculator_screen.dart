@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/shimmer_skeleton.dart';
 
 /// Cost Calculator — visual cost breakdown for a hobby over time.
 class CostCalculatorScreen extends ConsumerWidget {
@@ -19,7 +20,7 @@ class CostCalculatorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
-    final costData = ref.watch(costBreakdownProvider(hobbyId)).valueOrNull;
+    final costAsync = ref.watch(costBreakdownProvider(hobbyId));
     final hobbyName = hobby?.title ?? hobbyId;
 
     return Scaffold(
@@ -32,26 +33,33 @@ class CostCalculatorScreen extends ConsumerWidget {
 
             // ── Content ─────────────────────────────
             Expanded(
-              child: costData == null
-                  ? _buildEmptyState()
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Cost columns
-                          _buildCostColumns(costData),
-                          const SizedBox(height: 28),
+              child: costAsync.when(
+                loading: () => const CostCalculatorSkeleton(),
+                error: (err, _) => ErrorRetryWidget(
+                  error: err,
+                  onRetry: () => ref.invalidate(costBreakdownProvider(hobbyId)),
+                ),
+                data: (costData) => costData == null
+                    ? _buildEmptyState()
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Cost columns
+                            _buildCostColumns(costData),
+                            const SizedBox(height: 28),
 
-                          // Bar chart visual
-                          _buildBarChart(costData),
-                          const SizedBox(height: 32),
+                            // Bar chart visual
+                            _buildBarChart(costData),
+                            const SizedBox(height: 32),
 
-                          // Tips section
-                          _buildTipsSection(costData),
-                        ],
+                            // Tips section
+                            _buildTipsSection(costData),
+                          ],
+                        ),
                       ),
-                    ),
+              ),
             ),
           ],
         ),

@@ -14,6 +14,7 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
 import '../../theme/spacing.dart';
+import '../../providers/subscription_provider.dart';
 
 // ═══════════════════════════════════════════════════════
 //  INTERVAL HELPER
@@ -908,6 +909,8 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
 
   void _fireAiGeneration() {
     if (_aiGenFired) return;
+    // Only fire AI generation for Pro/trial users
+    if (!ref.read(isProProvider)) return;
     _aiGenFired = true;
     final vibeList = widget.vibes.join(', ');
     final socialPref = widget.social ? 'social/group' : 'solo';
@@ -1313,18 +1316,33 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                         ),
                       ),
                     ] else ...[
-                      Icon(MdiIcons.autoFix,
-                          size: 32, color: AppColors.indigo),
-                      const SizedBox(height: 10),
-                      Text(
-                        'AI PICK',
-                        style: AppTypography.sansLabel.copyWith(
-                          color: AppColors.nearBlack,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
+                      if (ref.watch(isProProvider)) ...[
+                        Icon(MdiIcons.autoFix,
+                            size: 32, color: AppColors.indigo),
+                        const SizedBox(height: 10),
+                        Text(
+                          'AI PICK',
+                          style: AppTypography.sansLabel.copyWith(
+                            color: AppColors.nearBlack,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                      ),
+                      ] else ...[
+                        Icon(Icons.lock_rounded,
+                            size: 28, color: AppColors.driftwood.withAlpha(120)),
+                        const SizedBox(height: 10),
+                        Text(
+                          'PRO',
+                          style: AppTypography.sansLabel.copyWith(
+                            color: AppColors.driftwood,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ],
                   ],
                 ),

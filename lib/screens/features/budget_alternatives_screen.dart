@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/spacing.dart';
+import '../../components/shimmer_skeleton.dart';
 
 /// Budget alternatives screen for a specific hobby.
 /// Shows a 3-column comparison (DIY / Budget / Premium) for each item
@@ -21,7 +22,7 @@ class BudgetAlternativesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hobby = ref.watch(hobbyByIdProvider(hobbyId)).valueOrNull;
-    final alternatives = ref.watch(budgetAlternativesProvider(hobbyId)).valueOrNull ?? [];
+    final altAsync = ref.watch(budgetAlternativesProvider(hobbyId));
     final costBreakdown = ref.watch(costBreakdownProvider(hobbyId)).valueOrNull;
     final topPad = MediaQuery.of(context).padding.top;
     final hobbyName = hobby?.title ?? hobbyId;
@@ -99,45 +100,58 @@ class BudgetAlternativesScreen extends ConsumerWidget {
           ),
 
           // ── Alternatives List ───────────────────────────
-          if (alternatives.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(MdiIcons.packageVariantClosed, size: 44, color: AppColors.warmGray),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No budget alternatives listed yet.',
-                        style: AppTypography.sansBody.copyWith(color: AppColors.driftwood),
+          ...altAsync.when(
+            loading: () => [const SliverToBoxAdapter(child: BudgetListSkeleton())],
+            error: (err, _) => [
+              SliverToBoxAdapter(
+                child: ErrorRetryWidget(
+                  error: err,
+                  onRetry: () => ref.invalidate(budgetAlternativesProvider(hobbyId)),
+                ),
+              ),
+            ],
+            data: (alternatives) => [
+              if (alternatives.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(MdiIcons.packageVariantClosed, size: 44, color: AppColors.warmGray),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No budget alternatives listed yet.',
+                            style: AppTypography.sansBody.copyWith(color: AppColors.driftwood),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Check the starter kit on the hobby detail page.',
+                            style: AppTypography.sansCaption,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Check the starter kit on the hobby detail page.',
-                        style: AppTypography.sansCaption,
-                      ),
-                    ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final alt = alternatives[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _AlternativeCard(alternative: alt),
+                        );
+                      },
+                      childCount: alternatives.length,
+                    ),
                   ),
                 ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final alt = alternatives[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _AlternativeCard(alternative: alt),
-                    );
-                  },
-                  childCount: alternatives.length,
-                ),
-              ),
-            ),
+            ],
+          ),
 
           // ── Tips Section ────────────────────────────────
           if (costBreakdown != null && costBreakdown.tips.isNotEmpty) ...[

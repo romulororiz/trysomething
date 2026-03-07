@@ -254,7 +254,7 @@ class PlanScreen extends ConsumerWidget {
             return Padding(
               padding: EdgeInsets.fromLTRB(
                 24, 20, 24,
-                MediaQuery.of(context).viewInsets.bottom + 24,
+                MediaQuery.of(context).viewInsets.bottom + 110,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

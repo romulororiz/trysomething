@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// A reported error with metadata.
 class ErrorReport {
@@ -42,6 +43,9 @@ class ErrorReporter {
     // Ring buffer — drop oldest when full
     if (_errors.length >= _maxErrors) _errors.removeFirst();
     _errors.add(report);
+
+    // Send to Sentry
+    Sentry.captureException(error, stackTrace: stackTrace);
 
     if (kDebugMode) {
       debugPrint('══════ ERROR REPORTED ══════');

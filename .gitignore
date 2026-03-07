@@ -59,3 +59,10 @@ server/node_modules/
 server/.env
 server/.vercel/
 server/dist/
+
+sentry.properties
+
+# Claude Code / MCP local config
+.claude/
+.mcp.json
+.vscode/mcp.json

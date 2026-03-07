@@ -1,50 +1,90 @@
+import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-/// Push notification service stub. Currently logs to console.
-///
-/// To activate FCM:
-/// 1. Create a Firebase project at https://console.firebase.google.com
-/// 2. Run `flutterfire configure` to generate config files
-/// 3. Add `firebase_core` and `firebase_messaging` to pubspec.yaml
-/// 4. Initialize Firebase in main.dart before this service
-/// 5. Replace this stub with real FCM calls
+/// Handle background messages (must be a top-level function).
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (kDebugMode) {
+    debugPrint('[Notifications] Background message: ${message.messageId}');
+  }
+}
+
+/// Push notification service powered by Firebase Cloud Messaging.
 class NotificationService {
   bool _initialized = false;
+  FirebaseMessaging? _messagingInstance;
+  FirebaseMessaging get _messaging => _messagingInstance ??= FirebaseMessaging.instance;
+  final List<void Function(RemoteMessage)> _foregroundListeners = [];
 
-  /// Whether the service has been initialized.
   bool get isInitialized => _initialized;
 
-  /// Initialize the notification service.
-  /// No-ops until Firebase is configured.
+  /// Initialize FCM, request permission, and listen for foreground messages.
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
+
+    // Register background handler
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // Request permission (iOS requires explicit prompt, Android auto-grants)
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     if (kDebugMode) {
-      debugPrint('[Notifications] Service initialized (stub — FCM not configured)');
+      debugPrint(
+        '[Notifications] Permission: ${settings.authorizationStatus}',
+      );
+    }
+
+    // Listen for foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Notifications] Foreground message: ${message.notification?.title}',
+        );
+      }
+      for (final listener in _foregroundListeners) {
+        listener(message);
+      }
+    });
+
+    // Handle notification taps when app is in background/terminated
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Notifications] Opened from notification: ${message.data}',
+        );
+      }
+    });
+
+    if (kDebugMode) {
+      final token = await _messaging.getToken();
+      debugPrint('[Notifications] FCM token: $token');
     }
   }
 
-  /// Request notification permission from the user.
-  /// Returns true if granted (stub always returns false).
+  /// Request notification permission. Returns true if granted.
   Future<bool> requestPermission() async {
-    if (kDebugMode) {
-      debugPrint('[Notifications] requestPermission (stub)');
-    }
-    return false;
+    final settings = await _messaging.requestPermission();
+    return settings.authorizationStatus == AuthorizationStatus.authorized;
   }
 
-  /// Get the FCM device token. Returns null until Firebase is configured.
+  /// Get the FCM device token for server registration.
   Future<String?> getToken() async {
-    if (kDebugMode) {
-      debugPrint('[Notifications] getToken (stub — no Firebase)');
-    }
-    return null;
+    return _messaging.getToken();
+  }
+
+  /// Listen for token refreshes (e.g. after app reinstall).
+  void onTokenRefresh(void Function(String token) handler) {
+    _messaging.onTokenRefresh.listen(handler);
   }
 
   /// Register a callback for foreground messages.
-  void onMessage(void Function(Map<String, dynamic> data) handler) {
-    if (kDebugMode) {
-      debugPrint('[Notifications] onMessage registered (stub)');
-    }
+  void onMessage(void Function(RemoteMessage message) handler) {
+    _foregroundListeners.add(handler);
   }
 }
