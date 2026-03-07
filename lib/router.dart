@@ -11,6 +11,7 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/onboarding/trial_offer_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/feed/discover_feed_screen.dart';
+import 'screens/feed/rail_feed_screen.dart';
 import 'screens/you/you_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/detail/hobby_detail_screen.dart';
@@ -131,6 +132,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: SearchScreen(),
             ),
+          ),
+          // Rail feed — inside shell so navbar stays visible
+          GoRoute(
+            path: '/rail-feed/:railId',
+            pageBuilder: (context, state) {
+              final railId = state.pathParameters['railId']!;
+              final title = state.uri.queryParameters['title'] ?? railId;
+              return CustomTransitionPage(
+                child: RailFeedScreen(railId: railId, railTitle: title),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return buildSlideRightTransition(animation, child);
+                },
+                transitionDuration: Motion.navForward,
+                reverseTransitionDuration: Motion.navBack,
+              );
+            },
           ),
         ],
       ),

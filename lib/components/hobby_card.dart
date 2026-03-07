@@ -17,6 +17,7 @@ class HobbyCard extends StatelessWidget {
   final VoidCallback? onSave;
   final VoidCallback? onShare;
   final bool isSaved;
+  final bool compactCta;
 
   const HobbyCard({
     super.key,
@@ -25,6 +26,7 @@ class HobbyCard extends StatelessWidget {
     this.onSave,
     this.onShare,
     this.isSaved = false,
+    this.compactCta = false,
   });
 
   @override
@@ -54,11 +56,15 @@ class HobbyCard extends StatelessWidget {
             ),
           ),
 
-          // Right side: action column (above nav: 85px + CTA: 56px + content + gap)
-          Positioned(
-            right: 12,
-            bottom: 300,
-            child: _buildActionColumn(),
+          // Right side: action column — vertically centered
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _buildActionColumn(),
+              ),
+            ),
           ),
 
           // Bottom content shelf (above CTA + nav clearance)
@@ -178,8 +184,14 @@ class HobbyCard extends StatelessWidget {
   }
 
   Widget _buildCta() {
+    final height =
+        compactCta ? Spacing.buttonSecondaryHeight : Spacing.buttonCtaHeight;
+    final fontSize = compactCta ? 13.0 : 16.0;
+    final iconSize = compactCta ? 16.0 : 20.0;
+    final shadowOpacity = compactCta ? 0.25 : 0.45;
+
     return Container(
-      height: Spacing.buttonCtaHeight,
+      height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(Spacing.radiusCta),
         gradient: const LinearGradient(
@@ -187,9 +199,9 @@ class HobbyCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.coral.withValues(alpha: 0.45),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
+            color: AppColors.coral.withValues(alpha: shadowOpacity),
+            blurRadius: compactCta ? 10 : 20,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -205,13 +217,13 @@ class HobbyCard extends StatelessWidget {
                 Text(
                   'TRY TODAY',
                   style: AppTypography.sansCta.copyWith(
-                    fontSize: 16,
+                    fontSize: fontSize,
                     letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_rounded,
-                    size: 20, color: Colors.white),
+                Icon(Icons.arrow_forward_rounded,
+                    size: iconSize, color: Colors.white),
               ],
             ),
           ),
@@ -311,9 +323,8 @@ class _FeedActionButtonState extends State<_FeedActionButton>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isActive
-        ? (widget.activeColor ?? Colors.white)
-        : Colors.white;
+    final color =
+        widget.isActive ? (widget.activeColor ?? Colors.white) : Colors.white;
 
     return GestureDetector(
       onTap: _handleTap,
@@ -329,7 +340,10 @@ class _FeedActionButtonState extends State<_FeedActionButton>
               children: [
                 ScaleTransition(
                   scale: _popScale,
-                  child: Icon(widget.icon, size: 30, color: color,
+                  child: Icon(
+                    widget.icon,
+                    size: 30,
+                    color: color,
                     shadows: [
                       Shadow(
                         blurRadius: 12,

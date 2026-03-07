@@ -261,8 +261,7 @@ class _ServerDataRepo implements UserProgressRepository {
   Future<UserHobby> toggleStep(String hobbyId, String stepId) async =>
       UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying);
   @override
-  Future<List<UserHobby>> syncHobbies(List<UserHobby> hobbies) async =>
-      hobbies;
+  Future<List<UserHobby>> syncHobbies(List<UserHobby> hobbies) async => hobbies;
   @override
   Future<List<Map<String, dynamic>>> getActivityLog({int days = 365}) async =>
       [];

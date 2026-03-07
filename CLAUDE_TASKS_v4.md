@@ -70,7 +70,7 @@ The app currently has broken trust in its core promise. Fix that first.
 Reduce from current tabs to 3. Build around one active hobby.
 **NOTE:** Monetization (RevenueCat, Pro locks, coach, paywall, trial) already exists from v3 work. When restructuring screens, ADAPT existing Pro/coach integrations to new locations — don't rebuild them.
 
-- [ ] **B.1 — Restructure navigation to 3 tabs**
+- [x] **B.1 — Restructure navigation to 3 tabs**
   - New tabs: Home / Discover / You
   - **Home:** active hobby dashboard (new screen — see CLAUDE.md)
   - **Discover:** personalized picks + category browse + search
@@ -79,7 +79,7 @@ Reduce from current tabs to 3. Build around one active hobby.
   - Update bottom nav component
   - **Test:** all 3 tabs navigate correctly, deep links work
 
-- [ ] **B.2 — Hide secondary features from navigation**
+- [x] **B.2 — Hide secondary features from navigation**
   - Remove routes and nav entries for (do NOT delete code):
     - Buddy mode, Community stories, Local discovery
     - Hobby passport, Year in review, Weekly challenge
@@ -88,7 +88,7 @@ Reduce from current tabs to 3. Build around one active hobby.
   - These screens stay in codebase but are unreachable from UI
   - **Test:** none of these features are accessible from any navigation path
 
-- [ ] **B.3 — Build Home tab (active hobby dashboard)**
+- [x] **B.3 — Build Home tab (active hobby dashboard)**
   - New screen: `lib/screens/home/home_screen.dart`
   - If user has active hobby:
     - Hobby card (image, title, current stage)
@@ -101,7 +101,7 @@ Reduce from current tabs to 3. Build around one active hobby.
     - Warm prompt: "Ready to find your thing?" → routes to Discover/onboarding
   - **Test:** home shows correct active hobby data, next step updates on completion
 
-- [ ] **B.4 — Rebuild Discover tab**
+- [X] **B.4 — Rebuild Discover tab**
   - Replace current feed/explore with focused discovery:
   - 4 rails: "For You" (from onboarding) / "Start Cheap" (under CHF 30) / "Start This Week" (low setup) / "Need a Different Vibe?" (category browse)
   - Search bar at top with natural language support
