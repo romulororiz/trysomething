@@ -36,20 +36,20 @@ double _iv(double v, double begin, double end,
 class _VibeItem {
   final String label;
   final String key;
-  final IconData icon;
-  final Color color;
-  const _VibeItem(this.label, this.key, this.icon, this.color);
+  final IconData outlineIcon;
+  final IconData filledIcon;
+  const _VibeItem(this.label, this.key, this.outlineIcon, this.filledIcon);
 }
 
 final _vibeItems = [
-  _VibeItem('Creative', 'creative', AppIcons.catCreative, AppColors.catCreative),
-  _VibeItem('Relaxing', 'relaxing', MdiIcons.meditation, AppColors.sage),
-  _VibeItem('Social', 'social', AppIcons.catSocial, AppColors.catSocial),
-  _VibeItem('Active', 'physical', MdiIcons.flash, AppColors.catMusic),
-  _VibeItem('Intellectual', 'intellectual', MdiIcons.bookOpenVariant, AppColors.amber),
-  _VibeItem('Outdoors', 'outdoors', AppIcons.catOutdoors, AppColors.catOutdoors),
-  _VibeItem('Tech', 'technical', MdiIcons.memory, AppColors.catCollecting),
-  _VibeItem('Culinary', 'culinary', AppIcons.catFood, AppColors.catFood),
+  _VibeItem('Creative', 'creative', MdiIcons.paletteOutline, MdiIcons.palette),
+  _VibeItem('Relaxing', 'relaxing', MdiIcons.yoga, MdiIcons.meditation),
+  _VibeItem('Social', 'social', MdiIcons.accountGroupOutline, MdiIcons.accountGroup),
+  _VibeItem('Active', 'physical', MdiIcons.flashOutline, MdiIcons.flash),
+  _VibeItem('Intellectual', 'intellectual', MdiIcons.bookOpenPageVariantOutline, MdiIcons.bookOpenPageVariant),
+  _VibeItem('Outdoors', 'outdoors', MdiIcons.pineTreeVariantOutline, MdiIcons.pineTree),
+  _VibeItem('Tech', 'technical', MdiIcons.laptopAccount, MdiIcons.memory),
+  _VibeItem('Culinary', 'culinary', MdiIcons.chefHat, MdiIcons.chefHat),
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -75,6 +75,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   final Set<String> _vibes = {};
   List<Hobby> _matchedHobbies = [];
   Map<String, List<String>> _matchReasons = {};
+  Map<String, int> _matchScores = {};
 
   // Animation controllers
   late AnimationController _page1EntryCtrl;
@@ -190,10 +191,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       userVibes: _vibes,
     );
 
-    // Compute reasons for each matched hobby
+    // Compute reasons and scores for each matched hobby
     _matchReasons = {
       for (final h in matched)
         h.id: computeMatchReasons(
+          hobby: h,
+          userHours: _hours,
+          userBudgetLevel: _budget,
+          userPrefersSocial: _social,
+          userVibes: _vibes,
+        ),
+    };
+    _matchScores = {
+      for (final h in matched)
+        h.id: computeMatchScore(
           hobby: h,
           userHours: _hours,
           userBudgetLevel: _budget,
@@ -245,15 +256,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           fontWeight: FontWeight.w600,
                         )),
                   const Spacer(),
-                  if (_currentPage < 2)
-                    GestureDetector(
-                      onTap: _skip,
-                      child: Text('Skip',
-                          style: AppTypography.sansLabel
-                              .copyWith(color: AppColors.driftwood)),
-                    )
-                  else
-                    const SizedBox(width: 24),
                 ],
               ),
             ),
@@ -290,6 +292,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     entryCtrl: _page3EntryCtrl,
                     matchedHobbies: _matchedHobbies,
                     matchReasons: _matchReasons,
+                    matchScores: _matchScores,
                     vibes: _vibes,
                     hours: _hours,
                     social: _social,
@@ -518,7 +521,7 @@ class _VibeCard extends StatelessWidget {
           color: AppColors.sand,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.sage : Colors.transparent,
+            color: isSelected ? AppColors.coral : Colors.transparent,
             width: 1.5,
           ),
         ),
@@ -529,14 +532,18 @@ class _VibeCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(item.icon, size: 32, color: item.color),
+                  Icon(
+                    isSelected ? item.filledIcon : item.outlineIcon,
+                    size: 32,
+                    color: isSelected ? AppColors.coral : AppColors.textMuted,
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     item.label,
                     style: AppTypography.sansLabel.copyWith(
                       color: isSelected
-                          ? AppColors.nearBlack
-                          : AppColors.driftwood,
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                       fontWeight:
                           isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
@@ -555,7 +562,7 @@ class _VibeCard extends StatelessWidget {
                   height: 22,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.sage,
+                    color: AppColors.coral,
                   ),
                   child: const Icon(Icons.check,
                       size: 14, color: Colors.white),
@@ -890,6 +897,7 @@ class _ReadyPage extends ConsumerStatefulWidget {
   final AnimationController entryCtrl;
   final List<Hobby> matchedHobbies;
   final Map<String, List<String>> matchReasons;
+  final Map<String, int> matchScores;
   final Set<String> vibes;
   final double hours;
   final bool social;
@@ -898,6 +906,7 @@ class _ReadyPage extends ConsumerStatefulWidget {
     required this.entryCtrl,
     required this.matchedHobbies,
     required this.matchReasons,
+    required this.matchScores,
     required this.vibes,
     required this.hours,
     required this.social,
@@ -912,12 +921,12 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
   late AnimationController _floatCtrl;
 
   // Card positions: (leftPct, topPct, width, height)
-  // Mimics mockup: top-left small, top-right medium, bottom-left large (overlaps), bottom-right small
+  // Shifted right for better centering within padded area
   static const _cardLayouts = [
-    (0.06, 0.02, 120.0, 130.0), // top-left — small
-    (0.48, 0.00, 155.0, 175.0), // top-right — taller
-    (-0.02, 0.34, 185.0, 200.0), // bottom-left — largest, top match, overlaps above
-    (0.50, 0.45, 130.0, 140.0), // bottom-right — small
+    (0.10, 0.02, 120.0, 130.0), // top-left — small
+    (0.52, 0.00, 155.0, 175.0), // top-right — taller
+    (0.02, 0.34, 185.0, 200.0), // bottom-left — largest, top match
+    (0.54, 0.45, 130.0, 140.0), // bottom-right — small
   ];
 
   // 3D perspective transforms per card: (rotateX, rotateY, rotateZ)
@@ -961,7 +970,6 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
       animation: Listenable.merge([widget.entryCtrl, _floatCtrl]),
       builder: (context, _) {
         final v = widget.entryCtrl.value;
-        final badgeOp = _iv(v, 0.0, 0.2);
         final cardsOp = _iv(v, 0.1, 0.4);
         final titleOp = _iv(v, 0.4, 0.65);
         final titleScale = _iv(v, 0.4, 0.65, Curves.easeOutCubic);
@@ -971,42 +979,45 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             children: [
-              // "Curated for you" badge — slight tilt for depth
+              // "Curated for you" badge — left-aligned, smaller, synced with top-left card
               Align(
-                alignment: Alignment.centerRight,
+                alignment: Alignment.centerLeft,
                 child: Opacity(
-                  opacity: badgeOp,
+                  opacity: _iv(v, 0.1, 0.35), // synced with card index 0
                   child: Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()
                       ..setEntry(3, 2, 0.003)
-                      ..rotateX(-0.08)
-                      ..rotateY(-0.12)
-                      ..rotateZ(0.05),
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 8, right: 8),
+                      ..rotateX(-0.15)
+                      ..rotateY(0.10)
+                      ..rotateZ(-0.04),
+                    child: Transform.translate(
+                      offset: Offset(0, math.sin(_floatCtrl.value * math.pi + 0.0) * 3.0),
+                      child: Container(
+                      margin: const EdgeInsets.only(top: 8, left: 4),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.sagePale.withAlpha(200),
+                        color: AppColors.surfaceElevated.withAlpha(200),
                         borderRadius:
                             BorderRadius.circular(Spacing.radiusBadge),
                         border:
-                            Border.all(color: AppColors.sage.withAlpha(60)),
+                            Border.all(color: AppColors.textWhisper),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(MdiIcons.autoFix,
-                              size: 14, color: AppColors.sage),
-                          const SizedBox(width: 4),
+                              size: 11, color: AppColors.textSecondary),
+                          const SizedBox(width: 3),
                           Text('Curated for you',
-                              style: AppTypography.sansCaption.copyWith(
-                                  color: AppColors.sage,
+                              style: AppTypography.sansTiny.copyWith(
+                                  color: AppColors.textSecondary,
                                   fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
+                  ),
                   ),
                 ),
               ),
@@ -1184,26 +1195,31 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                         Container(color: AppColors.sand),
                   ),
 
-                  // Dark gradient overlay for readability
+                  // Gradient overlay — small cards: dark bottom only; top match: clearer top, dark bottom
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withAlpha(isTopMatch ? 80 : 100),
-                          Colors.black.withAlpha(isTopMatch ? 180 : 190),
-                        ],
+                        stops: isTopMatch
+                            ? const [0.0, 0.4, 1.0]
+                            : const [0.0, 0.45, 1.0],
+                        colors: isTopMatch
+                            ? [
+                                Colors.black.withAlpha(20),  // clear top
+                                Colors.black.withAlpha(40),  // still visible middle
+                                Colors.black.withAlpha(190), // dark bottom for text
+                              ]
+                            : [
+                                Colors.black.withAlpha(10),  // almost clear top
+                                Colors.black.withAlpha(30),  // light middle
+                                Colors.black.withAlpha(200), // dark bottom for text
+                              ],
                       ),
                     ),
                   ),
 
-                  // Semi-transparent glass tint
-                  Container(
-                    color: AppColors.sand.withAlpha(60),
-                  ),
-
-                  // Content: hobby title + match reasons
+                  // Content: hobby title + subtitle specs
                   Padding(
                     padding: EdgeInsets.all(isTopMatch ? 14.0 : 10.0),
                     child: Column(
@@ -1220,7 +1236,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                           child: Icon(
                             hobby.catIcon,
                             size: isTopMatch ? 18 : 14,
-                            color: hobby.catColor,
+                            color: AppColors.textSecondary,
                           ),
                         ),
 
@@ -1239,15 +1255,28 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                           ),
                         ),
 
-                        // Match reason (larger cards only)
+                        // Subtitle: cost + time for all cards
+                        const SizedBox(height: 3),
+                        Text(
+                          '${hobby.costText} · ${hobby.timeText}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.sansTiny.copyWith(
+                            color: Colors.white.withAlpha(160),
+                            fontSize: isTopMatch ? 10 : 9,
+                            height: 1.3,
+                          ),
+                        ),
+
+                        // Match reason (larger card only)
                         if (isTopMatch && reasons.isNotEmpty) ...[
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           Text(
                             reasons.first,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.sansTiny.copyWith(
-                              color: Colors.white.withAlpha(180),
+                              color: Colors.white.withAlpha(140),
                               fontSize: 10,
                               height: 1.3,
                             ),
@@ -1265,11 +1294,20 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
     );
   }
 
-  /// Builds the "98% Match" badge that floats between cards
+  /// Builds the match percentage badge that floats between cards.
+  /// Uses actual score from [computeMatchScore] / max possible score.
   Widget _buildMatchBadge(double areaW, double areaH, double entryV) {
     final badgeOp = _iv(entryV, 0.25, 0.45);
     final (amp, phase) = (2.0, 1.2);
     final floatOffset = math.sin(_floatCtrl.value * math.pi + phase) * amp;
+
+    // Compute actual match percentage for top match (card index 2)
+    final topMatches = widget.matchedHobbies;
+    final topMatchId = topMatches.length > 2 ? topMatches[2].id : (topMatches.isNotEmpty ? topMatches.first.id : '');
+    final score = widget.matchScores[topMatchId] ?? 0;
+    // Max: 3 (budget) + 3 (time) + 2 (social) + vibes count
+    final maxScore = 8 + widget.vibes.length;
+    final pct = maxScore > 0 ? (score / maxScore * 100).round().clamp(0, 100) : 0;
 
     return Positioned(
       left: areaW * 0.22,
@@ -1290,7 +1328,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
             ],
           ),
           child: Text(
-            '98% Match',
+            '$pct% Match',
             style: AppTypography.monoBadgeSmall.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
