@@ -11,6 +11,7 @@ import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
 import '../../components/pro_upgrade_sheet.dart';
+import '../../components/glass_card.dart';
 
 /// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
 class HobbyJournalScreen extends ConsumerStatefulWidget {
@@ -41,7 +42,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
     final filtered = _applyFilter(sortedEntries);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -64,14 +65,14 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.coral : AppColors.sand,
+                          color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
                           borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                         ),
                         child: Text(
                           _filters[i],
-                          style: AppTypography.sansCaption.copyWith(
+                          style: AppTypography.caption.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : AppColors.driftwood,
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -118,10 +119,10 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
           GestureDetector(
             onTap: () => context.pop(),
             child: const Icon(Icons.arrow_back,
-                size: 20, color: AppColors.espresso),
+                size: 20, color: AppColors.textSecondary),
           ),
           const Spacer(),
-          Text('Hobby Journal', style: AppTypography.sansSection),
+          Text('Hobby Journal', style: AppTypography.title.copyWith(fontSize: 17)),
           const Spacer(),
           GestureDetector(
             onTap: () {
@@ -133,7 +134,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
             },
             child: Stack(
               children: [
-                const Icon(Icons.ios_share_rounded, size: 20, color: AppColors.espresso),
+                const Icon(Icons.ios_share_rounded, size: 20, color: AppColors.textSecondary),
                 if (!ref.watch(isProProvider))
                   Positioned(
                     right: -2,
@@ -144,7 +145,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.coral,
-                        border: Border.all(color: AppColors.cream, width: 1),
+                        border: Border.all(color: AppColors.background, width: 1),
                       ),
                       child: const Icon(Icons.lock, size: 7, color: Colors.white),
                     ),
@@ -162,11 +163,11 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(AppIcons.journal, size: 48, color: AppColors.sandDark),
+          Icon(AppIcons.journal, size: 48, color: AppColors.border),
           const SizedBox(height: 16),
           Text(
             'No journal entries yet',
-            style: AppTypography.sansSection.copyWith(color: AppColors.driftwood),
+            style: AppTypography.title.copyWith(fontSize: 17, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           Text(
@@ -195,7 +196,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(Spacing.radiusCard),
@@ -221,14 +222,14 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.sandDark,
+                        color: AppColors.textWhisper,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  Text('New Entry', style: AppTypography.serifSubheading),
+                  Text('New Entry', style: AppTypography.title),
                   const SizedBox(height: 16),
 
                   // Hobby selector
@@ -257,16 +258,16 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.coral
-                                  : AppColors.sand,
+                                  : AppColors.surfaceElevated,
                               borderRadius:
                                   BorderRadius.circular(Spacing.radiusBadge),
                             ),
                             child: Text(
                               hobby.title,
-                              style: AppTypography.sansCaption.copyWith(
+                              style: AppTypography.caption.copyWith(
                                 color: isSelected
                                     ? Colors.white
-                                    : AppColors.nearBlack,
+                                    : AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -288,20 +289,20 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     decoration: InputDecoration(
                       hintText: 'Describe your session...',
                       hintStyle: AppTypography.sansBodySmall.copyWith(
-                        color: AppColors.warmGray,
+                        color: AppColors.textMuted,
                       ),
                       filled: true,
-                      fillColor: AppColors.warmWhite,
+                      fillColor: AppColors.surface,
                       contentPadding: const EdgeInsets.all(14),
                       border: OutlineInputBorder(
                         borderRadius:
                             BorderRadius.circular(Spacing.radiusInput),
-                        borderSide: const BorderSide(color: AppColors.sandDark),
+                        borderSide: const BorderSide(color: AppColors.border),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius:
                             BorderRadius.circular(Spacing.radiusInput),
-                        borderSide: const BorderSide(color: AppColors.sandDark),
+                        borderSide: const BorderSide(color: AppColors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius:
@@ -328,16 +329,16 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.warmWhite,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(Spacing.radiusInput),
-                        border: Border.all(color: AppColors.sandDark),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Stack(
                             children: [
-                              Icon(AppIcons.camera, size: 18, color: AppColors.driftwood),
+                              Icon(AppIcons.camera, size: 18, color: AppColors.textSecondary),
                               if (!ref.read(isProProvider))
                                 Positioned(
                                   right: -2,
@@ -348,7 +349,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: AppColors.coral,
-                                      border: Border.all(color: AppColors.warmWhite, width: 1),
+                                      border: Border.all(color: AppColors.surface, width: 1),
                                     ),
                                     child: const Icon(Icons.lock, size: 7, color: Colors.white),
                                   ),
@@ -358,8 +359,8 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                           const SizedBox(width: 8),
                           Text(
                             'Add photo',
-                            style: AppTypography.sansCaption.copyWith(
-                              color: AppColors.driftwood,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -438,12 +439,9 @@ class _JournalEntryCard extends ConsumerWidget {
     final hobby = ref.watch(hobbyByIdProvider(entry.hobbyId)).valueOrNull;
     final hobbyName = hobby?.title ?? entry.hobbyId;
 
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.warmWhite,
-        borderRadius: BorderRadius.circular(Spacing.radiusCard),
-      ),
+      borderRadius: Spacing.radiusCard,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -458,13 +456,13 @@ class _JournalEntryCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.sand,
+                  color: AppColors.surfaceElevated,
                   borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                 ),
                 child: Text(
                   hobbyName,
                   style: AppTypography.sansTiny.copyWith(
-                    color: AppColors.driftwood,
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -477,8 +475,8 @@ class _JournalEntryCard extends ConsumerWidget {
           // Text content
           Text(
             entry.text,
-            style: AppTypography.sansBody.copyWith(
-              color: AppColors.espresso,
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
               height: 1.6,
             ),
           ),
@@ -495,16 +493,16 @@ class _JournalEntryCard extends ConsumerWidget {
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
                   height: 160,
-                  color: AppColors.sand,
+                  color: AppColors.surfaceElevated,
                   child: Center(
-                    child: Icon(AppIcons.camera, size: 28, color: AppColors.warmGray),
+                    child: Icon(AppIcons.camera, size: 28, color: AppColors.textMuted),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   height: 160,
-                  color: AppColors.sand,
+                  color: AppColors.surfaceElevated,
                   child: Center(
-                    child: Icon(AppIcons.image, size: 28, color: AppColors.warmGray),
+                    child: Icon(AppIcons.image, size: 28, color: AppColors.textMuted),
                   ),
                 ),
               ),

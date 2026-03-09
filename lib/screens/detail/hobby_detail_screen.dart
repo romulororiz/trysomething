@@ -99,11 +99,11 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     final hobby = hobbyAsync.valueOrNull;
     if (hobby == null) {
       return Scaffold(
-        backgroundColor: AppColors.cream,
+        backgroundColor: AppColors.background,
         body: Center(
           child: hobbyAsync.isLoading
               ? const CircularProgressIndicator()
-              : Text('Hobby not found', style: AppTypography.sansBody),
+              : Text('Hobby not found', style: AppTypography.body),
         ),
       );
     }
@@ -115,7 +115,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           CustomScrollView(
@@ -131,9 +131,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     const SectionHeader(title: "Why you'll love it"),
                     Text(
                       hobby.whyLove,
-                      style: AppTypography.sansBody.copyWith(
+                      style: AppTypography.body.copyWith(
                         height: 1.65,
-                        color: AppColors.espresso,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -156,9 +156,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: AppColors.warmWhite,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.sandDark),
+                              border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -225,7 +225,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                             child: Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: AppColors.warmWhite,
+                                color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Row(
@@ -237,13 +237,13 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text('Cost Breakdown',
-                                          style: AppTypography.sansCaption.copyWith(
+                                          style: AppTypography.caption.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: AppColors.nearBlack,
+                                            color: AppColors.textPrimary,
                                           )),
                                         Text('Year 1 projection',
                                           style: AppTypography.sansTiny.copyWith(
-                                            color: AppColors.warmGray,
+                                            color: AppColors.textMuted,
                                           )),
                                       ],
                                     ),
@@ -260,25 +260,25 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                             child: Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: AppColors.warmWhite,
+                                color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.help_outline_rounded, size: 18, color: AppColors.indigo),
+                                  const Icon(Icons.help_outline_rounded, size: 18, color: AppColors.textMuted),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text('Beginner FAQ',
-                                          style: AppTypography.sansCaption.copyWith(
+                                          style: AppTypography.caption.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: AppColors.nearBlack,
+                                            color: AppColors.textPrimary,
                                           )),
                                         Text('Common questions',
                                           style: AppTypography.sansTiny.copyWith(
-                                            color: AppColors.warmGray,
+                                            color: AppColors.textMuted,
                                           )),
                                       ],
                                     ),
@@ -373,10 +373,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.indigo,
+                  color: AppColors.accent,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.indigo.withValues(alpha: 0.4),
+                      color: AppColors.accent.withValues(alpha: 0.4),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -400,8 +400,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.cream.withValues(alpha: 0),
-                    AppColors.cream,
+                    AppColors.background.withValues(alpha: 0),
+                    AppColors.background,
                   ],
                   stops: const [0.0, 0.3],
                 ),
@@ -459,11 +459,11 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   fit: BoxFit.cover,
                   height: Spacing.heroHeight + Motion.maxParallaxOffset,
                   width: double.infinity,
-                  placeholder: (_, __) => Container(color: AppColors.sand),
+                  placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
                   errorWidget: (_, __, ___) => Container(
-                    color: AppColors.sand,
+                    color: AppColors.surfaceElevated,
                     child: const Icon(Icons.image,
-                        size: 40, color: AppColors.stone),
+                        size: 40, color: AppColors.textWhisper),
                   ),
                 ),
               ),
@@ -547,8 +547,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       const SizedBox(width: 6),
                       Text(
                         _masteryTimeText(hobby.roadmapSteps),
-                        style: AppTypography.sansCaption.copyWith(
-                          color: AppColors.driftwood,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -584,7 +584,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   child: Material(
                     color: Colors.transparent,
                     child:
-                        Text(hobby.title, style: AppTypography.serifHero),
+                        Text(hobby.title, style: AppTypography.hero),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -599,24 +599,24 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   child: Row(
                     children: [
                       const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.amber),
+                          size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 2),
                       const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.amber),
+                          size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 2),
                       const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.amber),
+                          size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 2),
                       const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.amber),
+                          size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 2),
-                      Icon(Icons.star_half_rounded,
-                          size: 14, color: AppColors.amber),
+                      const Icon(Icons.star_half_rounded,
+                          size: 14, color: AppColors.textMuted),
                       const SizedBox(width: 6),
                       Text(
                         '(1.2k)',
                         style: AppTypography.sansTiny
-                            .copyWith(color: AppColors.warmGray),
+                            .copyWith(color: AppColors.textMuted),
                       ),
                     ],
                   ),
@@ -689,7 +689,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         width: (MediaQuery.of(context).size.width - 24 * 2 - 10) / 2,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.warmWhite,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
           ),
           clipBehavior: Clip.antiAlias,
@@ -707,23 +707,23 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                         imageUrl: item.imageUrl!,
                         fit: BoxFit.cover,
                         placeholder: (_, __) =>
-                            Container(color: AppColors.sand),
+                            Container(color: AppColors.surfaceElevated),
                         errorWidget: (_, __, ___) => Container(
-                          color: AppColors.sand,
+                          color: AppColors.surfaceElevated,
                           child: const Icon(Icons.image,
-                              size: 24, color: AppColors.stone),
+                              size: 24, color: AppColors.textWhisper),
                         ),
                       )
                     else
                       Container(
-                        color: AppColors.sand,
+                        color: AppColors.surfaceElevated,
                         child: Center(
                           child: Icon(
                             item.isOptional
                                 ? Icons.add_circle_outline
                                 : AppIcons.check,
                             size: 24,
-                            color: AppColors.stone,
+                            color: AppColors.textWhisper,
                           ),
                         ),
                       ),
@@ -777,9 +777,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   children: [
                     Text(
                       item.name,
-                      style: AppTypography.sansCaption.copyWith(
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.nearBlack,
+                        color: AppColors.textPrimary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -804,8 +804,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                             ),
                           ),
                         const Spacer(),
-                        Icon(Icons.shopping_bag_outlined,
-                            size: 14, color: AppColors.driftwood),
+                        const Icon(Icons.shopping_bag_outlined,
+                            size: 14, color: AppColors.textSecondary),
                       ],
                     ),
                   ],
@@ -830,7 +830,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             margin: const EdgeInsets.only(top: 7),
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.amber,
+              color: AppColors.textMuted,
             ),
           ),
           const SizedBox(width: 12),
@@ -839,7 +839,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               text,
               style: AppTypography.sansBodySmall.copyWith(
                 height: 1.5,
-                color: AppColors.espresso,
+                color: AppColors.textSecondary,
               ),
             ),
           ),

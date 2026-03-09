@@ -287,7 +287,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -304,10 +304,10 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
                       height: 40,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.sand,
+                        color: AppColors.glassBackground,
                       ),
                       child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.espresso),
+                          size: 20, color: AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -317,7 +317,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
                       children: [
                         Text(hobbyTitle,
                             style: AppTypography.sansLabel
-                                .copyWith(color: AppColors.espresso)),
+                                .copyWith(color: AppColors.textSecondary)),
                         Text('AI Coach',
                             style: AppTypography.sansTiny
                                 .copyWith(color: AppColors.coral)),
@@ -333,17 +333,17 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
                       height: 36,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.sand,
+                        color: AppColors.glassBackground,
                       ),
                       child: const Icon(Icons.refresh_rounded,
-                          size: 18, color: AppColors.driftwood),
+                          size: 18, color: AppColors.textSecondary),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const Divider(height: 24, color: AppColors.sand),
+            const Divider(height: 24, color: AppColors.border),
 
             // Remaining messages indicator (free users only)
             _buildRemainingBanner(),
@@ -368,7 +368,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
 
             // Input bar
             Container(
-              color: AppColors.warmWhite,
+              color: AppColors.surface,
               padding: EdgeInsets.fromLTRB(
                   16, 10, 10, bottomInset > 0 ? 10 : bottomPad + 10),
               child: Row(
@@ -376,18 +376,18 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.cream,
+                        color: AppColors.background,
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: TextField(
                         controller: _textController,
-                        style: AppTypography.sansBody,
+                        style: AppTypography.body,
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _send(),
                         decoration: InputDecoration(
                           hintText: 'Ask your coach...',
-                          hintStyle: AppTypography.sansCaption
-                              .copyWith(color: AppColors.warmGray),
+                          hintStyle: AppTypography.caption
+                              .copyWith(color: AppColors.textMuted),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
@@ -423,11 +423,11 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     return remaining.when(
       data: (value) {
         if (value == null) return const SizedBox.shrink(); // unlimited
-        final color = value <= 1 ? AppColors.coral : AppColors.driftwood;
+        final color = value <= 1 ? AppColors.coral : AppColors.textSecondary;
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-          color: AppColors.warmWhite,
+          color: AppColors.surface,
           child: Text(
             value == 0
                 ? 'No free messages left this month'
@@ -462,14 +462,14 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
             const SizedBox(height: 16),
             Text(
               'Your $hobbyTitle Coach',
-              style: AppTypography.sansSection,
+              style: AppTypography.title.copyWith(fontSize: 17),
             ),
             const SizedBox(height: 8),
             Text(
               'Ask questions, get tips, or share\nyour progress. I\'m here to help!',
               textAlign: TextAlign.center,
               style:
-                  AppTypography.sansCaption.copyWith(color: AppColors.driftwood),
+                  AppTypography.caption.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -502,7 +502,7 @@ class _ChatBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.coral : AppColors.warmWhite,
+          color: isUser ? AppColors.coral : AppColors.glassBackground,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -512,8 +512,8 @@ class _ChatBubble extends StatelessWidget {
         ),
         child: Text(
           message.content,
-          style: AppTypography.sansBody.copyWith(
-            color: isUser ? Colors.white : AppColors.espresso,
+          style: AppTypography.body.copyWith(
+            color: isUser ? Colors.white : AppColors.textSecondary,
             height: 1.5,
           ),
         ),
@@ -560,7 +560,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
         margin: const EdgeInsets.only(top: 6, bottom: 6, right: 48),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.warmWhite,
+          color: AppColors.glassBackground,
           borderRadius: BorderRadius.circular(18),
         ),
         child: AnimatedBuilder(
@@ -581,7 +581,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                       height: 8,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.driftwood.withValues(alpha: 0.4),
+                        color: AppColors.textSecondary.withValues(alpha: 0.4),
                       ),
                     ),
                   ),

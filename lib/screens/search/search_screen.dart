@@ -265,10 +265,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     GestureDetector(
                       onTap: () => context.pop(),
                       child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.espresso),
+                          size: 20, color: AppColors.textSecondary),
                     ),
                     const Spacer(),
-                    Text('Search Hobbies', style: AppTypography.sansSection),
+                    Text('Search Hobbies', style: AppTypography.title.copyWith(fontSize: 17)),
                     const Spacer(),
                     const SizedBox(width: 20),
                   ],
@@ -283,7 +283,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.warmWhite,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -291,7 +291,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       const Opacity(
                         opacity: 0.35,
                         child: Icon(Icons.search,
-                            size: 15, color: AppColors.warmGray),
+                            size: 15, color: AppColors.textMuted),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -304,7 +304,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           decoration: InputDecoration(
                             hintText: 'Search hobbies, categories...',
                             hintStyle: AppTypography.sansBodySmall
-                                .copyWith(color: AppColors.warmGray),
+                                .copyWith(color: AppColors.textMuted),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                             isDense: true,
@@ -319,7 +319,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             setState(() => _query = '');
                           },
                           child: Icon(AppIcons.close,
-                              size: 16, color: AppColors.warmGray),
+                              size: 16, color: AppColors.textMuted),
                         ),
                     ],
                   ),
@@ -372,8 +372,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     'Try searching for...',
-                    style: AppTypography.sansCaption.copyWith(
-                      color: AppColors.warmGray,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textMuted,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -394,17 +394,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: AppColors.warmWhite,
+                            color: AppColors.surface,
                             borderRadius:
                                 BorderRadius.circular(Spacing.radiusBadge),
                             border: Border.all(
-                                color: AppColors.sandDark, width: 0.5),
+                                color: AppColors.border, width: 0.5),
                           ),
                           child: Text(
                             suggestion,
-                            style: AppTypography.sansCaption.copyWith(
+                            style: AppTypography.caption.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: AppColors.driftwood,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -439,18 +439,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
           child: Row(
             children: [
-              Text('Top Results', style: AppTypography.sansSection),
+              Text('Top Results', style: AppTypography.title.copyWith(fontSize: 17)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.sand,
+                  color: AppColors.surfaceElevated,
                   borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                 ),
                 child: Text(
                   '${results.length} found',
                   style: AppTypography.monoBadgeSmall.copyWith(
-                    color: AppColors.driftwood,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -479,7 +479,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.warmWhite,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
                   border:
                       Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
@@ -528,9 +528,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.warmWhite,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.sandDark),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -540,8 +540,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     Expanded(
                       child: Text(
                         'AI suggestion failed. Tap to retry.',
-                        style: AppTypography.sansCaption.copyWith(
-                          color: AppColors.driftwood,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -556,7 +556,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
             child:
-                Text('You might also like', style: AppTypography.sansSection),
+                Text('You might also like', style: AppTypography.title.copyWith(fontSize: 17)),
           ),
           SizedBox(
             height: 120,
@@ -583,7 +583,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             errorBuilder: (_, __, ___) => Container(
                               width: 110,
                               height: 80,
-                              color: AppColors.sand,
+                              color: AppColors.surfaceElevated,
                             ),
                           ),
                         ),
@@ -592,9 +592,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           s.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.sansCaption.copyWith(
+                          style: AppTypography.caption.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: AppColors.nearBlack,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -618,12 +618,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       children: [
         const Opacity(
           opacity: 0.3,
-          child: Icon(Icons.search, size: 44, color: AppColors.warmGray),
+          child: Icon(Icons.search, size: 44, color: AppColors.textMuted),
         ),
         const SizedBox(height: 12),
         Text(
           'No results for "$_query"',
-          style: AppTypography.sansBody.copyWith(color: AppColors.warmGray),
+          style: AppTypography.body.copyWith(color: AppColors.textMuted),
         ),
         const SizedBox(height: 20),
         if (isGenerating)
@@ -640,8 +640,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               const SizedBox(height: 10),
               Text(
                 'Generating hobby...',
-                style: AppTypography.sansCaption.copyWith(
-                  color: AppColors.driftwood,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -651,8 +651,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             children: [
               Text(
                 'Something went wrong. Try again?',
-                style: AppTypography.sansCaption.copyWith(
-                  color: AppColors.warmGray,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textMuted,
                 ),
               ),
               if (genState.error != null) ...[
@@ -660,7 +660,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 Text(
                   genState.error!,
                   style: AppTypography.monoTiny.copyWith(
-                    color: AppColors.warmGray,
+                    color: AppColors.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -740,7 +740,7 @@ class _SearchResultCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         margin: const EdgeInsets.fromLTRB(24, 0, 24, 10),
         decoration: BoxDecoration(
-          color: AppColors.warmWhite,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -756,7 +756,7 @@ class _SearchResultCard extends StatelessWidget {
                 errorBuilder: (_, __, ___) => Container(
                   width: 56,
                   height: 56,
-                  color: AppColors.sand,
+                  color: AppColors.surfaceElevated,
                 ),
               ),
             ),
@@ -792,7 +792,7 @@ class _SearchResultCard extends StatelessWidget {
                       Text(
                         '4.${hobby.id.hashCode.abs() % 5 + 5}',
                         style: AppTypography.monoBadgeSmall.copyWith(
-                          color: AppColors.driftwood,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -802,9 +802,9 @@ class _SearchResultCard extends StatelessWidget {
                   // Title
                   Text(
                     hobby.title,
-                    style: AppTypography.sansBody.copyWith(
+                    style: AppTypography.body.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.nearBlack,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -814,8 +814,8 @@ class _SearchResultCard extends StatelessWidget {
                     hobby.hook,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.sansCaption.copyWith(
-                      color: AppColors.warmGray,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textMuted,
                     ),
                   ),
                 ],
@@ -829,12 +829,12 @@ class _SearchResultCard extends StatelessWidget {
                 Text(
                   hobby.costText,
                   style: AppTypography.monoBadge.copyWith(
-                    color: AppColors.nearBlack,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    size: 12, color: AppColors.stone),
+                const Icon(Icons.arrow_forward_ios_rounded,
+                    size: 12, color: AppColors.textWhisper),
               ],
             ),
           ],
@@ -866,14 +866,14 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.coral : AppColors.warmWhite,
+          color: isSelected ? AppColors.coral : AppColors.surface,
           borderRadius: BorderRadius.circular(Spacing.radiusBadge),
         ),
         child: Text(
           label,
-          style: AppTypography.sansCaption.copyWith(
+          style: AppTypography.caption.copyWith(
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.driftwood,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),
       ),
@@ -922,9 +922,9 @@ class _AiSearchingTileState extends State<_AiSearchingTile>
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.warmWhite,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.sandDark),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -932,7 +932,7 @@ class _AiSearchingTileState extends State<_AiSearchingTile>
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.sand,
+                color: AppColors.surfaceElevated,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -947,16 +947,16 @@ class _AiSearchingTileState extends State<_AiSearchingTile>
                 children: [
                   Text(
                     'Finding more for you...',
-                    style: AppTypography.sansCaption.copyWith(
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.nearBlack,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'AI is generating a custom hobby',
                     style: AppTypography.sansTiny.copyWith(
-                      color: AppColors.driftwood,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -999,9 +999,9 @@ class _AiSearchLockedTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.warmWhite,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.sandDark),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -1009,7 +1009,7 @@ class _AiSearchLockedTile extends StatelessWidget {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: AppColors.sand,
+                        color: AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -1022,14 +1022,14 @@ class _AiSearchLockedTile extends StatelessWidget {
                               width: 120,
                               height: 12,
                               decoration: BoxDecoration(
-                                  color: AppColors.sand,
+                                  color: AppColors.surfaceElevated,
                                   borderRadius: BorderRadius.circular(4))),
                           const SizedBox(height: 8),
                           Container(
                               width: 80,
                               height: 10,
                               decoration: BoxDecoration(
-                                  color: AppColors.sand,
+                                  color: AppColors.surfaceElevated,
                                   borderRadius: BorderRadius.circular(4))),
                         ],
                       ),
@@ -1040,7 +1040,7 @@ class _AiSearchLockedTile extends StatelessWidget {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.cream.withValues(alpha: 0.75),
+                    color: AppColors.background.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(

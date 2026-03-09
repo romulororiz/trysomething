@@ -76,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         isLoading && authState.loadingMethod == AuthMethod.google;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -88,7 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   GestureDetector(
                     onTap: () => Navigator.of(context).maybePop(),
                     child: const Icon(Icons.arrow_back_rounded,
-                        size: 24, color: AppColors.nearBlack),
+                        size: 24, color: AppColors.textPrimary),
                   ),
                   const Spacer(),
                   GestureDetector(
@@ -100,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextSpan(
                         text: 'New here?  ',
                         style: AppTypography.sansCaption
-                            .copyWith(color: AppColors.warmGray),
+                            .copyWith(color: AppColors.textMuted),
                         children: [
                           TextSpan(
                             text: 'Create account',
@@ -144,14 +144,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 28),
                         Center(
                           child: Text('Welcome back',
-                              style: AppTypography.serifTitle),
+                              style: AppTypography.display),
                         ),
                         const SizedBox(height: 8),
                         Center(
                           child: Text(
                             'Ready to start a new hobby?',
                             style: AppTypography.sansBodySmall
-                                .copyWith(color: AppColors.driftwood),
+                                .copyWith(color: AppColors.textSecondary),
                           ),
                         ),
                         const SizedBox(height: 36),
@@ -161,20 +161,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.rosePale,
+                              color: AppColors.surfaceElevated,
                               borderRadius:
                                   BorderRadius.circular(Spacing.radiusInput),
                             ),
                             child: Row(
                               children: [
                                 const Icon(Icons.error_outline_rounded,
-                                    size: 18, color: AppColors.rose),
+                                    size: 18, color: AppColors.error),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     authState.error!,
                                     style: AppTypography.sansCaption
-                                        .copyWith(color: AppColors.rose),
+                                        .copyWith(color: AppColors.error),
                                   ),
                                 ),
                               ],
@@ -253,16 +253,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Row(
                           children: [
                             const Expanded(
-                                child: Divider(color: AppColors.sandDark)),
+                                child: Divider(color: AppColors.border)),
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16),
                               child: Text('Or continue with',
                                   style: AppTypography.sansCaption
-                                      .copyWith(color: AppColors.warmGray)),
+                                      .copyWith(color: AppColors.textMuted)),
                             ),
                             const Expanded(
-                                child: Divider(color: AppColors.sandDark)),
+                                child: Divider(color: AppColors.border)),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -363,30 +363,30 @@ class _AuthField extends StatelessWidget {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,
-      style: AppTypography.sansBody.copyWith(color: AppColors.nearBlack),
+      style: AppTypography.sansBody.copyWith(color: AppColors.textPrimary),
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTypography.sansBody.copyWith(color: AppColors.stone),
+        hintStyle: AppTypography.sansBody.copyWith(color: AppColors.textWhisper),
         filled: true,
-        fillColor: AppColors.warmWhite,
+        fillColor: AppColors.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         prefixIcon: leadingIcon != null
             ? Padding(
                 padding: const EdgeInsets.only(left: 16, right: 8),
-                child: Icon(leadingIcon, size: 20, color: AppColors.warmGray),
+                child: Icon(leadingIcon, size: 20, color: AppColors.textMuted),
               )
             : null,
         prefixIconConstraints:
             const BoxConstraints(minHeight: 20, minWidth: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
-          borderSide: const BorderSide(color: AppColors.sandDark),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
-          borderSide: const BorderSide(color: AppColors.sandDark),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
@@ -394,7 +394,7 @@ class _AuthField extends StatelessWidget {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
-          borderSide: const BorderSide(color: AppColors.rose),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
@@ -437,9 +437,9 @@ class _SocialButton extends StatelessWidget {
       child: Container(
         height: Spacing.buttonSecondaryHeight,
         decoration: BoxDecoration(
-          color: AppColors.warmWhite,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
-          border: Border.all(color: AppColors.sandDark),
+          border: Border.all(color: AppColors.border),
         ),
         child: Center(
           child: isLoading
@@ -454,12 +454,12 @@ class _SocialButton extends StatelessWidget {
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 20, color: AppColors.driftwood),
+                    Icon(icon, size: 20, color: AppColors.textSecondary),
                     const SizedBox(width: 8),
                     Text(
                       label,
                       style: AppTypography.sansButton
-                          .copyWith(color: AppColors.driftwood),
+                          .copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),

@@ -39,25 +39,25 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
   static const _proFeatures = [
     _ProFeature(
       icon: Icons.auto_awesome,
-      color: AppColors.coral,
+      color: AppColors.accent,
       title: 'AI Hobby Coach',
       subtitle: 'Personal guidance for every step of your journey',
     ),
     _ProFeature(
       icon: Icons.camera_alt_outlined,
-      color: AppColors.sage,
+      color: AppColors.success,
       title: 'Photo Journal',
       subtitle: 'Capture your progress with photos and notes',
     ),
     _ProFeature(
       icon: Icons.shuffle_rounded,
-      color: AppColors.indigo,
+      color: AppColors.textSecondary,
       title: '"Surprise Me" Generator',
       subtitle: 'AI-powered hobby suggestions tailored to you',
     ),
     _ProFeature(
       icon: Icons.insights_outlined,
-      color: AppColors.amber,
+      color: AppColors.textMuted,
       title: 'Advanced Stats',
       subtitle: 'Skill radar, activity heatmap, and deep insights',
     ),
@@ -69,7 +69,7 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: FadeTransition(
         opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
         child: Stack(
@@ -102,8 +102,8 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.indigo.withValues(alpha: 0.1),
-                      AppColors.indigo.withValues(alpha: 0),
+                      AppColors.textMuted.withValues(alpha: 0.1),
+                      AppColors.textMuted.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -142,14 +142,14 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                     // Heading
                     Text(
                       'Unlock the full\nexperience',
-                      style: AppTypography.serifDisplay.copyWith(fontSize: 32),
+                      style: AppTypography.hero.copyWith(fontSize: 32),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Get the most out of your hobby journey\nwith TrySomething Pro.',
                       style: AppTypography.sansCaption.copyWith(
-                        color: AppColors.driftwood, height: 1.5,
+                        color: AppColors.textSecondary, height: 1.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -214,7 +214,7 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                         child: Text(
                           'Maybe later',
                           style: AppTypography.sansCaption.copyWith(
-                            color: AppColors.driftwood,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -234,9 +234,9 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.warmWhite,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(Spacing.radiusTile),
-        border: Border.all(color: AppColors.sandDark),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -258,7 +258,7 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                 const SizedBox(height: 2),
                 Text(
                   feature.subtitle,
-                  style: AppTypography.sansTiny.copyWith(color: AppColors.driftwood),
+                  style: AppTypography.sansTiny.copyWith(color: AppColors.textSecondary),
                 ),
               ],
             ),

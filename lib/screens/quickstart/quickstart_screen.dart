@@ -33,7 +33,7 @@ class QuickstartScreen extends ConsumerWidget {
     final steps = hobby.roadmapSteps.take(3).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         top: false,
         child: Column(
@@ -50,7 +50,7 @@ class QuickstartScreen extends ConsumerWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.stone,
+                      color: AppColors.textWhisper,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -63,10 +63,10 @@ class QuickstartScreen extends ConsumerWidget {
                         height: 32,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.sand,
+                          color: AppColors.glassBackground,
                         ),
                         child: const Icon(Icons.close_rounded,
-                            size: 18, color: AppColors.driftwood),
+                            size: 18, color: AppColors.textSecondary),
                       ),
                     ),
                   ),
@@ -83,7 +83,7 @@ class QuickstartScreen extends ConsumerWidget {
                     // Hobby title
                     Text(
                       hobby.title,
-                      style: AppTypography.serifTitle,
+                      style: AppTypography.display,
                     ),
                     const SizedBox(height: 16),
 
@@ -91,7 +91,7 @@ class QuickstartScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.warmWhite,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(Spacing.radiusTile),
                       ),
                       child: Row(
@@ -122,7 +122,7 @@ class QuickstartScreen extends ConsumerWidget {
                                       ? '${hobby.whyLove.substring(0, 80)}...'
                                       : hobby.whyLove,
                                   style: AppTypography.sansBodySmall.copyWith(
-                                    color: AppColors.driftwood,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -139,9 +139,9 @@ class QuickstartScreen extends ConsumerWidget {
                               errorBuilder: (_, __, ___) => Container(
                                 width: 80,
                                 height: 80,
-                                color: AppColors.sand,
-                                child: Icon(Icons.image_outlined,
-                                    color: AppColors.warmGray),
+                                color: AppColors.surfaceElevated,
+                                child: const Icon(Icons.image_outlined,
+                                    color: AppColors.textMuted),
                               ),
                             ),
                           ),
@@ -153,7 +153,7 @@ class QuickstartScreen extends ConsumerWidget {
                     // Roadmap section title
                     Text(
                       hobby.title,
-                      style: AppTypography.sansSection,
+                      style: AppTypography.title.copyWith(fontSize: 17),
                     ),
                     const SizedBox(height: 14),
 
@@ -191,9 +191,9 @@ class QuickstartScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     step.title,
-                                    style: AppTypography.sansBody.copyWith(
+                                    style: AppTypography.body.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.nearBlack,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -201,8 +201,8 @@ class QuickstartScreen extends ConsumerWidget {
                                     step.description,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.sansCaption.copyWith(
-                                      color: AppColors.driftwood,
+                                    style: AppTypography.caption.copyWith(
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -248,8 +248,8 @@ class QuickstartScreen extends ConsumerWidget {
                   const SizedBox(height: 10),
                   Text(
                     'Free for the first 3 lessons',
-                    style: AppTypography.sansCaption.copyWith(
-                      color: AppColors.warmGray,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textMuted,
                     ),
                   ),
                 ],

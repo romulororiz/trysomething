@@ -5,6 +5,7 @@ import '../../providers/subscription_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/glass_card.dart';
 
 /// Dedicated TrySomething Pro screen with full feature list, plan comparison,
 /// and trial/upgrade CTA.
@@ -25,7 +26,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -42,14 +43,14 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                       height: 40,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.sand,
+                        color: AppColors.glassBackground,
                       ),
                       child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.espresso),
+                          size: 20, color: AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text('TrySomething Pro', style: AppTypography.serifHeading),
+                  Text('TrySomething Pro', style: AppTypography.display.copyWith(fontSize: 24)),
                 ],
               ),
             ),
@@ -68,13 +69,13 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                       decoration: BoxDecoration(
                         color: status.isPro
                             ? AppColors.sage.withValues(alpha: 0.15)
-                            : AppColors.sand,
+                            : AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         _statusText(status),
                         style: AppTypography.monoBadge.copyWith(
-                          color: status.isPro ? AppColors.sage : AppColors.driftwood,
+                          color: status.isPro ? AppColors.sage : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -95,7 +96,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 AppColors.coral.withValues(alpha: 0.2),
-                                AppColors.indigo.withValues(alpha: 0.2),
+                                AppColors.textMuted.withValues(alpha: 0.2),
                               ],
                             ),
                           ),
@@ -105,14 +106,14 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'Unlock the full experience',
-                          style: AppTypography.serifSubheading,
+                          style: AppTypography.title,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'AI coaching, photo journals, buddy matching,\nand much more.',
                           style: AppTypography.sansCaption
-                              .copyWith(color: AppColors.driftwood),
+                              .copyWith(color: AppColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -124,17 +125,14 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                   // Feature list
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Container(
+                    child: GlassCard(
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.warmWhite,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
+                      borderRadius: 18,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Everything in Pro',
-                              style: AppTypography.sansSection),
+                              style: AppTypography.title.copyWith(fontSize: 17)),
                           const SizedBox(height: 16),
                           ..._proFeatures.map((f) => _FeatureItem(
                                 icon: f.$1,
@@ -188,7 +186,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                         child: Text(
                           'Restore purchase',
                           style: AppTypography.sansCaption.copyWith(
-                            color: AppColors.driftwood,
+                            color: AppColors.textSecondary,
                             decoration: TextDecoration.underline,
                           ),
                         ),
@@ -202,7 +200,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                       child: Text(
                         'Subscriptions are managed by your app store.',
                         style: AppTypography.sansTiny
-                            .copyWith(color: AppColors.warmGray),
+                            .copyWith(color: AppColors.textMuted),
                       ),
                     ),
                   ],
@@ -216,7 +214,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
       bottomSheet: status.isPro
           ? null
           : Container(
-              color: AppColors.cream,
+              color: AppColors.background,
               padding: EdgeInsets.fromLTRB(24, 12, 24, bottomPad + 16),
               child: GestureDetector(
                 onTap: _purchasing ? null : _handlePurchase,
@@ -361,11 +359,11 @@ class _FeatureItem extends StatelessWidget {
               children: [
                 Text(label,
                     style: AppTypography.sansLabel
-                        .copyWith(color: AppColors.espresso)),
+                        .copyWith(color: AppColors.textSecondary)),
                 const SizedBox(height: 2),
                 Text(desc,
                     style: AppTypography.sansTiny
-                        .copyWith(color: AppColors.warmGray)),
+                        .copyWith(color: AppColors.textMuted)),
               ],
             ),
           ),
@@ -404,10 +402,10 @@ class _PlanCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? AppColors.coral.withValues(alpha: 0.08)
-              : AppColors.warmWhite,
+              : AppColors.glassBackground,
           borderRadius: BorderRadius.circular(Spacing.radiusButton),
           border: Border.all(
-            color: selected ? AppColors.coral : AppColors.sandDark,
+            color: selected ? AppColors.coral : AppColors.glassBorder,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -416,19 +414,19 @@ class _PlanCard extends StatelessWidget {
           children: [
             Text(label,
                 style: AppTypography.sansLabel.copyWith(
-                  color: selected ? AppColors.coral : AppColors.nearBlack,
+                  color: selected ? AppColors.coral : AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 )),
             const SizedBox(height: 4),
             Text(price,
-                style: AppTypography.serifHeading.copyWith(
+                style: AppTypography.title.copyWith(
                   fontSize: 20,
-                  color: selected ? AppColors.coral : AppColors.nearBlack,
+                  color: selected ? AppColors.coral : AppColors.textPrimary,
                 )),
             const SizedBox(height: 2),
             Text(sub,
                 style: AppTypography.sansTiny
-                    .copyWith(color: AppColors.driftwood)),
+                    .copyWith(color: AppColors.textSecondary)),
           ],
         ),
       ),

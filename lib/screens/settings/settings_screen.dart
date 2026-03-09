@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
+import '../../components/glass_card.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -33,7 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final prefs = ref.watch(userPreferencesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,14 +51,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       height: 40,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.sand,
+                        color: AppColors.glassBackground,
                       ),
                       child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.espresso),
+                          size: 20, color: AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text('Settings', style: AppTypography.serifHeading),
+                  Text('Settings', style: AppTypography.display.copyWith(fontSize: 24)),
                 ],
               ),
             ),
@@ -96,7 +97,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             '${prefs.hoursPerWeek}',
-                            style: AppTypography.monoMedium.copyWith(color: AppColors.espresso),
+                            style: AppTypography.monoMedium.copyWith(color: AppColors.textSecondary),
                           ),
                         ),
                         _StepperButton(
@@ -161,13 +162,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           duration: Motion.fast,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
-                            color: isActive ? AppColors.indigo : AppColors.sand,
+                            color: isActive ? AppColors.accent : AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Text(
                             vibe[0].toUpperCase() + vibe.substring(1),
                             style: AppTypography.sansLabel.copyWith(
-                              color: isActive ? Colors.white : AppColors.driftwood,
+                              color: isActive ? Colors.white : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -220,7 +221,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.rosePale,
+                        color: AppColors.glassBackground,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
@@ -237,7 +238,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 'Sign out of your account',
-                                style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
+                                style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
                               ),
                             ],
                           ),
@@ -255,24 +256,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.sand,
+                        color: AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.warmGray),
+                          const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.textMuted),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Clear local data',
-                                style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood),
+                                style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 'Reset onboarding, preferences & cached hobbies',
-                                style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray),
+                                style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
                               ),
                             ],
                           ),
@@ -296,7 +297,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Text(
                           'TrySomething v1.0.0 (Build 1)',
                           style: AppTypography.sansTiny.copyWith(
-                            color: AppColors.warmGray,
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -317,17 +318,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cream,
+        backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Log out?', style: AppTypography.sansSection),
         content: Text(
           'You\'ll need to sign in again to access your data.',
-          style: AppTypography.sansBodySmall.copyWith(color: AppColors.warmGray),
+          style: AppTypography.sansBodySmall.copyWith(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood)),
+            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () async {
@@ -347,17 +348,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cream,
+        backgroundColor: AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Clear local data?', style: AppTypography.sansSection),
         content: Text(
           'This will reset onboarding, preferences, and cached hobbies. You\'ll go through onboarding again.',
-          style: AppTypography.sansBodySmall.copyWith(color: AppColors.warmGray),
+          style: AppTypography.sansBodySmall.copyWith(color: AppColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood)),
+            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () async {
@@ -398,7 +399,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: AppTypography.overline.copyWith(
-        color: AppColors.warmGray,
+        color: AppColors.textMuted,
         letterSpacing: 2,
       ),
     );
@@ -426,23 +427,20 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
+      child: GlassCard(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.warmWhite,
-          borderRadius: BorderRadius.circular(14),
-        ),
+        borderRadius: 14,
         child: Row(
           children: [
             Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: AppColors.sand,
+                color: AppColors.surfaceElevated,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                child: Icon(icon, size: 16, color: AppColors.driftwood),
+                child: Icon(icon, size: 16, color: AppColors.textSecondary),
               ),
             ),
             const SizedBox(width: 12),
@@ -450,9 +448,9 @@ class _SettingsTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTypography.sansLabel.copyWith(color: AppColors.espresso)),
+                  Text(title, style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppTypography.sansTiny.copyWith(color: AppColors.warmGray)),
+                  Text(subtitle, style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted)),
                 ],
               ),
             ),
@@ -483,13 +481,13 @@ class _StepperButton extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: onTap != null ? AppColors.sand : AppColors.sand.withAlpha(120),
+          color: onTap != null ? AppColors.surfaceElevated : AppColors.surfaceElevated.withAlpha(120),
         ),
         child: Center(
           child: Icon(
             icon,
             size: 14,
-            color: onTap != null ? AppColors.driftwood : AppColors.warmGray,
+            color: onTap != null ? AppColors.textSecondary : AppColors.textMuted,
           ),
         ),
       ),
@@ -521,13 +519,13 @@ class _BudgetSelector extends StatelessWidget {
             margin: EdgeInsets.only(left: i > 0 ? 6 : 0),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isActive ? AppColors.amber : AppColors.sand,
+              color: isActive ? AppColors.accent : AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               labels[i],
               style: AppTypography.monoBadge.copyWith(
-                color: isActive ? Colors.white : AppColors.driftwood,
+                color: isActive ? Colors.white : AppColors.textSecondary,
               ),
             ),
           ),
@@ -562,13 +560,13 @@ class _ToggleChip extends StatelessWidget {
         duration: Motion.fast,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isOn ? AppColors.coral : AppColors.sand,
+          color: isOn ? AppColors.coral : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(100),
         ),
         child: Text(
           isOn ? onLabel : offLabel,
           style: AppTypography.sansCaption.copyWith(
-            color: isOn ? Colors.white : AppColors.driftwood,
+            color: isOn ? Colors.white : AppColors.textSecondary,
           ),
         ),
       ),
@@ -586,23 +584,19 @@ class _DebugProToggle extends ConsumerWidget {
     final notifier = ref.read(proStatusProvider.notifier);
     final current = notifier.debugTier;
 
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.warmWhite,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.amber.withValues(alpha: 0.3)),
-      ),
+      borderRadius: 14,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.bug_report_rounded, size: 16, color: AppColors.amber),
+              const Icon(Icons.bug_report_rounded, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 8),
               Text(
                 'Subscription Override',
-                style: AppTypography.sansLabel.copyWith(color: AppColors.amber),
+                style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
               ),
             ],
           ),
@@ -618,14 +612,14 @@ class _DebugProToggle extends ConsumerWidget {
                       margin: EdgeInsets.only(left: tier.index > 0 ? 6 : 0),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: current == tier ? AppColors.coral : AppColors.sand,
+                        color: current == tier ? AppColors.coral : AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         tier == DebugTier.none ? 'Auto' : tier.name[0].toUpperCase() + tier.name.substring(1),
                         style: AppTypography.sansCaption.copyWith(
-                          color: current == tier ? Colors.white : AppColors.driftwood,
+                          color: current == tier ? Colors.white : AppColors.textSecondary,
                           fontWeight: current == tier ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
@@ -668,7 +662,7 @@ class _ProSettingsRow extends StatelessWidget {
           gradient: LinearGradient(
             colors: [
               AppColors.coral.withValues(alpha: 0.08),
-              AppColors.indigo.withValues(alpha: 0.06),
+              AppColors.textMuted.withValues(alpha: 0.06),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -684,7 +678,7 @@ class _ProSettingsRow extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     AppColors.coral.withValues(alpha: 0.2),
-                    AppColors.indigo.withValues(alpha: 0.2),
+                    AppColors.textMuted.withValues(alpha: 0.2),
                   ],
                 ),
               ),
@@ -705,7 +699,7 @@ class _ProSettingsRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _statusLabel(status),
-                    style: AppTypography.sansTiny.copyWith(color: AppColors.driftwood),
+                    style: AppTypography.sansTiny.copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
