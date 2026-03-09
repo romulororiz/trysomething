@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,26 +11,23 @@ import '../../models/hobby.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../theme/motion.dart';
 import '../../theme/spacing.dart';
+import '../../components/glass_card.dart';
 
 // ═══════════════════════════════════════════════════════
-//  SIMPLE CATEGORY FILTERS
+//  CATEGORY FILTERS (used in bottom sheet)
 // ═══════════════════════════════════════════════════════
 
-/// Fixed category filters per CLAUDE.md: creative / active / mindful / social / outdoors / at home
 class _CategoryFilter {
   final String id;
   final String label;
   final IconData icon;
-  final Color color;
   final bool Function(Hobby) matches;
 
   const _CategoryFilter({
     required this.id,
     required this.label,
     required this.icon,
-    required this.color,
     required this.matches,
   });
 }
@@ -39,7 +37,6 @@ final _categoryFilters = <_CategoryFilter>[
     id: 'creative',
     label: 'Creative',
     icon: MdiIcons.palette,
-    color: AppColors.catCreative,
     matches: (h) =>
         h.category.toLowerCase() == 'creative' ||
         h.tags.any((t) => t.toLowerCase() == 'creative'),
@@ -48,7 +45,6 @@ final _categoryFilters = <_CategoryFilter>[
     id: 'active',
     label: 'Active',
     icon: MdiIcons.dumbbell,
-    color: AppColors.catFitness,
     matches: (h) =>
         h.category.toLowerCase() == 'fitness' ||
         h.tags.any(
@@ -58,7 +54,6 @@ final _categoryFilters = <_CategoryFilter>[
     id: 'mindful',
     label: 'Mindful',
     icon: MdiIcons.meditation,
-    color: AppColors.catMind,
     matches: (h) =>
         h.category.toLowerCase() == 'mind' ||
         h.tags.any((t) => ['meditative', 'relaxing', 'mindful', 'calming']
@@ -68,7 +63,6 @@ final _categoryFilters = <_CategoryFilter>[
     id: 'social',
     label: 'Social',
     icon: MdiIcons.accountGroup,
-    color: AppColors.catSocial,
     matches: (h) =>
         h.category.toLowerCase() == 'social' ||
         h.tags.any((t) => t.toLowerCase() == 'social'),
@@ -77,7 +71,6 @@ final _categoryFilters = <_CategoryFilter>[
     id: 'outdoors',
     label: 'Outdoors',
     icon: MdiIcons.pineTree,
-    color: AppColors.catOutdoors,
     matches: (h) =>
         h.category.toLowerCase() == 'outdoors' ||
         h.tags.any(
@@ -87,13 +80,12 @@ final _categoryFilters = <_CategoryFilter>[
     id: 'at-home',
     label: 'At Home',
     icon: MdiIcons.homeOutline,
-    color: AppColors.sky,
     matches: (h) => h.tags
         .any((t) => ['indoor', 'at-home', 'home'].contains(t.toLowerCase())),
   ),
 ];
 
-/// Scrollable Discover tab with horizontal rails, search, and category filters.
+/// Cinematic Discover tab with hero card layout.
 class DiscoverFeedScreen extends ConsumerStatefulWidget {
   const DiscoverFeedScreen({super.key});
 
@@ -106,8 +98,94 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
 
   List<Hobby> _applyFilter(List<Hobby> hobbies) {
     if (_selectedFilter == null) return hobbies;
-    final filter = _categoryFilters.firstWhere((f) => f.id == _selectedFilter);
+    final filter =
+        _categoryFilters.firstWhere((f) => f.id == _selectedFilter);
     return hobbies.where(filter.matches).toList();
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Filter by category',
+                  style: AppTypography.title
+                      .copyWith(color: AppColors.textPrimary)),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _categoryFilters.map((f) {
+                  final isSelected = _selectedFilter == f.id;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedFilter =
+                            _selectedFilter == f.id ? null : f.id;
+                      });
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.accent
+                            : AppColors.glassBackground,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: isSelected
+                                ? AppColors.accent
+                                : AppColors.glassBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(f.icon,
+                              size: 16,
+                              color: isSelected
+                                  ? AppColors.background
+                                  : AppColors.textSecondary),
+                          const SizedBox(width: 6),
+                          Text(f.label,
+                              style: AppTypography.body.copyWith(
+                                fontSize: 13,
+                                color: isSelected
+                                    ? AppColors.background
+                                    : AppColors.textPrimary,
+                              )),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (_selectedFilter != null) ...[
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedFilter = null);
+                    Navigator.pop(ctx);
+                  },
+                  child: Text('Clear filter',
+                      style: AppTypography.body
+                          .copyWith(color: AppColors.accent)),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -116,27 +194,27 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     final prefs = ref.watch(userPreferencesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: hobbiesAsync.when(
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.coral),
+          child: CircularProgressIndicator(color: AppColors.accent),
         ),
         error: (e, _) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(MdiIcons.alertCircleOutline,
-                  size: 32, color: AppColors.warmGray),
+                  size: 32, color: AppColors.textMuted),
               const SizedBox(height: 12),
               Text('Something went wrong',
-                  style: AppTypography.sansBody
-                      .copyWith(color: AppColors.warmGray)),
+                  style: AppTypography.body
+                      .copyWith(color: AppColors.textMuted)),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => ref.invalidate(hobbyListProvider),
                 child: Text('Tap to retry',
-                    style: AppTypography.sansLabel
-                        .copyWith(color: AppColors.coral)),
+                    style:
+                        AppTypography.body.copyWith(color: AppColors.accent)),
               ),
             ],
           ),
@@ -147,7 +225,6 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   }
 
   Widget _buildContent(List<Hobby> allHobbies, UserPreferences prefs) {
-    // Build rails, then apply category filter
     final forYou = _applyFilter(_buildForYouList(allHobbies, prefs));
     final startCheap = _applyFilter(allHobbies.where((h) {
       final (_, max) = parseCostRange(h.costText);
@@ -157,187 +234,155 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       final hours = parseWeeklyHours(h.timeText);
       return hours <= 2 && h.difficultyText.toLowerCase() == 'easy';
     }).toList());
-    final differentVibe =
-        _applyFilter(_buildDifferentVibeList(allHobbies, prefs));
+
+    // Hero = first match, alternates = next 2
+    final heroHobby = forYou.isNotEmpty ? forYou.first : null;
+    final alternates = forYou.length > 1 ? forYou.skip(1).take(2).toList() : <Hobby>[];
 
     return CustomScrollView(
       slivers: [
-        // Header
+        // ── Search bar (floating, glass) ──
         SliverToBoxAdapter(
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title row
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.coral,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'TRYSOMETHING',
-                        style: AppTypography.sansLabel.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                          color: AppColors.nearBlack,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => context.push('/search'),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.warmWhite,
-                          ),
-                          child: const Icon(Icons.search_rounded,
-                              size: 20, color: AppColors.driftwood),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Search bar with NLP hints
-                  GestureDetector(
-                    onTap: () => context.push('/search'),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: GestureDetector(
+                onTap: () => context.push('/search'),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                     child: Container(
                       height: Spacing.searchBarHeight,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.warmWhite,
-                        borderRadius:
-                            BorderRadius.circular(Spacing.radiusButton),
+                        color: AppColors.glassBackground,
+                        borderRadius: BorderRadius.circular(16),
+                        border:
+                            Border.all(color: AppColors.glassBorder, width: 0.5),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.search_rounded,
-                              size: 18, color: AppColors.warmGray),
+                          Icon(MdiIcons.magnify,
+                              size: 18, color: AppColors.textMuted),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              '"cheap creative hobby", "hobby for anxiety"...',
-                              style: AppTypography.sansCaption.copyWith(
-                                color: AppColors.warmGray,
+                              '"cheap creative hobby", "indoor winter"...',
+                              style: AppTypography.body.copyWith(
+                                fontSize: 13,
+                                color: AppColors.textMuted,
                               ),
                               overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // Filter icon → opens bottom sheet
+                          GestureDetector(
+                            onTap: _showFilterSheet,
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Icon(
+                                _selectedFilter != null
+                                    ? MdiIcons.filterCheck
+                                    : MdiIcons.filterVariant,
+                                size: 18,
+                                color: _selectedFilter != null
+                                    ? AppColors.accent
+                                    : AppColors.textMuted,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
-                ],
+                ),
               ),
             ),
           ),
         ),
 
-        // Category filter bar — outside parent padding so it scrolls edge-to-edge
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: _CategoryFilterBar(
-              selectedId: _selectedFilter,
-              onSelected: (id) {
-                setState(() {
-                  _selectedFilter = _selectedFilter == id ? null : id;
-                });
-              },
+        // ── Hero card ──
+        if (heroHobby != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: _HeroCard(hobby: heroHobby),
             ),
           ),
-        ),
 
-        // For You rail
-        if (forYou.isNotEmpty)
-          _SliverRail(
-            key: ValueKey('for-you-$_selectedFilter'),
-            title: 'For You',
-            icon: AppIcons.sparkle,
-            iconColor: AppColors.coral,
-            hobbies: forYou,
-            onExploreAll: () => context.push('/rail-feed/for-you?title=For+You'),
+        // ── MORE FOR YOU — 2 alternates ──
+        if (alternates.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('MORE FOR YOU',
+                      style: AppTypography.overline
+                          .copyWith(color: AppColors.textMuted)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      for (int i = 0; i < alternates.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 12),
+                        Expanded(
+                            child: _AlternateCard(hobby: alternates[i])),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
 
-        // Start Cheap rail
+        // ── START CHEAP rail ──
         if (startCheap.isNotEmpty)
-          _SliverRail(
-            key: ValueKey('start-cheap-$_selectedFilter'),
-            title: 'Start Cheap',
-            icon: AppIcons.cheap,
-            iconColor: AppColors.sage,
+          _SliverCompactRail(
+            title: 'START CHEAP',
             hobbies: startCheap,
-            onExploreAll: () => context.push('/rail-feed/start-cheap?title=Start+Cheap'),
+            routeId: 'start-cheap',
           ),
 
-        // Start This Week rail
+        // ── START THIS WEEK rail ──
         if (startThisWeek.isNotEmpty)
-          _SliverRail(
-            key: ValueKey('start-week-$_selectedFilter'),
-            title: 'Start This Week',
-            icon: AppIcons.quickStart,
-            iconColor: AppColors.amber,
+          _SliverCompactRail(
+            title: 'START THIS WEEK',
             hobbies: startThisWeek,
-            onExploreAll: () => context.push('/rail-feed/start-this-week?title=Start+This+Week'),
+            routeId: 'start-this-week',
           ),
 
-        // Need a Different Vibe? rail
-        if (differentVibe.isNotEmpty)
-          _SliverRail(
-            key: ValueKey('vibe-$_selectedFilter'),
-            title: 'Need a Different Vibe?',
-            icon: MdiIcons.shuffle,
-            iconColor: AppColors.indigo,
-            hobbies: differentVibe,
-            onExploreAll: () => context.push('/rail-feed/different-vibe?title=Need+a+Different+Vibe'),
-          ),
-
-        // Empty state when all rails are empty (category filter too narrow)
-        if (forYou.isEmpty &&
+        // Empty state
+        if (heroHobby == null &&
             startCheap.isEmpty &&
-            startThisWeek.isEmpty &&
-            differentVibe.isEmpty)
+            startThisWeek.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
               child: Column(
                 children: [
                   Icon(MdiIcons.magnifyClose,
-                      size: 36, color: AppColors.warmGray),
+                      size: 36, color: AppColors.textMuted),
                   const SizedBox(height: 12),
-                  Text(
-                    'No hobbies match this filter',
-                    style: AppTypography.sansBody
-                        .copyWith(color: AppColors.warmGray),
-                  ),
+                  Text('No hobbies match this filter',
+                      style: AppTypography.body
+                          .copyWith(color: AppColors.textMuted)),
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () => setState(() => _selectedFilter = null),
-                    child: Text(
-                      'Show all hobbies',
-                      style: AppTypography.sansLabel
-                          .copyWith(color: AppColors.coral),
-                    ),
+                    child: Text('Show all hobbies',
+                        style: AppTypography.body
+                            .copyWith(color: AppColors.accent)),
                   ),
                 ],
               ),
             ),
           ),
 
-        // Bottom padding
+        // Bottom padding for nav
         const SliverPadding(
           padding: EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
         ),
@@ -359,44 +404,235 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     scored.sort((a, b) => b.score.compareTo(a.score));
     return scored.take(10).map((e) => e.hobby).toList();
   }
+}
 
-  List<Hobby> _buildDifferentVibeList(
-      List<Hobby> allHobbies, UserPreferences prefs) {
-    final scored = allHobbies.map((h) {
-      final score = computeMatchScore(
-        hobby: h,
-        userHours: prefs.hoursPerWeek.toDouble(),
-        userBudgetLevel: prefs.budgetLevel,
-        userPrefersSocial: prefs.preferSocial,
-        userVibes: prefs.vibes,
-      );
-      return (hobby: h, score: score);
-    }).toList();
-    scored.sort((a, b) => a.score.compareTo(b.score));
-    return scored.take(8).map((e) => e.hobby).toList();
+// ═══════════════════════════════════════════════════════
+//  HERO CARD — Full width, 55-60% height, #1 match
+// ═══════════════════════════════════════════════════════
+
+class _HeroCard extends StatelessWidget {
+  final Hobby hobby;
+
+  const _HeroCard({required this.hobby});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenH = MediaQuery.of(context).size.height;
+    final cardH = screenH * 0.55;
+
+    return GestureDetector(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      child: Container(
+        height: cardH,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.glassBorder, width: 0.5),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background image
+            CachedNetworkImage(
+              imageUrl: hobby.imageUrl,
+              fit: BoxFit.cover,
+              memCacheWidth: 800,
+              placeholder: (_, __) =>
+                  Container(color: AppColors.surfaceElevated),
+              errorWidget: (_, __, ___) => Container(
+                color: AppColors.surfaceElevated,
+                child: Icon(AppIcons.categoryIcon(hobby.category),
+                    size: 48, color: AppColors.textMuted),
+              ),
+            ),
+
+            // Gradient overlay — editorial fade to dark at bottom
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withAlpha(20),
+                    Colors.black.withAlpha(180),
+                    Colors.black.withAlpha(220),
+                  ],
+                  stops: const [0.0, 0.35, 0.7, 1.0],
+                ),
+              ),
+            ),
+
+            // Content at bottom
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Category overline
+                  Text(
+                    hobby.category.toUpperCase(),
+                    style: AppTypography.overline.copyWith(
+                      color: AppColors.textSecondary,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Hobby title — hero text
+                  Text(
+                    hobby.title,
+                    style: AppTypography.hero.copyWith(
+                      color: Colors.white,
+                      fontSize: 32,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Hook line
+                  Text(
+                    hobby.hook,
+                    style: AppTypography.body.copyWith(
+                      color: Colors.white.withAlpha(200),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Specs — warm gray middot line
+                  Text(
+                    '${hobby.costText} · ${hobby.timeText} · ${hobby.difficultyText}',
+                    style: AppTypography.data.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
 // ═══════════════════════════════════════════════════════
-//  SLIVER RAIL — Horizontal scrolling hobby row
+//  ALTERNATE CARD — Glass card for "More For You"
 // ═══════════════════════════════════════════════════════
 
-class _SliverRail extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final IconData icon;
-  final Color iconColor;
-  final List<Hobby> hobbies;
-  final VoidCallback? onExploreAll;
+class _AlternateCard extends StatelessWidget {
+  final Hobby hobby;
 
-  const _SliverRail({
-    super.key,
+  const _AlternateCard({required this.hobby});
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      padding: EdgeInsets.zero,
+      borderRadius: 16,
+      child: SizedBox(
+        height: 200,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 400,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) => Container(
+                  color: AppColors.surfaceElevated,
+                  child: Icon(AppIcons.categoryIcon(hobby.category),
+                      size: 28, color: AppColors.textMuted),
+                ),
+              ),
+            ),
+
+            // Gradient
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withAlpha(160),
+                    Colors.black.withAlpha(210),
+                  ],
+                  stops: const [0.2, 0.65, 1.0],
+                ),
+              ),
+            ),
+
+            // Content
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    hobby.category.toUpperCase(),
+                    style: AppTypography.overline.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 9,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hobby.title,
+                    style: AppTypography.title.copyWith(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${hobby.costText} · ${hobby.timeText}',
+                    style: AppTypography.data.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  COMPACT RAIL — Horizontal scroll for cheap/quick
+// ═══════════════════════════════════════════════════════
+
+class _SliverCompactRail extends StatelessWidget {
+  final String title;
+  final List<Hobby> hobbies;
+  final String routeId;
+
+  const _SliverCompactRail({
     required this.title,
-    this.subtitle,
-    required this.icon,
-    required this.iconColor,
     required this.hobbies,
-    this.onExploreAll,
+    required this.routeId,
   });
 
   @override
@@ -405,73 +641,33 @@ class _SliverRail extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 15, color: iconColor),
+                Text(title,
+                    style: AppTypography.overline
+                        .copyWith(color: AppColors.textMuted)),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => context.push(
+                      '/rail-feed/$routeId?title=${Uri.encodeComponent(title)}'),
+                  child: Text('See all',
+                      style: AppTypography.caption
+                          .copyWith(color: AppColors.textSecondary)),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.sansSection.copyWith(
-                          fontSize: 16,
-                          color: AppColors.nearBlack,
-                        ),
-                      ),
-                      if (subtitle != null)
-                        Text(
-                          subtitle!,
-                          style: AppTypography.sansTiny.copyWith(
-                            color: AppColors.warmGray,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                if (onExploreAll != null)
-                  GestureDetector(
-                    onTap: onExploreAll,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 8, bottom: 2),
-                      child: Text(
-                        'Explore all →',
-                        style: AppTypography.sansCaption.copyWith(
-                          color: AppColors.coral,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Horizontal card list
           SizedBox(
-            height: 200,
+            height: 160,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 24),
               itemCount: hobbies.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                return _RailCard(hobby: hobbies[index]);
-              },
+              itemBuilder: (context, index) =>
+                  _CompactCard(hobby: hobbies[index]),
             ),
           ),
         ],
@@ -481,245 +677,87 @@ class _SliverRail extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-//  RAIL CARD — Compact hobby card for horizontal rails
+//  COMPACT CARD — Small card for horizontal rails
 // ═══════════════════════════════════════════════════════
 
-class _RailCard extends StatefulWidget {
+class _CompactCard extends StatelessWidget {
   final Hobby hobby;
 
-  const _RailCard({required this.hobby});
-
-  @override
-  State<_RailCard> createState() => _RailCardState();
-}
-
-class _RailCardState extends State<_RailCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _scaleController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _scaleController = AnimationController(
-      duration: Motion.cardPress,
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: Motion.cardPressScale)
-        .animate(
-            CurvedAnimation(parent: _scaleController, curve: Motion.fastCurve));
-  }
-
-  @override
-  void dispose() {
-    _scaleController.dispose();
-    super.dispose();
-  }
+  const _CompactCard({required this.hobby});
 
   @override
   Widget build(BuildContext context) {
-    final hobby = widget.hobby;
-
-    return GestureDetector(
-      onTapDown: (_) => _scaleController.forward(),
-      onTapUp: (_) {
-        _scaleController.reverse();
-        context.push('/hobby/${hobby.id}');
-      },
-      onTapCancel: () => _scaleController.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          width: 155,
-          decoration: BoxDecoration(
-            color: AppColors.sand,
-            borderRadius: BorderRadius.circular(Spacing.radiusTile),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Full-bleed background image
-              CachedNetworkImage(
+    return GlassCard(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      padding: EdgeInsets.zero,
+      borderRadius: 14,
+      child: SizedBox(
+        width: 140,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: CachedNetworkImage(
                 imageUrl: hobby.imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => Container(color: AppColors.sand),
+                memCacheWidth: 300,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.sand,
-                  child: Icon(
-                    AppIcons.categoryIcon(hobby.category),
-                    size: 28,
-                    color: AppColors.warmGray,
-                  ),
+                  color: AppColors.surfaceElevated,
+                  child: Icon(AppIcons.categoryIcon(hobby.category),
+                      size: 24, color: AppColors.textMuted),
                 ),
               ),
-
-              // Dark overlay gradient — heavier at bottom for text
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.1),
-                      Colors.black.withValues(alpha: 0.25),
-                      Colors.black.withValues(alpha: 0.65),
-                    ],
-                    stops: const [0.0, 0.4, 1.0],
-                  ),
-                ),
-              ),
-
-              // Content on top
-              Positioned(
-                left: 10,
-                right: 10,
-                bottom: 10,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      hobby.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.sansLabel.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 6,
-                            color: Colors.black.withValues(alpha: 0.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    // Spec badges row
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        _SpecMini(
-                          icon: AppIcons.badgeCost,
-                          text: hobby.costText.replaceAll('CHF ', ''),
-                        ),
-                        _SpecMini(
-                          icon: AppIcons.badgeTime,
-                          text: hobby.timeText,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  SPEC MINI — Tiny spec badge for rail cards
-// ═══════════════════════════════════════════════════════
-
-class _SpecMini extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _SpecMini({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 9, color: Colors.white.withValues(alpha: 0.7)),
-          const SizedBox(width: 3),
-          Text(
-            text,
-            style: AppTypography.monoTiny.copyWith(
-              fontSize: 9,
-              color: Colors.white.withValues(alpha: 0.85),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  CATEGORY FILTER BAR — 6 simple fixed filters
-// ═══════════════════════════════════════════════════════
-
-class _CategoryFilterBar extends StatelessWidget {
-  final String? selectedId;
-  final ValueChanged<String?> onSelected;
-
-  const _CategoryFilterBar({
-    required this.selectedId,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 32,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        itemCount: _categoryFilters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final filter = _categoryFilters[index];
-          final isSelected = selectedId == filter.id;
-          return GestureDetector(
-            onTap: () => onSelected(filter.id),
-            child: AnimatedContainer(
-              duration: Motion.fast,
-              curve: Motion.fastCurve,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            Container(
               decoration: BoxDecoration(
-                color: isSelected ? filter.color : AppColors.warmWhite,
-                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                borderRadius: BorderRadius.circular(14),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withAlpha(150),
+                    Colors.black.withAlpha(200),
+                  ],
+                  stops: const [0.3, 0.7, 1.0],
+                ),
               ),
-              child: Row(
+            ),
+            Positioned(
+              left: 10,
+              right: 10,
+              bottom: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    filter.icon,
-                    size: 12,
-                    color: isSelected
-                        ? Colors.white
-                        : filter.color.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(width: 5),
                   Text(
-                    filter.label,
-                    style: AppTypography.sansCaption.copyWith(
+                    hobby.title,
+                    style: AppTypography.body.copyWith(
+                      color: Colors.white,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                      color: isSelected ? Colors.white : AppColors.driftwood,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${hobby.costText} · ${hobby.timeText}',
+                    style: AppTypography.data.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
                     ),
                   ),
                 ],
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
 }
-
-// End of file
