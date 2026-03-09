@@ -6,6 +6,7 @@ import '../../core/api/api_constants.dart';
 import '../../core/storage/cache_manager.dart';
 import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
+import '../../models/seed_data.dart';
 import 'hobby_repository.dart';
 import 'hobby_repository_impl.dart';
 
@@ -44,17 +45,20 @@ class HobbyRepositoryApi implements HobbyRepository {
     try {
       final cached = CacheManager.get(key);
       if (cached != null) {
-        return Hobby.fromJson(json.decode(cached) as Map<String, dynamic>);
+        return _enrichFromSeed(
+            Hobby.fromJson(json.decode(cached) as Map<String, dynamic>));
       }
 
       final response = await _dio.get(ApiConstants.hobby(id));
       final jsonString = json.encode(response.data);
       await CacheManager.put(key, jsonString);
-      return Hobby.fromJson(response.data as Map<String, dynamic>);
+      return _enrichFromSeed(
+          Hobby.fromJson(response.data as Map<String, dynamic>));
     } catch (e) {
       final stale = CacheManager.getStale(key);
       if (stale != null) {
-        return Hobby.fromJson(json.decode(stale) as Map<String, dynamic>);
+        return _enrichFromSeed(
+            Hobby.fromJson(json.decode(stale) as Map<String, dynamic>));
       }
       return _seedFallback.getHobbyById(id);
     }
@@ -106,6 +110,7 @@ class HobbyRepositoryApi implements HobbyRepository {
       );
       return (response.data as List)
           .map((e) => Hobby.fromJson(e as Map<String, dynamic>))
+          .map(_enrichFromSeed)
           .toList();
     } catch (e) {
       return _seedFallback.searchHobbies(query);
@@ -168,10 +173,23 @@ class HobbyRepositoryApi implements HobbyRepository {
 
   // ── Helpers ──────────────────────────────────────
 
+  /// Merge client-only fields (quittingReasons) from seed data into
+  /// API-loaded hobbies. These fields aren't in the server DB yet.
+  Hobby _enrichFromSeed(Hobby hobby) {
+    if (hobby.quittingReasons.isNotEmpty) return hobby;
+    final titleLower = hobby.title.toLowerCase();
+    final seed = SeedData.hobbies
+        .where((s) => s.id == hobby.id || s.title.toLowerCase() == titleLower)
+        .firstOrNull;
+    if (seed == null || seed.quittingReasons.isEmpty) return hobby;
+    return hobby.copyWith(quittingReasons: seed.quittingReasons);
+  }
+
   List<Hobby> _parseHobbyList(String jsonString) {
     final list = json.decode(jsonString) as List;
     return list
         .map((e) => Hobby.fromJson(e as Map<String, dynamic>))
+        .map(_enrichFromSeed)
         .toList();
   }
 

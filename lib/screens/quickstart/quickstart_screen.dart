@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../components/glass_card.dart';
@@ -20,9 +21,8 @@ class QuickstartScreen extends ConsumerStatefulWidget {
 }
 
 class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
-  /// 0 = choose (save/start), 1 = budget, 2 = session length,
-  /// 3 = preferred day, 4 = first action summary
-  int _step = 0;
+  /// 1 = budget, 2 = session length, 3 = preferred day, 4 = summary
+  int _step = 1;
 
   // Setup choices
   int _budgetChoice = 0; // 0 = minimum, 1 = best value
@@ -34,15 +34,6 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
   static const _dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   static const _timeLabels = ['Morning', 'Afternoon', 'Evening', 'Night'];
 
-  void _saveForLater() {
-    ref.read(userHobbiesProvider.notifier).saveHobby(widget.hobbyId);
-    context.pop();
-  }
-
-  void _startNow() {
-    setState(() => _step = 1);
-  }
-
   void _nextStep() {
     if (_step < 4) {
       setState(() => _step++);
@@ -50,16 +41,18 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
   }
 
   void _prevStep() {
-    if (_step > 0) {
+    if (_step > 1) {
       setState(() => _step--);
+    } else {
+      context.pop();
     }
   }
 
   void _finishSetup() {
     ref.read(userHobbiesProvider.notifier).startTrying(widget.hobbyId);
     context.pop();
-    // Navigate to home tab with active hobby
-    context.go('/home');
+    // Navigate to home tab showing the newly started hobby
+    context.go('/home?hobby=${widget.hobbyId}');
   }
 
   @override
@@ -78,8 +71,8 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
             // Drag handle + close
             _buildHandle(),
 
-            // Progress dots (only in setup flow, steps 1-4)
-            if (_step > 0) _buildProgressDots(),
+            // Progress dots
+            _buildProgressDots(),
 
             // Content
             Expanded(
@@ -98,10 +91,24 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
 
   Widget _buildHandle() {
     return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 8),
-      child: Stack(
-        alignment: Alignment.center,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
         children: [
+          GestureDetector(
+            onTap: _prevStep,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.glassBackground,
+              ),
+              child: const Icon(Icons.arrow_back_rounded,
+                  size: 18, color: AppColors.textSecondary),
+            ),
+          ),
+          const Spacer(),
+          // Drag handle
           Container(
             width: 40,
             height: 4,
@@ -110,20 +117,18 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Positioned(
-            right: 16,
-            child: GestureDetector(
-              onTap: () => context.pop(),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.glassBackground,
-                ),
-                child: const Icon(Icons.close_rounded,
-                    size: 18, color: AppColors.textSecondary),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.glassBackground,
               ),
+              child: const Icon(Icons.close_rounded,
+                  size: 18, color: AppColors.textSecondary),
             ),
           ),
         ],
@@ -155,10 +160,8 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
     );
   }
 
-  Widget _buildStepContent(dynamic hobby) {
+  Widget _buildStepContent(Hobby hobby) {
     switch (_step) {
-      case 0:
-        return _buildChooseStep(hobby);
       case 1:
         return _buildBudgetStep(hobby);
       case 2:
@@ -173,100 +176,15 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
   }
 
   // ═══════════════════════════════════════════════════════
-  //  STEP 0: SAVE vs START
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildChooseStep(dynamic hobby) {
-    return Padding(
-      key: const ValueKey('choose'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          // Hobby image + title
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  hobby.imageUrl,
-                  width: 64,
-                  height: 64,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 64,
-                    height: 64,
-                    color: AppColors.surfaceElevated,
-                    child: const Icon(Icons.image_outlined,
-                        color: AppColors.textMuted),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(hobby.title, style: AppTypography.display),
-                    const SizedBox(height: 4),
-                    Text(
-                      hobby.difficultyText,
-                      style: AppTypography.sansTiny
-                          .copyWith(color: AppColors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-
-          Text('Ready to try this?',
-              style: AppTypography.title.copyWith(fontSize: 17)),
-          const SizedBox(height: 8),
-          Text(
-            'You don\'t need the perfect moment. Just a good enough start.',
-            style: AppTypography.sansBodySmall
-                .copyWith(color: AppColors.textSecondary),
-          ),
-          const Spacer(),
-
-          // Start Now CTA
-          _CoralButton(
-            label: 'Start now \u2192',
-            onTap: _startNow,
-          ),
-          const SizedBox(height: 12),
-
-          // Save for later
-          Center(
-            child: GestureDetector(
-              onTap: _saveForLater,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('Save for later',
-                    style: AppTypography.sansCaption
-                        .copyWith(color: AppColors.textSecondary)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
   //  STEP 1: BUDGET VERSION
   // ═══════════════════════════════════════════════════════
 
-  Widget _buildBudgetStep(dynamic hobby) {
+  Widget _buildBudgetStep(Hobby hobby) {
     final essentialCost = hobby.starterKit
         .where((k) => !k.isOptional)
-        .fold(0, (int sum, k) => sum + (k.cost as int));
+        .fold<int>(0, (sum, k) => sum + k.cost);
     final fullCost =
-        hobby.starterKit.fold(0, (int sum, k) => sum + (k.cost as int));
+        hobby.starterKit.fold<int>(0, (sum, k) => sum + k.cost);
 
     return Padding(
       key: const ValueKey('budget'),
@@ -472,7 +390,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
   //  STEP 4: SUMMARY
   // ═══════════════════════════════════════════════════════
 
-  Widget _buildSummaryStep(dynamic hobby) {
+  Widget _buildSummaryStep(Hobby hobby) {
     final firstStep = hobby.roadmapSteps.isNotEmpty
         ? hobby.roadmapSteps.first
         : null;

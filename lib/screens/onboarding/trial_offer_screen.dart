@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/glass_card.dart';
 
 /// One-time trial offer screen shown after onboarding, before first feed view.
 class TrialOfferScreen extends ConsumerStatefulWidget {
@@ -36,30 +36,24 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
     super.dispose();
   }
 
-  static const _proFeatures = [
+  static const _benefits = [
+    _ProFeature(
+      icon: Icons.route_outlined,
+      color: AppColors.coral,
+      title: 'Know the next right step',
+      subtitle: 'Your coach tells you exactly what to do next — no overthinking, no guessing.',
+    ),
     _ProFeature(
       icon: Icons.auto_awesome,
-      color: AppColors.accent,
-      title: 'AI Hobby Coach',
-      subtitle: 'Personal guidance for every step of your journey',
+      color: AppColors.coral,
+      title: 'Get unstuck fast',
+      subtitle: 'Lost motivation? Skipped a few days? Your coach helps you restart in 10 minutes.',
     ),
     _ProFeature(
       icon: Icons.camera_alt_outlined,
-      color: AppColors.success,
-      title: 'Photo Journal',
-      subtitle: 'Capture your progress with photos and notes',
-    ),
-    _ProFeature(
-      icon: Icons.shuffle_rounded,
-      color: AppColors.textSecondary,
-      title: '"Surprise Me" Generator',
-      subtitle: 'AI-powered hobby suggestions tailored to you',
-    ),
-    _ProFeature(
-      icon: Icons.insights_outlined,
-      color: AppColors.textMuted,
-      title: 'Advanced Stats',
-      subtitle: 'Skill radar, activity heatmap, and deep insights',
+      color: AppColors.coral,
+      title: 'Track real progress',
+      subtitle: 'Photo journal and reflections that show how far you\'ve come.',
     ),
   ];
 
@@ -129,7 +123,7 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(MdiIcons.starFourPoints, size: 14, color: AppColors.coral),
+                          const Icon(Icons.auto_awesome, size: 14, color: AppColors.coral),
                           const SizedBox(width: 6),
                           Text('LIMITED OFFER', style: AppTypography.monoBadge.copyWith(
                             color: AppColors.coral, fontSize: 10, letterSpacing: 1.2,
@@ -137,17 +131,48 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+
+                    // Brand wordmark
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Try',
+                            style: AppTypography.hero.copyWith(
+                              fontSize: 20,
+                              color: AppColors.coral,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Something ',
+                            style: AppTypography.hero.copyWith(
+                              fontSize: 20,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Pro',
+                            style: AppTypography.hero.copyWith(
+                              fontSize: 20,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
                     // Heading
                     Text(
-                      'Unlock the full\nexperience',
+                      'Start hobbies you\nactually stick with',
                       style: AppTypography.hero.copyWith(fontSize: 32),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Get the most out of your hobby journey\nwith TrySomething Pro.',
+                      'Get step-by-step support for your first 30 days,\nplus tools to keep momentum when it drops.',
                       style: AppTypography.sansCaption.copyWith(
                         color: AppColors.textSecondary, height: 1.5,
                       ),
@@ -155,14 +180,14 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                     ),
                     const SizedBox(height: 32),
 
-                    // Feature list
+                    // Benefit blocks
                     Expanded(
                       child: ListView.separated(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: _proFeatures.length,
+                        itemCount: _benefits.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (_, i) => _buildFeatureCard(_proFeatures[i]),
+                        itemBuilder: (_, i) => _buildFeatureCard(_benefits[i]),
                       ),
                     ),
 
@@ -231,13 +256,9 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
   }
 
   Widget _buildFeatureCard(_ProFeature feature) {
-    return Container(
+    return GlassCard(
+      blur: false,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(Spacing.radiusTile),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Row(
         children: [
           Container(

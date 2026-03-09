@@ -11,7 +11,7 @@ part 'social.g.dart';
 class JournalEntry with _$JournalEntry {
   const factory JournalEntry({
     required String id,
-    required String hobbyId,
+    String? hobbyId,
     required String text,
     String? photoUrl,
     required DateTime createdAt,

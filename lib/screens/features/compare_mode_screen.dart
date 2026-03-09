@@ -5,6 +5,7 @@ import '../../models/hobby.dart';
 import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../components/pro_upgrade_sheet.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -344,6 +345,14 @@ class CompareModeScreen extends ConsumerWidget {
                     onPressed: () {
                       final winnerId =
                           leftVote >= rightVote ? left.id : right.id;
+                      final canStart = ref.read(canStartHobbyProvider(winnerId));
+                      if (!canStart) {
+                        showProUpgrade(
+                          context,
+                          'Free users can have one active hobby. Upgrade to Pro for unlimited.',
+                        );
+                        return;
+                      }
                       ref
                           .read(userHobbiesProvider.notifier)
                           .startTrying(winnerId);

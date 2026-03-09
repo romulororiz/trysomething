@@ -452,15 +452,26 @@ function buildCoachSystemPrompt(
       : "No journal entries yet.";
 
   let userState = "BROWSING";
+  let coachMode = "START"; // START | MOMENTUM | RESCUE
   let progressInfo = "Not started yet.";
   if (userHobby) {
     if (userHobby.status === "trying" || userHobby.status === "active") {
       userState = "ACTIVE";
       const completedSteps = userHobby.completedSteps ?? 0;
       const totalSteps = hobby.roadmapSteps?.length ?? 0;
-      progressInfo = `Status: ${userHobby.status}. Completed ${completedSteps}/${totalSteps} roadmap steps. Started: ${userHobby.startedAt ? new Date(userHobby.startedAt).toLocaleDateString() : "unknown"}.`;
+      const startedAt = userHobby.startedAt ? new Date(userHobby.startedAt) : null;
+      const daysSinceStart = startedAt ? Math.floor((Date.now() - startedAt.getTime()) / 86400000) : 0;
+      progressInfo = `Status: ${userHobby.status}. Completed ${completedSteps}/${totalSteps} roadmap steps. Started: ${startedAt ? startedAt.toLocaleDateString() : "unknown"}. Days since start: ${daysSinceStart}.`;
+
+      // Determine coach mode: RESCUE if stalled 7+ days
+      if (daysSinceStart >= 7 && completedSteps < totalSteps) {
+        coachMode = "RESCUE";
+      } else {
+        coachMode = "MOMENTUM";
+      }
     } else if (userHobby.status === "saved") {
       userState = "SAVED";
+      coachMode = "START";
       progressInfo = "Saved but not started yet.";
     }
   }
@@ -469,6 +480,7 @@ function buildCoachSystemPrompt(
 You ONLY discuss ${hobby.title} and directly related topics.
 
 User state: ${userState}
+Coach mode: ${coachMode}
 ${progressInfo}
 
 Recent journal entries:
@@ -491,9 +503,9 @@ Rules:
 - Keep responses concise (2-3 paragraphs max).
 - Be encouraging but honest.
 - Reference their specific progress when relevant.
-- If they're BROWSING, share what makes this hobby special and encourage them to save it.
-- If they're SAVED, address hesitation and help them take the first step.
-- If they're ACTIVE, give specific guidance based on their current roadmap step.`;
+- START mode (browsing/saved): Share what makes this hobby special. Address hesitation. Help them take the first tiny step — what to buy, how to begin cheap, no overthinking.
+- MOMENTUM mode (active, on track): Give specific next-step guidance based on their current roadmap progress. Help simplify sessions. Keep it practical.
+- RESCUE mode (active but stalled 7+ days): Be warm, not guilt-tripping. Help them find the easiest re-entry point. Suggest a tiny 10-minute session. Ask what got in the way. If they want to switch hobbies, that's valid — help them decide.`;
 }
 
 // ── Audit log helper ────────────────────────────

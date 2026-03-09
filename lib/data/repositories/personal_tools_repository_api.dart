@@ -22,14 +22,14 @@ class PersonalToolsRepositoryApi implements PersonalToolsRepository {
 
   @override
   Future<JournalEntry> createJournalEntry({
-    required String hobbyId,
+    String? hobbyId,
     required String text,
     String? photoUrl,
   }) async {
     final response = await _dio.post(
       ApiConstants.usersJournal,
       data: {
-        'hobbyId': hobbyId,
+        if (hobbyId != null) 'hobbyId': hobbyId,
         'text': text,
         if (photoUrl != null) 'photoUrl': photoUrl,
       },

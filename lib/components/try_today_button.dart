@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_icons.dart';
 import '../theme/app_typography.dart';
 import '../theme/motion.dart';
 
@@ -123,7 +122,7 @@ class _TryTodayButtonState extends State<TryTodayButton>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(widget.icon ?? AppIcons.rocket, size: 16, color: Colors.white),
+            Icon(widget.icon ?? Icons.play_arrow_rounded, size: 16, color: Colors.white),
             const SizedBox(width: 8),
             Text(widget.text, style: AppTypography.sansCta),
           ],

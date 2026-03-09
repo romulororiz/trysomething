@@ -21,7 +21,7 @@ JournalEntry _$JournalEntryFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$JournalEntry {
   String get id => throw _privateConstructorUsedError;
-  String get hobbyId => throw _privateConstructorUsedError;
+  String? get hobbyId => throw _privateConstructorUsedError;
   String get text => throw _privateConstructorUsedError;
   String? get photoUrl => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
@@ -44,7 +44,7 @@ abstract class $JournalEntryCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
-      String hobbyId,
+      String? hobbyId,
       String text,
       String? photoUrl,
       DateTime createdAt});
@@ -66,7 +66,7 @@ class _$JournalEntryCopyWithImpl<$Res, $Val extends JournalEntry>
   @override
   $Res call({
     Object? id = null,
-    Object? hobbyId = null,
+    Object? hobbyId = freezed,
     Object? text = null,
     Object? photoUrl = freezed,
     Object? createdAt = null,
@@ -76,10 +76,10 @@ class _$JournalEntryCopyWithImpl<$Res, $Val extends JournalEntry>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      hobbyId: null == hobbyId
+      hobbyId: freezed == hobbyId
           ? _value.hobbyId
           : hobbyId // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       text: null == text
           ? _value.text
           : text // ignore: cast_nullable_to_non_nullable
@@ -106,7 +106,7 @@ abstract class _$$JournalEntryImplCopyWith<$Res>
   @useResult
   $Res call(
       {String id,
-      String hobbyId,
+      String? hobbyId,
       String text,
       String? photoUrl,
       DateTime createdAt});
@@ -126,7 +126,7 @@ class __$$JournalEntryImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? hobbyId = null,
+    Object? hobbyId = freezed,
     Object? text = null,
     Object? photoUrl = freezed,
     Object? createdAt = null,
@@ -136,10 +136,10 @@ class __$$JournalEntryImplCopyWithImpl<$Res>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      hobbyId: null == hobbyId
+      hobbyId: freezed == hobbyId
           ? _value.hobbyId
           : hobbyId // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       text: null == text
           ? _value.text
           : text // ignore: cast_nullable_to_non_nullable
@@ -161,7 +161,7 @@ class __$$JournalEntryImplCopyWithImpl<$Res>
 class _$JournalEntryImpl implements _JournalEntry {
   const _$JournalEntryImpl(
       {required this.id,
-      required this.hobbyId,
+      this.hobbyId,
       required this.text,
       this.photoUrl,
       required this.createdAt});
@@ -172,7 +172,7 @@ class _$JournalEntryImpl implements _JournalEntry {
   @override
   final String id;
   @override
-  final String hobbyId;
+  final String? hobbyId;
   @override
   final String text;
   @override
@@ -223,7 +223,7 @@ class _$JournalEntryImpl implements _JournalEntry {
 abstract class _JournalEntry implements JournalEntry {
   const factory _JournalEntry(
       {required final String id,
-      required final String hobbyId,
+      final String? hobbyId,
       required final String text,
       final String? photoUrl,
       required final DateTime createdAt}) = _$JournalEntryImpl;
@@ -234,7 +234,7 @@ abstract class _JournalEntry implements JournalEntry {
   @override
   String get id;
   @override
-  String get hobbyId;
+  String? get hobbyId;
   @override
   String get text;
   @override

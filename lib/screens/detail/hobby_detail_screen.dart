@@ -8,6 +8,7 @@ import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../components/try_today_button.dart';
 import '../../components/glass_card.dart';
+import '../../components/pro_upgrade_sheet.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -193,12 +194,12 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     _staggeredCard(2, _buildWhatToExpect(hobby)),
                     const SizedBox(height: 16),
 
-                    // 3b. "Why people stop" — quitting reasons
-                    if (hobby.quittingReasons.isNotEmpty)
-                      ...[
-                        _staggeredCard(3, _buildWhyPeopleStop(hobby)),
-                        const SizedBox(height: 16),
-                      ],
+                    // 3b. "Why people stop" — pitfalls / quitting reasons
+                    if (hobby.pitfalls.isNotEmpty ||
+                        hobby.quittingReasons.isNotEmpty) ...[
+                      _staggeredCard(3, _buildWhyPeopleStop(hobby)),
+                      const SizedBox(height: 16),
+                    ],
 
                     // 4. Starter Kit glass card
                     _staggeredCard(4, _buildStarterKit(hobby)),
@@ -237,6 +238,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   ),
                 ),
                 const Spacer(),
+                // Save / bookmark
+                _SaveButton(hobbyId: widget.hobbyId),
+                const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () {},
                   child: Container(
@@ -267,9 +271,18 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               child: SafeArea(
                 top: false,
                 child: TryTodayButton(
-                  text: 'Start the easy version',
-                  onPressed: () =>
-                      context.push('/quickstart/${widget.hobbyId}'),
+                  text: 'Start with the basics',
+                  onPressed: () {
+                    final canStart = ref.read(canStartHobbyProvider(widget.hobbyId));
+                    if (!canStart) {
+                      showProUpgrade(
+                        context,
+                        'Free users can have one active hobby. Upgrade to Pro for unlimited.',
+                      );
+                      return;
+                    }
+                    context.push('/quickstart/${widget.hobbyId}');
+                  },
                 ),
               ),
             ),
@@ -788,6 +801,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
   // ═══════════════════════════════════════════════════════
 
   Widget _buildWhyPeopleStop(Hobby hobby) {
+    // Use quittingReasons if available, otherwise fall back to pitfalls
+    final reasons = hobby.quittingReasons.isNotEmpty
+        ? hobby.quittingReasons
+        : hobby.pitfalls;
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -806,7 +823,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ],
           ),
           const SizedBox(height: 14),
-          ...hobby.quittingReasons.map((reason) => Padding(
+          ...reasons.map((reason) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1167,6 +1184,39 @@ class _KitToggle extends StatelessWidget {
             color: selected ? AppColors.coral : AppColors.textSecondary,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SAVE / BOOKMARK BUTTON (detail header)
+// ═══════════════════════════════════════════════════════
+
+class _SaveButton extends ConsumerWidget {
+  final String hobbyId;
+  const _SaveButton({required this.hobbyId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSaved = ref.watch(isHobbySavedProvider(hobbyId));
+
+    return GestureDetector(
+      onTap: () {
+        ref.read(userHobbiesProvider.notifier).toggleSave(hobbyId);
+      },
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withValues(alpha: 0.35),
+        ),
+        child: Icon(
+          isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+          size: 18,
+          color: isSaved ? AppColors.coral : Colors.white,
         ),
       ),
     );

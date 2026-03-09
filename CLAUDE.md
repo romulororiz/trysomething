@@ -85,32 +85,61 @@ Did they DO the hobby and come back?
 
 ---
 
-## Design System — "Midnight Neon" (Keep, with tone shift)
+## Design System — "Warm Cinematic Minimalism"
 
-**Colors:** Keep the existing palette. #0A0A0F bg, #FF6B6B coral, #06D6A0 sage, etc.
+**IMPORTANT: The visual system has been completely overhauled.** See `VISUAL_REDESIGN_PROMPT.md` for full implementation details with code patterns. This section is the summary.
 
-**Typography:** Source Serif 4 headings, DM Sans body, IBM Plex Mono data.
+### Visual Direction
+Not "Midnight Neon" anymore. The new aesthetic is: **editorial + tactile + cinematic + warm.** Think DoReset's restraint + Headspace's warmth + Kinfolk magazine's editorial quality.
 
-**Tone shift:** The visual system stays. But the VOICE of the app shifts:
-- Less: "neon AI lifestyle app"
-- More: "warm, honest, practical guide"
+### Color Palette (Simplified)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| background | #0A0A0F | Deep black (unchanged) |
+| surface | #111116 | Barely lighter |
+| surfaceElevated | #1A1A20 | Cards |
+| textPrimary | #F5F0EB | Warm cream (NOT pure white) |
+| textSecondary | #B0A89E | Warm gray (body) |
+| textMuted | #6B6360 | Warm dark gray (metadata) |
+| accent | #FF6B6B | Coral — CTAs ONLY, nothing else |
+| success | #06D6A0 | Completed steps only |
+| glass | #15FFFFFF | White at 8% (glass surfaces) |
 
+**REMOVED from active use:** amber, indigo, ALL category-specific colors. No multi-color badges.
+
+### Typography (Cinematic Contrast)
+- Hero: 36pt Source Serif 4 — massive, cinematic screen headlines
+- Display: 28pt — section titles
+- Body: 15pt DM Sans warm gray
+- Caption: 12pt / Overline: 11pt uppercase
+- DataLarge: 48pt IBM Plex Mono — big stats
+- Hero-to-caption ratio: 3.3x (this creates the cinematic feel)
+
+### Components
+- **Glass cards** everywhere — semi-transparent, subtle blur, warm border. Replace all solid dark cards.
+- **Floating glass dock** for bottom nav — 3 icons, no labels, rounded, floating
+- **Noise texture overlay** on every screen — 256x256 grain at 3% opacity
+- **One coral CTA per screen** — everything else is secondary (warm cream text)
+
+### Spec Badges (NO MORE COLORED PILLS)
+All specs as one warm gray text line: `CHF 40-120 · 2h/week · Easy`
+No backgrounds, no icons, no colored pills. Just `AppColors.textMuted` + `AppTypography.data`.
+
+### Motion (flutter_animate)
+- Screen entry: staggered fade-up (400ms, 100ms delay between elements)
+- Card press: scale to 0.97 (150ms)
+- Tab switches: crossfade (250ms)
+- Scroll parallax on hero images (0.7x speed)
+
+### Voice
 **Prefer:** "Start gently" / "Try the easy version" / "Keep it simple" / "Small progress counts"
 **Avoid:** "Crush it" / "Unlock everything" / "Level up" / "Become your best self"
-
-The app should feel emotionally safe for overwhelmed adults.
-
-### Spec Badge Rules (Unchanged)
-- ALL spec badges: muted `sand` (#1E1E2E) bg, `driftwood` (#A0A0B8) text, monochrome icons
-- Cost: CHF range ("CHF 40–120"), never single number
-- Time: "/week" suffix always ("2h/week"), NEVER bare hours
-- Difficulty: Easy / Medium / Hard
 
 ### Responsive Rules (Unchanged)
 - `SafeArea` or `MediaQuery.of(context).padding` on every screen
 - Never hardcode system UI dimensions
 - Test device: Nothing Phone 3a
-- Bottom nav bar = 85px, account for it in all bottom-positioned elements
+- Bottom nav is now floating glass dock — account for its position in all bottom elements
 
 ---
 

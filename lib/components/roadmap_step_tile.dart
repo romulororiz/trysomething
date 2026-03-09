@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
-import '../theme/app_icons.dart';
 import '../theme/spacing.dart';
 import '../theme/motion.dart';
 import '../models/hobby.dart';
@@ -138,10 +137,9 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: widget.isCurrent
-            ? AppColors.coralPale
-            : AppColors.warmWhite,
+            ? AppColors.coral.withValues(alpha: 0.08)
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(Spacing.radiusButton),
-        // No border — dark mode uses bg color contrast
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +173,7 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
           _activeFill,
         ),
         border: Border.all(
-          color: widget.isCompleted ? AppColors.sage : (widget.isCurrent ? AppColors.coral : AppColors.sandDark),
+          color: widget.isCompleted ? AppColors.sage : (widget.isCurrent ? AppColors.coral : AppColors.textMuted),
           width: 1.5,
         ),
       ),
@@ -195,7 +193,7 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
               child: Text(
                 '${widget.stepNumber}',
                 style: AppTypography.monoTiny.copyWith(
-                  color: AppColors.warmGray,
+                  color: AppColors.textMuted,
                 ),
               ),
             ),
@@ -216,8 +214,8 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
                       ? TextDecoration.lineThrough
                       : null,
                   color: widget.isCompleted
-                      ? AppColors.warmGray
-                      : AppColors.nearBlack,
+                      ? AppColors.textMuted
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -225,17 +223,15 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: widget.isCompleted
-                    ? AppColors.sand.withValues(alpha: 0.5)
-                    : AppColors.sand,
+                color: AppColors.surfaceElevated,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '${widget.step.estimatedMinutes}min',
                 style: AppTypography.monoTiny.copyWith(
                   color: widget.isCompleted
-                      ? AppColors.stone
-                      : AppColors.driftwood,
+                      ? AppColors.textWhisper
+                      : AppColors.textMuted,
                 ),
               ),
             ),
@@ -245,7 +241,7 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
         Text(
           widget.step.description,
           style: AppTypography.sansTiny.copyWith(
-            color: widget.isCompleted ? AppColors.stone : AppColors.warmGray,
+            color: widget.isCompleted ? AppColors.textWhisper : AppColors.textMuted,
           ),
         ),
         // Milestone badge
@@ -254,19 +250,18 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.amberPale,
+              color: AppColors.coral.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-              // No border — dark mode milestone pill
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(AppIcons.trophy, size: 12, color: AppColors.amberDeep),
+                Icon(Icons.emoji_events_outlined, size: 12, color: AppColors.coral),
                 const SizedBox(width: 4),
                 Text(
                   widget.step.milestone!,
                   style: AppTypography.monoMilestone.copyWith(
-                    color: AppColors.amberDeep,
+                    color: AppColors.coral,
                   ),
                 ),
               ],

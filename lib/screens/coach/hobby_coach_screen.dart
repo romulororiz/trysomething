@@ -442,7 +442,43 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     );
   }
 
+  /// Pick starter chips based on user's hobby state (start/momentum/rescue).
+  List<String> _getStarterChips() {
+    final userHobbies = ref.read(userHobbiesProvider);
+    final userHobby = userHobbies[widget.hobbyId];
+
+    if (userHobby == null || userHobby.status == HobbyStatus.saved) {
+      // Start mode — not started yet
+      return [
+        'Help me start tonight',
+        'Make this cheaper',
+        'What do I need to buy?',
+      ];
+    }
+
+    // Check for stalled state (rescue mode): no activity in 7+ days
+    final lastActive = userHobby.startedAt ?? DateTime.now();
+    final daysSinceActive = DateTime.now().difference(lastActive).inDays;
+    if (daysSinceActive >= 7) {
+      // Rescue mode
+      return [
+        'I skipped a few days',
+        'I\'m losing motivation',
+        'Maybe this hobby isn\'t for me',
+      ];
+    }
+
+    // Momentum mode — actively trying
+    return [
+      'What should I do next?',
+      'I\'m losing motivation',
+      'Make this easier',
+    ];
+  }
+
   Widget _buildEmptyState(String hobbyTitle) {
+    final chips = _getStarterChips();
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -470,6 +506,33 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
               textAlign: TextAlign.center,
               style:
                   AppTypography.caption.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            // Starter chips
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: chips.map((chip) => GestureDetector(
+                onTap: () {
+                  _textController.text = chip;
+                  _send();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.glassBackground,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.glassBorder),
+                  ),
+                  child: Text(
+                    chip,
+                    style: AppTypography.sansTiny.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              )).toList(),
             ),
           ],
         ),

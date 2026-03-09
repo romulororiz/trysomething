@@ -162,7 +162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           duration: Motion.fast,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
-                            color: isActive ? AppColors.accent : AppColors.surfaceElevated,
+                            color: isActive ? AppColors.coral : AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Text(
@@ -208,6 +208,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _SectionLabel(text: 'DEBUG'),
                     const SizedBox(height: 12),
                     _DebugProToggle(),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () => _showResetHobbiesDialog(context, ref),
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(14),
+                        borderRadius: 14,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.restart_alt_rounded, size: 16, color: AppColors.textMuted),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Reset hobby data',
+                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
+                                  const SizedBox(height: 2),
+                                  Text('Clear saved/active hobbies (keeps onboarding)',
+                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () async {
+                        await ref.read(userHobbiesProvider.notifier).syncFromServer();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Synced from server')),
+                          );
+                        }
+                      },
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(14),
+                        borderRadius: 14,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.cloud_download_outlined, size: 16, color: AppColors.textMuted),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Sync from server',
+                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
+                                  const SizedBox(height: 2),
+                                  Text('Replace local state with server data',
+                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
 
                   const SizedBox(height: 28),
@@ -376,6 +435,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _showResetHobbiesDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Reset hobby data?', style: AppTypography.sansSection),
+        content: Text(
+          'This clears all saved/active hobbies locally. Onboarding stays intact.',
+          style: AppTypography.sansBodySmall.copyWith(color: AppColors.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final prefs = ref.read(sharedPreferencesProvider);
+              await prefs.remove('user_hobbies');
+              ref.invalidate(userHobbiesProvider);
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Hobby data cleared')),
+                );
+              }
+            },
+            child: Text('Reset', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
+          ),
+        ],
+      ),
+    );
+  }
+
   static String _budgetLabel(int level) {
     switch (level) {
       case 0: return 'Low';
@@ -519,7 +613,7 @@ class _BudgetSelector extends StatelessWidget {
             margin: EdgeInsets.only(left: i > 0 ? 6 : 0),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isActive ? AppColors.accent : AppColors.surfaceElevated,
+              color: isActive ? AppColors.coral : AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

@@ -199,7 +199,7 @@ Redesign the You tab (`lib/screens/profile/` or wherever the You/Profile tab liv
 - Navigation to Home, Detail, Journal, Pro, Settings all work
 - Verify on Nothing Phone 3a — check safe areas and bottom nav clearance
 
-- [ ] **C.8 — Apply visual system to remaining screens**
+- [X] **C.8 — Apply visual system to remaining screens**
   - Go through EVERY remaining screen and apply:
     - Warm cream text (not pure white)
     - Glass cards (not solid dark cards)
@@ -223,7 +223,7 @@ Redesign the You tab (`lib/screens/profile/` or wherever the You/Profile tab liv
     - Onboarding (all pages) — option selection uses warm cream border highlight, not teal/green
   - **Test:** every screen follows the new visual system, no remnants of old colored badge style
 
-- [ ] **C.9 — Sprint C visual QA on physical device**
+- [X] **C.9 — Sprint C visual QA on physical device**
   - Run full `flutter analyze`
   - Test on Nothing Phone 3a:
     - Glass blur effects: smooth at 60fps? If jank on scrollable lists, switch to simple glass (no blur)
@@ -242,7 +242,7 @@ Redesign the You tab (`lib/screens/profile/` or wherever the You/Profile tab liv
 
 Now that the visual system is in place, build the detail page using it.
 
-- [ ] **D.1 — Redesign hobby detail page**
+- [X] **D.1 — Redesign hobby detail page**
   - Full-bleed atmospheric image (50% screen height) with gradient fade to black
   - Category overline over image ("CREATIVE" in warm gray)
   - Hobby title in hero text (36pt) over image
@@ -257,7 +257,7 @@ Now that the visual system is in place, build the detail page using it.
   - All with staggered fade-in animation
   - **Test:** all sections render, CTA navigates to commitment flow
 
-- [ ] **D.2 — Build commitment flow (Save vs Start)**
+- [X] **D.2 — Build commitment flow (Save vs Start)**
   - After user taps main CTA:
     - Glass bottom sheet: "Save for later" or "Start now"
     - If "Start now": mini setup flow:
@@ -270,7 +270,7 @@ Now that the visual system is in place, build the detail page using it.
     - → Navigate to Home tab with active hobby
   - **Test:** full flow works, hobby appears on Home tab
 
-- [ ] **D.3 — Build 4-stage roadmap view**
+- [X] **D.3 — Build 4-stage roadmap view**
   - Replace generic step list with 4 stages:
     - Week 1: Try it / Week 2: Repeat it / Week 3: Reduce friction / Week 4: Decide
   - Show one stage at a time in glass cards
@@ -278,7 +278,7 @@ Now that the visual system is in place, build the detail page using it.
   - "Stuck?" button → routes to coach
   - **Test:** stages progress correctly, stuck button opens coach
 
-- [ ] **D.4 — Add "Common reasons people quit" to each hobby**
+- [X] **D.4 — Add "Common reasons people quit" to each hobby**
   - Add `quittingReasons` field to Hobby model (String[])
   - Seed 3-5 honest reasons per hobby
   - Display as glass card section: "Why people stop" — warm, non-judgmental framing
@@ -312,27 +312,22 @@ These exist from v3. Adapt during Sprints C and D inline.
   - Update Pro locks: remove hidden feature locks, add multi-hobby lock
   - **Test:** coach accessible from Home + Detail, visual style matches
 
-- [ ] **F.2 — Brand assets (app icon + splash)**
-  - App icon: brushstroke T on dark, configure flutter_launcher_icons
-  - Splash: warm cinematic style — wordmark + "Find a hobby you'll actually start" + tagline on black with noise texture
-  - Login: icon above warm greeting text
-  - **Test:** icon renders on both platforms, splash transitions smoothly
 
-- [ ] **F.3 — Re-engagement notifications**
+- [ ] **F.2 — Re-engagement notifications**
   - User saved but never started (24h): "Ready to try {hobby}? First session is just {duration}."
   - User went silent (3 days): "Still interested in {hobby}? Try a quick 10-minute session tonight."
   - User completed step (immediate): "{step} done! Here's what comes next."
   - Gentle, warm, action-oriented — matches brand voice
   - **Test:** notifications fire at correct triggers
 
-- [ ] **F.4 — Performance pass**
+- [ ] **F.3 — Performance pass**
   - 60fps scroll with glass effects (switch to simple glass on heavy scroll lists if needed)
   - CachedNetworkImage with memCacheWidth
   - APK < 30MB
   - BackdropFilter limited to 3-5 per visible screen (performance guard)
   - **Test:** no jank on Nothing Phone 3a, bundle size target met
 
-- [ ] **F.5 — End-to-end testing**
+- [ ] **F.4 — End-to-end testing**
   - Full flows on physical device:
     - Onboarding → match → start → complete step → return day 7
     - Free → hit coach limit → upgrade → Pro
@@ -340,13 +335,13 @@ These exist from v3. Adapt during Sprints C and D inline.
     - Visual: every screen follows warm cinematic system, no old style remnants
   - **Test:** all flows work on Nothing Phone 3a
 
-- [ ] **F.6 — App store prep**
+- [ ] **F.5 — App store prep**
   - Metadata, privacy policy, screenshots with FINAL premium visual design
   - iOS signing via Codemagic, Android release signing
   - Screenshots should showcase the cinematic hero cards, glass surfaces, warm typography
   - **Test:** builds accessible on TestFlight + Play Console
 
-- [ ] **F.7 — Beta launch**
+- [ ] **F.6 — Beta launch**
   - 10 iOS + 10 Android testers
   - Mix of free and Pro testers
   - In-app feedback mechanism

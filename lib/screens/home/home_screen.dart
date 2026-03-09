@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../components/glass_card.dart';
 import '../../components/stage_roadmap_card.dart';
+import '../../components/roadmap_step_tile.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/feature_providers.dart';
@@ -16,7 +17,9 @@ import '../../theme/spacing.dart';
 
 /// Home tab — cinematic active hobby dashboard.
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final String? initialHobbyId;
+
+  const HomeScreen({super.key, this.initialHobbyId});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -29,7 +32,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    // Find initial page index if a specific hobby was requested
+    final initialIndex = _findHobbyIndex(widget.initialHobbyId);
+    _currentPage = initialIndex;
+    _pageController = PageController(initialPage: initialIndex);
+  }
+
+  int _findHobbyIndex(String? hobbyId) {
+    if (hobbyId == null) return 0;
+    final userHobbies = ref.read(userHobbiesProvider);
+    final activeEntries = userHobbies.entries
+        .where((e) =>
+            e.value.status == HobbyStatus.trying ||
+            e.value.status == HobbyStatus.active)
+        .toList();
+    final idx = activeEntries.indexWhere((e) => e.key == hobbyId);
+    return idx >= 0 ? idx : 0;
   }
 
   @override
@@ -128,7 +146,7 @@ class _PageDots extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isActive
                     ? AppColors.coral
-                    : AppColors.coral.withAlpha(80),
+                    : AppColors.textPrimary.withAlpha(80),
                 borderRadius: BorderRadius.circular(3),
               ),
             );
@@ -349,79 +367,6 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                 const SizedBox(height: 20),
               ],
 
-              // ── Your next step ──
-              if (nextStep != null) ...[
-                GlassCard(
-                  blur: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('YOUR NEXT STEP',
-                          style: AppTypography.overline
-                              .copyWith(color: AppColors.textMuted)),
-                      const SizedBox(height: 10),
-                      Text(nextStep.title, style: AppTypography.display),
-                      if (nextStep.description.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          nextStep.description,
-                          style: AppTypography.body
-                              .copyWith(color: AppColors.textSecondary),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Text(
-                            '${completedValid.length}/$totalSteps steps',
-                            style: AppTypography.data
-                                .copyWith(color: AppColors.textMuted),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(2),
-                              child: LinearProgressIndicator(
-                                value: progress.clamp(0.0, 1.0),
-                                minHeight: 3,
-                                backgroundColor: AppColors.textWhisper,
-                                valueColor:
-                                    const AlwaysStoppedAnimation<Color>(
-                                        AppColors.textPrimary),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      GestureDetector(
-                        onTap: () {
-                          ref
-                              .read(userHobbiesProvider.notifier)
-                              .toggleStep(hobby.id, nextStep!.id);
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Center(
-                            child: Text('Mark as done',
-                                style: AppTypography.button
-                                    .copyWith(color: AppColors.background)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
               // ── 4-Stage Roadmap ──
               StageRoadmapCard(
                 currentWeek: weekNum,
@@ -429,6 +374,29 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                 completedSteps: completedValid.length,
                 totalSteps: totalSteps,
               ),
+              const SizedBox(height: 16),
+
+              // ── Roadmap steps checklist ──
+              Text('YOUR STEPS',
+                  style: AppTypography.overline
+                      .copyWith(color: AppColors.textMuted)),
+              const SizedBox(height: 10),
+              ...List.generate(hobby.roadmapSteps.length, (i) {
+                final step = hobby.roadmapSteps[i];
+                final isCompleted = completedValid.contains(step.id);
+                final isCurrent = step.id == nextStep?.id;
+                return RoadmapStepTile(
+                  step: step,
+                  stepNumber: i + 1,
+                  isCompleted: isCompleted,
+                  isCurrent: isCurrent,
+                  onToggle: () {
+                    ref
+                        .read(userHobbiesProvider.notifier)
+                        .toggleStep(hobby.id, step.id);
+                  },
+                );
+              }),
               const SizedBox(height: 16),
 
               // ── This week's plan ──

@@ -6,7 +6,7 @@ abstract class PersonalToolsRepository {
   // ── Journal ──
   Future<List<JournalEntry>> getJournalEntries();
   Future<JournalEntry> createJournalEntry({
-    required String hobbyId,
+    String? hobbyId,
     required String text,
     String? photoUrl,
   });

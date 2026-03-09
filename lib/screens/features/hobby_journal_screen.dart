@@ -5,8 +5,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/social.dart';
 import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../models/hobby.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
@@ -98,15 +99,17 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEntrySheet(context, ref),
-        backgroundColor: AppColors.coral,
-        foregroundColor: Colors.white,
-        elevation: 3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Spacing.radiusButton),
+      floatingActionButton: SizedBox(
+        width: 48,
+        height: 48,
+        child: FloatingActionButton(
+          onPressed: () => _showAddEntrySheet(context, ref),
+          backgroundColor: AppColors.coral,
+          foregroundColor: Colors.white,
+          elevation: 3,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, size: 22),
         ),
-        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
@@ -118,40 +121,21 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
         children: [
           GestureDetector(
             onTap: () => context.pop(),
-            child: const Icon(Icons.arrow_back,
-                size: 20, color: AppColors.textSecondary),
-          ),
-          const Spacer(),
-          Text('Hobby Journal', style: AppTypography.title.copyWith(fontSize: 17)),
-          const Spacer(),
-          GestureDetector(
-            onTap: () {
-              final isPro = ref.read(isProProvider);
-              if (!isPro) {
-                showProUpgrade(context, 'Export your journal as PDF with Pro.');
-              }
-              // TODO: implement PDF export for Pro users
-            },
-            child: Stack(
-              children: [
-                const Icon(Icons.ios_share_rounded, size: 20, color: AppColors.textSecondary),
-                if (!ref.watch(isProProvider))
-                  Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.coral,
-                        border: Border.all(color: AppColors.background, width: 1),
-                      ),
-                      child: const Icon(Icons.lock, size: 7, color: Colors.white),
-                    ),
-                  ),
-              ],
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.glassBackground,
+              ),
+              child: const Icon(Icons.arrow_back,
+                  size: 20, color: AppColors.textSecondary),
             ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text('Journal',
+                style: AppTypography.display.copyWith(fontSize: 24)),
           ),
         ],
       ),
@@ -160,22 +144,35 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(AppIcons.journal, size: 48, color: AppColors.border),
-          const SizedBox(height: 16),
-          Text(
-            'No journal entries yet',
-            style: AppTypography.title.copyWith(fontSize: 17, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap the button below to record your first entry.',
-            style: AppTypography.sansBodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.coral.withValues(alpha: 0.1),
+              ),
+              child: const Icon(Icons.edit_note_rounded,
+                  size: 28, color: AppColors.coral),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No entries yet',
+              style: AppTypography.title.copyWith(fontSize: 17),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'After a session, jot down what happened.\nWhat felt good? What was annoying?',
+              textAlign: TextAlign.center,
+              style: AppTypography.sansBodySmall
+                  .copyWith(color: AppColors.textSecondary.withAlpha(80)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -186,11 +183,18 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
 
   void _showAddEntrySheet(BuildContext context, WidgetRef ref) {
     final textController = TextEditingController();
+    // null = general entry (no hobby attached)
     String? selectedHobbyId;
-    final hobbies = ref.read(hobbyListProvider).valueOrNull ?? [];
-    if (hobbies.isNotEmpty) {
-      selectedHobbyId = hobbies.first.id;
-    }
+
+    // Only show hobbies the user is actively trying or has active
+    final userHobbies = ref.read(userHobbiesProvider);
+    final activeUserHobbies = userHobbies.entries.where(
+      (e) => e.value.status == HobbyStatus.trying || e.value.status == HobbyStatus.active,
+    ).toList();
+    final allHobbies = ref.read(hobbyListProvider).valueOrNull ?? [];
+    final hobbies = allHobbies.where(
+      (h) => activeUserHobbies.any((uh) => uh.key == h.id),
+    ).toList();
 
     showModalBottomSheet(
       context: context,
@@ -232,42 +236,51 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                   Text('New Entry', style: AppTypography.title),
                   const SizedBox(height: 16),
 
-                  // Hobby selector
+                  // Hobby selector (General + active hobbies)
                   Text('Hobby', style: AppTypography.sansLabel),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 36,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: hobbies.length,
+                      itemCount: hobbies.length + 1, // +1 for General
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
-                        final hobby = hobbies[index];
+                        // First chip = General (no hobby)
+                        if (index == 0) {
+                          final isSelected = selectedHobbyId == null;
+                          return GestureDetector(
+                            onTap: () => setSheetState(() => selectedHobbyId = null),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                              ),
+                              child: Text(
+                                'General',
+                                style: AppTypography.caption.copyWith(
+                                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        final hobby = hobbies[index - 1];
                         final isSelected = hobby.id == selectedHobbyId;
                         return GestureDetector(
-                          onTap: () {
-                            setSheetState(() {
-                              selectedHobbyId = hobby.id;
-                            });
-                          },
+                          onTap: () => setSheetState(() => selectedHobbyId = hobby.id),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.coral
-                                  : AppColors.surfaceElevated,
-                              borderRadius:
-                                  BorderRadius.circular(Spacing.radiusBadge),
+                              color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
+                              borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                             ),
                             child: Text(
                               hobby.title,
                               style: AppTypography.caption.copyWith(
-                                color: isSelected
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
+                                color: isSelected ? Colors.white : AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -338,7 +351,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                         children: [
                           Stack(
                             children: [
-                              Icon(AppIcons.camera, size: 18, color: AppColors.textSecondary),
+                              Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.textSecondary),
                               if (!ref.read(isProProvider))
                                 Positioned(
                                   right: -2,
@@ -378,11 +391,11 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         final text = textController.text.trim();
-                        if (text.isEmpty || selectedHobbyId == null) return;
+                        if (text.isEmpty) return;
 
                         final entry = JournalEntry(
                           id: 'j_${DateTime.now().millisecondsSinceEpoch}',
-                          hobbyId: selectedHobbyId!,
+                          hobbyId: selectedHobbyId,
                           text: text,
                           createdAt: DateTime.now(),
                         );
@@ -436,8 +449,9 @@ class _JournalEntryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hobby = ref.watch(hobbyByIdProvider(entry.hobbyId)).valueOrNull;
-    final hobbyName = hobby?.title ?? entry.hobbyId;
+    final hobbyName = entry.hobbyId != null
+        ? (ref.watch(hobbyByIdProvider(entry.hobbyId!)).valueOrNull?.title ?? entry.hobbyId!)
+        : 'General';
 
     return GlassCard(
       padding: const EdgeInsets.all(16),
@@ -495,14 +509,14 @@ class _JournalEntryCard extends ConsumerWidget {
                   height: 160,
                   color: AppColors.surfaceElevated,
                   child: Center(
-                    child: Icon(AppIcons.camera, size: 28, color: AppColors.textMuted),
+                    child: Icon(Icons.camera_alt_outlined, size: 28, color: AppColors.textMuted),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   height: 160,
                   color: AppColors.surfaceElevated,
                   child: Center(
-                    child: Icon(AppIcons.image, size: 28, color: AppColors.textMuted),
+                    child: Icon(Icons.image_outlined, size: 28, color: AppColors.textMuted),
                   ),
                 ),
               ),

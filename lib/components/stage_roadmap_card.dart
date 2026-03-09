@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../theme/motion.dart';
 import 'glass_card.dart';
 
 /// 4-stage roadmap card for the Home tab.
@@ -124,7 +125,7 @@ class StageRoadmapCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: done || current
                           ? AppColors.coral
-                          : AppColors.border,
+                          : AppColors.textPrimary.withAlpha(80),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   );

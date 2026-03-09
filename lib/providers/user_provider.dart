@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/analytics/analytics_provider.dart';
 import '../core/analytics/analytics_service.dart';
 import '../data/repositories/user_progress_repository.dart';
+import 'subscription_provider.dart';
 import '../data/repositories/user_progress_repository_api.dart';
 import '../models/hobby.dart';
 
@@ -326,4 +327,22 @@ final hobbyCountByStatusProvider = Provider.family<int, HobbyStatus>((ref, statu
 /// Whether a specific hobby is saved/bookmarked
 final isHobbySavedProvider = Provider.family<bool, String>((ref, hobbyId) {
   return ref.watch(userHobbiesProvider).containsKey(hobbyId);
+});
+
+/// Whether the user can start a new hobby (Pro = unlimited, Free = 1 active).
+/// Returns true if the hobbyId is already active OR if no other hobby is active.
+final canStartHobbyProvider = Provider.family<bool, String>((ref, hobbyId) {
+  final isPro = ref.watch(isProProvider);
+  if (isPro) return true;
+
+  final hobbies = ref.watch(userHobbiesProvider);
+  final activeEntries = hobbies.entries.where(
+    (e) => e.value.status == HobbyStatus.trying || e.value.status == HobbyStatus.active,
+  );
+
+  // Allow if this hobby is already the active one
+  if (activeEntries.any((e) => e.key == hobbyId)) return true;
+
+  // Allow if no other hobby is active
+  return activeEntries.isEmpty;
 });
