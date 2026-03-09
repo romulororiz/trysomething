@@ -327,7 +327,7 @@ These exist from v3. Adapt during Sprints C and D inline.
   - BackdropFilter limited to 3-5 per visible screen (performance guard)
   - **Test:** no jank on Nothing Phone 3a, bundle size target met
 
-- [ ] **F.4 — End-to-end testing**
+- [ ] **F.4 — End-to-end testing** *(manual — requires physical device)*
   - Full flows on physical device:
     - Onboarding → match → start → complete step → return day 7
     - Free → hit coach limit → upgrade → Pro
