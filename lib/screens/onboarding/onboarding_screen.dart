@@ -1189,6 +1189,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                   CachedNetworkImage(
                     imageUrl: hobby.imageUrl,
                     fit: BoxFit.cover,
+                    memCacheWidth: 600,
                     placeholder: (_, __) =>
                         Container(color: AppColors.sand),
                     errorWidget: (_, __, ___) =>

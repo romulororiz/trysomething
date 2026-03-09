@@ -526,6 +526,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 imageUrl: hobby.imageUrl,
                 width: 58,
                 height: 58,
+                memCacheWidth: 116,
                 fit: BoxFit.cover,
                 placeholder: (_, __) =>
                     Container(color: AppColors.sand, width: 58, height: 58),

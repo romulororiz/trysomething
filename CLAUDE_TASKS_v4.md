@@ -303,7 +303,7 @@ These exist from v3. Adapt during Sprints C and D inline.
 
 ## Sprint F: Polish & Launch (Week 6-7)
 
-- [ ] **F.1 — Adapt coach to new architecture + visual system**
+- [X] **F.1 — Adapt coach to new architecture + visual system**
   - Add 6 starter chips if not present
   - Add 3 modes (start/momentum/rescue)
   - Move coach entry to Home tab + Detail page
@@ -313,14 +313,14 @@ These exist from v3. Adapt during Sprints C and D inline.
   - **Test:** coach accessible from Home + Detail, visual style matches
 
 
-- [ ] **F.2 — Re-engagement notifications**
+- [X] **F.2 — Re-engagement notifications**
   - User saved but never started (24h): "Ready to try {hobby}? First session is just {duration}."
   - User went silent (3 days): "Still interested in {hobby}? Try a quick 10-minute session tonight."
   - User completed step (immediate): "{step} done! Here's what comes next."
   - Gentle, warm, action-oriented — matches brand voice
   - **Test:** notifications fire at correct triggers
 
-- [ ] **F.3 — Performance pass**
+- [X] **F.3 — Performance pass**
   - 60fps scroll with glass effects (switch to simple glass on heavy scroll lists if needed)
   - CachedNetworkImage with memCacheWidth
   - APK < 30MB

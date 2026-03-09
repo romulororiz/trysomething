@@ -14,6 +14,7 @@ import 'models/hobby.dart';
 import 'router.dart';
 import 'providers/user_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/hobby_provider.dart';
 import 'providers/feature_providers.dart';
 import 'core/storage/local_storage.dart';
 import 'core/error/error_reporter.dart';
@@ -22,6 +23,7 @@ import 'core/analytics/analytics_service.dart';
 import 'core/analytics/analytics_provider.dart';
 import 'core/notifications/notification_provider.dart';
 import 'core/notifications/notification_service.dart';
+import 'core/notifications/notification_scheduler.dart';
 import 'core/subscription/subscription_service.dart';
 import 'providers/subscription_provider.dart';
 
@@ -53,8 +55,10 @@ void main() async {
 
   // Initialize notification service (mobile only — FCM not supported on web)
   final notifications = NotificationService();
+  final scheduler = NotificationScheduler();
   if (!kIsWeb) {
     await notifications.init();
+    await scheduler.init();
   }
 
   // Initialize PostHog analytics (may fail on web — non-fatal)
@@ -75,6 +79,7 @@ void main() async {
       errorReporterProvider.overrideWithValue(reporter),
       analyticsProvider.overrideWithValue(analytics),
       notificationProvider.overrideWithValue(notifications),
+      notificationSchedulerProvider.overrideWithValue(scheduler),
       subscriptionProvider.overrideWithValue(subscriptions),
     ],
     observers: [ErrorReporterObserver(reporter)],
@@ -133,6 +138,15 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         // Track hobby_abandoned (14+ days inactive)
         _trackAbandonedHobbies();
 
+        // Schedule re-engagement notifications based on hobby state
+        // and re-schedule whenever hobby state changes
+        if (!kIsWeb) {
+          _rescheduleNotifications();
+          ref.listen(userHobbiesProvider, (prev, next) {
+            _rescheduleNotifications();
+          });
+        }
+
         // Sync FCM token to server (mobile only)
         if (!kIsWeb) _syncFcmToken();
       }
@@ -190,6 +204,18 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         analytics.trackEvent('hobby_abandoned', {'hobby_id': entry.key});
       }
     }
+  }
+
+  void _rescheduleNotifications() {
+    final scheduler = ref.read(notificationSchedulerProvider);
+    final hobbies = ref.read(userHobbiesProvider);
+    final hobbyList = ref.read(hobbyListProvider).valueOrNull ?? [];
+    final titleMap = {for (final h in hobbyList) h.id: h.title};
+
+    scheduler.reschedule(
+      hobbies: hobbies,
+      hobbyTitle: (id) => titleMap[id] ?? 'your hobby',
+    );
   }
 
   Future<void> _syncFcmToken() async {

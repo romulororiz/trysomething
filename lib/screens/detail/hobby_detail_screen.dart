@@ -336,6 +336,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 child: CachedNetworkImage(
                   imageUrl: hobby.imageUrl,
                   fit: BoxFit.cover,
+                  memCacheWidth: 800,
                   height: heroH + Motion.maxParallaxOffset,
                   width: double.infinity,
                   placeholder: (_, __) =>
@@ -962,6 +963,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     ? CachedNetworkImage(
                         imageUrl: item.imageUrl!,
                         fit: BoxFit.cover,
+                        memCacheWidth: 88,
                         placeholder: (_, __) =>
                             Container(color: AppColors.surfaceElevated),
                         errorWidget: (_, __, ___) => Container(

@@ -71,6 +71,7 @@ class _CategoryTileState extends State<CategoryTile>
               CachedNetworkImage(
                 imageUrl: cat.imageUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: 400,
                 placeholder: (context, url) => Container(
                   color: cat.color.withValues(alpha: 0.15),
                 ),

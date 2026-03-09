@@ -504,6 +504,7 @@ class _JournalEntryCard extends ConsumerWidget {
                 imageUrl: entry.photoUrl!,
                 height: 160,
                 width: double.infinity,
+                memCacheWidth: 600,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
                   height: 160,

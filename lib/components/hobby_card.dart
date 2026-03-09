@@ -93,6 +93,7 @@ class HobbyCard extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: hobby.imageUrl,
         fit: BoxFit.cover,
+        memCacheWidth: 800,
         width: double.infinity,
         height: double.infinity,
         placeholder: (context, url) => Container(
