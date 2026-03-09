@@ -63,35 +63,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            // Page dots (if multiple)
-            if (activeEntries.length > 1) ...[
-              const SizedBox(height: 8),
-              _PageDots(
-                count: activeEntries.length,
-                current: _currentPage,
-              ),
-            ],
-            const SizedBox(height: 8),
-
-            // Swipeable hobby pages
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: activeEntries.length,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                itemBuilder: (context, i) {
-                  final userHobby = activeEntries[i].value;
-                  return _HobbyPage(
-                    key: ValueKey(userHobby.hobbyId),
-                    userHobby: userHobby,
-                    greeting: _greeting(),
-                  );
-                },
-              ),
+            // Full-bleed swipeable hobby pages
+            PageView.builder(
+              controller: _pageController,
+              itemCount: activeEntries.length,
+              onPageChanged: (i) => setState(() => _currentPage = i),
+              itemBuilder: (context, i) {
+                final userHobby = activeEntries[i].value;
+                return _HobbyPage(
+                  key: ValueKey(userHobby.hobbyId),
+                  userHobby: userHobby,
+                  greeting: _greeting(),
+                );
+              },
             ),
+            // Page dots overlaid on hero image
+            if (activeEntries.length > 1)
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: _PageDots(
+                  count: activeEntries.length,
+                  current: _currentPage,
+                ),
+              ),
           ],
         ),
       ),
@@ -111,21 +109,32 @@ class _PageDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
-        final isActive = i == current;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          width: isActive ? 20 : 6,
-          height: 6,
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.textPrimary : AppColors.textWhisper,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        );
-      }),
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.background.withAlpha(160),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(count, (i) {
+            final isActive = i == current;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 20 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.textPrimary
+                    : AppColors.textPrimary.withAlpha(80),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            );
+          }),
+        ),
+      ),
     );
   }
 }
@@ -147,12 +156,12 @@ class _HobbyPage extends ConsumerWidget {
     return hobbyAsync.when(
       loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.accent)),
-      error: (_, __) => Center(
+      error: (_, __) => const Center(
           child: Text('Failed to load hobby',
               style: TextStyle(color: AppColors.textMuted))),
       data: (hobby) {
         if (hobby == null) {
-          return Center(
+          return const Center(
               child: Text('Hobby not found',
                   style: TextStyle(color: AppColors.textMuted)));
         }
@@ -179,8 +188,34 @@ class _HobbyPageContent extends ConsumerStatefulWidget {
       _HobbyPageContentState();
 }
 
-class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
+class _HobbyPageContentState extends ConsumerState<_HobbyPageContent>
+    with SingleTickerProviderStateMixin {
   bool _roadmapExpanded = false;
+  late AnimationController _roadmapController;
+
+  @override
+  void initState() {
+    super.initState();
+    _roadmapController = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _roadmapController.dispose();
+    super.dispose();
+  }
+
+  void _toggleRoadmap() {
+    setState(() => _roadmapExpanded = !_roadmapExpanded);
+    if (_roadmapExpanded) {
+      _roadmapController.forward();
+    } else {
+      _roadmapController.reverse();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +267,7 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
         GestureDetector(
           onTap: () => context.push('/hobby/${hobby.id}'),
           child: SizedBox(
-            height: 220,
+            height: 250,
             width: double.infinity,
             child: Stack(
               fit: StackFit.expand,
@@ -417,8 +452,7 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               // ── Roadmap (collapsible) ──
               if (hobby.roadmapSteps.isNotEmpty) ...[
                 GlassCard(
-                  onTap: () =>
-                      setState(() => _roadmapExpanded = !_roadmapExpanded),
+                  onTap: _toggleRoadmap,
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,24 +492,37 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                     ],
                   ),
                 ),
-                // Expanded roadmap steps
-                AnimatedCrossFade(
-                  firstChild: const SizedBox.shrink(),
-                  secondChild: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Column(
-                      children:
-                          hobby.roadmapSteps.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final step = entry.value;
-                        final isCompleted =
-                            completedValid.contains(step.id);
-                        final previousDone = index == 0 ||
-                            completedValid.contains(
-                                hobby.roadmapSteps[index - 1].id);
-                        final isCurrent = !isCompleted && previousDone;
+                // Each step individually animates size+fade, staggered
+                ...hobby.roadmapSteps.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final step = entry.value;
+                  final total = hobby.roadmapSteps.length;
+                  final isCompleted = completedValid.contains(step.id);
+                  final previousDone = index == 0 ||
+                      completedValid
+                          .contains(hobby.roadmapSteps[index - 1].id);
+                  final isCurrent = !isCompleted && previousDone;
 
-                        return RoadmapStepTile(
+                  final start = index / (total + 2);
+                  final end = (index + 3) / (total + 2);
+                  final interval = CurvedAnimation(
+                    parent: _roadmapController,
+                    curve: Interval(
+                      start.clamp(0.0, 1.0),
+                      end.clamp(0.0, 1.0),
+                      curve: Curves.easeOut,
+                    ),
+                  );
+
+                  return SizeTransition(
+                    sizeFactor: interval,
+                    axisAlignment: -1.0,
+                    child: FadeTransition(
+                      opacity: interval,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            top: index == 0 ? 8 : 0),
+                        child: RoadmapStepTile(
                           step: step,
                           stepNumber: index + 1,
                           isCompleted: isCompleted,
@@ -485,15 +532,11 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                                 .read(userHobbiesProvider.notifier)
                                 .toggleStep(hobby.id, step.id);
                           },
-                        );
-                      }).toList(),
+                        ),
+                      ),
                     ),
-                  ),
-                  crossFadeState: _roadmapExpanded
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 250),
-                ),
+                  );
+                }),
                 const SizedBox(height: 16),
               ],
 

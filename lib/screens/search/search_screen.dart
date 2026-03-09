@@ -35,8 +35,11 @@ const _nlpKeywords = <String, List<String>>{
   'outside': ['outdoors', 'outdoor'],
   'social': ['social', 'group'],
   'friends': ['social', 'group'],
-  'couple': ['social'],
-  'couples': ['social'],
+  'couple': ['social', 'romantic'],
+  'couples': ['social', 'romantic'],
+  'partner': ['social', 'romantic'],
+  'date': ['social', 'romantic'],
+  'together': ['social'],
   'solo': ['solo'],
   'alone': ['solo', 'indoor'],
   'active': ['physical', 'active', 'fitness'],
@@ -56,6 +59,19 @@ const _nlpKeywords = <String, List<String>>{
   'beginner': ['easy'],
   'simple': ['easy'],
   'quick': ['easy'],
+  'low': ['budget', 'easy'],
+  'pressure': ['relaxing', 'solo', 'calming'],
+  'gentle': ['relaxing', 'easy', 'calming'],
+  'fun': ['playful', 'social'],
+  'boring': ['creative', 'active', 'outdoors'],
+  'lonely': ['social', 'group'],
+  'tired': ['relaxing', 'easy', 'calming'],
+  'energy': ['active', 'physical', 'fitness'],
+  'focus': ['meditative', 'mindful', 'creative'],
+  'productive': ['creative', 'maker'],
+  'weekend': ['outdoors', 'social'],
+  'evening': ['indoor', 'relaxing', 'creative'],
+  'morning': ['active', 'outdoors', 'fitness'],
 };
 
 /// NLP-friendly search suggestions shown when the search bar is empty.
@@ -149,8 +165,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       // Direct title match (strong signal)
       if (h.title.toLowerCase().contains(q)) score += 10;
 
+      // Per-word title match (partial)
+      for (final w in words) {
+        if (h.title.toLowerCase().contains(w)) score += 4;
+      }
+
       // Category match
       if (h.category.toLowerCase().contains(q)) score += 5;
+
+      // Hook / whyLove text match (natural language match)
+      final hookLower = h.hook.toLowerCase();
+      final whyLower = h.whyLove.toLowerCase();
+      for (final w in words) {
+        if (hookLower.contains(w)) score += 2;
+        if (whyLower.contains(w)) score += 2;
+      }
 
       // Tag match (direct)
       for (final t in h.tags) {

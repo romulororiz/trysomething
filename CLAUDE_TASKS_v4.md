@@ -1,146 +1,265 @@
-# TrySomething — Task List v4 (Focused Redesign)
+# TrySomething — Task List v4.1 (Focused Redesign + Visual Overhaul)
 
-> **Strategy shift:** Stop building features. Start proving the core loop.
+> **Strategy:** Prove the core loop. Make the app feel premium.
 > **Core loop:** Choose 1 hobby → Start it → Do step 1 → Come back tomorrow
-> **North star metric:** First session completed + day-7 return
+> **Visual direction:** Warm Cinematic Minimalism — DoReset restraint + Headspace warmth
 
 ## Rules
 - Read `CLAUDE.md` before every session
-- `view docs/mockups/<file>.png` before any UI work (for visual style only — CLAUDE.md defines structure)
+- Read `VISUAL_REDESIGN_PROMPT.md` before any UI work — it defines the new aesthetic
 - `dart analyze` on changed files after each task (NOT full flutter analyze)
 - Full `flutter analyze` + `dart test` after each sprint
 
 ---
 
-## Sprint A: Fix the Foundation (Week 1)
+## Sprint A: Fix the Foundation ✅ DONE
 
-The app currently has broken trust in its core promise. Fix that first.
-
-- [x] **A.1 — Fix onboarding matching logic (MOST CRITICAL TASK)**
-  - Current `_computeMatchedHobbies()` barely uses budget or time inputs
-  - Rebuild matching to actually filter/rank by ALL onboarding inputs:
-    - Budget: filter hobbies where starter cost fits user's selected range
-    - Time: filter hobbies where weekly commitment fits user's selected range
-    - Indoor/outdoor: match user's "where" preference
-    - Solo/social: match user's preference
-    - Emotional intent: boost hobbies tagged with matching mood/vibe
-  - Each hobby in the database needs: `starterCostMin`, `starterCostMax`, `weeklyHoursMin`, `weeklyHoursMax`, `isIndoor`, `isOutdoor`, `isSolo`, `isSocial` fields (add to Prisma model if missing, or derive from existing data)
-  - Result: 3 matches (1 best + 2 alternatives), ordered by composite fit score
-  - **Test:** User selects "under CHF 30, 1h/week, solo, at home" → NEVER gets recommended a hobby costing CHF 150+ or requiring 4h/week
-
+- [x] **A.1 — Fix onboarding matching logic**
 - [x] **A.2 — Add "Why this fits you" to match results**
-  - On each match card, show 2-3 specific reasons:
-    - "Fits your CHF 30 budget" / "Works in 1h/week" / "Great for solo evenings at home"
-  - These must come from actual matching logic, not generic text
-  - Edit `lib/screens/onboarding/` match results section
-  - **Test:** reasons are specific to the user's quiz answers, not the same for everyone
-
 - [x] **A.3 — Fix empty states → loading states** *(skipped)*
-  - Screens showing "No FAQ available" / "No combos" etc. when data is loading
-  - Add shimmer placeholders (animate between #141420 and #1E1E2E) for loading state
-  - Show actual empty state ONLY when API returns zero results
-  - Add error state with "Tap to retry"
-  - Fix across ALL data-dependent screens
-  - **Test:** no screen ever shows "No data" while an API call is in progress
-
 - [x] **A.4 — Fix feed category filter black flash**
-  - Switching categories causes black screen flash
-  - Wrap feed content in `AnimatedSwitcher` with `FadeTransition` (200ms)
-  - Use `ValueKey(selectedCategory)` so switcher knows when to animate
-  - Filter chips stay pinned/static — only card list below animates
-  - **Test:** category switching is smooth, no black flash
-
 - [x] **A.5 — Instrument core analytics events**
-  - Set up PostHog tracking for these events BEFORE any other work:
-    - `onboarding_completed` (with quiz answers as properties)
-    - `match_selected` (hobbyId, position: best/alt1/alt2)
-    - `hobby_started` (hobbyId, budget_version)
-    - `first_session_completed` (hobbyId, duration)
-    - `day_3_return`, `day_7_return` (requires tracking first_open date)
-    - `coach_message_sent` (hobbyId, mode: start/momentum/rescue)
-    - `paywall_shown` (trigger context)
-    - `hobby_switched`, `hobby_abandoned` (14+ days inactive)
-  - Replace ALL console.log stubs in analytics_service.dart with real PostHog calls
-  - **Test:** events fire correctly, visible in PostHog dashboard
 
 ---
 
-## Sprint B: Restructure the App (Week 2-3)
-
-Reduce from current tabs to 3. Build around one active hobby.
-**NOTE:** Monetization (RevenueCat, Pro locks, coach, paywall, trial) already exists from v3 work. When restructuring screens, ADAPT existing Pro/coach integrations to new locations — don't rebuild them.
+## Sprint B: Restructure the App ✅ DONE
 
 - [x] **B.1 — Restructure navigation to 3 tabs**
-  - New tabs: Home / Discover / You
-  - **Home:** active hobby dashboard (new screen — see CLAUDE.md)
-  - **Discover:** personalized picks + category browse + search
-  - **You:** saved/tried hobbies, journal archive, profile, settings, subscription
-  - Update `lib/router.dart` — new route structure
-  - Update bottom nav component
-  - **Test:** all 3 tabs navigate correctly, deep links work
-
 - [x] **B.2 — Hide secondary features from navigation**
-  - Remove routes and nav entries for (do NOT delete code):
-    - Buddy mode, Community stories, Local discovery
-    - Hobby passport, Year in review, Weekly challenge
-    - Mood match as standalone, Seasonal picks as standalone
-    - Compare/battle as standalone (keep as tool inside Discover)
-  - These screens stay in codebase but are unreachable from UI
-  - **Test:** none of these features are accessible from any navigation path
-
 - [x] **B.3 — Build Home tab (active hobby dashboard)**
-  - New screen: `lib/screens/home/home_screen.dart`
-  - If user has active hobby:
-    - Hobby card (image, title, current stage)
-    - **Next step** — one clear action with description
-    - **This week** — simple plan (day/time/duration, merged from old planner)
-    - **Coach entry** — "Need help?" button with starter chips
-    - **Recent progress** — last journal entry, streak, steps completed
-    - **Restart flow** — if 3+ days inactive: "Pick up where you left off" or "Try something different"
-  - If user has NO active hobby:
-    - Warm prompt: "Ready to find your thing?" → routes to Discover/onboarding
-  - **Test:** home shows correct active hobby data, next step updates on completion
-
-- [X] **B.4 — Rebuild Discover tab**
-  - Replace current feed/explore with focused discovery:
-  - 4 rails: "For You" (from onboarding) / "Start Cheap" (under CHF 30) / "Start This Week" (low setup) / "Need a Different Vibe?" (category browse)
-  - Search bar at top with natural language support
-  - Simple category filters: creative / active / mindful / social / outdoors / at home
-  - Remove excessive novelty modules, social teasers, browse clutter
-  - **Test:** rails show relevant hobbies, search handles natural queries
-
-- [ ] **B.5 — Rebuild "You" tab**
-  - Merge profile, settings, library, journal into one tab
-  - Sections: Active hobby / Saved for later / Tried before (3 clear states)
-  - Journal archive (all entries across hobbies)
-  - Profile (simple: name, avatar, stats)
-  - Subscription status + link to Pro screen
-  - Settings
-  - **Test:** all sections accessible, hobby states display correctly
+- [x] **B.4 — Rebuild Discover tab**
+- [x] **B.5 — Rebuild "You" tab**
 
 ---
 
-## Sprint C: Make the Detail Page Convert (Week 3-4)
+## Sprint C: Visual Overhaul — Warm Cinematic Minimalism (Week 3-4)
 
-The hobby detail page is where someone decides to start. Make it action-first.
+The app works but looks generic. This sprint transforms it from "competent dark mode" to "premium editorial." Follow `VISUAL_REDESIGN_PROMPT.md` for full details and code patterns.
 
-- [ ] **C.1 — Redesign hobby detail page structure**
-  - **FIRST: `view docs/mockups/02_hobby_detail.png` for visual style**
-  - New section order (per CLAUDE.md):
-    1. Quick start snapshot (budget, time, difficulty, solo/social, location)
-    2. "Why it fits you" (personalized from onboarding — reuse matching reasons)
-    3. Easiest way to start ("Try this in 20 minutes: buy these 2 things, do this tiny session")
-    4. Common reasons people quit (honest list — trust builder)
-    5. Week 1 plan (not full roadmap)
-    6. Full roadmap (expandable, secondary)
-    7. Starter kit (minimum / best value / premium tiers, with images + buy links)
-    8. Coach teaser ("Want help starting without overthinking?")
-  - CTAs: "Start the easy version" / "Build my week 1 plan" / "Ask the coach"
-  - **Test:** all sections render, CTAs navigate correctly
+- [X] **C.1 — Update color palette + typography scale**
+  - Replace current palette in `lib/theme/app_colors.dart` with warm cinematic palette:
+    - Text: warm cream (#F5F0EB), not pure white
+    - Secondary: warm grays (#B0A89E, #6B6360), not cool grays
+    - ONE accent: coral (#FF6B6B) for CTAs ONLY
+    - Glass surfaces: white at 8% opacity with 12% border
+    - REMOVE: amber, indigo, all category-specific colors from active use
+  - Replace typography in `lib/theme/app_typography.dart`:
+    - Hero: 36pt Source Serif 4 (cinematic headlines)
+    - Display: 28pt (section titles)
+    - Body: 15pt DM Sans warm gray
+    - Caption: 12pt, Overline: 11pt uppercase
+    - DataLarge: 48pt IBM Plex Mono (for big stats like "2%")
+    - Ratio between hero and caption should be ~3.3x (cinematic contrast)
+  - **Test:** `dart analyze` clean, app renders with new colors/fonts without crashes
 
-- [ ] **C.2 — Build commitment flow (Save vs Start)**
-  - After user taps "Start this hobby":
-    - Choice: "Save for later" or "Start now"
+- [X] **C.2 — Create glass card component**
+  - Create `lib/components/glass_card.dart`:
+    - Semi-transparent background (white at 8%)
+    - Subtle border (white at 12%)
+    - BackdropFilter blur (sigma 12) for static/hero elements
+    - Simple glass (no blur) variant for scrollable lists (performance)
+    - Scale-to-0.97 on press animation
+    - Accepts: child, onTap, padding, blur (bool)
+  - **Test:** glass card renders correctly, no performance issues
+
+- [X] **C.3 — Redesign bottom navigation as floating glass dock**
+  - Replace current curved_nav bar with floating glass dock:
+    - Glass background with blur, rounded corners (28px radius)
+    - Horizontal margins (40px each side), floating above bottom
+    - 3 icons only: Home / Discover / You — NO labels
+    - Active icon: warm cream, Inactive: warm dark gray (#3D3835)
+    - NO coral on nav — coral is ONLY for CTAs
+  - Account for safe area: `MediaQuery.of(context).padding.bottom + 12` as bottom margin
+  - Ensure all screens account for new nav height in bottom padding
+  - **Test:** nav floats correctly, icons switch, no overlap with content
+
+- [X] **C.4 — Redesign Discover tab with hero card layout**
+  - Replace current rail-based layout with cinematic discovery:
+    - Search bar: glass-style, floating, subtle
+    - NO category filter chips at top — move filtering to icon on search bar → opens bottom sheet
+    - Hero card: FULL WIDTH, 55-60% screen height
+      - Atmospheric hobby image (muted warm tones, editorial style)
+      - Category overline in warm gray ("CREATIVE")
+      - Hobby title in hero text (36pt) over gradient
+      - One-line hook in body text
+      - Specs as one warm gray line: "CHF 40-120 · 2h/week · Easy"
+      - This is the user's #1 recommended hobby
+    - Below hero: "MORE FOR YOU" overline section
+      - 2 smaller glass cards side by side (alternatives #2 and #3)
+    - Below: "START CHEAP" section — horizontal scroll of compact cards
+    - Below: "START THIS WEEK" section — horizontal scroll
+    - Far fewer elements visible at once. The hero dominates.
+  - **Test:** hero shows personalized #1 match, rails scroll, search opens
+
+- [X] **C.5 — Redesign Home tab with cinematic layout**
+  - Apply warm cinematic aesthetic to the Home tab:
+    - Warm greeting: "Good evening" in hero text (36pt)
+    - "Week 2 of Pottery" in overline
+    - Glass card: "Your next step" — one clear action in display text, specs in data text, coral CTA "Start session"
+    - Glass card: "This week" — simple 3-line plan
+    - Glass card: "Need help?" — coach entry with starter chips
+    - If stalled 3+ days: warm message with "Let's go" (coral) / "Maybe later" (text)
+    - NO stats/graphs/streaks on home — those live in You tab
+    - Staggered fade-in animation on all elements (flutter_animate)
+  - **Test:** layout matches cinematic style, animations play smoothly
+
+- [X] **C.6 — Strip all colored badges → warm gray text**
+  - REMOVE the current colored badge/pill system across EVERY screen
+  - Replace with single-line warm gray text using middot separators:
+    - Old: [💰 CHF 40-120] [⏱ 2h/week] [📊 Easy] (3 colored pills)
+    - New: `CHF 40-120 · 2h/week · Easy` (one line, AppColors.textMuted, AppTypography.data)
+  - Apply to: feed cards, detail page, search results, match results, library cards, everywhere badges appear
+  - Remove all badge background colors, icons, and pill shapes
+  - **Test:** no colored badges anywhere in the app, all specs render as warm gray text
+
+- [x] **C.7 — Update CTA buttons + apply one-CTA-per-screen rule**
+  - Primary CTA: coral background, rounded (16px), subtle glow shadow, dark text
+  - Secondary CTA: no background, warm cream text, subtle underline or arrow
+  - ONE coral CTA per screen maximum. Audit every screen:
+    - If multiple coral buttons exist, demote all but the primary to secondary style
+  - Update paywall/upgrade sheet copy to emotional language:
+    - "Start hobbies you actually stick with"
+    - Benefits: "Know the next step" / "Get unstuck fast" / "Track progress with photos"
+    - No feature-list framing, no bullet points
+  - **Test:** only one coral CTA visible per screen, upgrade sheet copy updated
+
+
+ - [x] **Task C.7.1 — Redesign "You" tab with warm cinematic aesthetic**
+
+Read CLAUDE.md and VISUAL_REDESIGN_PROMPT.md first for the full visual system.
+
+Redesign the You tab (`lib/screens/profile/` or wherever the You/Profile tab lives) to match the warm cinematic minimalism direction. This tab should feel like a calm, personal space — not a dashboard.
+
+### Layout (top to bottom):
+
+**Header:**
+- User name in serif (display, 28pt), warm cream
+- Small avatar to the left
+- No banner, no cover image, no elaborate header
+
+**ACTIVE section:**
+- "ACTIVE" overline label (11pt, uppercase, warm dark gray, letter-spaced)
+- One prominent glass card showing current hobby:
+  - Hobby image (small, rounded), title in title text (20pt serif)
+  - Current stage: "Week 2 · Centering the clay" in data text (mono, warm gray)
+  - Progress indicator (subtle, warm cream thin bar)
+  - Tapping navigates to Home tab
+- If no active hobby: warm prompt "Start your first hobby" with coral CTA linking to Discover
+
+**SAVED FOR LATER section:**
+- "SAVED FOR LATER" overline label
+- Smaller glass cards in a vertical list, each showing:
+  - Hobby title in warm cream
+  - Specs in warm gray middot line: "CHF 40-120 · 2h/week · Easy"
+  - Tapping navigates to hobby detail
+- If empty: "Explore hobbies to save some for later" in warm gray, no card
+
+**TRIED BEFORE section:**
+- "TRIED BEFORE" overline label
+- Even more subtle glass cards (lower opacity than Saved cards)
+  - Hobby title, how long they tried it: "2 weeks in Oct 2025"
+  - Warm dark gray text — this section is quiet, not prominent
+- If empty: don't show this section at all
+
+**Journal link:**
+- Glass card or simple row: "Journal" with right arrow, warm cream text
+- Tapping opens journal archive (all entries across all hobbies)
+
+**Subscription row:**
+- Glass card or simple row: "TrySomething Pro" with coral sparkle icon
+- Shows status: "Free Plan" / "Pro (renews Mar 2027)" / "Trial (5 days left)" in warm gray
+- Tapping opens Pro screen
+
+**Settings row:**
+- Simple row: "Settings" with right arrow, warm gray text
+- Tapping opens settings screen
+
+### What NOT to include:
+- NO radar chart
+- NO activity heatmap
+- NO year-in-review
+- NO hobby passport
+- NO achievements grid
+- NO stats dashboard
+- NO elaborate profile header with bio/badges
+- These are all deferred until core retention is proven
+
+### Visual rules:
+- All cards are glass cards (semi-transparent, subtle blur for static elements)
+- Only coral element: the CTA if no active hobby. Everything else is warm cream / warm gray
+- Staggered fade-in on screen entry (flutter_animate: 400ms, 100ms delay between elements)
+- Scale-to-0.97 on card press
+- Generous padding between sections
+- The tab should feel quiet, personal, calm
+
+### Test:
+- `dart analyze` on changed files
+- Active/Saved/Tried states display correctly
+- Empty states render properly
+- Navigation to Home, Detail, Journal, Pro, Settings all work
+- Verify on Nothing Phone 3a — check safe areas and bottom nav clearance
+
+- [ ] **C.8 — Apply visual system to remaining screens**
+  - Go through EVERY remaining screen and apply:
+    - Warm cream text (not pure white)
+    - Glass cards (not solid dark cards)
+    - No colored badges (warm gray middot text)
+    - Staggered fade-in on screen entry (flutter_animate)
+    - Scale-down on card press
+    - Noise texture on scaffold (via wrapper)
+    - Dramatic typography hierarchy
+    - Generous negative space
+  - Screens to update:
+    - Search results
+    - Journal
+    - Coach chat interface
+    - Library (saved/tried/active in You tab)
+    - Profile section (in You tab)
+    - Settings
+    - Pro/upgrade screen
+    - Trial offer screen
+    - Quickstart bottom sheet
+    - Login
+    - Onboarding (all pages) — option selection uses warm cream border highlight, not teal/green
+  - **Test:** every screen follows the new visual system, no remnants of old colored badge style
+
+- [ ] **C.9 — Sprint C visual QA on physical device**
+  - Run full `flutter analyze`
+  - Test on Nothing Phone 3a:
+    - Glass blur effects: smooth at 60fps? If jank on scrollable lists, switch to simple glass (no blur)
+    - Noise texture: visible but not distracting?
+    - Typography hierarchy: hero text feels cinematic, not just "big"?
+    - Color: no stray amber/indigo/category colors anywhere?
+    - One coral CTA per screen: verified?
+    - Bottom nav: floating dock looks correct, no overlap?
+    - Animations: stagger reveals feel smooth, not janky?
+  - Fix any issues found
+  - **Test:** entire app passes visual QA on physical device
+
+---
+
+## Sprint D: Make the Detail Page Convert (Week 5)
+
+Now that the visual system is in place, build the detail page using it.
+
+- [ ] **D.1 — Redesign hobby detail page**
+  - Full-bleed atmospheric image (50% screen height) with gradient fade to black
+  - Category overline over image ("CREATIVE" in warm gray)
+  - Hobby title in hero text (36pt) over image
+  - Hook line in body text over image
+  - Specs as warm gray middot line below image
+  - Glass card: "Why this fits you" — personalized onboarding reasons
+  - Glass card: "Start in 20 minutes" — minimum viable first session, 2 items to buy, one tiny action
+  - Glass card: "What to expect" — 4-stage roadmap preview (Week 1-4) as simple text lines
+  - Glass card: "Starter kit" — product images + prices + buy links, minimum/best value toggle
+  - Coach teaser: "Want help starting without overthinking?"
+  - Floating coral CTA at bottom: "Start the easy version"
+  - All with staggered fade-in animation
+  - **Test:** all sections render, CTA navigates to commitment flow
+
+- [ ] **D.2 — Build commitment flow (Save vs Start)**
+  - After user taps main CTA:
+    - Glass bottom sheet: "Save for later" or "Start now"
     - If "Start now": mini setup flow:
       - Choose budget version (minimum / best value)
       - Pick first session length (15min / 30min / 1hr)
@@ -149,88 +268,85 @@ The hobby detail page is where someone decides to start. Make it action-first.
     - → Generate Week 1 plan
     - → Hobby status → "Trying"
     - → Navigate to Home tab with active hobby
-  - **Test:** full flow works, hobby appears on Home tab after commitment
+  - **Test:** full flow works, hobby appears on Home tab
 
-- [ ] **C.3 — Build 4-stage roadmap view**
+- [ ] **D.3 — Build 4-stage roadmap view**
   - Replace generic step list with 4 stages:
-    - Week 1: Try it
-    - Week 2: Repeat it
-    - Week 3: Reduce friction
-    - Week 4: Decide if it fits
-  - Show one stage at a time (not giant ladder)
+    - Week 1: Try it / Week 2: Repeat it / Week 3: Reduce friction / Week 4: Decide
+  - Show one stage at a time in glass cards
   - Each stage: what to do, what to ignore, what success looks like
-  - "Stuck?" button on every stage → routes to coach
+  - "Stuck?" button → routes to coach
   - **Test:** stages progress correctly, stuck button opens coach
 
-- [ ] **C.4 — Add "Common reasons people quit" to each hobby**
-  - Add `quittingReasons` field to Hobby model (String[] or separate model)
-  - Seed 3-5 honest reasons per hobby in the 150 pre-seeded hobbies
-  - Display as a section on hobby detail: "Why people stop" with practical, non-judgmental framing
+- [ ] **D.4 — Add "Common reasons people quit" to each hobby**
+  - Add `quittingReasons` field to Hobby model (String[])
+  - Seed 3-5 honest reasons per hobby
+  - Display as glass card section: "Why people stop" — warm, non-judgmental framing
   - Example: "People overbuy gear early — start with the minimum kit"
-  - **Test:** reasons display for all seeded hobbies
+  - **Test:** reasons display for seeded hobbies
 
 ---
 
-## Sprint D: Coach + Monetization — ALREADY BUILT (Adapt Only)
+## Sprint E: Coach + Monetization Adaptation — ALREADY BUILT
 
-These were built in the v3 sprint cycle. They exist and work. During Sprint B/C restructuring, they need to be ADAPTED to the new 3-tab architecture but NOT rebuilt from scratch.
+These exist from v3. Adapt during Sprints C and D inline.
 
-- [X] **D.1 — AI Hobby Coach** — EXISTS. Adapt: add starter chips if missing, add 3 modes (start/momentum/rescue), move chat icon to new Home tab + Detail page.
-- [X] **D.2 — RevenueCat integration** — EXISTS. No changes needed.
-- [X] **D.3 — Upgrade bottom sheet** — EXISTS. Adapt: rewrite copy to emotional transformation language ("Start hobbies you actually stick with" / "Know the next step / Get unstuck fast / Track progress"). Remove feature-list framing.
-- [X] **D.4 — Coach message limits + paywall** — EXISTS. No changes needed.
-- [X] **D.5 — Pro locks on features** — EXISTS. Adapt: add multi-hobby lock (free = one active hobby). Remove locks on features that are now hidden (buddy mode, passport, etc.).
-- [X] **D.6 — Trial offer screen** — EXISTS. Adapt: update copy if needed to match new emotional framing.
-- [X] **D.7 — Settings Pro screen** — EXISTS. No changes needed.
-
-**Sprint D adaptation happens DURING Sprints B and C, not as a separate phase.**
-When restructuring a screen that has Pro locks or coach integration, adapt it to the new architecture inline.
+- [X] **E.1 — AI Hobby Coach** — EXISTS. Adapt: add starter chips, 3 modes, move to Home + Detail.
+- [X] **E.2 — RevenueCat integration** — EXISTS. No changes needed.
+- [X] **E.3 — Upgrade bottom sheet** — EXISTS. Adapt: rewrite copy to emotional framing during C.7.
+- [X] **E.4 — Coach message limits + paywall** — EXISTS. No changes needed.
+- [X] **E.5 — Pro locks on features** — EXISTS. Adapt: add multi-hobby lock, remove hidden feature locks.
+- [X] **E.6 — Trial offer screen** — EXISTS. Adapt: update to warm cinematic visual style during C.8.
+- [X] **E.7 — Settings Pro screen** — EXISTS. Adapt: update visual style during C.8.
 
 ---
 
-## Sprint E: Polish & Launch (Week 5-6)
+## Sprint F: Polish & Launch (Week 6-7)
 
-- [ ] **E.1 — Adapt coach to new architecture**
-  - Add 6 starter chips to coach screen if not present: "Help me start tonight" / "Make this cheaper" / "What should I do next?" / "I'm losing motivation" / "I skipped a few days" / "Maybe this isn't for me"
-  - Add 3 modes (start/momentum/rescue) — system prompt adapts based on user hobby state
-  - Move coach entry point to Home tab ("Need help?" section) + Hobby Detail page
-  - Rewrite upgrade sheet copy to emotional framing: "Start hobbies you actually stick with" / benefits: "Know the next step" / "Get unstuck fast" / "Track progress with photos"
-  - Update Pro locks: remove locks on hidden features (buddy, passport, etc.), add multi-hobby lock (free = one active)
-  - **Test:** coach accessible from Home + Detail, chips work, modes adapt to state, Pro copy updated
+- [ ] **F.1 — Adapt coach to new architecture + visual system**
+  - Add 6 starter chips if not present
+  - Add 3 modes (start/momentum/rescue)
+  - Move coach entry to Home tab + Detail page
+  - Apply glass card styling to chat bubbles (coach = glass, user = coral tint)
+  - Update Pro copy to emotional framing
+  - Update Pro locks: remove hidden feature locks, add multi-hobby lock
+  - **Test:** coach accessible from Home + Detail, visual style matches
 
-- [ ] **E.2 — Brand assets (app icon + splash)**
-  - App icon: brushstroke T, configure flutter_launcher_icons
-  - Splash: wordmark + "Find a hobby you'll actually start" + tagline
-  - Login: icon above "Welcome back"
-  - **Test:** icon renders on both platforms, splash transitions
+- [ ] **F.2 — Brand assets (app icon + splash)**
+  - App icon: brushstroke T on dark, configure flutter_launcher_icons
+  - Splash: warm cinematic style — wordmark + "Find a hobby you'll actually start" + tagline on black with noise texture
+  - Login: icon above warm greeting text
+  - **Test:** icon renders on both platforms, splash transitions smoothly
 
-- [ ] **E.3 — Re-engagement notifications**
-  - Build simple notification flow for:
-    - User chose hobby but never started (24h after save): "Ready to try {hobby}? The first session is just {duration}."
-    - User started but went silent (3 days): "Still interested in {hobby}? Try a quick 10-minute session tonight."
-    - User completed a step (immediate): "{step} done! When you're ready, here's what comes next."
-  - Use existing Firebase push notification system
-  - Gentle, specific, action-oriented — NOT nagging
-  - **Test:** notifications fire at correct triggers on physical device
+- [ ] **F.3 — Re-engagement notifications**
+  - User saved but never started (24h): "Ready to try {hobby}? First session is just {duration}."
+  - User went silent (3 days): "Still interested in {hobby}? Try a quick 10-minute session tonight."
+  - User completed step (immediate): "{step} done! Here's what comes next."
+  - Gentle, warm, action-oriented — matches brand voice
+  - **Test:** notifications fire at correct triggers
 
-- [ ] **E.4 — Performance pass**
-  - 60fps scroll, CachedNetworkImage, APK < 30MB
-  - Riverpod .select() where over-watching
-  - **Test:** no jank, bundle size target met
+- [ ] **F.4 — Performance pass**
+  - 60fps scroll with glass effects (switch to simple glass on heavy scroll lists if needed)
+  - CachedNetworkImage with memCacheWidth
+  - APK < 30MB
+  - BackdropFilter limited to 3-5 per visible screen (performance guard)
+  - **Test:** no jank on Nothing Phone 3a, bundle size target met
 
-- [ ] **E.5 — End-to-end testing**
+- [ ] **F.5 — End-to-end testing**
   - Full flows on physical device:
-    - Onboarding → match → start → complete step → day 7
+    - Onboarding → match → start → complete step → return day 7
     - Free → hit coach limit → upgrade → Pro
     - Trial → expire → lock → upgrade
+    - Visual: every screen follows warm cinematic system, no old style remnants
   - **Test:** all flows work on Nothing Phone 3a
 
-- [ ] **E.6 — App store prep**
-  - Metadata, privacy policy, screenshots with final UI
+- [ ] **F.6 — App store prep**
+  - Metadata, privacy policy, screenshots with FINAL premium visual design
   - iOS signing via Codemagic, Android release signing
+  - Screenshots should showcase the cinematic hero cards, glass surfaces, warm typography
   - **Test:** builds accessible on TestFlight + Play Console
 
-- [ ] **E.7 — Beta launch**
+- [ ] **F.7 — Beta launch**
   - 10 iOS + 10 Android testers
   - Mix of free and Pro testers
   - In-app feedback mechanism
