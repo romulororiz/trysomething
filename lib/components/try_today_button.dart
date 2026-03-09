@@ -14,7 +14,7 @@ class TryTodayButton extends StatefulWidget {
   const TryTodayButton({
     super.key,
     this.onPressed,
-    this.text = 'TRY THIS TODAY',
+    this.text = 'Start the easy version',
     this.icon,
   });
 
@@ -97,7 +97,7 @@ class _TryTodayButtonState extends State<TryTodayButton>
               height: 54,
               decoration: BoxDecoration(
                 color: AppColors.coral,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: reduceMotion
                     ? [
                         BoxShadow(

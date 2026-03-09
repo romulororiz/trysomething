@@ -5,7 +5,6 @@ import '../core/analytics/analytics_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
-import '../theme/spacing.dart';
 
 /// Show the Pro upgrade bottom sheet from any screen.
 void showProUpgrade(BuildContext context, String triggerMessage) {
@@ -30,15 +29,6 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
   bool _annualSelected = true;
   bool _purchasing = false;
 
-  static const _features = [
-    _FeatureRow(icon: Icons.auto_awesome, label: 'AI Hobby Coach', free: false, pro: true),
-    _FeatureRow(icon: Icons.camera_alt_outlined, label: 'Photo Journal', free: false, pro: true),
-    _FeatureRow(icon: Icons.shuffle_rounded, label: '"Surprise Me" Generator', free: false, pro: true),
-    _FeatureRow(icon: Icons.insights_outlined, label: 'Advanced Stats & Radar', free: false, pro: true),
-    _FeatureRow(icon: Icons.people_outline, label: 'Buddy Mode', free: false, pro: true),
-    _FeatureRow(icon: Icons.explore_outlined, label: '150+ Curated Hobbies', free: true, pro: true),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -55,125 +45,97 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.warmWhite,
+        color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: bottomInset + 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.driftwood.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Sparkle icon
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.coral.withValues(alpha: 0.2),
-                    AppColors.indigo.withValues(alpha: 0.2),
-                  ],
-                ),
-              ),
-              child: const Icon(Icons.auto_awesome, color: AppColors.coral, size: 28),
-            ),
-            const SizedBox(height: 16),
-
-            // Title
-            Text('TrySomething Pro', style: AppTypography.serifHeading.copyWith(fontSize: 24)),
-            const SizedBox(height: 8),
-
-            // Trigger context
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                widget.triggerMessage,
-                style: AppTypography.sansCaption.copyWith(color: AppColors.driftwood),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Feature comparison
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: const EdgeInsets.all(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.sand,
-                  borderRadius: BorderRadius.circular(Spacing.radiusTile),
+                  color: AppColors.textWhisper,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                child: Column(
+              ),
+              const SizedBox(height: 32),
+
+              // Headline — emotional, not feature-list
+              Text(
+                'Start hobbies you\nactually stick with',
+                textAlign: TextAlign.center,
+                style: AppTypography.hero.copyWith(fontSize: 28),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Get step-by-step support for your first 30 days,\nplus tools to keep momentum when motivation drops.',
+                textAlign: TextAlign.center,
+                style: AppTypography.body
+                    .copyWith(color: AppColors.textSecondary, height: 1.5),
+              ),
+              const SizedBox(height: 32),
+
+              // 3 benefit blocks — not a feature checklist
+              _BenefitBlock(
+                icon: MdiIcons.mapMarkerPath,
+                title: 'Know the next right step',
+                body:
+                    'Your coach suggests exactly what to do next, so you never feel stuck.',
+              ),
+              const SizedBox(height: 16),
+              _BenefitBlock(
+                icon: MdiIcons.lifebuoy,
+                title: 'Get unstuck fast',
+                body:
+                    'Lost motivation? Skipped a few days? Your coach helps you restart gently.',
+              ),
+              const SizedBox(height: 16),
+              _BenefitBlock(
+                icon: MdiIcons.cameraOutline,
+                title: 'Track real progress',
+                body:
+                    'Photo journal and reflections that show how far you\'ve actually come.',
+              ),
+              const SizedBox(height: 32),
+
+              // Trial callout
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.accentMuted,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Header row
-                    Row(
-                      children: [
-                        const Expanded(child: SizedBox()),
-                        SizedBox(
-                          width: 48,
-                          child: Text('Free', style: AppTypography.monoBadge.copyWith(
-                            color: AppColors.driftwood, fontSize: 10,
-                          ), textAlign: TextAlign.center),
-                        ),
-                        SizedBox(
-                          width: 48,
-                          child: Text('Pro', style: AppTypography.monoBadge.copyWith(
-                            color: AppColors.coral, fontSize: 10,
-                          ), textAlign: TextAlign.center),
-                        ),
-                      ],
+                    Icon(MdiIcons.giftOutline,
+                        color: AppColors.accent, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Try free for 7 days',
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    ..._features.map((f) => _buildFeatureRow(f)),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-            // Trial callout
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.coral.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(Spacing.radiusButton),
-                border: Border.all(color: AppColors.coral.withValues(alpha: 0.2)),
-              ),
-              child: Row(
+              // Plan toggle
+              Row(
                 children: [
-                  Icon(MdiIcons.giftOutline, color: AppColors.coral, size: 20),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      'Try Pro free for 7 days',
-                      style: AppTypography.sansLabel.copyWith(color: AppColors.coral),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Plan toggle
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Expanded(child: _buildPlanCard(
+                      child: _buildPlanCard(
                     label: 'Monthly',
                     price: 'CHF 4.99',
                     sub: '/month',
@@ -181,7 +143,8 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
                     onTap: () => setState(() => _annualSelected = false),
                   )),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildPlanCard(
+                  Expanded(
+                      child: _buildPlanCard(
                     label: 'Annual',
                     price: 'CHF 39.99',
                     sub: '/year · save 33%',
@@ -190,23 +153,20 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
                   )),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // CTA button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: GestureDetector(
+              // Single coral CTA
+              GestureDetector(
                 onTap: _purchasing ? null : _handlePurchase,
                 child: Container(
                   width: double.infinity,
-                  height: Spacing.buttonCtaHeight,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.coral,
-                    borderRadius: BorderRadius.circular(Spacing.radiusCta),
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.coral.withValues(alpha: 0.4),
+                        color: AppColors.accent.withAlpha(60),
                         blurRadius: 20,
                         offset: const Offset(0, 6),
                       ),
@@ -223,64 +183,33 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
                             ),
                           )
                         : Text(
-                            'Start Free Trial',
-                            style: AppTypography.sansLabel.copyWith(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            'Start free trial',
+                            style: AppTypography.button
+                                .copyWith(color: AppColors.background),
                           ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // Restore purchases link
-            GestureDetector(
-              onTap: _handleRestore,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Restore purchase',
-                  style: AppTypography.sansCaption.copyWith(
-                    color: AppColors.driftwood,
-                    decoration: TextDecoration.underline,
+              // Restore — secondary text link
+              GestureDetector(
+                onTap: _handleRestore,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Restore purchase',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textMuted,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.textMuted,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureRow(_FeatureRow feature) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(feature.icon, size: 18, color: AppColors.driftwood),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(feature.label, style: AppTypography.sansBodySmall),
-          ),
-          SizedBox(
-            width: 48,
-            child: Center(
-              child: feature.free
-                  ? const Icon(Icons.check_circle, size: 18, color: AppColors.sage)
-                  : Icon(Icons.remove, size: 18, color: AppColors.driftwood.withValues(alpha: 0.3)),
-            ),
-          ),
-          const SizedBox(
-            width: 48,
-            child: Center(
-              child: Icon(Icons.check_circle, size: 18, color: AppColors.coral),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -297,29 +226,35 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.coral.withValues(alpha: 0.08) : AppColors.sand,
-          borderRadius: BorderRadius.circular(Spacing.radiusButton),
+          color: selected ? AppColors.accentMuted : AppColors.glassBackground,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? AppColors.coral : AppColors.sandDark,
-            width: selected ? 1.5 : 1,
+            color: selected ? AppColors.accent : AppColors.glassBorder,
+            width: selected ? 1.5 : 0.5,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppTypography.sansLabel.copyWith(
-              color: selected ? AppColors.coral : AppColors.nearBlack,
-              fontWeight: FontWeight.w700,
-            )),
+            Text(label,
+                style: AppTypography.body.copyWith(
+                  color: selected
+                      ? AppColors.accent
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                )),
             const SizedBox(height: 4),
-            Text(price, style: AppTypography.serifHeading.copyWith(
-              fontSize: 20,
-              color: selected ? AppColors.coral : AppColors.nearBlack,
-            )),
+            Text(price,
+                style: AppTypography.display.copyWith(
+                  fontSize: 20,
+                  color: selected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                )),
             const SizedBox(height: 2),
-            Text(sub, style: AppTypography.sansTiny.copyWith(
-              color: AppColors.driftwood,
-            )),
+            Text(sub,
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.textMuted)),
           ],
         ),
       ),
@@ -337,13 +272,13 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
       setState(() => _purchasing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No plans available. Try again later.')),
+          const SnackBar(
+              content: Text('No plans available. Try again later.')),
         );
       }
       return;
     }
 
-    // Pick the right package based on selection
     final package = _annualSelected ? offering.annual : offering.monthly;
     if (package == null) {
       setState(() => _purchasing = false);
@@ -377,16 +312,50 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
   }
 }
 
-class _FeatureRow {
-  final IconData icon;
-  final String label;
-  final bool free;
-  final bool pro;
+// ═══════════════════════════════════════════════════════
+//  BENEFIT BLOCK — Emotional, not feature-list
+// ═══════════════════════════════════════════════════════
 
-  const _FeatureRow({
+class _BenefitBlock extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String body;
+
+  const _BenefitBlock({
     required this.icon,
-    required this.label,
-    required this.free,
-    required this.pro,
+    required this.title,
+    required this.body,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.glassBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.glassBorder, width: 0.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 22, color: AppColors.textSecondary),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: AppTypography.title.copyWith(fontSize: 15)),
+                const SizedBox(height: 4),
+                Text(body,
+                    style: AppTypography.body
+                        .copyWith(color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
