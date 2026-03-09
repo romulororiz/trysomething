@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../components/glass_card.dart';
-import '../../components/roadmap_step_tile.dart';
+import '../../components/stage_roadmap_card.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/feature_providers.dart';
@@ -127,8 +127,8 @@ class _PageDots extends StatelessWidget {
               height: 6,
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.textPrimary
-                    : AppColors.textPrimary.withAlpha(80),
+                    ? AppColors.coral
+                    : AppColors.coral.withAlpha(80),
                 borderRadius: BorderRadius.circular(3),
               ),
             );
@@ -188,34 +188,7 @@ class _HobbyPageContent extends ConsumerStatefulWidget {
       _HobbyPageContentState();
 }
 
-class _HobbyPageContentState extends ConsumerState<_HobbyPageContent>
-    with SingleTickerProviderStateMixin {
-  bool _roadmapExpanded = false;
-  late AnimationController _roadmapController;
-
-  @override
-  void initState() {
-    super.initState();
-    _roadmapController = AnimationController(
-      duration: const Duration(milliseconds: 350),
-      vsync: this,
-    );
-  }
-
-  @override
-  void dispose() {
-    _roadmapController.dispose();
-    super.dispose();
-  }
-
-  void _toggleRoadmap() {
-    setState(() => _roadmapExpanded = !_roadmapExpanded);
-    if (_roadmapExpanded) {
-      _roadmapController.forward();
-    } else {
-      _roadmapController.reverse();
-    }
-  }
+class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
 
   @override
   Widget build(BuildContext context) {
@@ -449,96 +422,14 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent>
                 const SizedBox(height: 16),
               ],
 
-              // ── Roadmap (collapsible) ──
-              if (hobby.roadmapSteps.isNotEmpty) ...[
-                GlassCard(
-                  onTap: _toggleRoadmap,
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text('YOUR ROADMAP',
-                              style: AppTypography.overline
-                                  .copyWith(color: AppColors.textMuted)),
-                          const Spacer(),
-                          Text(
-                            '${completedValid.length}/$totalSteps',
-                            style: AppTypography.data
-                                .copyWith(color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(width: 8),
-                          AnimatedRotation(
-                            turns: _roadmapExpanded ? 0.5 : 0,
-                            duration: const Duration(milliseconds: 200),
-                            child: Icon(MdiIcons.chevronDown,
-                                size: 18, color: AppColors.textMuted),
-                          ),
-                        ],
-                      ),
-                      // Progress bar always visible
-                      const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          value: progress.clamp(0.0, 1.0),
-                          minHeight: 3,
-                          backgroundColor: AppColors.textWhisper,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.textPrimary),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Each step individually animates size+fade, staggered
-                ...hobby.roadmapSteps.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final step = entry.value;
-                  final total = hobby.roadmapSteps.length;
-                  final isCompleted = completedValid.contains(step.id);
-                  final previousDone = index == 0 ||
-                      completedValid
-                          .contains(hobby.roadmapSteps[index - 1].id);
-                  final isCurrent = !isCompleted && previousDone;
-
-                  final start = index / (total + 2);
-                  final end = (index + 3) / (total + 2);
-                  final interval = CurvedAnimation(
-                    parent: _roadmapController,
-                    curve: Interval(
-                      start.clamp(0.0, 1.0),
-                      end.clamp(0.0, 1.0),
-                      curve: Curves.easeOut,
-                    ),
-                  );
-
-                  return SizeTransition(
-                    sizeFactor: interval,
-                    axisAlignment: -1.0,
-                    child: FadeTransition(
-                      opacity: interval,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            top: index == 0 ? 8 : 0),
-                        child: RoadmapStepTile(
-                          step: step,
-                          stepNumber: index + 1,
-                          isCompleted: isCompleted,
-                          isCurrent: isCurrent,
-                          onToggle: () {
-                            ref
-                                .read(userHobbiesProvider.notifier)
-                                .toggleStep(hobby.id, step.id);
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 16),
-              ],
+              // ── 4-Stage Roadmap ──
+              StageRoadmapCard(
+                currentWeek: weekNum,
+                hobbyId: hobby.id,
+                completedSteps: completedValid.length,
+                totalSteps: totalSteps,
+              ),
+              const SizedBox(height: 16),
 
               // ── This week's plan ──
               if (hobbySchedule.isNotEmpty) ...[

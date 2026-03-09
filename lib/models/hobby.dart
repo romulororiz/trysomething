@@ -38,6 +38,7 @@ class Hobby with _$Hobby {
     required String difficultyExplain,
     required List<KitItem> starterKit,
     required List<String> pitfalls,
+    @Default([]) List<String> quittingReasons,
     required List<RoadmapStep> roadmapSteps,
   }) = _Hobby;
 

@@ -52,6 +52,12 @@ class SeedData {
         'Air-dry clay cracks if too thin. Keep walls ≥5mm.',
         "Don't skip wedging. Air bubbles ruin your piece.",
       ],
+      quittingReasons: [
+        'People overbuy gear early — start with air-dry clay, not a kiln',
+        'Expecting perfect results on day one kills motivation',
+        'Drying and cracking feels like failure, but it\'s normal',
+        'Studio classes feel expensive — try hand-building at home first',
+      ],
       roadmapSteps: [
         RoadmapStep(id: 'p1', title: 'Make a pinch pot', description: 'The simplest form. Just a ball of clay and your thumbs.', estimatedMinutes: 25),
         RoadmapStep(id: 'p2', title: 'Try coil building', description: 'Roll snakes of clay and stack them into a vessel.', estimatedMinutes: 40),
@@ -83,6 +89,12 @@ class SeedData {
         'Rest between problems. Tendons need time to adapt.',
         'Start on easy grades (V0–V1). Ego is the enemy.',
       ],
+      quittingReasons: [
+        'Finger tendons hurt — people push too hard too fast',
+        'Comparing yourself to regulars who\'ve climbed for years',
+        'Going alone feels intimidating at first',
+        'Thinking you need to be strong to start (you don\'t)',
+      ],
       roadmapSteps: [
         RoadmapStep(id: 'b1', title: 'Visit a gym', description: 'Just go, rent shoes, try the easiest walls.', estimatedMinutes: 60),
         RoadmapStep(id: 'b2', title: 'Learn footwork', description: 'Watch your feet. Place them precisely.', estimatedMinutes: 45),
@@ -112,6 +124,12 @@ class SeedData {
         "Don't rush fermentation. Cold overnight rise = more flavor.",
         'Your starter needs 7–10 days to mature. Be patient.',
         "Don't add too much flour. Wet dough = open crumb.",
+      ],
+      quittingReasons: [
+        'Starter dies in the first week — feels like starting over',
+        'First loaves look nothing like Instagram posts',
+        'The time commitment (waiting hours) feels impractical',
+        'Buying fancy flour and tools before mastering basics',
       ],
       roadmapSteps: [
         RoadmapStep(id: 's1', title: 'Create your starter', description: 'Mix flour + water. Feed daily for 7–10 days.', estimatedMinutes: 10),
@@ -143,6 +161,12 @@ class SeedData {
         'Learn to push and stop before attempting tricks.',
         'Skate on smooth ground first. Rough pavement is frustrating.',
       ],
+      quittingReasons: [
+        'Falls hurt and feel embarrassing in public',
+        'Progress feels invisible for the first few weeks',
+        'Buying a cheap board that rides terribly',
+        'Trying tricks too early instead of getting comfortable riding',
+      ],
       roadmapSteps: [
         RoadmapStep(id: 'sk1', title: 'Stand and push', description: 'Get comfortable standing on the board and pushing.', estimatedMinutes: 30),
         RoadmapStep(id: 'sk2', title: 'Learn to stop', description: 'Foot brake and power slide basics.', estimatedMinutes: 30),
@@ -172,6 +196,12 @@ class SeedData {
         "Don't try to memorize openings first. Learn tactics instead.",
         "Play longer time controls to actually learn. Avoid only bullet chess.",
         "Analyze your losses. That's where the growth is.",
+      ],
+      quittingReasons: [
+        'Losing constantly online feels demoralizing',
+        'Memorizing openings instead of understanding principles',
+        'Playing only bullet/blitz and not learning from mistakes',
+        'Thinking you need to be "smart enough" — chess is a skill, not talent',
       ],
       roadmapSteps: [
         RoadmapStep(id: 'ch1', title: 'Learn the rules', description: 'How pieces move, check, checkmate, special moves.', estimatedMinutes: 20),
@@ -204,6 +234,12 @@ class SeedData {
         "Don't press too hard. Let the pen do the work.",
         'Start with drills, not letters. Build muscle memory first.',
       ],
+      quittingReasons: [
+        'Comparing your practice to polished Instagram calligraphy',
+        'Using the wrong paper and thinking the pen is broken',
+        'Rushing to write words before mastering basic strokes',
+        'Hand cramping from gripping too hard',
+      ],
       roadmapSteps: [
         RoadmapStep(id: 'ca1', title: 'Basic strokes', description: 'Upstrokes (thin) and downstrokes (thick). The foundation.', estimatedMinutes: 20),
         RoadmapStep(id: 'ca2', title: 'Lowercase alphabet', description: 'Apply basic strokes to form each letter.', estimatedMinutes: 40, milestone: 'Full alphabet'),
@@ -235,6 +271,12 @@ class SeedData {
         "Don't skip sunscreen. UV is stronger at elevation.",
         'Start shorter than you think. 3 hours is plenty for your first hike.',
       ],
+      quittingReasons: [
+        'Picking a trail that\'s too hard and having a miserable time',
+        'Overbuying gear before knowing what you actually need',
+        'Going alone and feeling unsafe or bored',
+        'Bad weather on your first attempt and never trying again',
+      ],
       roadmapSteps: [
         RoadmapStep(id: 'h1', title: 'Find a local trail', description: 'Use AllTrails or Komoot. Pick something rated "easy".', estimatedMinutes: 15),
         RoadmapStep(id: 'h2', title: 'Do your first hike', description: 'Keep it under 2 hours. Enjoy the walk.', estimatedMinutes: 120, milestone: 'First trail'),
@@ -265,6 +307,12 @@ class SeedData {
         "Your fingers will hurt for 2 weeks. Push through — calluses form fast.",
         "Don't try barre chords in week 1. Stick to open chords.",
         'Practice 15 minutes daily rather than 2 hours on weekends.',
+      ],
+      quittingReasons: [
+        'Sore fingers in the first two weeks — calluses take time',
+        'Expecting to play songs immediately instead of building basics',
+        'Practicing once a week for 2 hours instead of daily for 15 min',
+        'Buying a guitar that\'s hard to play (high action, thick strings)',
       ],
       roadmapSteps: [
         RoadmapStep(id: 'g1', title: 'Learn 3 chords', description: 'G, C, D — these three unlock hundreds of songs.', estimatedMinutes: 25),

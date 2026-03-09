@@ -23,6 +23,10 @@ _$HobbyImpl _$$HobbyImplFromJson(Map<String, dynamic> json) => _$HobbyImpl(
           .toList(),
       pitfalls:
           (json['pitfalls'] as List<dynamic>).map((e) => e as String).toList(),
+      quittingReasons: (json['quittingReasons'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       roadmapSteps: (json['roadmapSteps'] as List<dynamic>)
           .map((e) => RoadmapStep.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -43,6 +47,7 @@ Map<String, dynamic> _$$HobbyImplToJson(_$HobbyImpl instance) =>
       'difficultyExplain': instance.difficultyExplain,
       'starterKit': instance.starterKit.map((e) => e.toJson()).toList(),
       'pitfalls': instance.pitfalls,
+      'quittingReasons': instance.quittingReasons,
       'roadmapSteps': instance.roadmapSteps.map((e) => e.toJson()).toList(),
     };
 

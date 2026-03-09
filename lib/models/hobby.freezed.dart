@@ -33,6 +33,7 @@ mixin _$Hobby {
   String get difficultyExplain => throw _privateConstructorUsedError;
   List<KitItem> get starterKit => throw _privateConstructorUsedError;
   List<String> get pitfalls => throw _privateConstructorUsedError;
+  List<String> get quittingReasons => throw _privateConstructorUsedError;
   List<RoadmapStep> get roadmapSteps => throw _privateConstructorUsedError;
 
   /// Serializes this Hobby to a JSON map.
@@ -63,6 +64,7 @@ abstract class $HobbyCopyWith<$Res> {
       String difficultyExplain,
       List<KitItem> starterKit,
       List<String> pitfalls,
+      List<String> quittingReasons,
       List<RoadmapStep> roadmapSteps});
 }
 
@@ -94,6 +96,7 @@ class _$HobbyCopyWithImpl<$Res, $Val extends Hobby>
     Object? difficultyExplain = null,
     Object? starterKit = null,
     Object? pitfalls = null,
+    Object? quittingReasons = null,
     Object? roadmapSteps = null,
   }) {
     return _then(_value.copyWith(
@@ -149,6 +152,10 @@ class _$HobbyCopyWithImpl<$Res, $Val extends Hobby>
           ? _value.pitfalls
           : pitfalls // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      quittingReasons: null == quittingReasons
+          ? _value.quittingReasons
+          : quittingReasons // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       roadmapSteps: null == roadmapSteps
           ? _value.roadmapSteps
           : roadmapSteps // ignore: cast_nullable_to_non_nullable
@@ -178,6 +185,7 @@ abstract class _$$HobbyImplCopyWith<$Res> implements $HobbyCopyWith<$Res> {
       String difficultyExplain,
       List<KitItem> starterKit,
       List<String> pitfalls,
+      List<String> quittingReasons,
       List<RoadmapStep> roadmapSteps});
 }
 
@@ -207,6 +215,7 @@ class __$$HobbyImplCopyWithImpl<$Res>
     Object? difficultyExplain = null,
     Object? starterKit = null,
     Object? pitfalls = null,
+    Object? quittingReasons = null,
     Object? roadmapSteps = null,
   }) {
     return _then(_$HobbyImpl(
@@ -262,6 +271,10 @@ class __$$HobbyImplCopyWithImpl<$Res>
           ? _value._pitfalls
           : pitfalls // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      quittingReasons: null == quittingReasons
+          ? _value._quittingReasons
+          : quittingReasons // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       roadmapSteps: null == roadmapSteps
           ? _value._roadmapSteps
           : roadmapSteps // ignore: cast_nullable_to_non_nullable
@@ -287,10 +300,12 @@ class _$HobbyImpl implements _Hobby {
       required this.difficultyExplain,
       required final List<KitItem> starterKit,
       required final List<String> pitfalls,
+      final List<String> quittingReasons = const [],
       required final List<RoadmapStep> roadmapSteps})
       : _tags = tags,
         _starterKit = starterKit,
         _pitfalls = pitfalls,
+        _quittingReasons = quittingReasons,
         _roadmapSteps = roadmapSteps;
 
   factory _$HobbyImpl.fromJson(Map<String, dynamic> json) =>
@@ -340,6 +355,15 @@ class _$HobbyImpl implements _Hobby {
     return EqualUnmodifiableListView(_pitfalls);
   }
 
+  final List<String> _quittingReasons;
+  @override
+  @JsonKey()
+  List<String> get quittingReasons {
+    if (_quittingReasons is EqualUnmodifiableListView) return _quittingReasons;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_quittingReasons);
+  }
+
   final List<RoadmapStep> _roadmapSteps;
   @override
   List<RoadmapStep> get roadmapSteps {
@@ -350,7 +374,7 @@ class _$HobbyImpl implements _Hobby {
 
   @override
   String toString() {
-    return 'Hobby(id: $id, title: $title, hook: $hook, category: $category, imageUrl: $imageUrl, tags: $tags, costText: $costText, timeText: $timeText, difficultyText: $difficultyText, whyLove: $whyLove, difficultyExplain: $difficultyExplain, starterKit: $starterKit, pitfalls: $pitfalls, roadmapSteps: $roadmapSteps)';
+    return 'Hobby(id: $id, title: $title, hook: $hook, category: $category, imageUrl: $imageUrl, tags: $tags, costText: $costText, timeText: $timeText, difficultyText: $difficultyText, whyLove: $whyLove, difficultyExplain: $difficultyExplain, starterKit: $starterKit, pitfalls: $pitfalls, quittingReasons: $quittingReasons, roadmapSteps: $roadmapSteps)';
   }
 
   @override
@@ -379,6 +403,8 @@ class _$HobbyImpl implements _Hobby {
                 .equals(other._starterKit, _starterKit) &&
             const DeepCollectionEquality().equals(other._pitfalls, _pitfalls) &&
             const DeepCollectionEquality()
+                .equals(other._quittingReasons, _quittingReasons) &&
+            const DeepCollectionEquality()
                 .equals(other._roadmapSteps, _roadmapSteps));
   }
 
@@ -399,6 +425,7 @@ class _$HobbyImpl implements _Hobby {
       difficultyExplain,
       const DeepCollectionEquality().hash(_starterKit),
       const DeepCollectionEquality().hash(_pitfalls),
+      const DeepCollectionEquality().hash(_quittingReasons),
       const DeepCollectionEquality().hash(_roadmapSteps));
 
   /// Create a copy of Hobby
@@ -432,6 +459,7 @@ abstract class _Hobby implements Hobby {
       required final String difficultyExplain,
       required final List<KitItem> starterKit,
       required final List<String> pitfalls,
+      final List<String> quittingReasons,
       required final List<RoadmapStep> roadmapSteps}) = _$HobbyImpl;
 
   factory _Hobby.fromJson(Map<String, dynamic> json) = _$HobbyImpl.fromJson;
@@ -462,6 +490,8 @@ abstract class _Hobby implements Hobby {
   List<KitItem> get starterKit;
   @override
   List<String> get pitfalls;
+  @override
+  List<String> get quittingReasons;
   @override
   List<RoadmapStep> get roadmapSteps;
 

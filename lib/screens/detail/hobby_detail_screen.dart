@@ -4,19 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/hobby.dart';
-import '../../theme/category_ui.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../components/try_today_button.dart';
-import '../../components/roadmap_step_tile.dart';
-import '../../components/shared_widgets.dart';
+import '../../components/glass_card.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../theme/motion.dart';
 
-/// Full hobby detail — hero parallax, floating header, entry animations.
+/// Full hobby detail — cinematic hero, glass card sections, staggered reveals.
 class HobbyDetailScreen extends ConsumerStatefulWidget {
   final String hobbyId;
 
@@ -29,15 +27,16 @@ class HobbyDetailScreen extends ConsumerStatefulWidget {
 class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-
-  /// Scroll offset for parallax
   double _scrollOffset = 0;
+  bool _showBestValue = false;
 
-  /// Entry animation controllers
   late final AnimationController _entryController;
   late final Animation<double> _overlayOpacity;
   late final Animation<double> _detailsOpacity;
   late final Animation<Offset> _detailsSlide;
+
+  /// Stagger controller for below-fold glass cards
+  late final AnimationController _staggerController;
 
   @override
   void initState() {
@@ -72,25 +71,74 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       ),
     );
 
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
     _entryController.forward();
+    // Delay stagger until hero is mostly done
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _staggerController.forward();
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _entryController.dispose();
+    _staggerController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    setState(() {
-      _scrollOffset = _scrollController.offset;
-    });
+    setState(() => _scrollOffset = _scrollController.offset);
   }
 
   double get _heroParallax {
     return (_scrollOffset * Motion.parallaxFactor)
         .clamp(0.0, Motion.maxParallaxOffset);
+  }
+
+  /// Build a staggered fade+slide animation for card at [index] (0-based).
+  Animation<double> _cardOpacity(int index) {
+    final start = (index * 0.12).clamp(0.0, 0.7);
+    final end = (start + 0.4).clamp(0.0, 1.0);
+    return Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _staggerController,
+        curve: Interval(start, end, curve: Curves.easeOut),
+      ),
+    );
+  }
+
+  Animation<Offset> _cardSlide(int index) {
+    final start = (index * 0.12).clamp(0.0, 0.7);
+    final end = (start + 0.4).clamp(0.0, 1.0);
+    return Tween<Offset>(
+      begin: const Offset(0, 16),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _staggerController,
+        curve: Interval(start, end, curve: Curves.easeOut),
+      ),
+    );
+  }
+
+  Widget _staggeredCard(int index, Widget child) {
+    return AnimatedBuilder(
+      animation: _staggerController,
+      builder: (context, _) {
+        return Transform.translate(
+          offset: _cardSlide(index).value,
+          child: Opacity(
+            opacity: _cardOpacity(index).value,
+            child: child,
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -108,10 +156,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       );
     }
 
-    final relatedHobbies =
-        ref.watch(relatedHobbiesProvider(widget.hobbyId)).valueOrNull ?? [];
-    final userHobbies = ref.watch(userHobbiesProvider);
-    final userHobby = userHobbies[widget.hobbyId];
+    final prefs = ref.watch(userPreferencesProvider);
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
@@ -123,204 +168,48 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             slivers: [
               SliverToBoxAdapter(child: _buildHeroImage(context, hobby)),
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + Spacing.scrollBottomPadding),
+                padding: EdgeInsets.fromLTRB(
+                    24,
+                    0,
+                    24,
+                    MediaQuery.of(context).padding.bottom +
+                        Spacing.scrollBottomPadding),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Why you will love it
+                    // Specs middot line
+                    const SizedBox(height: 20),
+                    _buildSpecsLine(hobby),
                     const SizedBox(height: 24),
-                    const SectionHeader(title: "Why you'll love it"),
-                    Text(
-                      hobby.whyLove,
-                      style: AppTypography.body.copyWith(
-                        height: 1.65,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
 
-                    // Starter Kit
-                    SectionHeader(
-                      title: 'Starter Kit',
-                      rightText: _kitTotal(hobby.starterKit) > 0
-                          ? '~ CHF ${_kitTotal(hobby.starterKit)}'
-                          : null,
-                    ),
-                    _buildKitGrid(hobby.starterKit, hobby.id),
-                    if (hobby.starterKit.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 8),
-                        child: GestureDetector(
-                          onTap: () =>
-                              context.push('/shopping/${widget.hobbyId}'),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(AppIcons.shoppingList,
-                                    size: 16, color: AppColors.coral),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Open Shopping Checklist',
-                                  style: AppTypography.sansLabel
-                                      .copyWith(color: AppColors.coral),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 28),
+                    // 1. "Why this fits you" glass card
+                    _staggeredCard(0, _buildWhyFitsYou(hobby, prefs)),
+                    const SizedBox(height: 16),
 
-                    // Roadmap
-                    SectionHeader(
-                      title: 'Your Roadmap',
-                      rightText: '${hobby.roadmapSteps.length} steps',
-                    ),
-                    ...hobby.roadmapSteps.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final step = entry.value;
-                      final isCompleted =
-                          userHobby?.completedStepIds.contains(step.id) ??
-                              false;
-                      final isCurrent = !isCompleted &&
-                          (index == 0 ||
-                              (userHobby?.completedStepIds.contains(
-                                      hobby.roadmapSteps[index - 1].id) ??
-                                  false));
+                    // 2. "Start in 20 minutes" glass card
+                    _staggeredCard(1, _buildStartIn20(hobby)),
+                    const SizedBox(height: 16),
 
-                      return RoadmapStepTile(
-                        step: step,
-                        stepNumber: index + 1,
-                        isCompleted: isCompleted,
-                        isCurrent: isCurrent,
-                        onToggle: () {
-                          ref
-                              .read(userHobbiesProvider.notifier)
-                              .toggleStep(widget.hobbyId, step.id);
-                        },
-                      );
-                    }),
+                    // 3. "What to expect" — 4-week roadmap preview
+                    _staggeredCard(2, _buildWhatToExpect(hobby)),
+                    const SizedBox(height: 16),
 
-                    // Beginner Pitfalls (after roadmap)
-                    if (hobby.pitfalls.isNotEmpty) ...[
-                      const SizedBox(height: 28),
-                      const SectionHeader(title: 'Beginner Pitfalls'),
-                      ...hobby.pitfalls.map((p) => _buildPitfall(p)),
-                    ],
-
-                    // Quick links: Cost Projection + FAQ
-                    const SizedBox(height: 28),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => context.push('/cost/${widget.hobbyId}'),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(AppIcons.badgeCost, size: 18, color: AppColors.coral),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Cost Breakdown',
-                                          style: AppTypography.caption.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                          )),
-                                        Text('Year 1 projection',
-                                          style: AppTypography.sansTiny.copyWith(
-                                            color: AppColors.textMuted,
-                                          )),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => context.push('/faq/${widget.hobbyId}'),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.help_outline_rounded, size: 18, color: AppColors.textMuted),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Beginner FAQ',
-                                          style: AppTypography.caption.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                          )),
-                                        Text('Common questions',
-                                          style: AppTypography.sansTiny.copyWith(
-                                            color: AppColors.textMuted,
-                                          )),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                    // 3b. "Why people stop" — quitting reasons
+                    if (hobby.quittingReasons.isNotEmpty)
+                      ...[
+                        _staggeredCard(3, _buildWhyPeopleStop(hobby)),
+                        const SizedBox(height: 16),
                       ],
-                    ),
 
-                    // Related hobbies
-                    if (relatedHobbies.isNotEmpty) ...[
-                      const SizedBox(height: 28),
-                      const SectionHeader(title: 'You might also like'),
-                      SizedBox(
-                        height: 80,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: relatedHobbies.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 10),
-                          itemBuilder: (context, i) {
-                            final related = relatedHobbies[i];
-                            return SizedBox(
-                              width: 260,
-                              child: HobbyMiniCard(
-                                title: related.title,
-                                imageUrl: related.imageUrl,
-                                category: related.category,
-                                catIcon: related.catIcon,
-                                catColor: related.catColor,
-                                cost: related.costText,
-                                onTap: () =>
-                                    context.push('/hobby/${related.id}'),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                    // 4. Starter Kit glass card
+                    _staggeredCard(4, _buildStarterKit(hobby)),
+                    const SizedBox(height: 16),
+
+                    // 5. Coach teaser
+                    _staggeredCard(5, _buildCoachTeaser()),
+                    const SizedBox(height: 16),
+
+                    // 6. Quick links
+                    _staggeredCard(6, _buildQuickLinks()),
                   ]),
                 ),
               ),
@@ -336,55 +225,32 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               children: [
                 GestureDetector(
                   onTap: () => context.pop(),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      size: 24, color: Colors.white),
-                ),
-                Expanded(
-                  child: Text(
-                    hobby.title,
-                    style: AppTypography.sansLabel.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.35),
                     ),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
+                    child: const Icon(Icons.arrow_back_rounded,
+                        size: 20, color: Colors.white),
                   ),
                 ),
+                const Spacer(),
                 GestureDetector(
-                  onTap: () {
-                    // Share hobby
-                  },
-                  child:
-                      Icon(AppIcons.share, size: 20, color: Colors.white),
+                  onTap: () {},
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.35),
+                    ),
+                    child:
+                        Icon(AppIcons.share, size: 18, color: Colors.white),
+                  ),
                 ),
               ],
-            ),
-          ),
-
-          // Coach chat FAB (above CTA)
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 90,
-            right: 20,
-            child: GestureDetector(
-              onTap: () => context.push('/coach/${widget.hobbyId}'),
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.accent,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.auto_awesome,
-                    size: 22, color: Colors.white),
-              ),
             ),
           ),
 
@@ -395,20 +261,13 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             right: 0,
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.background.withValues(alpha: 0),
-                    AppColors.background,
-                  ],
-                  stops: const [0.0, 0.3],
-                ),
+              decoration: const BoxDecoration(
+                gradient: Spacing.ctaFadeGradient,
               ),
               child: SafeArea(
                 top: false,
                 child: TryTodayButton(
+                  text: 'Start the easy version',
                   onPressed: () =>
                       context.push('/quickstart/${widget.hobbyId}'),
                 ),
@@ -420,9 +279,16 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     );
   }
 
+  // ═══════════════════════════════════════════════════════
+  //  HERO IMAGE — 50% screen height
+  // ═══════════════════════════════════════════════════════
+
   Widget _buildHeroImage(BuildContext context, Hobby hobby) {
+    final screenH = MediaQuery.of(context).size.height;
+    final heroH = screenH * 0.50;
+
     return SizedBox(
-      height: Spacing.heroHeight,
+      height: heroH,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -457,9 +323,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 child: CachedNetworkImage(
                   imageUrl: hobby.imageUrl,
                   fit: BoxFit.cover,
-                  height: Spacing.heroHeight + Motion.maxParallaxOffset,
+                  height: heroH + Motion.maxParallaxOffset,
                   width: double.infinity,
-                  placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
+                  placeholder: (_, __) =>
+                      Container(color: AppColors.surfaceElevated),
                   errorWidget: (_, __, ___) => Container(
                     color: AppColors.surfaceElevated,
                     child: const Icon(Icons.image,
@@ -470,7 +337,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ),
           ),
 
-          // Gradient overlay
+          // Gradient overlay — fade to black at bottom
           AnimatedBuilder(
             animation: _overlayOpacity,
             builder: (context, child) {
@@ -485,44 +352,15 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ),
           ),
 
-          // TRENDING badge (top-right)
+          // Bottom text: category overline + title + hook
           Positioned(
-            top: MediaQuery.of(context).padding.top + 52,
-            right: 16,
-            child: AnimatedBuilder(
-              animation: _detailsOpacity,
-              builder: (context, child) => Opacity(
-                opacity: _detailsOpacity.value,
-                child: child,
-              ),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.coral,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                ),
-                child: Text(
-                  'TRENDING',
-                  style: AppTypography.monoBadgeSmall.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Bottom: mastery time + title + star rating
-          Positioned(
-            bottom: 16,
+            bottom: 20,
             left: 24,
             right: 24,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mastery time with green dot
+                // Category overline
                 AnimatedBuilder(
                   animation: _detailsOpacity,
                   builder: (context, child) {
@@ -534,24 +372,12 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       ),
                     );
                   },
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.sage,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _masteryTimeText(hobby.roadmapSteps),
-                        style: AppTypography.caption.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    hobby.category.toUpperCase(),
+                    style: AppTypography.monoBadgeSmall.copyWith(
+                      color: AppColors.textMuted,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -589,36 +415,21 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 ),
                 const SizedBox(height: 6),
 
-                // Star rating row
+                // Hook line
                 AnimatedBuilder(
                   animation: _detailsOpacity,
                   builder: (context, child) => Opacity(
                     opacity: _detailsOpacity.value,
                     child: child,
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.textMuted),
-                      const SizedBox(width: 2),
-                      const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.textMuted),
-                      const SizedBox(width: 2),
-                      const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.textMuted),
-                      const SizedBox(width: 2),
-                      const Icon(Icons.star_rounded,
-                          size: 14, color: AppColors.textMuted),
-                      const SizedBox(width: 2),
-                      const Icon(Icons.star_half_rounded,
-                          size: 14, color: AppColors.textMuted),
-                      const SizedBox(width: 6),
-                      Text(
-                        '(1.2k)',
-                        style: AppTypography.sansTiny
-                            .copyWith(color: AppColors.textMuted),
-                      ),
-                    ],
+                  child: Text(
+                    hobby.hook,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -629,26 +440,567 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     );
   }
 
-  String _masteryTimeText(List<RoadmapStep> steps) {
-    final totalMinutes =
-        steps.fold(0, (sum, s) => sum + s.estimatedMinutes);
-    final totalHours = totalMinutes / 60;
-    if (totalHours < 10) return '${totalHours.round()} hours to master';
-    final weeks = (totalHours / 5).ceil();
-    return '$weeks weeks to master';
+  // ═══════════════════════════════════════════════════════
+  //  SPECS MIDDOT LINE
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildSpecsLine(Hobby hobby) {
+    final specs = <String>[
+      hobby.costText,
+      hobby.timeText,
+      hobby.difficultyText,
+    ];
+    return Row(
+      children: [
+        for (int i = 0; i < specs.length; i++) ...[
+          if (i > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text('\u00B7',
+                  style: AppTypography.caption
+                      .copyWith(color: AppColors.textMuted)),
+            ),
+          Text(
+            specs[i],
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
-  int _kitTotal(List<KitItem> items) {
-    return items
-        .where((i) => !i.isOptional)
-        .fold(0, (sum, i) => sum + i.cost);
+  // ═══════════════════════════════════════════════════════
+  //  1. WHY THIS FITS YOU
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildWhyFitsYou(Hobby hobby, UserPreferences prefs) {
+    final reasons = _generateFitReasons(hobby, prefs);
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.favorite_outline_rounded,
+                  size: 16, color: AppColors.coral),
+              const SizedBox(width: 8),
+              Text('Why this fits you',
+                  style: AppTypography.sansLabel.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...reasons.map((reason) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Icon(Icons.check_rounded,
+                          size: 14, color: AppColors.sage),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        reason,
+                        style: AppTypography.sansBodySmall
+                            .copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
   }
 
-  Widget _buildKitGrid(List<KitItem> items, String hobbyId) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: items.map((item) => _buildKitCard(item, hobbyId)).toList(),
+  List<String> _generateFitReasons(Hobby hobby, UserPreferences prefs) {
+    final reasons = <String>[];
+
+    // Budget fit
+    final budgetLabels = ['free', 'under CHF 30', 'under CHF 75', 'under CHF 150', 'flexible'];
+    if (prefs.budgetLevel < budgetLabels.length) {
+      reasons.add('Fits your ${budgetLabels[prefs.budgetLevel]} budget');
+    }
+
+    // Time fit
+    reasons.add('Works in ${prefs.hoursPerWeek}h/week');
+
+    // Solo/social fit
+    if (prefs.preferSocial) {
+      reasons.add('Great for meeting people');
+    } else {
+      reasons.add('Perfect for solo sessions at home');
+    }
+
+    // Hobby-specific whyLove (truncated)
+    if (hobby.whyLove.isNotEmpty) {
+      final truncated = hobby.whyLove.length > 60
+          ? '${hobby.whyLove.substring(0, 60)}...'
+          : hobby.whyLove;
+      reasons.add(truncated);
+    }
+
+    return reasons.take(4).toList();
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  2. START IN 20 MINUTES
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildStartIn20(Hobby hobby) {
+    final essentialKit = hobby.starterKit.where((k) => !k.isOptional).take(2).toList();
+    final firstStep = hobby.roadmapSteps.isNotEmpty ? hobby.roadmapSteps.first : null;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bolt_rounded, size: 16, color: AppColors.coral),
+              const SizedBox(width: 8),
+              Text('Start in 20 minutes',
+                  style: AppTypography.sansLabel.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // What to buy
+          if (essentialKit.isNotEmpty) ...[
+            Text('Buy only these:',
+                style: AppTypography.sansTiny
+                    .copyWith(color: AppColors.textMuted)),
+            const SizedBox(height: 8),
+            ...essentialKit.asMap().entries.map((entry) {
+              final item = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: AppColors.coral.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${entry.key + 1}',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: AppColors.coral,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        style: AppTypography.sansBodySmall
+                            .copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    if (item.cost > 0)
+                      Text('CHF ${item.cost}',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: AppColors.textMuted,
+                          )),
+                    if (item.cost == 0)
+                      Text('FREE',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: AppColors.sage,
+                          )),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
+
+          // First tiny session
+          if (firstStep != null) ...[
+            Text('Your first tiny session:',
+                style: AppTypography.sansTiny
+                    .copyWith(color: AppColors.textMuted)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.play_circle_outline_rounded,
+                      size: 20, color: AppColors.coral),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(firstStep.title,
+                            style: AppTypography.sansLabel.copyWith(
+                              color: AppColors.textPrimary,
+                            )),
+                        Text(
+                          '${firstStep.estimatedMinutes} min',
+                          style: AppTypography.sansTiny
+                              .copyWith(color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 10),
+          Text(
+            'Ignore everything else for now.',
+            style: AppTypography.sansTiny.copyWith(
+              color: AppColors.textMuted,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  3. WHAT TO EXPECT — 4-week preview
+  // ═══════════════════════════════════════════════════════
+
+  static const _weekPlan = [
+    (
+      title: 'Week 1 — Try it',
+      desc: 'Do one tiny session. No pressure, no gear obsession.',
+      icon: Icons.play_arrow_rounded,
+    ),
+    (
+      title: 'Week 2 — Repeat it',
+      desc: 'Do it again. Same thing, slightly longer.',
+      icon: Icons.refresh_rounded,
+    ),
+    (
+      title: 'Week 3 — Reduce friction',
+      desc: 'Simplify your setup. Remove what annoys you.',
+      icon: Icons.auto_fix_high_rounded,
+    ),
+    (
+      title: 'Week 4 — Decide',
+      desc: 'Keep going, switch hobbies, or level up.',
+      icon: Icons.flag_rounded,
+    ),
+  ];
+
+  Widget _buildWhatToExpect(Hobby hobby) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_month_outlined,
+                  size: 16, color: AppColors.coral),
+              const SizedBox(width: 8),
+              Text('What to expect',
+                  style: AppTypography.sansLabel.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...List.generate(_weekPlan.length, (i) {
+            final week = _weekPlan[i];
+            final isLast = i == _weekPlan.length - 1;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.coral.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(week.icon,
+                            size: 14, color: AppColors.coral),
+                      ),
+                      if (!isLast)
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: AppColors.border,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(week.title,
+                            style: AppTypography.sansLabel.copyWith(
+                              color: AppColors.textPrimary,
+                            )),
+                        const SizedBox(height: 2),
+                        Text(week.desc,
+                            style: AppTypography.sansTiny.copyWith(
+                              color: AppColors.textSecondary,
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  3b. WHY PEOPLE STOP
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildWhyPeopleStop(Hobby hobby) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline_rounded,
+                  size: 16, color: AppColors.textMuted),
+              const SizedBox(width: 8),
+              Text('Why people stop',
+                  style: AppTypography.sansLabel.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...hobby.quittingReasons.map((reason) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.only(top: 6),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        reason,
+                        style: AppTypography.sansBodySmall
+                            .copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 4),
+          Text(
+            'Knowing this helps you avoid the common traps.',
+            style: AppTypography.sansTiny.copyWith(
+              color: AppColors.textMuted,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  4. STARTER KIT
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildStarterKit(Hobby hobby) {
+    final essentialItems =
+        hobby.starterKit.where((k) => !k.isOptional).toList();
+    final allItems = hobby.starterKit;
+    final displayItems = _showBestValue ? allItems : essentialItems;
+    final total =
+        displayItems.fold(0, (sum, item) => sum + item.cost);
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.shopping_bag_outlined,
+                  size: 16, color: AppColors.coral),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Starter kit',
+                    style: AppTypography.sansLabel.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    )),
+              ),
+              if (total > 0)
+                Text('~ CHF $total',
+                    style: AppTypography.monoBadge
+                        .copyWith(color: AppColors.textMuted)),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Minimum / Best Value toggle
+          if (allItems.length > essentialItems.length)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  _KitToggle(
+                    label: 'Minimum',
+                    selected: !_showBestValue,
+                    onTap: () => setState(() => _showBestValue = false),
+                  ),
+                  const SizedBox(width: 8),
+                  _KitToggle(
+                    label: 'Best value',
+                    selected: _showBestValue,
+                    onTap: () => setState(() => _showBestValue = true),
+                  ),
+                ],
+              ),
+            ),
+
+          // Kit items
+          ...displayItems.map((item) => _buildKitRow(item)),
+
+          // Shopping checklist link
+          if (hobby.starterKit.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => context.push('/shopping/${widget.hobbyId}'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(AppIcons.shoppingList,
+                      size: 14, color: AppColors.coral),
+                  const SizedBox(width: 6),
+                  Text('Open Shopping Checklist',
+                      style: AppTypography.sansTiny
+                          .copyWith(color: AppColors.coral)),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKitRow(KitItem item) {
+    return GestureDetector(
+      onTap: () => _openAffiliateLink(item),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            // Thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: item.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            Container(color: AppColors.surfaceElevated),
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppColors.surfaceElevated,
+                          child: const Icon(Icons.image_outlined,
+                              size: 16, color: AppColors.textWhisper),
+                        ),
+                      )
+                    : Container(
+                        color: AppColors.surfaceElevated,
+                        child: Icon(
+                          item.isOptional
+                              ? Icons.add_circle_outline
+                              : Icons.check_circle_outline,
+                          size: 18,
+                          color: AppColors.textWhisper,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.name,
+                      style: AppTypography.sansBodySmall.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  if (item.isOptional)
+                    Text('Optional',
+                        style: AppTypography.sansTiny
+                            .copyWith(color: AppColors.textMuted)),
+                ],
+              ),
+            ),
+            if (item.cost > 0)
+              Text('CHF ${item.cost}',
+                  style: AppTypography.monoBadge.copyWith(
+                    color: AppColors.coral,
+                    fontWeight: FontWeight.w700,
+                  ))
+            else
+              Text('FREE',
+                  style: AppTypography.monoBadge.copyWith(
+                    color: AppColors.sage,
+                    fontWeight: FontWeight.w700,
+                  )),
+            const SizedBox(width: 6),
+            const Icon(Icons.open_in_new_rounded,
+                size: 12, color: AppColors.textWhisper),
+          ],
+        ),
+      ),
     );
   }
 
@@ -661,189 +1013,161 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     }
   }
 
-  String _kitLabel(KitItem item) {
-    final name = item.name.toLowerCase();
-    if (name.contains('tool') ||
-        name.contains('saw') ||
-        name.contains('knife') ||
-        name.contains('needle') ||
-        name.contains('scissors')) return 'TOOLS';
-    if (name.contains('book') ||
-        name.contains('app') ||
-        name.contains('course') ||
-        name.contains('guide') ||
-        name.contains('account')) return 'RESOURCE';
-    if (name.contains('bag') ||
-        name.contains('case') ||
-        name.contains('pad') ||
-        name.contains('mat') ||
-        name.contains('stand')) return 'GEAR';
-    return 'MATERIAL';
-  }
+  // ═══════════════════════════════════════════════════════
+  //  5. COACH TEASER
+  // ═══════════════════════════════════════════════════════
 
-  Widget _buildKitCard(KitItem item, String hobbyId) {
-    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
-    return GestureDetector(
-      onTap: () => _openAffiliateLink(item),
-      child: SizedBox(
-        width: (MediaQuery.of(context).size.width - 24 * 2 - 10) / 2,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
+  Widget _buildCoachTeaser() {
+    return GlassCard(
+      onTap: () => context.push('/coach/${widget.hobbyId}'),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.coral.withValues(alpha: 0.12),
+            ),
+            child: const Icon(Icons.auto_awesome,
+                size: 20, color: AppColors.coral),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 100,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (hasImage)
-                      CachedNetworkImage(
-                        imageUrl: item.imageUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) =>
-                            Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => Container(
-                          color: AppColors.surfaceElevated,
-                          child: const Icon(Icons.image,
-                              size: 24, color: AppColors.textWhisper),
-                        ),
-                      )
-                    else
-                      Container(
-                        color: AppColors.surfaceElevated,
-                        child: Center(
-                          child: Icon(
-                            item.isOptional
-                                ? Icons.add_circle_outline
-                                : AppIcons.check,
-                            size: 24,
-                            color: AppColors.textWhisper,
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(140),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          _kitLabel(item),
-                          style: AppTypography.monoBadgeSmall.copyWith(
-                            color: Colors.white,
-                            fontSize: 8,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (item.isOptional)
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.warmGray.withAlpha(180),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'OPT',
-                            style: AppTypography.monoBadgeSmall.copyWith(
-                              color: Colors.white,
-                              fontSize: 8,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      style: AppTypography.caption.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (item.cost > 0)
-                          Text(
-                            'CHF ${item.cost}',
-                            style: AppTypography.monoBadge.copyWith(
-                              color: AppColors.coral,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          )
-                        else
-                          Text(
-                            'FREE',
-                            style: AppTypography.monoBadge.copyWith(
-                              color: AppColors.sage,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        const Spacer(),
-                        const Icon(Icons.shopping_bag_outlined,
-                            size: 14, color: AppColors.textSecondary),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Want help starting?',
+                    style: AppTypography.sansLabel.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    )),
+                const SizedBox(height: 2),
+                Text('Ask the coach without overthinking it.',
+                    style: AppTypography.sansTiny.copyWith(
+                      color: AppColors.textSecondary,
+                    )),
+              ],
+            ),
           ),
-        ),
+          const Icon(Icons.chevron_right_rounded,
+              size: 20, color: AppColors.textMuted),
+        ],
       ),
     );
   }
 
-  Widget _buildPitfall(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(top: 7),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.textMuted,
+  // ═══════════════════════════════════════════════════════
+  //  6. QUICK LINKS
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildQuickLinks() {
+    return Row(
+      children: [
+        Expanded(
+          child: GlassCard(
+            onTap: () => context.push('/cost/${widget.hobbyId}'),
+            padding: const EdgeInsets.all(14),
+            borderRadius: 14,
+            child: Row(
+              children: [
+                Icon(AppIcons.badgeCost,
+                    size: 16, color: AppColors.coral),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Cost Breakdown',
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          )),
+                      Text('Year 1 projection',
+                          style: AppTypography.sansTiny
+                              .copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTypography.sansBodySmall.copyWith(
-                height: 1.5,
-                color: AppColors.textSecondary,
-              ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GlassCard(
+            onTap: () => context.push('/faq/${widget.hobbyId}'),
+            padding: const EdgeInsets.all(14),
+            borderRadius: 14,
+            child: Row(
+              children: [
+                const Icon(Icons.help_outline_rounded,
+                    size: 16, color: AppColors.textMuted),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Beginner FAQ',
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          )),
+                      Text('Common questions',
+                          style: AppTypography.sansTiny
+                              .copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  KIT TOGGLE PILL
+// ═══════════════════════════════════════════════════════
+
+class _KitToggle extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _KitToggle({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Motion.fast,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.coral.withValues(alpha: 0.12)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+          border: Border.all(
+            color: selected ? AppColors.coral : AppColors.border,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.sansTiny.copyWith(
+            color: selected ? AppColors.coral : AppColors.textSecondary,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
