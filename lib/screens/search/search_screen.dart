@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -297,6 +298,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       Expanded(
                         child: TextField(
                           controller: _searchController,
+                          autofocus: true,
                           onChanged: _onSearchChanged,
                           onSubmitted: _onSearchSubmitted,
                           textInputAction: TextInputAction.search,
@@ -551,59 +553,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
-        // "You might also like"
+        // "You might also like" — vertical premium cards
         if (suggestions.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-            child:
-                Text('You might also like', style: AppTypography.title.copyWith(fontSize: 17)),
+            child: Text('You might also like',
+                style: AppTypography.title.copyWith(fontSize: 17)),
           ),
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: suggestions.length,
-              itemBuilder: (context, i) {
-                final s = suggestions[i];
-                return GestureDetector(
-                  onTap: () => context.push('/hobby/${s.id}'),
-                  child: Container(
-                    width: 110,
-                    margin: const EdgeInsets.only(right: 10),
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            s.imageUrl,
-                            width: 110,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 110,
-                              height: 80,
-                              color: AppColors.surfaceElevated,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          s.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.caption.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+          ...suggestions.map((s) => _SuggestionCard(hobby: s)),
+          const SizedBox(height: 20),
         ],
       ],
     );
@@ -748,12 +706,12 @@ class _SearchResultCard extends StatelessWidget {
             // Hobby image
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                hobby.imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
                 width: 56,
                 height: 56,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorWidget: (_, __, ___) => Container(
                   width: 56,
                   height: 56,
                   color: AppColors.surfaceElevated,
@@ -875,6 +833,88 @@ class _FilterChip extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SUGGESTION CARD  (You might also like)
+// ═══════════════════════════════════════════════════════
+
+class _SuggestionCard extends StatelessWidget {
+  final Hobby hobby;
+  const _SuggestionCard({required this.hobby});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hero image
+            SizedBox(
+              height: 140,
+              width: double.infinity,
+              child: CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.surfaceElevated),
+              ),
+            ),
+            // Info row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hobby.category.toUpperCase(),
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: AppColors.accent,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          hobby.title,
+                          style: AppTypography.body.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          hobby.hook,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 13, color: AppColors.textWhisper),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
