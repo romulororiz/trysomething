@@ -95,6 +95,41 @@ class DiscoverFeedScreen extends ConsumerStatefulWidget {
 
 class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   String? _selectedFilter;
+  bool _searchActive = false;
+  String _searchQuery = '';
+  late final TextEditingController _searchController;
+  late final FocusNode _searchFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _searchFocus = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  void _activateSearch() {
+    setState(() {
+      _searchActive = true;
+      _searchQuery = '';
+    });
+    _searchFocus.requestFocus();
+  }
+
+  void _deactivateSearch() {
+    setState(() {
+      _searchActive = false;
+      _searchQuery = '';
+      _searchController.clear();
+    });
+    _searchFocus.unfocus();
+  }
 
   List<Hobby> _applyFilter(List<Hobby> hobbies) {
     if (_selectedFilter == null) return hobbies;
@@ -195,36 +230,274 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: hobbiesAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.accent),
-        ),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(MdiIcons.alertCircleOutline,
-                  size: 32, color: AppColors.textMuted),
-              const SizedBox(height: 12),
-              Text('Something went wrong',
-                  style: AppTypography.body
-                      .copyWith(color: AppColors.textMuted)),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () => ref.invalidate(hobbyListProvider),
-                child: Text('Tap to retry',
-                    style:
-                        AppTypography.body.copyWith(color: AppColors.accent)),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: _buildSearchBar(),
+            ),
+            Expanded(
+              child: hobbiesAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.accent),
+                ),
+                error: (e, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(MdiIcons.alertCircleOutline,
+                          size: 32, color: AppColors.textMuted),
+                      const SizedBox(height: 12),
+                      Text('Something went wrong',
+                          style: AppTypography.body
+                              .copyWith(color: AppColors.textMuted)),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => ref.invalidate(hobbyListProvider),
+                        child: Text('Tap to retry',
+                            style: AppTypography.body
+                                .copyWith(color: AppColors.accent)),
+                      ),
+                    ],
+                  ),
+                ),
+                data: (allHobbies) => AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  transitionBuilder: (child, anim) =>
+                      FadeTransition(opacity: anim, child: child),
+                  child: _searchActive
+                      ? _buildSearchView(allHobbies)
+                      : _buildDiscoverRails(allHobbies, prefs),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        data: (allHobbies) => _buildContent(allHobbies, prefs),
       ),
     );
   }
 
-  Widget _buildContent(List<Hobby> allHobbies, UserPreferences prefs) {
+  Widget _buildSearchBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(
+                height: Spacing.searchBarHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.glassBackground,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _searchActive
+                        ? AppColors.accent.withValues(alpha: 0.3)
+                        : AppColors.glassBorder,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(MdiIcons.magnify,
+                        size: 18,
+                        color: _searchActive
+                            ? AppColors.accent
+                            : AppColors.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _searchActive
+                          ? TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocus,
+                              autofocus: true,
+                              onChanged: (q) =>
+                                  setState(() => _searchQuery = q),
+                              style: AppTypography.body.copyWith(
+                                fontSize: 13,
+                                color: AppColors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                isDense: true,
+                                hintText: 'Search hobbies...',
+                                hintStyle: AppTypography.body.copyWith(
+                                  fontSize: 13,
+                                  color: AppColors.textMuted,
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              cursorColor: AppColors.accent,
+                              cursorWidth: 1.5,
+                            )
+                          : GestureDetector(
+                              onTap: _activateSearch,
+                              behavior: HitTestBehavior.opaque,
+                              child: SizedBox(
+                                height: Spacing.searchBarHeight,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    '"cheap creative hobby", "indoor winter"...',
+                                    style: AppTypography.body.copyWith(
+                                      fontSize: 13,
+                                      color: AppColors.textMuted,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                    if (_searchActive && _searchQuery.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          _searchQuery = '';
+                          _searchController.clear();
+                        }),
+                        child: Icon(MdiIcons.close,
+                            size: 16, color: AppColors.textMuted),
+                      ),
+                    if (!_searchActive)
+                      GestureDetector(
+                        onTap: _showFilterSheet,
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Icon(
+                            _selectedFilter != null
+                                ? MdiIcons.filterCheck
+                                : MdiIcons.filterVariant,
+                            size: 18,
+                            color: _selectedFilter != null
+                                ? AppColors.accent
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_searchActive) ...[
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _deactivateSearch,
+            child: Text(
+              'Cancel',
+              style: AppTypography.body.copyWith(
+                color: AppColors.accent,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSearchView(List<Hobby> allHobbies) {
+    if (_searchQuery.isEmpty) {
+      return _buildSearchSuggestions();
+    }
+
+    final query = _searchQuery.toLowerCase();
+    final results = allHobbies.where((h) {
+      return h.title.toLowerCase().contains(query) ||
+          h.category.toLowerCase().contains(query) ||
+          h.tags.any((t) => t.toLowerCase().contains(query)) ||
+          h.hook.toLowerCase().contains(query);
+    }).toList();
+
+    if (results.isEmpty) {
+      return Center(
+        key: const ValueKey('no-results'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(MdiIcons.magnifyClose, size: 36, color: AppColors.textMuted),
+            const SizedBox(height: 12),
+            Text('No hobbies found',
+                style:
+                    AppTypography.body.copyWith(color: AppColors.textMuted)),
+            const SizedBox(height: 6),
+            Text('Try "creative", "outdoor", or "social"',
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.textWhisper)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      key: ValueKey('results-$_searchQuery'),
+      padding:
+          const EdgeInsets.fromLTRB(24, 16, 24, Spacing.scrollBottomPadding),
+      itemCount: results.length,
+      itemBuilder: (context, i) => _SearchResultItem(hobby: results[i]),
+    );
+  }
+
+  Widget _buildSearchSuggestions() {
+    const suggestions = [
+      'cheap creative hobby',
+      'hobby for anxiety',
+      'indoor winter hobby',
+      'social but low pressure',
+      'hobby for couples',
+      'solo at home',
+    ];
+
+    return ListView(
+      key: const ValueKey('suggestions'),
+      padding:
+          const EdgeInsets.fromLTRB(24, 20, 24, Spacing.scrollBottomPadding),
+      children: [
+        Text('TRY SEARCHING FOR',
+            style: AppTypography.overline.copyWith(color: AppColors.textMuted)),
+        const SizedBox(height: 12),
+        ...suggestions.map((s) => GestureDetector(
+              onTap: () => setState(() {
+                _searchQuery = s;
+                _searchController.text = s;
+                _searchController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: s.length));
+              }),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(MdiIcons.magnify, size: 16, color: AppColors.textMuted),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(s,
+                          style: AppTypography.body
+                              .copyWith(color: AppColors.textSecondary)),
+                    ),
+                    Icon(Icons.north_west_rounded,
+                        size: 14, color: AppColors.textWhisper),
+                  ],
+                ),
+              ),
+            )),
+      ],
+    );
+  }
+
+  Widget _buildDiscoverRails(List<Hobby> allHobbies, UserPreferences prefs) {
     final forYou = _applyFilter(_buildForYouList(allHobbies, prefs));
     final startCheap = _applyFilter(allHobbies.where((h) {
       final (_, max) = parseCostRange(h.costText);
@@ -235,75 +508,13 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       return hours <= 2 && h.difficultyText.toLowerCase() == 'easy';
     }).toList());
 
-    // Hero = first match, alternates = next 2
     final heroHobby = forYou.isNotEmpty ? forYou.first : null;
-    final alternates = forYou.length > 1 ? forYou.skip(1).take(2).toList() : <Hobby>[];
+    final alternates =
+        forYou.length > 1 ? forYou.skip(1).take(2).toList() : <Hobby>[];
 
     return CustomScrollView(
+      key: const ValueKey('discover'),
       slivers: [
-        // ── Search bar (floating, glass) ──
-        SliverToBoxAdapter(
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: GestureDetector(
-                onTap: () => context.push('/search'),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: Container(
-                      height: Spacing.searchBarHeight,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.glassBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        border:
-                            Border.all(color: AppColors.glassBorder, width: 0.5),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(MdiIcons.magnify,
-                              size: 18, color: AppColors.textMuted),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              '"cheap creative hobby", "indoor winter"...',
-                              style: AppTypography.body.copyWith(
-                                fontSize: 13,
-                                color: AppColors.textMuted,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          // Filter icon → opens bottom sheet
-                          GestureDetector(
-                            onTap: _showFilterSheet,
-                            behavior: HitTestBehavior.opaque,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: Icon(
-                                _selectedFilter != null
-                                    ? MdiIcons.filterCheck
-                                    : MdiIcons.filterVariant,
-                                size: 18,
-                                color: _selectedFilter != null
-                                    ? AppColors.accent
-                                    : AppColors.textMuted,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-
         // ── Hero card ──
         if (heroHobby != null)
           SliverToBoxAdapter(
@@ -356,12 +567,11 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
           ),
 
         // Empty state
-        if (heroHobby == null &&
-            startCheap.isEmpty &&
-            startThisWeek.isEmpty)
+        if (heroHobby == null && startCheap.isEmpty && startThisWeek.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
               child: Column(
                 children: [
                   Icon(MdiIcons.magnifyClose,
@@ -382,7 +592,6 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             ),
           ),
 
-        // Bottom padding for nav
         const SliverPadding(
           padding: EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
         ),
@@ -754,6 +963,88 @@ class _CompactCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEARCH RESULT ITEM — Inline search result row
+// ═══════════════════════════════════════════════════════
+
+class _SearchResultItem extends StatelessWidget {
+  final Hobby hobby;
+  const _SearchResultItem({required this.hobby});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        height: 88,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            // Image
+            SizedBox(
+              width: 88,
+              child: CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 176,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) => Container(
+                  color: AppColors.surfaceElevated,
+                  child: Icon(AppIcons.categoryIcon(hobby.category),
+                      size: 24, color: AppColors.textMuted),
+                ),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      hobby.category.toUpperCase(),
+                      style: AppTypography.overline.copyWith(
+                          color: AppColors.accent, fontSize: 9),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hobby.title,
+                      style: AppTypography.title.copyWith(fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${hobby.costText} · ${hobby.timeText}',
+                      style: AppTypography.caption.copyWith(
+                          color: AppColors.textMuted, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: Icon(Icons.chevron_right_rounded,
+                  size: 18, color: AppColors.textWhisper),
             ),
           ],
         ),

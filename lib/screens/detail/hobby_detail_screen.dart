@@ -1220,7 +1220,7 @@ class _SaveButton extends ConsumerWidget {
           color: Colors.black.withValues(alpha: 0.35),
         ),
         child: Icon(
-          isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+          isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
           size: 18,
           color: isSaved ? AppColors.coral : Colors.white,
         ),

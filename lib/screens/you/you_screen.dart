@@ -26,11 +26,12 @@ class YouScreen extends ConsumerStatefulWidget {
 class _YouScreenState extends ConsumerState<YouScreen> {
   late PageController _hobbyPageController;
   int _currentHobbyPage = 0;
+  bool _showAllSaved = false;
 
   @override
   void initState() {
     super.initState();
-    _hobbyPageController = PageController();
+    _hobbyPageController = PageController(viewportFraction: 0.88);
   }
 
   @override
@@ -81,33 +82,53 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         ? activeEntries[_currentHobbyPage.clamp(0, activeEntries.length - 1)]
         : null;
 
+    final allEntries = [...activeEntries, ...savedEntries, ...triedEntries];
+    final totalStepsCompleted = allEntries.fold(
+        0, (sum, m) => sum + m.userHobby.completedStepIds.length);
+    final bestStreak = allEntries.fold(
+        0, (best, m) => m.userHobby.streakDays > best ? m.userHobby.streakDays : best);
+    final hobbiesExplored = allEntries.length;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-              24, 16, 24, Spacing.scrollBottomPadding),
+          padding: const EdgeInsets.only(
+              top: 16, bottom: Spacing.scrollBottomPadding),
           children: [
             // ── Header ──
-            _ProfileHeader(
-              displayName: displayName,
-              avatarUrl: avatarUrl,
-              streakDays: visibleMeta != null
-                  ? _computeStreak(visibleMeta.userHobby)
-                  : 0,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _ProfileHeader(
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+                streakDays: visibleMeta != null
+                    ? _computeStreak(visibleMeta.userHobby)
+                    : 0,
+                hobbiesExplored: hobbiesExplored,
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // ── ACTIVE section ──
-            const _SectionLabel('ACTIVE'),
-            const SizedBox(height: 12),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: _SectionLabel('ACTIVE'),
+            ),
+            const SizedBox(height: 10),
 
             if (activeEntries.isEmpty)
-              _EmptyActivePrompt()
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _EmptyActivePrompt(),
+              )
             else ...[
               if (activeEntries.length == 1)
-                _CollectorCard(meta: activeEntries.first)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _CollectorCard(meta: activeEntries.first),
+                )
               else ...[
                 SizedBox(
                   height: 130,
@@ -116,8 +137,10 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                     itemCount: activeEntries.length,
                     onPageChanged: (i) =>
                         setState(() => _currentHobbyPage = i),
-                    itemBuilder: (context, i) =>
-                        _CollectorCard(meta: activeEntries[i]),
+                    itemBuilder: (context, i) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: _CollectorCard(meta: activeEntries[i]),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -126,66 +149,150 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                   current: _currentHobbyPage,
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               if (visibleMeta != null)
-                _StatsChipRow(meta: visibleMeta),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _StatsChipRow(meta: visibleMeta),
+                ),
             ],
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             if (savedEntries.isNotEmpty) ...[
-              const _SectionLabel('SAVED FOR LATER'),
-              const SizedBox(height: 12),
-              ...savedEntries.map((m) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _SavedHobbyCard(meta: m),
-                  )),
-              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    const _SectionLabel('SAVED FOR LATER'),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Text(
+                        '${savedEntries.length}',
+                        style: AppTypography.monoTiny
+                            .copyWith(color: AppColors.textMuted),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...(_showAllSaved
+                      ? savedEntries
+                      : savedEntries.take(4).toList())
+                  .map((m) => Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+                        child: _SavedHobbyCard(meta: m),
+                      )),
+              if (savedEntries.length > 4)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
+                  child: GestureDetector(
+                    onTap: () =>
+                        setState(() => _showAllSaved = !_showAllSaved),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _showAllSaved
+                              ? 'Show less'
+                              : 'See ${savedEntries.length - 4} more',
+                          style: AppTypography.caption
+                              .copyWith(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                const SizedBox(height: 14),
             ],
 
             if (triedEntries.isNotEmpty) ...[
-              const _SectionLabel('TRIED BEFORE'),
-              const SizedBox(height: 12),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: _SectionLabel('TRIED BEFORE'),
+              ),
+              const SizedBox(height: 10),
               ...triedEntries.map((m) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
                     child: _TriedHobbyCard(meta: m),
                   )),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
             ],
 
-            // ── Nav rows ──
-            _NavRow(
-              icon: MdiIcons.bookOpenPageVariantOutline,
-              iconBg: AppColors.surface,
-              iconBorder: AppColors.border,
-              iconColor: AppColors.textSecondary,
-              title: 'Journal',
-              titleStyle: AppTypography.sansLabel.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-              chevronColor: AppColors.textMuted,
-              onTap: () => context.push('/journal'),
+            // ── Journey stats ──
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: _SectionLabel('YOUR JOURNEY'),
             ),
-            const _HairlineDivider(),
-
-            _ProNavRow(proStatus: proStatus),
-            const _HairlineDivider(),
-
-            _NavRow(
-              icon: MdiIcons.cogOutline,
-              iconBg: Colors.transparent,
-              iconBorder: Colors.transparent,
-              iconColor: AppColors.textMuted.withValues(alpha: 0.4),
-              title: 'Settings',
-              titleStyle: AppTypography.body.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textMuted,
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _JourneyStats(
+                stepsCompleted: totalStepsCompleted,
+                bestStreak: bestStreak,
+                hobbiesExplored: hobbiesExplored,
               ),
-              chevronColor: AppColors.textWhisper,
-              onTap: () => context.push('/settings'),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Nav rows ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _NavRow(
+                icon: MdiIcons.bookOpenPageVariantOutline,
+                iconBg: AppColors.surface,
+                iconBorder: AppColors.border,
+                iconColor: AppColors.textSecondary,
+                title: 'Journal',
+                titleStyle: AppTypography.sansLabel,
+                chevronColor: AppColors.textMuted,
+                onTap: () => context.push('/journal'),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: _HairlineDivider(),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _ProNavRow(proStatus: proStatus),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: _HairlineDivider(),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _NavRow(
+                icon: MdiIcons.cogOutline,
+                iconBg: Colors.transparent,
+                iconBorder: Colors.transparent,
+                iconColor: AppColors.textMuted.withValues(alpha: 0.4),
+                title: 'Settings',
+                titleStyle: AppTypography.caption.copyWith(
+                  color: AppColors.textMuted,
+                ),
+                chevronColor: AppColors.textWhisper,
+                onTap: () => context.push('/settings'),
+              ),
             ),
           ],
         ),
@@ -223,22 +330,26 @@ class _ProfileHeader extends StatelessWidget {
   final String displayName;
   final String? avatarUrl;
   final int streakDays;
+  final int hobbiesExplored;
 
   const _ProfileHeader({
     required this.displayName,
     required this.avatarUrl,
     required this.streakDays,
+    required this.hobbiesExplored,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // Avatar
         Container(
-          width: 48,
-          height: 48,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(18),
             gradient: const LinearGradient(
               colors: [Color(0xFF1A1520), Color(0xFF151A25)],
               begin: Alignment.topLeft,
@@ -253,51 +364,153 @@ class _ProfileHeader extends StatelessWidget {
               ? CachedNetworkImage(
                   imageUrl: avatarUrl!,
                   fit: BoxFit.cover,
-                  memCacheWidth: 96,
+                  memCacheWidth: 128,
                   placeholder: (_, __) => const SizedBox.shrink(),
                   errorWidget: (_, __, ___) => const SizedBox.shrink(),
                 )
-              : const SizedBox.shrink(),
-        ),
-        const SizedBox(width: 14),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              displayName,
-              style: GoogleFonts.sourceSerif4(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (streakDays > 0) ...[
-              const SizedBox(height: 3),
-              Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$streakDays DAY STREAK',
-                    style: GoogleFonts.ibmPlexMono(
-                      fontSize: 9,
+              : Center(
+                  child: Text(
+                    displayName.isNotEmpty
+                        ? displayName[0].toUpperCase()
+                        : '?',
+                    style: AppTypography.title.copyWith(
                       color: AppColors.textMuted,
                     ),
                   ),
+                ),
+        ),
+        const SizedBox(width: 16),
+        // Name + info chips
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName,
+                style: AppTypography.title,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                children: [
+                  _MiniInfoChip(
+                    label: '$hobbiesExplored ${hobbiesExplored == 1 ? 'hobby' : 'hobbies'}',
+                  ),
+                  if (streakDays > 0)
+                    _MiniInfoChip(
+                      label: '$streakDays-day streak',
+                      accent: true,
+                    )
+                  else
+                    const _MiniInfoChip(label: 'Start your streak'),
                 ],
               ),
             ],
-          ],
+          ),
         ),
       ],
+    );
+  }
+}
+
+// ── Mini info chip (used in header) ──
+class _MiniInfoChip extends StatelessWidget {
+  final String label;
+  final bool accent;
+  const _MiniInfoChip({required this.label, this.accent = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: accent
+            ? AppColors.accent.withValues(alpha: 0.08)
+            : AppColors.surface,
+        border: Border.all(
+          color: accent
+              ? AppColors.accent.withValues(alpha: 0.18)
+              : AppColors.border,
+        ),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.monoTiny.copyWith(
+          color: accent ? AppColors.accent : AppColors.textMuted,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Journey stats block ──
+class _JourneyStats extends StatelessWidget {
+  final int stepsCompleted;
+  final int bestStreak;
+  final int hobbiesExplored;
+
+  const _JourneyStats({
+    required this.stepsCompleted,
+    required this.bestStreak,
+    required this.hobbiesExplored,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          _StatTile(value: '$stepsCompleted', label: 'STEPS DONE'),
+          const SizedBox(width: 8),
+          _StatTile(value: '${bestStreak}d', label: 'BEST STREAK'),
+          const SizedBox(width: 8),
+          _StatTile(value: '$hobbiesExplored', label: 'EXPLORED'),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String value;
+  final String label;
+  const _StatTile({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 26,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: AppTypography.overline.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -322,7 +535,7 @@ class _CollectorCard extends StatelessWidget {
         (DateTime.now().difference(startedAt).inDays / 7).floor() + 1;
 
     return GestureDetector(
-      onTap: () => context.go('/home'),
+      onTap: () => context.go('/home?hobby=${hobby.id}'),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: SizedBox(
@@ -364,9 +577,10 @@ class _CollectorCard extends StatelessWidget {
                   children: [
                     Text(
                       'WEEK ${weekNum.toString().padLeft(2, '0')} / 04',
-                      style: GoogleFonts.ibmPlexMono(
-                        fontSize: 8.5,
+                      style: AppTypography.overline.copyWith(
                         color: AppColors.textPrimary.withValues(alpha: 0.35),
+                        fontSize: 9,
+                        letterSpacing: 1.0,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -376,9 +590,8 @@ class _CollectorCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             hobby.title,
-                            style: GoogleFonts.sourceSerif4(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w900,
+                            style: AppTypography.title.copyWith(
+                              fontSize: 18,
                               color: AppColors.textPrimary,
                             ),
                             maxLines: 1,
@@ -412,10 +625,11 @@ class _CollectorCard extends StatelessWidget {
                             ),
                             Text(
                               'COMPLETE',
-                              style: GoogleFonts.ibmPlexMono(
-                                fontSize: 8,
+                              style: AppTypography.overline.copyWith(
                                 color: AppColors.textPrimary
                                     .withValues(alpha: 0.3),
+                                fontSize: 8,
+                                letterSpacing: 0.8,
                               ),
                             ),
                           ],
@@ -512,10 +726,7 @@ class _Chip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.ibmPlexMono(
-          fontSize: 8.5,
-          color: textColor,
-        ),
+        style: AppTypography.monoTiny.copyWith(color: textColor),
       ),
     );
   }
@@ -622,18 +833,13 @@ class _ProNavRow extends StatelessWidget {
                 children: [
                   Text(
                     'TrySomething Pro',
-                    style: AppTypography.sansLabel.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: AppTypography.sansLabel,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     _label(proStatus),
-                    style: GoogleFonts.ibmPlexMono(
-                      fontSize: 9,
-                      color: AppColors.accent.withValues(alpha: 0.4),
+                    style: AppTypography.monoTiny.copyWith(
+                      color: AppColors.accent.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -719,22 +925,69 @@ class _SavedHobbyCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/hobby/${hobby.id}'),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        height: 88,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.border),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        clipBehavior: Clip.antiAlias,
+        child: Row(
           children: [
-            Text(hobby.title,
-                style: AppTypography.title.copyWith(fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(
-              '${hobby.costText} · ${hobby.timeText} · ${hobby.difficultyText}',
-              style: AppTypography.data
-                  .copyWith(color: AppColors.textMuted, fontSize: 12),
+            // Hobby image
+            SizedBox(
+              width: 88,
+              child: CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 176,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) => Container(
+                  color: AppColors.surfaceElevated,
+                  child: Center(
+                    child: Icon(Icons.image_outlined,
+                        color: AppColors.textMuted, size: 24),
+                  ),
+                ),
+              ),
+            ),
+            // Text content
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      hobby.category.toUpperCase(),
+                      style: AppTypography.overline.copyWith(
+                          color: AppColors.accent, fontSize: 9),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hobby.title,
+                      style: AppTypography.title.copyWith(fontSize: 15),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${hobby.costText} · ${hobby.timeText}',
+                      style: AppTypography.caption.copyWith(
+                          color: AppColors.textMuted, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Chevron
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: Icon(Icons.chevron_right_rounded,
+                  size: 18, color: AppColors.textWhisper),
             ),
           ],
         ),

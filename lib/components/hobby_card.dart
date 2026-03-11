@@ -118,15 +118,15 @@ class HobbyCard extends StatelessWidget {
       children: [
         _FeedActionButton(
           icon: isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
-          label: '2.4k',
+          label: '',
           onTap: onSave,
           isActive: isSaved,
           activeColor: AppColors.redHeart,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 0),
         _FeedActionButton(
           icon: AppIcons.share,
-          label: 'Share',
+          label: '',
           onTap: onShare ?? () {},
         ),
       ],
