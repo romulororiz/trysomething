@@ -15,6 +15,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import 'package:timelines_plus/timelines_plus.dart';
 
 /// Home tab — cinematic active hobby dashboard.
 class HomeScreen extends ConsumerStatefulWidget {
@@ -340,45 +341,55 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   style: AppTypography.overline
                       .copyWith(color: AppColors.textMuted)),
               const SizedBox(height: 10),
-              ...List.generate(hobby.roadmapSteps.length, (i) {
-                final step = hobby.roadmapSteps[i];
-                final isCompleted = completedValid.contains(step.id);
-                final isCurrent = step.id == nextStep?.id;
-                // Next step title for completion screen preview
-                final followingTitle = i + 1 < hobby.roadmapSteps.length
-                    ? hobby.roadmapSteps[i + 1].title
-                    : null;
-                return RoadmapStepTile(
-                  step: step,
-                  stepNumber: i + 1,
-                  isCompleted: isCompleted,
-                  isCurrent: isCurrent,
-                  onToggle: () {
-                    if (isCompleted) {
-                      // Uncheck — toggle off directly
-                      ref
-                          .read(userHobbiesProvider.notifier)
-                          .toggleStep(hobby.id, step.id);
-                    } else {
-                      // Launch session screen for uncompleted steps
-                      context.push(
-                        '/session/${hobby.id}/${step.id}',
-                        extra: <String, dynamic>{
-                          'hobbyTitle': hobby.title,
-                          'hobbyCategory': hobby.category,
-                          'stepTitle': step.title,
-                          'stepDescription': step.description,
-                          'stepInstructions': '',
-                          'whatYouNeed': '',
-                          'recommendedMinutes': step.estimatedMinutes,
-                          'completionMode': step.effectiveMode,
-                          'nextStepTitle': followingTitle,
-                        },
-                      );
-                    }
-                  },
-                );
-              }),
+              FixedTimeline(
+                theme: TimelineThemeData(
+                  nodePosition: 0,
+                  color: AppColors.border,
+                  connectorTheme: const ConnectorThemeData(
+                    thickness: 1.5,
+                    color: AppColors.border,
+                  ),
+                  indicatorTheme: const IndicatorThemeData(
+                    size: 26,
+                  ),
+                ),
+                children: List.generate(hobby.roadmapSteps.length, (i) {
+                  final step = hobby.roadmapSteps[i];
+                  final isCompleted = completedValid.contains(step.id);
+                  final isCurrent = step.id == nextStep?.id;
+                  final followingTitle = i + 1 < hobby.roadmapSteps.length
+                      ? hobby.roadmapSteps[i + 1].title
+                      : null;
+                  return RoadmapStepTile(
+                    step: step,
+                    stepNumber: i + 1,
+                    isCompleted: isCompleted,
+                    isCurrent: isCurrent,
+                    onToggle: () {
+                      if (isCompleted) {
+                        ref
+                            .read(userHobbiesProvider.notifier)
+                            .toggleStep(hobby.id, step.id);
+                      } else {
+                        context.push(
+                          '/session/${hobby.id}/${step.id}',
+                          extra: <String, dynamic>{
+                            'hobbyTitle': hobby.title,
+                            'hobbyCategory': hobby.category,
+                            'stepTitle': step.title,
+                            'stepDescription': step.description,
+                            'stepInstructions': '',
+                            'whatYouNeed': '',
+                            'recommendedMinutes': step.estimatedMinutes,
+                            'completionMode': step.effectiveMode,
+                            'nextStepTitle': followingTitle,
+                          },
+                        );
+                      }
+                    },
+                  );
+                }),
+              ),
               const SizedBox(height: 16),
 
               // ── This week's plan ──
