@@ -1,11 +1,9 @@
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/hobby.dart';
@@ -38,7 +36,7 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
       );
     }
 
-    // 2. Insert ShareCard off-screen inside an Offstage OverlayEntry.
+    // 2. Insert ShareCard off-screen inside an OverlayEntry.
     // GlobalKey's type parameter must be State<StatefulWidget>, not a
     // RenderObject — use an untyped GlobalKey and cast when accessing.
     final boundaryKey = GlobalKey();
@@ -76,19 +74,22 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
     entry.remove();
     entry = null;
 
-    // 6. Write to a timestamped temp file to avoid collision on rapid taps.
-    final dir = await getTemporaryDirectory();
-    final path =
-        '${dir.path}/share_${DateTime.now().millisecondsSinceEpoch}.png';
-    await File(path).writeAsBytes(byteData.buffer.asUint8List());
-
-    // 7. Open the system share sheet with the image and share text.
+    // 6. Share directly from memory — XFile.fromData works on all platforms
+    // including web (no file system / path_provider required).
     await Share.shareXFiles(
-      [XFile(path, mimeType: 'image/png')],
+      [
+        XFile.fromData(
+          byteData.buffer.asUint8List(),
+          name: 'share_${DateTime.now().millisecondsSinceEpoch}.png',
+          mimeType: 'image/png',
+        )
+      ],
       text: "I'm trying ${hobby.title} on TrySomething",
     );
-  } catch (_) {
+  } catch (e, st) {
     // share_plus does NOT throw on user cancellation — only real errors land here.
+    debugPrint('[shareHobby] ERROR: $e');
+    debugPrint('[shareHobby] STACK: $st');
     messenger?.showSnackBar(
       const SnackBar(content: Text("Couldn't create share card")),
     );
