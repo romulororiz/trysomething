@@ -9,6 +9,7 @@ import '../../providers/user_provider.dart';
 import '../../components/try_today_button.dart';
 import '../../components/glass_card.dart';
 import '../../components/pro_upgrade_sheet.dart';
+import '../../components/share_card.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -242,7 +243,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                 _SaveButton(hobbyId: widget.hobbyId),
                 const SizedBox(width: 10),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () => shareHobby(context, hobby),
                   child: Container(
                     width: 36,
                     height: 36,
