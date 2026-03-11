@@ -1,9 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'hobby.dart' show CompletionMode;
+
+// Re-export so existing imports of session.dart still get CompletionMode.
+export 'hobby.dart' show CompletionMode;
 
 part 'session.freezed.dart';
-
-/// How a roadmap step is completed during a session.
-enum CompletionMode { timer, photoProof, checkIn }
 
 /// User's reflection after completing a timed session.
 enum ReflectionChoice { lovedIt, okay, struggled }

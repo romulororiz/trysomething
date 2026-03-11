@@ -80,6 +80,8 @@ _$RoadmapStepImpl _$$RoadmapStepImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String,
       estimatedMinutes: (json['estimatedMinutes'] as num).toInt(),
       milestone: json['milestone'] as String?,
+      completionMode:
+          $enumDecodeNullable(_$CompletionModeEnumMap, json['completionMode']),
     );
 
 Map<String, dynamic> _$$RoadmapStepImplToJson(_$RoadmapStepImpl instance) =>
@@ -89,7 +91,14 @@ Map<String, dynamic> _$$RoadmapStepImplToJson(_$RoadmapStepImpl instance) =>
       'description': instance.description,
       'estimatedMinutes': instance.estimatedMinutes,
       'milestone': instance.milestone,
+      'completionMode': _$CompletionModeEnumMap[instance.completionMode],
     };
+
+const _$CompletionModeEnumMap = {
+  CompletionMode.timer: 'timer',
+  CompletionMode.photoProof: 'photoProof',
+  CompletionMode.checkIn: 'checkIn',
+};
 
 _$HobbyCategoryImpl _$$HobbyCategoryImplFromJson(Map<String, dynamic> json) =>
     _$HobbyCategoryImpl(

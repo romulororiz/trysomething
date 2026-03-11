@@ -65,18 +65,46 @@ class KitItem with _$KitItem {
 }
 
 // ═══════════════════════════════════════════════════════
+//  COMPLETION MODE
+// ═══════════════════════════════════════════════════════
+
+/// How a roadmap step is completed during a session.
+enum CompletionMode { timer, photoProof, checkIn }
+
+// ═══════════════════════════════════════════════════════
 //  ROADMAP STEP MODEL
 // ═══════════════════════════════════════════════════════
 
 @freezed
 class RoadmapStep with _$RoadmapStep {
+  const RoadmapStep._();
+
   const factory RoadmapStep({
     required String id,
     required String title,
     required String description,
     required int estimatedMinutes,
     String? milestone,
+    CompletionMode? completionMode,
   }) = _RoadmapStep;
+
+  /// Infers completion mode from step title when not explicitly set.
+  ///
+  /// Steps about buying/visiting/finding → checkIn (quick confirm).
+  /// Everything else → timer (timed practice session).
+  CompletionMode get effectiveMode {
+    if (completionMode != null) return completionMode!;
+    final lower = title.toLowerCase();
+    if (lower.startsWith('buy') ||
+        lower.startsWith('get ') ||
+        lower.startsWith('visit') ||
+        lower.startsWith('try a local') ||
+        lower.startsWith('set up') ||
+        lower.startsWith('find ')) {
+      return CompletionMode.checkIn;
+    }
+    return CompletionMode.timer;
+  }
 
   factory RoadmapStep.fromJson(Map<String, dynamic> json) =>
       _$RoadmapStepFromJson(json);

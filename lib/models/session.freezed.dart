@@ -95,7 +95,7 @@ class _$SessionStateCopyWithImpl<$Res, $Val extends SessionState>
     Object? stepInstructions = null,
     Object? whatYouNeed = null,
     Object? recommendedMinutes = null,
-    Object? completionMode = null,
+    Object? completionMode = freezed,
     Object? phase = null,
     Object? selectedMinutes = null,
     Object? elapsedSeconds = null,
@@ -143,7 +143,7 @@ class _$SessionStateCopyWithImpl<$Res, $Val extends SessionState>
           ? _value.recommendedMinutes
           : recommendedMinutes // ignore: cast_nullable_to_non_nullable
               as int,
-      completionMode: null == completionMode
+      completionMode: freezed == completionMode
           ? _value.completionMode
           : completionMode // ignore: cast_nullable_to_non_nullable
               as CompletionMode,
@@ -239,7 +239,7 @@ class __$$SessionStateImplCopyWithImpl<$Res>
     Object? stepInstructions = null,
     Object? whatYouNeed = null,
     Object? recommendedMinutes = null,
-    Object? completionMode = null,
+    Object? completionMode = freezed,
     Object? phase = null,
     Object? selectedMinutes = null,
     Object? elapsedSeconds = null,
@@ -287,7 +287,7 @@ class __$$SessionStateImplCopyWithImpl<$Res>
           ? _value.recommendedMinutes
           : recommendedMinutes // ignore: cast_nullable_to_non_nullable
               as int,
-      completionMode: null == completionMode
+      completionMode: freezed == completionMode
           ? _value.completionMode
           : completionMode // ignore: cast_nullable_to_non_nullable
               as CompletionMode,
@@ -425,8 +425,8 @@ class _$SessionStateImpl implements _SessionState {
                 other.whatYouNeed == whatYouNeed) &&
             (identical(other.recommendedMinutes, recommendedMinutes) ||
                 other.recommendedMinutes == recommendedMinutes) &&
-            (identical(other.completionMode, completionMode) ||
-                other.completionMode == completionMode) &&
+            const DeepCollectionEquality()
+                .equals(other.completionMode, completionMode) &&
             (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.selectedMinutes, selectedMinutes) ||
                 other.selectedMinutes == selectedMinutes) &&
@@ -458,7 +458,7 @@ class _$SessionStateImpl implements _SessionState {
         stepInstructions,
         whatYouNeed,
         recommendedMinutes,
-        completionMode,
+        const DeepCollectionEquality().hash(completionMode),
         phase,
         selectedMinutes,
         elapsedSeconds,

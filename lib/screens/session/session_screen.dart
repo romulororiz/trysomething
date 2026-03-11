@@ -4,6 +4,7 @@ import '../../components/category_shape_painter.dart';
 import '../../components/session_glow_widget.dart';
 import '../../models/session.dart';
 import '../../providers/session_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import 'session_complete_phase.dart';
 import 'session_prepare_phase.dart';
@@ -109,6 +110,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   }
 
   void _exitSession() {
+    final session = ref.read(sessionProvider);
+    // Mark step complete in user state if session finished successfully
+    if (session != null && session.isComplete) {
+      ref
+          .read(userHobbiesProvider.notifier)
+          .toggleStep(session.hobbyId, session.stepId);
+    }
     ref.read(sessionProvider.notifier).completeSession();
     if (mounted) Navigator.of(context).maybePop();
   }
@@ -150,8 +158,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             ),
 
             // Layer 3: Phase content
-            SafeArea(
-              child: AnimatedSwitcher(
+            Positioned.fill(
+              child: SafeArea(
+                child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 transitionBuilder: (child, animation) {
                   return FadeTransition(
@@ -167,6 +176,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                 },
                 child: _buildPhase(session),
               ),
+            ),
             ),
           ],
         ),

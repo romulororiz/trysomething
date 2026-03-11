@@ -790,6 +790,7 @@ mixin _$RoadmapStep {
   String get description => throw _privateConstructorUsedError;
   int get estimatedMinutes => throw _privateConstructorUsedError;
   String? get milestone => throw _privateConstructorUsedError;
+  CompletionMode? get completionMode => throw _privateConstructorUsedError;
 
   /// Serializes this RoadmapStep to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -812,7 +813,8 @@ abstract class $RoadmapStepCopyWith<$Res> {
       String title,
       String description,
       int estimatedMinutes,
-      String? milestone});
+      String? milestone,
+      CompletionMode? completionMode});
 }
 
 /// @nodoc
@@ -835,6 +837,7 @@ class _$RoadmapStepCopyWithImpl<$Res, $Val extends RoadmapStep>
     Object? description = null,
     Object? estimatedMinutes = null,
     Object? milestone = freezed,
+    Object? completionMode = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -857,6 +860,10 @@ class _$RoadmapStepCopyWithImpl<$Res, $Val extends RoadmapStep>
           ? _value.milestone
           : milestone // ignore: cast_nullable_to_non_nullable
               as String?,
+      completionMode: freezed == completionMode
+          ? _value.completionMode
+          : completionMode // ignore: cast_nullable_to_non_nullable
+              as CompletionMode?,
     ) as $Val);
   }
 }
@@ -874,7 +881,8 @@ abstract class _$$RoadmapStepImplCopyWith<$Res>
       String title,
       String description,
       int estimatedMinutes,
-      String? milestone});
+      String? milestone,
+      CompletionMode? completionMode});
 }
 
 /// @nodoc
@@ -895,6 +903,7 @@ class __$$RoadmapStepImplCopyWithImpl<$Res>
     Object? description = null,
     Object? estimatedMinutes = null,
     Object? milestone = freezed,
+    Object? completionMode = freezed,
   }) {
     return _then(_$RoadmapStepImpl(
       id: null == id
@@ -917,19 +926,25 @@ class __$$RoadmapStepImplCopyWithImpl<$Res>
           ? _value.milestone
           : milestone // ignore: cast_nullable_to_non_nullable
               as String?,
+      completionMode: freezed == completionMode
+          ? _value.completionMode
+          : completionMode // ignore: cast_nullable_to_non_nullable
+              as CompletionMode?,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$RoadmapStepImpl implements _RoadmapStep {
+class _$RoadmapStepImpl extends _RoadmapStep {
   const _$RoadmapStepImpl(
       {required this.id,
       required this.title,
       required this.description,
       required this.estimatedMinutes,
-      this.milestone});
+      this.milestone,
+      this.completionMode})
+      : super._();
 
   factory _$RoadmapStepImpl.fromJson(Map<String, dynamic> json) =>
       _$$RoadmapStepImplFromJson(json);
@@ -944,10 +959,12 @@ class _$RoadmapStepImpl implements _RoadmapStep {
   final int estimatedMinutes;
   @override
   final String? milestone;
+  @override
+  final CompletionMode? completionMode;
 
   @override
   String toString() {
-    return 'RoadmapStep(id: $id, title: $title, description: $description, estimatedMinutes: $estimatedMinutes, milestone: $milestone)';
+    return 'RoadmapStep(id: $id, title: $title, description: $description, estimatedMinutes: $estimatedMinutes, milestone: $milestone, completionMode: $completionMode)';
   }
 
   @override
@@ -962,13 +979,15 @@ class _$RoadmapStepImpl implements _RoadmapStep {
             (identical(other.estimatedMinutes, estimatedMinutes) ||
                 other.estimatedMinutes == estimatedMinutes) &&
             (identical(other.milestone, milestone) ||
-                other.milestone == milestone));
+                other.milestone == milestone) &&
+            (identical(other.completionMode, completionMode) ||
+                other.completionMode == completionMode));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, title, description, estimatedMinutes, milestone);
+  int get hashCode => Object.hash(runtimeType, id, title, description,
+      estimatedMinutes, milestone, completionMode);
 
   /// Create a copy of RoadmapStep
   /// with the given fields replaced by the non-null parameter values.
@@ -986,13 +1005,15 @@ class _$RoadmapStepImpl implements _RoadmapStep {
   }
 }
 
-abstract class _RoadmapStep implements RoadmapStep {
+abstract class _RoadmapStep extends RoadmapStep {
   const factory _RoadmapStep(
       {required final String id,
       required final String title,
       required final String description,
       required final int estimatedMinutes,
-      final String? milestone}) = _$RoadmapStepImpl;
+      final String? milestone,
+      final CompletionMode? completionMode}) = _$RoadmapStepImpl;
+  const _RoadmapStep._() : super._();
 
   factory _RoadmapStep.fromJson(Map<String, dynamic> json) =
       _$RoadmapStepImpl.fromJson;
@@ -1007,6 +1028,8 @@ abstract class _RoadmapStep implements RoadmapStep {
   int get estimatedMinutes;
   @override
   String? get milestone;
+  @override
+  CompletionMode? get completionMode;
 
   /// Create a copy of RoadmapStep
   /// with the given fields replaced by the non-null parameter values.

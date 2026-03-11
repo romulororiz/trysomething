@@ -385,15 +385,38 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                 final step = hobby.roadmapSteps[i];
                 final isCompleted = completedValid.contains(step.id);
                 final isCurrent = step.id == nextStep?.id;
+                // Next step title for completion screen preview
+                final followingTitle = i + 1 < hobby.roadmapSteps.length
+                    ? hobby.roadmapSteps[i + 1].title
+                    : null;
                 return RoadmapStepTile(
                   step: step,
                   stepNumber: i + 1,
                   isCompleted: isCompleted,
                   isCurrent: isCurrent,
                   onToggle: () {
-                    ref
-                        .read(userHobbiesProvider.notifier)
-                        .toggleStep(hobby.id, step.id);
+                    if (isCompleted) {
+                      // Uncheck — toggle off directly
+                      ref
+                          .read(userHobbiesProvider.notifier)
+                          .toggleStep(hobby.id, step.id);
+                    } else {
+                      // Launch session screen for uncompleted steps
+                      context.push(
+                        '/session/${hobby.id}/${step.id}',
+                        extra: <String, dynamic>{
+                          'hobbyTitle': hobby.title,
+                          'hobbyCategory': hobby.category,
+                          'stepTitle': step.title,
+                          'stepDescription': step.description,
+                          'stepInstructions': '',
+                          'whatYouNeed': '',
+                          'recommendedMinutes': step.estimatedMinutes,
+                          'completionMode': step.effectiveMode,
+                          'nextStepTitle': followingTitle,
+                        },
+                      );
+                    }
                   },
                 );
               }),

@@ -19,6 +19,8 @@ import 'screens/quickstart/quickstart_screen.dart';
 import 'screens/coach/hobby_coach_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/pro_screen.dart';
+import 'models/hobby.dart' show CompletionMode;
+import 'screens/session/session_screen.dart';
 import 'screens/features/beginner_faq_screen.dart';
 import 'screens/features/personal_notes_screen.dart';
 import 'screens/features/budget_alternatives_screen.dart';
@@ -183,6 +185,35 @@ final routerProvider = Provider<GoRouter>((ref) {
           final hobbyId = state.pathParameters['hobbyId']!;
           return modalSlideUpTransitionPage(
             child: QuickstartScreen(hobbyId: hobbyId),
+          );
+        },
+      ),
+
+      // Session — full-screen immersive experience
+      GoRoute(
+        path: '/session/:hobbyId/:stepId',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return CustomTransitionPage(
+            child: SessionScreen(
+              hobbyId: state.pathParameters['hobbyId']!,
+              stepId: state.pathParameters['stepId']!,
+              hobbyTitle: extra['hobbyTitle'] as String,
+              hobbyCategory: extra['hobbyCategory'] as String,
+              stepTitle: extra['stepTitle'] as String,
+              stepDescription: extra['stepDescription'] as String,
+              stepInstructions: extra['stepInstructions'] as String? ?? '',
+              whatYouNeed: extra['whatYouNeed'] as String? ?? '',
+              recommendedMinutes: extra['recommendedMinutes'] as int,
+              completionMode: extra['completionMode'] as CompletionMode,
+              nextStepTitle: extra['nextStepTitle'] as String?,
+            ),
+            transitionsBuilder: (_, animation, __, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: Motion.hero,
+            reverseTransitionDuration: Motion.slow,
           );
         },
       ),

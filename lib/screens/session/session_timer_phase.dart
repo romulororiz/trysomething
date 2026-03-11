@@ -104,14 +104,16 @@ class SessionTimerPhase extends StatelessWidget {
             ).animate().fadeIn(duration: 400.ms),
           ],
 
-          // Paused label
-          if (session.isPaused && !_isCompleting) ...[
-            const SizedBox(height: 8),
-            Text(
+          // Paused label — always reserves space to avoid layout shift
+          const SizedBox(height: 8),
+          AnimatedOpacity(
+            opacity: session.isPaused && !_isCompleting ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Text(
               'Paused',
               style: AppTypography.caption,
-            ).animate().fadeIn(duration: 200.ms),
-          ],
+            ),
+          ),
 
           const SizedBox(height: 24),
 
@@ -137,14 +139,19 @@ class SessionTimerPhase extends StatelessWidget {
               onToggle: session.isPaused ? onResume : onPause,
             ),
 
-            // "End session early" link (visible only when paused)
-            if (session.isPaused) ...[
-              const SizedBox(height: 16),
-              _EndEarlyLink(
-                onEndEarly: onEndEarly,
-                onEndEarlyExit: onEndEarlyExit,
+            // "End session early" — always reserves space, fades in when paused
+            const SizedBox(height: 16),
+            AnimatedOpacity(
+              opacity: session.isPaused ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: IgnorePointer(
+                ignoring: !session.isPaused,
+                child: _EndEarlyLink(
+                  onEndEarly: onEndEarly,
+                  onEndEarlyExit: onEndEarlyExit,
+                ),
               ),
-            ],
+            ),
           ],
 
           const SizedBox(height: 48),
@@ -249,7 +256,7 @@ class _EndEarlyLink extends StatelessWidget {
         'End session early',
         style: AppTypography.caption.copyWith(color: AppColors.textMuted),
       ),
-    ).animate().fadeIn(duration: 200.ms);
+    );
   }
 
   void _showConfirmation(BuildContext context) {
@@ -280,3 +287,4 @@ class _EndEarlyLink extends StatelessWidget {
     );
   }
 }
+
