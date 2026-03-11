@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:timelines_plus/timelines_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/spacing.dart';
 import '../theme/motion.dart';
 import '../models/hobby.dart';
 
-/// Editorial checklist step with animated checkbox (elastic spring),
-/// milestone badges, time estimates, and completion states.
+/// Timeline-journey step tile using timelines_plus.
+/// Public constructor API is identical to the previous flat-card version.
 class RoadmapStepTile extends StatefulWidget {
   final RoadmapStep step;
   final int stepNumber;
@@ -29,12 +31,11 @@ class RoadmapStepTile extends StatefulWidget {
 
 class _RoadmapStepTileState extends State<RoadmapStepTile>
     with TickerProviderStateMixin {
+  // ── Animation controllers (preserved from original) ──
   late AnimationController _checkController;
   late AnimationController _uncheckController;
-  late Animation<double> _fillAnimation;
   late Animation<double> _checkmarkScaleAnimation;
   late Animation<double> _checkmarkOpacityAnimation;
-  late Animation<double> _uncheckFillAnimation;
   late Animation<double> _uncheckScaleAnimation;
   late Animation<double> _uncheckOpacityAnimation;
 
@@ -43,29 +44,17 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
   @override
   void initState() {
     super.initState();
-    // Check ON — 400ms with elastic spring
     _checkController = AnimationController(
       duration: Motion.spring,
       vsync: this,
     );
 
-    // Phase 1: Circle fill (0–200ms of 400ms)
-    _fillAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _checkController,
-        curve: const Interval(0, 0.5, curve: Curves.easeInOut),
-      ),
-    );
-
-    // Phase 2: Checkmark scale (0–240ms of 400ms) with elastic
     _checkmarkScaleAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _checkController,
         curve: const Interval(0, 0.6, curve: Curves.elasticOut),
       ),
     );
-
-    // Phase 3: Checkmark opacity (0–120ms of 400ms)
     _checkmarkOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _checkController,
@@ -73,14 +62,9 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
       ),
     );
 
-    // Check OFF — 250ms with easeInOut (no elastic)
     _uncheckController = AnimationController(
       duration: Motion.normal,
       vsync: this,
-    );
-
-    _uncheckFillAnimation = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _uncheckController, curve: Curves.easeInOut),
     );
     _uncheckScaleAnimation = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _uncheckController, curve: Curves.easeInOut),
@@ -120,155 +104,218 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
     super.dispose();
   }
 
-  // Active animation values — pick from the correct controller
-  double get _activeFill =>
-      _isReversing ? _uncheckFillAnimation.value : _fillAnimation.value;
   double get _activeScale =>
       _isReversing ? _uncheckScaleAnimation.value : _checkmarkScaleAnimation.value;
   double get _activeOpacity =>
       _isReversing ? _uncheckOpacityAnimation.value : _checkmarkOpacityAnimation.value;
 
+  // ── Connector colors ──
+  // startConnector = segment entering this node (from tile above)
+  // endConnector   = segment leaving this node (to tile below)
+  // Known approximation: tile doesn't know its neighbor's state, so
+  // consecutive done steps show accent connectors instead of success-colored.
+  Color get _startConnectorColor {
+    if (widget.isCompleted) return AppColors.success.withValues(alpha: 0.25);
+    if (widget.isCurrent) return AppColors.accent.withValues(alpha: 0.25);
+    return AppColors.border;
+  }
+
+  Color get _endConnectorColor {
+    if (widget.isCompleted) return AppColors.accent.withValues(alpha: 0.25);
+    if (widget.isCurrent) return AppColors.border;
+    return AppColors.border;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: Motion.normal,
-      curve: Motion.normalCurve,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: widget.isCurrent
-            ? AppColors.coral.withValues(alpha: 0.08)
-            : AppColors.surface,
-        borderRadius: BorderRadius.circular(Spacing.radiusButton),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Animated checkbox
-          GestureDetector(
-            onTap: widget.onToggle,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_checkController, _uncheckController]),
-              builder: (context, _) => _buildCheckbox(),
-            ),
+    return TimelineTile(
+      nodeAlign: TimelineNodeAlign.start,
+      node: TimelineNode(
+        indicator: GestureDetector(
+          onTap: widget.onToggle,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_checkController, _uncheckController]),
+            builder: (context, _) => _buildNode(),
           ),
-          const SizedBox(width: 12),
-
-          // Content
-          Expanded(child: _buildContent()),
-        ],
+        ),
+        startConnector: SolidLineConnector(
+          color: _startConnectorColor,
+          thickness: 1.5,
+        ),
+        endConnector: SolidLineConnector(
+          color: _endConnectorColor,
+          thickness: 1.5,
+        ),
+      ),
+      contents: GestureDetector(
+        onTap: widget.onToggle,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 12, top: 2),
+          child: _buildCard(),
+        ),
       ),
     );
   }
 
-  Widget _buildCheckbox() {
-    return Container(
-      width: Spacing.checkboxSize,
-      height: Spacing.checkboxSize,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color.lerp(
-          Colors.transparent,
-          widget.isCurrent ? AppColors.coral : AppColors.sage,
-          _activeFill,
+  Widget _buildNode() {
+    if (widget.isCompleted) {
+      return Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.success.withValues(alpha: 0.15),
+          border: Border.all(color: AppColors.success, width: 1.5),
         ),
-        border: Border.all(
-          color: widget.isCompleted ? AppColors.sage : (widget.isCurrent ? AppColors.coral : AppColors.textMuted),
-          width: 1.5,
+        child: Opacity(
+          opacity: _activeOpacity,
+          child: Transform.scale(
+            scale: _activeScale,
+            child: const Icon(Icons.check, size: 13, color: AppColors.success),
+          ),
         ),
-      ),
-      child: widget.isCompleted || _checkController.isAnimating || _isReversing
-          ? Opacity(
-              opacity: _activeOpacity,
-              child: Transform.scale(
-                scale: _activeScale,
-                child: const Icon(
-                  Icons.check,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ),
-            )
-          : Center(
-              child: Text(
-                '${widget.stepNumber}',
-                style: AppTypography.monoTiny.copyWith(
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-    );
-  }
+      );
+    }
 
-  Widget _buildContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.step.title,
-                style: AppTypography.sansLabel.copyWith(
-                  decoration: widget.isCompleted
-                      ? TextDecoration.lineThrough
-                      : null,
-                  color: widget.isCompleted
-                      ? AppColors.textMuted
-                      : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            // Time badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${widget.step.estimatedMinutes}min',
-                style: AppTypography.monoTiny.copyWith(
-                  color: widget.isCompleted
-                      ? AppColors.textWhisper
-                      : AppColors.textMuted,
-                ),
-              ),
+    if (widget.isCurrent) {
+      return Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.accent,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accent.withValues(alpha: 0.25),
+              blurRadius: 8,
+              spreadRadius: 2,
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          widget.step.description,
-          style: AppTypography.sansTiny.copyWith(
-            color: widget.isCompleted ? AppColors.textWhisper : AppColors.textMuted,
+        child: Center(
+          child: Text(
+            '${widget.stepNumber}',
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
-        // Milestone badge
-        if (widget.step.milestone != null) ...[
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.coral.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+      );
+    }
+
+    // Future
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.transparent,
+        border: Border.all(color: AppColors.border, width: 1.5),
+      ),
+      child: Center(
+        child: Text(
+          '${widget.stepNumber}',
+          style: GoogleFonts.ibmPlexMono(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textWhisper,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard() {
+    if (widget.isCompleted) {
+      return Opacity(
+        opacity: 0.45,
+        child: Text(
+          widget.step.title,
+          style: AppTypography.sansLabel.copyWith(
+            decoration: TextDecoration.lineThrough,
+            color: AppColors.textWhisper,
+          ),
+        ),
+      );
+    }
+
+    if (widget.isCurrent) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.06),
+          border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Icon(Icons.emoji_events_outlined, size: 12, color: AppColors.coral),
-                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.step.title,
+                    style: AppTypography.sansLabel.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
                 Text(
-                  widget.step.milestone!,
-                  style: AppTypography.monoMilestone.copyWith(
-                    color: AppColors.coral,
+                  '${widget.step.estimatedMinutes}min',
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9,
+                    color: AppColors.accent.withValues(alpha: 0.7),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ],
+            const SizedBox(height: 4),
+            Text(
+              widget.step.description,
+              style: AppTypography.sansTiny.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            if (widget.step.milestone != null) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.accentMuted,
+                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.emoji_events_outlined,
+                        size: 12, color: AppColors.accent),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.step.milestone!,
+                      style: AppTypography.monoMilestone.copyWith(
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Future
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text(
+        widget.step.title,
+        style: AppTypography.sansLabel.copyWith(
+          color: AppColors.textMuted,
+        ),
+      ),
     );
   }
 }
