@@ -44,7 +44,11 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
     final boundaryKey = GlobalKey();
 
     entry = OverlayEntry(
-      builder: (_) => Offstage(
+      builder: (_) => Positioned(
+        // Off-screen but still painted — Offstage suppresses painting and
+        // breaks RenderRepaintBoundary.toImage() (layer is never populated).
+        left: -10000,
+        top: 0,
         child: SizedBox(
           width: 300,
           height: 420,
