@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../components/glass_card.dart';
+import '../../components/page_dots.dart';
 import '../../components/stage_roadmap_card.dart';
 import '../../components/roadmap_step_tile.dart';
 import '../../models/hobby.dart';
@@ -103,54 +104,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 top: 8,
                 left: 0,
                 right: 0,
-                child: _PageDots(
+                child: PageDots(
                   count: activeEntries.length,
                   current: _currentPage,
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  PAGE DOTS
-// ═══════════════════════════════════════════════════════
-
-class _PageDots extends StatelessWidget {
-  final int count;
-  final int current;
-
-  const _PageDots({required this.count, required this.current});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.background.withAlpha(160),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(count, (i) {
-            final isActive = i == current;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: isActive ? 20 : 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.coral
-                    : AppColors.textPrimary.withAlpha(80),
-                borderRadius: BorderRadius.circular(3),
-              ),
-            );
-          }),
         ),
       ),
     );
