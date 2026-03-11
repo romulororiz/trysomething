@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../components/hobby_card.dart';
+import '../../components/share_card.dart';
 import '../../core/hobby_match.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
@@ -131,6 +132,7 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
                     onSave: () => ref
                         .read(userHobbiesProvider.notifier)
                         .toggleSave(hobby.id),
+                    onShare: () => shareHobby(context, hobby),
                   );
                 },
               ),
