@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../components/glass_card.dart';
+import '../../components/logo_loader.dart';
 import '../../components/page_dots.dart';
 import '../../components/stage_roadmap_card.dart';
 import '../../components/roadmap_step_tile.dart';
@@ -79,6 +80,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return _EmptyHomeState();
     }
 
+    // Show the logo loader until ALL active hobby data is ready so the page
+    // dots and partial UI never flash while content is still fetching.
+    final anyLoading = activeEntries.any(
+      (e) => ref.watch(hobbyByIdProvider(e.value.hobbyId)).isLoading,
+    );
+    if (anyLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: LogoLoader(),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -132,8 +145,7 @@ class _HobbyPage extends ConsumerWidget {
     final hobbyAsync = ref.watch(hobbyByIdProvider(userHobby.hobbyId));
 
     return hobbyAsync.when(
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.accent)),
+      loading: () => const LogoLoader(),
       error: (_, __) => const Center(
           child: Text('Failed to load hobby',
               style: TextStyle(color: AppColors.textMuted))),

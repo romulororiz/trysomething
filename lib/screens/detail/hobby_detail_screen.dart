@@ -8,6 +8,7 @@ import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../components/try_today_button.dart';
 import '../../components/glass_card.dart';
+import '../../components/logo_loader.dart';
 import '../../components/pro_upgrade_sheet.dart';
 import '../../components/share_card.dart';
 import '../../theme/app_colors.dart';
@@ -148,13 +149,15 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     final hobbyAsync = ref.watch(hobbyByIdProvider(widget.hobbyId));
     final hobby = hobbyAsync.valueOrNull;
     if (hobby == null) {
+      if (hobbyAsync.isLoading) {
+        return const Scaffold(
+          backgroundColor: AppColors.background,
+          body: LogoLoader(),
+        );
+      }
       return Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(
-          child: hobbyAsync.isLoading
-              ? const CircularProgressIndicator()
-              : Text('Hobby not found', style: AppTypography.body),
-        ),
+        body: Center(child: Text('Hobby not found', style: AppTypography.body)),
       );
     }
 
