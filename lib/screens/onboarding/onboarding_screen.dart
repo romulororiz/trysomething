@@ -136,13 +136,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   void _skip() {
-    setState(() {
-      _currentPage = 2;
-      _matchedHobbies = _computeMatchedHobbies();
-    });
-    _pageController.animateToPage(2,
-        duration: Motion.onboardingPage, curve: Motion.normalCurve);
-    _page3EntryCtrl.forward();
+    _completeOnboarding();
   }
 
   void _completeOnboarding() {

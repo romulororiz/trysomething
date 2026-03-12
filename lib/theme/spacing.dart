@@ -103,9 +103,9 @@ class Spacing {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0x000A0A0F), // transparent
-      Color(0x660A0A0F), // 0.4 at 55%
-      Color(0xEB0A0A0F), // 0.92 at 100%
+      Color(0x0009090F), // transparent
+      Color(0x6609090F), // 0.4 at 55%
+      Color(0xEB09090F), // 0.92 at 100%
     ],
     stops: [0.3, 0.55, 1.0],
   );
@@ -114,19 +114,19 @@ class Spacing {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0x000A0A0F), // cream transparent
-      Color(0xB30A0A0F), // cream @ 0.7
-      Color(0xFF0A0A0F), // cream solid
+      Color(0x0010121C), // transparent
+      Color(0xCC10121C), // @ 0.8
+      Color(0xFF10121C), // solid — matches bg top colour
     ],
-    stops: [0.25, 0.65, 1.0],
+    stops: [0.35, 0.72, 1.0],
   );
 
   static const LinearGradient ctaFadeGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0x000A0A0F),
-      Color(0xFF0A0A0F),
+      Color(0x0009090F),
+      Color(0xFF09090F),
     ],
     stops: [0.0, 0.3],
   );

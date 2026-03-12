@@ -97,6 +97,9 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
   Widget build(BuildContext context) {
     final hobbiesAsync = ref.watch(hobbyListProvider);
     final prefs = ref.watch(userPreferencesProvider);
+    // Capture stable context for share — itemBuilder shadows 'context' with
+    // a short-lived builder context that may become stale across async gaps.
+    final rootContext = context;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -121,18 +124,18 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
                 controller: _pageController,
                 scrollDirection: Axis.vertical,
                 itemCount: hobbies.length,
-                itemBuilder: (context, index) {
+                itemBuilder: (itemCtx, index) {
                   final hobby = hobbies[index];
                   final isSaved = ref.watch(isHobbySavedProvider(hobby.id));
                   return HobbyCard(
                     hobby: hobby,
                     isSaved: isSaved,
                     compactCta: true,
-                    onTap: () => context.push('/hobby/${hobby.id}'),
+                    onTap: () => itemCtx.push('/hobby/${hobby.id}'),
                     onSave: () => ref
                         .read(userHobbiesProvider.notifier)
                         .toggleSave(hobby.id),
-                    onShare: () => shareHobby(context, hobby),
+                    onShare: () => shareHobby(rootContext, hobby),
                   );
                 },
               ),

@@ -10,6 +10,7 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/shimmer_skeleton.dart';
+import '../../components/app_background.dart';
 
 /// Cost Calculator — visual cost breakdown for a hobby over time.
 class CostCalculatorScreen extends ConsumerWidget {
@@ -24,8 +25,9 @@ class CostCalculatorScreen extends ConsumerWidget {
     final hobbyName = hobby?.title ?? hobbyId;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+      child: SafeArea(
         child: Column(
           children: [
             // ── Header ──────────────────────────────
@@ -63,6 +65,7 @@ class CostCalculatorScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

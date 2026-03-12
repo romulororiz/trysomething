@@ -91,17 +91,25 @@ const _nlpSuggestions = [
 
 /// Search screen — search bar, category chips, result cards with badges.
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  final String initialQuery;
+  const SearchScreen({super.key, this.initialQuery = ''});
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _query = '';
+  late final TextEditingController _searchController;
+  late String _query;
   String? _selectedCategory;
   Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _query = widget.initialQuery;
+    _searchController = TextEditingController(text: widget.initialQuery);
+  }
 
   @override
   void dispose() {

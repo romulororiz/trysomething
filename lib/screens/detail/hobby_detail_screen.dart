@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../components/app_background.dart';
 import '../../components/try_today_button.dart';
 import '../../components/glass_card.dart';
 import '../../components/logo_loader.dart';
@@ -34,7 +36,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
   bool _showBestValue = false;
 
   late final AnimationController _entryController;
-  late final Animation<double> _overlayOpacity;
   late final Animation<double> _detailsOpacity;
   late final Animation<Offset> _detailsSlide;
 
@@ -49,13 +50,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     _entryController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
-    );
-
-    _overlayOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.05, 0.65, curve: Curves.easeOut),
-      ),
     );
 
     _detailsOpacity = Tween<double>(begin: 0, end: 1).animate(
@@ -151,13 +145,13 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     if (hobby == null) {
       if (hobbyAsync.isLoading) {
         return const Scaffold(
-          backgroundColor: AppColors.background,
-          body: LogoLoader(),
+          backgroundColor: Colors.transparent,
+          body: AppBackground(tintTopLeft: false, child: LogoLoader()),
         );
       }
       return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: Text('Hobby not found', style: AppTypography.body)),
+        backgroundColor: Colors.transparent,
+        body: AppBackground(tintTopLeft: false, child: Center(child: Text('Hobby not found', style: AppTypography.body))),
       );
     }
 
@@ -165,8 +159,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        tintTopLeft: false,
+        child: Stack(
         children: [
           CustomScrollView(
             controller: _scrollController,
@@ -181,9 +177,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                         Spacing.scrollBottomPadding),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Specs middot line
-                    const SizedBox(height: 20),
-                    _buildSpecsLine(hobby),
                     const SizedBox(height: 24),
 
                     // 1. "Why this fits you" glass card
@@ -293,6 +286,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -309,6 +303,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // Hero image — ShaderMask fades image to transparent at bottom (same as home hero)
           ClipRect(
             child: Hero(
               tag: 'hobby_image_${hobby.id}',
@@ -316,176 +311,103 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   fromHeroContext, toHeroContext) {
                 final Hero toHero = toHeroContext.widget as Hero;
                 final radiusTween = Tween<double>(
-                  begin: direction == HeroFlightDirection.push
-                      ? Spacing.radiusCard
-                      : 0,
-                  end: direction == HeroFlightDirection.push
-                      ? 0
-                      : Spacing.radiusCard,
+                  begin: direction == HeroFlightDirection.push ? Spacing.radiusCard : 0,
+                  end: direction == HeroFlightDirection.push ? 0 : Spacing.radiusCard,
                 );
                 return AnimatedBuilder(
                   animation: animation,
                   child: toHero.child,
-                  builder: (context, child) {
-                    final r = radiusTween.evaluate(animation);
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(r),
-                      child: child,
-                    );
-                  },
+                  builder: (context, child) => ClipRRect(
+                    borderRadius: BorderRadius.circular(radiusTween.evaluate(animation)),
+                    child: child,
+                  ),
                 );
               },
-              child: Transform.translate(
-                offset: Offset(0, -_heroParallax),
-                child: CachedNetworkImage(
-                  imageUrl: hobby.imageUrl,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 800,
-                  height: heroH + Motion.maxParallaxOffset,
-                  width: double.infinity,
-                  placeholder: (_, __) =>
-                      Container(color: AppColors.surfaceElevated),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surfaceElevated,
-                    child: const Icon(Icons.image,
-                        size: 40, color: AppColors.textWhisper),
+              child: ShaderMask(
+                shaderCallback: (rect) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.white, Colors.white, Colors.transparent],
+                  stops: [0.0, 0.4, 1.0],
+                ).createShader(rect),
+                blendMode: BlendMode.dstIn,
+                child: Transform.translate(
+                  offset: Offset(0, -_heroParallax),
+                  child: CachedNetworkImage(
+                    imageUrl: hobby.imageUrl,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 800,
+                    height: heroH + Motion.maxParallaxOffset,
+                    width: double.infinity,
+                    placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
+                    errorWidget: (_, __, ___) => Container(
+                      color: AppColors.surfaceElevated,
+                      child: const Icon(Icons.image, size: 40, color: AppColors.textWhisper),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
 
-          // Gradient overlay — fade to black at bottom
-          AnimatedBuilder(
-            animation: _overlayOpacity,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _overlayOpacity.value,
-                child: child,
-              );
-            },
-            child: const DecoratedBox(
-              decoration:
-                  BoxDecoration(gradient: Spacing.heroOverlayGradient),
-            ),
-          ),
-
-          // Bottom text: category overline + title + hook
+          // Bottom text: category + title + hook + specs
           Positioned(
-            bottom: 20,
+            bottom: 24,
             left: 24,
             right: 24,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Category overline
-                AnimatedBuilder(
-                  animation: _detailsOpacity,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: _detailsSlide.value,
-                      child: Opacity(
-                        opacity: _detailsOpacity.value,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Text(
+            child: AnimatedBuilder(
+              animation: _detailsOpacity,
+              builder: (context, child) => Transform.translate(
+                offset: _detailsSlide.value,
+                child: Opacity(opacity: _detailsOpacity.value, child: child),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     hobby.category.toUpperCase(),
                     style: AppTypography.monoBadgeSmall.copyWith(
-                      color: AppColors.textMuted,
-                      letterSpacing: 1.5,
+                      color: AppColors.textMuted, letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 8),
+                  Hero(
+                    tag: 'hobby_title_${hobby.id}',
+                    flightShuttleBuilder: (flightContext, animation, direction,
+                        fromHeroContext, toHeroContext) {
+                      final fromChild = (fromHeroContext.widget as Hero).child;
+                      final toChild = (toHeroContext.widget as Hero).child;
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, _) => Stack(children: [
+                          Opacity(opacity: 1 - animation.value, child: fromChild),
+                          Opacity(opacity: animation.value, child: toChild),
+                        ]),
+                      );
+                    },
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Text(hobby.title, style: AppTypography.hero),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-
-                // Title
-                Hero(
-                  tag: 'hobby_title_${hobby.id}',
-                  flightShuttleBuilder: (flightContext, animation, direction,
-                      fromHeroContext, toHeroContext) {
-                    final fromChild =
-                        (fromHeroContext.widget as Hero).child;
-                    final toChild =
-                        (toHeroContext.widget as Hero).child;
-                    return AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, _) {
-                        return Stack(
-                          children: [
-                            Opacity(
-                                opacity: 1 - animation.value,
-                                child: fromChild),
-                            Opacity(
-                                opacity: animation.value,
-                                child: toChild),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: Material(
-                    color: Colors.transparent,
-                    child:
-                        Text(hobby.title, style: AppTypography.hero),
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Hook line
-                AnimatedBuilder(
-                  animation: _detailsOpacity,
-                  builder: (context, child) => Opacity(
-                    opacity: _detailsOpacity.value,
-                    child: child,
-                  ),
-                  child: Text(
+                  const SizedBox(height: 6),
+                  Text(
                     hobby.hook,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.4,
-                    ),
+                    style: AppTypography.body.copyWith(color: AppColors.textSecondary, height: 1.4),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  // Specs on the overlay
+                  Text(
+                    '${hobby.costText}  ·  ${hobby.timeText}  ·  ${hobby.difficultyText}',
+                    style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  SPECS MIDDOT LINE
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildSpecsLine(Hobby hobby) {
-    final specs = <String>[
-      hobby.costText,
-      hobby.timeText,
-      hobby.difficultyText,
-    ];
-    return Row(
-      children: [
-        for (int i = 0; i < specs.length; i++) ...[
-          if (i > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text('\u00B7',
-                  style: AppTypography.caption
-                      .copyWith(color: AppColors.textMuted)),
-            ),
-          Text(
-            specs[i],
-            style: AppTypography.caption.copyWith(
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -1200,31 +1122,182 @@ class _KitToggle extends StatelessWidget {
 //  SAVE / BOOKMARK BUTTON (detail header)
 // ═══════════════════════════════════════════════════════
 
-class _SaveButton extends ConsumerWidget {
+class _SaveButton extends ConsumerStatefulWidget {
   final String hobbyId;
   const _SaveButton({required this.hobbyId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isSaved = ref.watch(isHobbySavedProvider(hobbyId));
+  ConsumerState<_SaveButton> createState() => _SaveButtonState();
+}
 
+class _SaveButtonState extends ConsumerState<_SaveButton>
+    with TickerProviderStateMixin {
+  late AnimationController _popController;
+  late Animation<double> _popScale;
+  late AnimationController _burstController;
+  late Animation<double> _burstRadius;
+  late Animation<double> _burstOpacity;
+  late AnimationController _particleController;
+  late Animation<double> _particleProgress;
+
+  static const int _particleCount = 7;
+  static final List<Offset> _particleDirs = List.generate(_particleCount, (i) {
+    final angle = (i / _particleCount) * 2 * math.pi - 0.3;
+    return Offset(math.cos(angle), math.sin(angle));
+  });
+
+  @override
+  void initState() {
+    super.initState();
+    _popController = AnimationController(
+        duration: const Duration(milliseconds: 500), vsync: this);
+    _popScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.75), weight: 15),
+      TweenSequenceItem(tween: Tween(begin: 0.75, end: 1.30), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 1.30, end: 0.95), weight: 25),
+      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _popController, curve: Curves.easeOut));
+    _burstController = AnimationController(
+        duration: const Duration(milliseconds: 400), vsync: this);
+    _burstRadius = Tween<double>(begin: 0.0, end: 22.0).animate(
+        CurvedAnimation(parent: _burstController, curve: Curves.easeOut));
+    _burstOpacity = Tween<double>(begin: 0.7, end: 0.0).animate(
+        CurvedAnimation(parent: _burstController, curve: Curves.easeOut));
+    _particleController = AnimationController(
+        duration: const Duration(milliseconds: 600), vsync: this);
+    _particleProgress = CurvedAnimation(
+        parent: _particleController, curve: Curves.easeOut);
+  }
+
+  @override
+  void dispose() {
+    _popController.dispose();
+    _burstController.dispose();
+    _particleController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap(bool isSaved) {
+    _popController.forward(from: 0);
+    if (!isSaved) {
+      _burstController.forward(from: 0);
+      _particleController.forward(from: 0);
+    }
+    ref.read(userHobbiesProvider.notifier).toggleSave(widget.hobbyId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isSaved = ref.watch(isHobbySavedProvider(widget.hobbyId));
     return GestureDetector(
-      onTap: () {
-        ref.read(userHobbiesProvider.notifier).toggleSave(hobbyId);
-      },
-      child: Container(
+      onTap: () => _handleTap(isSaved),
+      child: SizedBox(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.35),
-        ),
-        child: Icon(
-          isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-          size: 18,
-          color: isSaved ? AppColors.coral : Colors.white,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            // Circle background
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withValues(alpha: 0.35),
+              ),
+            ),
+            // Burst ring
+            if (isSaved || _burstController.isAnimating)
+              AnimatedBuilder(
+                animation: _burstController,
+                builder: (_, __) => Container(
+                  width: _burstRadius.value * 2,
+                  height: _burstRadius.value * 2,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.coral
+                          .withValues(alpha: _burstOpacity.value),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+            // Particles
+            AnimatedBuilder(
+              animation: _particleProgress,
+              builder: (_, __) {
+                if (!_particleController.isAnimating &&
+                    !_particleController.isCompleted) {
+                  return const SizedBox.shrink();
+                }
+                final t = _particleProgress.value;
+                if (t == 0) return const SizedBox.shrink();
+                final opacity = (1.0 - t).clamp(0.0, 1.0);
+                if (opacity < 0.05) return const SizedBox.shrink();
+                return SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: CustomPaint(
+                    painter: _HeartParticlePainter(
+                      progress: t,
+                      opacity: opacity,
+                      directions: _particleDirs,
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Icon
+            ScaleTransition(
+              scale: _popScale,
+              child: Icon(
+                isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                size: 18,
+                color: isSaved ? AppColors.coral : Colors.white,
+                shadows: const [Shadow(blurRadius: 8, color: Colors.black54)],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class _HeartParticlePainter extends CustomPainter {
+  final double progress;
+  final double opacity;
+  final List<Offset> directions;
+
+  const _HeartParticlePainter({
+    required this.progress,
+    required this.opacity,
+    required this.directions,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    const maxDist = 18.0;
+    for (int i = 0; i < directions.length; i++) {
+      final dist = maxDist * progress;
+      final pos = center + directions[i] * dist;
+      final radius = 2.5 * (1.0 - progress * 0.5);
+      canvas.drawCircle(
+        pos,
+        radius,
+        Paint()
+          ..color = (i.isEven
+                  ? AppColors.coral
+                  : AppColors.coral.withValues(alpha: opacity * 0.7))
+              .withValues(alpha: opacity),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_HeartParticlePainter old) =>
+      progress != old.progress || opacity != old.opacity;
 }

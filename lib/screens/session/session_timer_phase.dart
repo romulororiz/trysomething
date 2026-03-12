@@ -4,6 +4,7 @@ import '../../components/brushstroke_timer_painter.dart';
 import '../../models/session.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/app_dialog.dart';
 
 /// Phase 2: Timer — the sacred core of the session.
 ///
@@ -260,7 +261,7 @@ class _EndEarlyLink extends StatelessWidget {
   }
 
   void _showConfirmation(BuildContext context) {
-    showDialog(
+    showFadeDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,

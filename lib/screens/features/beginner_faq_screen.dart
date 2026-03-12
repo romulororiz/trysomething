@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/shimmer_skeleton.dart';
+import '../../components/app_background.dart';
 
 /// Beginner FAQ screen for a specific hobby.
 /// Shows expandable Q&A cards loaded from seed data, with upvote badges
@@ -26,8 +27,9 @@ class BeginnerFaqScreen extends ConsumerWidget {
     final hobbyName = hobby?.title ?? hobbyId;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      body: CustomScrollView(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+      child: CustomScrollView(
         slivers: [
           // ── Header ──────────────────────────────────────
           SliverToBoxAdapter(
@@ -127,6 +129,7 @@ class BeginnerFaqScreen extends ConsumerWidget {
                   ],
           ),
         ],
+      ),
       ),
     );
   }

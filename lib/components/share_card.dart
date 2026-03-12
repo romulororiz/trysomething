@@ -132,7 +132,6 @@ class ShareCard extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: hobby.imageUrl,
                   fit: BoxFit.cover,
-                  memCacheWidth: 900,
                 ),
               )
             else

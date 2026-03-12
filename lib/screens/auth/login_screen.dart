@@ -8,6 +8,7 @@ import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/app_background.dart';
 
 /// Sign-in screen — email/password + Google sign-in.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -76,8 +77,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         isLoading && authState.loadingMethod == AuthMethod.google;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(child: SafeArea(
         child: Column(
           children: [
             // ── Top header: back + "New here? Create account" ──
@@ -323,7 +324,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

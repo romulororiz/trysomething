@@ -18,6 +18,7 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../providers/subscription_provider.dart';
 import '../../components/pro_upgrade_sheet.dart';
+import '../../utils/app_dialog.dart';
 
 /// Profile tab — photo, editable name/bio, heatmap, radar, gallery, passport.
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -1404,7 +1405,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _showPhotoViewer(
       BuildContext context, List<String> photos, int initialIndex) {
-    showDialog(
+    showFadeDialog(
       context: context,
       builder: (ctx) => Dialog.fullscreen(
         backgroundColor: Colors.black,

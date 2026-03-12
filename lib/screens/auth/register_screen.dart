@@ -8,6 +8,7 @@ import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/app_background.dart';
 
 /// Registration screen — display name, email, password, confirm password.
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -81,8 +82,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isGoogleLoading = isLoading && authState.loadingMethod == AuthMethod.google;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(child: SafeArea(
         child: Column(
           children: [
             // ── Top header: back + "Already have an account? Sign in" ──
@@ -374,7 +375,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

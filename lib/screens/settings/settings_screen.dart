@@ -2,14 +2,19 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/feature_providers.dart';
 import '../../providers/subscription_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
+import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
+import '../../utils/app_dialog.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -32,10 +37,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final prefs = ref.watch(userPreferencesProvider);
+    final authUser = ref.watch(authProvider).user;
+    final profile = ref.watch(profileProvider);
+
+    final displayName = authUser?.displayName ?? profile.username;
+    final email = authUser?.email ?? '';
+    final avatarUrl = authUser?.avatarUrl ?? profile.avatarUrl;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -70,12 +82,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 children: [
+                  // ── Profile section — tap to edit ──
+                  GestureDetector(
+                    onTap: () => _showEditProfileSheet(
+                      context, ref,
+                      displayName: displayName,
+                      email: email,
+                      avatarUrl: avatarUrl,
+                    ),
+                    child: _ProfileSection(
+                      displayName: displayName,
+                      email: email,
+                      avatarUrl: avatarUrl,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
                   // ── TrySomething Pro ──
                   _ProSettingsRow(ref: ref, onTap: () => context.push('/pro')),
                   const SizedBox(height: 20),
 
                   // ── Preferences section ──
-                  _SectionLabel(text: 'PREFERENCES'),
+                  const _SectionLabel(text: 'PREFERENCES'),
                   const SizedBox(height: 12),
 
                   // Hours per week
@@ -370,11 +398,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showFadeDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.background,
@@ -392,7 +421,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           TextButton(
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
-              // Don't reset onboarding — returning users skip it on next login
               if (ctx.mounted) Navigator.of(ctx).pop();
               if (context.mounted) context.go('/login');
             },
@@ -404,7 +432,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showClearDataDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showFadeDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.background,
@@ -436,7 +464,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showResetHobbiesDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showFadeDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.background,
@@ -470,6 +498,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _showEditProfileSheet(
+    BuildContext context,
+    WidgetRef ref, {
+    required String displayName,
+    required String email,
+    required String? avatarUrl,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      builder: (ctx) => _EditProfileSheet(
+        ref: ref,
+        initialName: displayName,
+        initialBio: ref.read(authProvider).user?.bio ?? '',
+        email: email,
+        avatarUrl: avatarUrl,
+      ),
+    );
+  }
+
   static String _budgetLabel(int level) {
     switch (level) {
       case 0: return 'Low';
@@ -477,6 +527,481 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case 2: return 'High';
       default: return 'Any';
     }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE SECTION
+// ═══════════════════════════════════════════════════════
+
+class _ProfileSection extends StatelessWidget {
+  final String displayName;
+  final String email;
+  final String? avatarUrl;
+
+  const _ProfileSection({
+    required this.displayName,
+    required this.email,
+    required this.avatarUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.glassBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.glassBorder, width: 0.5),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A1520), Color(0xFF151A25)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 2,
+              ),
+            ),
+            child: ClipOval(
+              child: avatarUrl != null && avatarUrl!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: avatarUrl!,
+                      fit: BoxFit.cover,
+                      memCacheWidth: 128,
+                      placeholder: (_, __) => const SizedBox.shrink(),
+                      errorWidget: (_, __, ___) =>
+                          _ProfileInitials(name: displayName),
+                    )
+                  : _ProfileInitials(name: displayName),
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: AppTypography.sansLabel.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                if (email.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    email,
+                    style: AppTypography.sansTiny
+                        .copyWith(color: AppColors.textMuted),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Tap hint
+          Icon(Icons.edit_outlined, size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Edit profile bottom sheet ──
+class _EditProfileSheet extends StatefulWidget {
+  final WidgetRef ref;
+  final String initialName;
+  final String initialBio;
+  final String email;
+  final String? avatarUrl;
+
+  const _EditProfileSheet({
+    required this.ref,
+    required this.initialName,
+    required this.initialBio,
+    required this.email,
+    required this.avatarUrl,
+  });
+
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _bioCtrl;
+  String? _pendingAvatarUrl;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.initialName);
+    _bioCtrl = TextEditingController(text: widget.initialBio);
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _bioCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (file == null) return;
+    // For now store the path/URL locally — upload logic goes through updateProfile
+    setState(() => _pendingAvatarUrl = file.path);
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final name = _nameCtrl.text.trim();
+    final bio = _bioCtrl.text.trim();
+    await widget.ref.read(authProvider.notifier).updateProfile(
+      displayName: name.isNotEmpty ? name : null,
+      bio: bio.isNotEmpty ? bio : null,
+      avatarUrl: _pendingAvatarUrl,
+    );
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveAvatar = _pendingAvatarUrl ?? widget.avatarUrl;
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1C1C24), Color(0xFF131318)],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.5),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 14, 24, 28 + bottom),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Header row — title + close
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Edit Profile', style: AppTypography.sansSection),
+                      const SizedBox(height: 3),
+                      Text(
+                        'How you appear in TrySomething',
+                        style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.07),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+
+            // Avatar picker — centered with name below
+            Center(
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: _pickPhoto,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF252530), Color(0xFF1A1A28)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(
+                              color: AppColors.coral.withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.coral.withValues(alpha: 0.12),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: effectiveAvatar != null && effectiveAvatar.isNotEmpty
+                                ? (effectiveAvatar.startsWith('http')
+                                    ? CachedNetworkImage(
+                                        imageUrl: effectiveAvatar,
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, __) => const SizedBox.shrink(),
+                                        errorWidget: (_, __, ___) =>
+                                            _ProfileInitials(name: _nameCtrl.text),
+                                      )
+                                    : Image.network(effectiveAvatar, fit: BoxFit.cover))
+                                : _ProfileInitials(name: _nameCtrl.text),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 2,
+                          right: 2,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFF1C1C24), width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accent.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded, size: 13, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Change photo',
+                    style: AppTypography.sansTiny.copyWith(
+                      color: AppColors.coral,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Divider
+            Container(
+              height: 0.5,
+              color: Colors.white.withValues(alpha: 0.06),
+            ),
+            const SizedBox(height: 24),
+
+            // Email (read-only)
+            if (widget.email.isNotEmpty) ...[
+              _FieldLabel('Email'),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.lock_outline_rounded, size: 14, color: AppColors.textMuted),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.email,
+                        style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Name
+            _FieldLabel('Display name'),
+            const SizedBox(height: 8),
+            _SheetTextField(controller: _nameCtrl, hint: 'Your name'),
+            const SizedBox(height: 16),
+
+            // Bio
+            _FieldLabel('Bio'),
+            const SizedBox(height: 8),
+            _SheetTextField(
+              controller: _bioCtrl,
+              hint: 'Tell people what you\'re into (optional)',
+              maxLines: 3,
+            ),
+            const SizedBox(height: 32),
+
+            // Save button
+            GestureDetector(
+              onTap: _saving ? null : _save,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: _saving
+                      ? null
+                      : const LinearGradient(
+                          colors: [Color(0xFFFF6B6B), Color(0xFFE85555)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                  color: _saving ? AppColors.accent.withValues(alpha: 0.4) : null,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: _saving
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: AppColors.coral.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                ),
+                child: Center(
+                  child: _saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Save changes',
+                          style: AppTypography.button.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: AppTypography.overline.copyWith(
+        color: AppColors.textMuted,
+        letterSpacing: 1.2,
+        fontSize: 10,
+      ),
+    );
+  }
+}
+
+class _SheetTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final int maxLines;
+
+  const _SheetTextField({
+    required this.controller,
+    required this.hint,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: AppTypography.sansLabel.copyWith(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.accent.withValues(alpha: 0.6)),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileInitials extends StatelessWidget {
+  final String name;
+  const _ProfileInitials({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: AppTypography.title.copyWith(
+          color: AppColors.textMuted,
+          fontSize: 22,
+        ),
+      ),
+    );
   }
 }
 

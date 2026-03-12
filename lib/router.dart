@@ -133,9 +133,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/search',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SearchScreen(),
-            ),
+            pageBuilder: (context, state) {
+              final initialQuery = state.uri.queryParameters['q'] ?? '';
+              return NoTransitionPage(
+                child: SearchScreen(initialQuery: initialQuery),
+              );
+            },
           ),
           // Rail feed — inside shell so navbar stays visible
           GoRoute(

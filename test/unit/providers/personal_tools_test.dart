@@ -24,7 +24,7 @@ class MockPersonalToolsRepository implements PersonalToolsRepository {
 
   @override
   Future<JournalEntry> createJournalEntry({
-    required String hobbyId,
+    String? hobbyId,
     required String text,
     String? photoUrl,
   }) async {

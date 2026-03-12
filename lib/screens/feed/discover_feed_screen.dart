@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,13 +7,76 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/subscription_provider.dart';
+import '../../components/pro_upgrade_sheet.dart';
 import '../../core/hobby_match.dart';
 import '../../models/hobby.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
+
+// ═══════════════════════════════════════════════════════
+//  NLP SEARCH KEYWORDS
+// ═══════════════════════════════════════════════════════
+
+const _nlpKeywords = <String, List<String>>{
+  'cheap': ['budget', 'free', 'affordable'],
+  'free': ['budget', 'free'],
+  'creative': ['creative'],
+  'anxiety': ['relaxing', 'meditative', 'calming', 'mindful'],
+  'stress': ['relaxing', 'meditative', 'calming'],
+  'relax': ['relaxing', 'meditative', 'calming'],
+  'calm': ['calming', 'meditative', 'relaxing'],
+  'indoor': ['indoor', 'at-home', 'home'],
+  'home': ['indoor', 'at-home', 'home'],
+  'winter': ['indoor', 'at-home'],
+  'outdoor': ['outdoors', 'outdoor', 'nature'],
+  'outside': ['outdoors', 'outdoor'],
+  'social': ['social', 'group'],
+  'friends': ['social', 'group'],
+  'couple': ['social', 'romantic'],
+  'couples': ['social', 'romantic'],
+  'solo': ['solo'],
+  'alone': ['solo', 'indoor'],
+  'active': ['physical', 'active', 'fitness'],
+  'exercise': ['physical', 'fitness', 'active'],
+  'fitness': ['fitness', 'physical'],
+  'craft': ['creative', 'maker'],
+  'art': ['creative'],
+  'music': ['music'],
+  'food': ['culinary', 'food'],
+  'nature': ['outdoors', 'nature'],
+  'mindful': ['meditative', 'mindful', 'relaxing'],
+  'meditation': ['meditative', 'mindful'],
+  'easy': ['easy'],
+  'beginner': ['easy'],
+  'simple': ['easy'],
+  'low': ['budget', 'easy'],
+  'pressure': ['relaxing', 'solo', 'calming'],
+  'gentle': ['relaxing', 'easy', 'calming'],
+  'screen': ['physical', 'outdoors', 'creative'],
+  'tired': ['relaxing', 'easy', 'calming'],
+  'focus': ['meditative', 'mindful', 'creative'],
+  'productive': ['creative', 'maker'],
+  'evening': ['indoor', 'relaxing', 'creative'],
+  'morning': ['active', 'outdoors', 'fitness'],
+};
+
+const _nlpSuggestions = [
+  'cheap creative hobby',
+  'hobby for anxiety',
+  'indoor winter hobby',
+  'social but low pressure',
+  'something with my hands',
+  'hobby for couples',
+  'active outdoors',
+  'easy solo at home',
+  'reduce screen time',
+  'mindful and calm',
+];
 
 // ═══════════════════════════════════════════════════════
 //  CATEGORY FILTERS (used in bottom sheet)
@@ -95,6 +159,7 @@ class DiscoverFeedScreen extends ConsumerStatefulWidget {
 
 class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   String? _selectedFilter;
+  String? _selectedSearchCategory;
   bool _searchActive = false;
   String _searchQuery = '';
   late final TextEditingController _searchController;
@@ -229,8 +294,9 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     final prefs = ref.watch(userPreferencesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -276,6 +342,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -402,98 +469,289 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     );
   }
 
-  Widget _buildSearchView(List<Hobby> allHobbies) {
-    if (_searchQuery.isEmpty) {
-      return _buildSearchSuggestions();
+  List<Hobby> _nlpSearch(List<Hobby> allHobbies) {
+    if (_searchQuery.isEmpty) return [];
+    final q = _searchQuery.toLowerCase();
+    final words = q.split(RegExp(r'\s+')).where((w) => w.length > 1).toList();
+    final expandedTags = <String>{};
+    for (final word in words) {
+      for (final entry in _nlpKeywords.entries) {
+        if (word.contains(entry.key) || entry.key.contains(word)) {
+          expandedTags.addAll(entry.value);
+        }
+      }
     }
+    final scored = <(Hobby, int)>[];
+    for (final h in allHobbies) {
+      int score = 0;
+      if (h.title.toLowerCase().contains(q)) score += 10;
+      for (final w in words) {
+        if (h.title.toLowerCase().contains(w)) score += 4;
+      }
+      if (h.category.toLowerCase().contains(q)) score += 5;
+      for (final w in words) {
+        if (h.hook.toLowerCase().contains(w)) score += 2;
+      }
+      for (final t in h.tags) {
+        if (words.any((w) => t.toLowerCase().contains(w))) score += 3;
+        if (expandedTags.contains(t.toLowerCase())) score += 2;
+      }
+      if (expandedTags.contains('easy') && h.difficultyText.toLowerCase() == 'easy') score += 2;
+      if (expandedTags.contains('budget') || expandedTags.contains('free')) {
+        final (_, max) = parseCostRange(h.costText);
+        if (max <= 30) score += 3;
+      }
+      if (score > 0) scored.add((h, score));
+    }
+    scored.sort((a, b) => b.$2.compareTo(a.$2));
+    var results = scored.map((e) => e.$1).toList();
+    if (_selectedSearchCategory != null) {
+      results = results.where((h) =>
+          h.category.toLowerCase() == _selectedSearchCategory!.toLowerCase()).toList();
+    }
+    return results;
+  }
 
-    final query = _searchQuery.toLowerCase();
-    final results = allHobbies.where((h) {
-      return h.title.toLowerCase().contains(query) ||
-          h.category.toLowerCase().contains(query) ||
-          h.tags.any((t) => t.toLowerCase().contains(query)) ||
-          h.hook.toLowerCase().contains(query);
-    }).toList();
+  Widget _buildSearchView(List<Hobby> allHobbies) {
+    final genState = ref.watch(generationProvider);
+    final isPro = ref.watch(isProProvider);
 
-    if (results.isEmpty) {
-      return Center(
-        key: const ValueKey('no-results'),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(MdiIcons.magnifyClose, size: 36, color: AppColors.textMuted),
-            const SizedBox(height: 12),
-            Text('No hobbies found',
-                style:
-                    AppTypography.body.copyWith(color: AppColors.textMuted)),
-            const SizedBox(height: 6),
-            Text('Try "creative", "outdoor", or "social"',
-                style: AppTypography.caption
-                    .copyWith(color: AppColors.textWhisper)),
-          ],
-        ),
+    // Auto-navigate on successful generation
+    ref.listen<GenerationState>(generationProvider, (_, next) {
+      if (next.status == GenerationStatus.success && next.hobby != null) {
+        ref.read(generationProvider.notifier).reset();
+        context.push('/hobby/${next.hobby!.id}');
+      }
+    });
+
+    // Category chips — always visible at top of search view
+    final categoryRow = SizedBox(
+      height: 34,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        children: [
+          _SearchChip(
+            label: 'All',
+            isSelected: _selectedSearchCategory == null,
+            onTap: () => setState(() => _selectedSearchCategory = null),
+          ),
+          const SizedBox(width: 6),
+          ..._categoryFilters.map((f) => Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: _SearchChip(
+              label: f.label,
+              isSelected: _selectedSearchCategory == f.id,
+              onTap: () => setState(() =>
+                  _selectedSearchCategory = _selectedSearchCategory == f.id ? null : f.id),
+            ),
+          )),
+        ],
+      ),
+    );
+
+    if (_searchQuery.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          categoryRow,
+          const SizedBox(height: 8),
+          Expanded(child: _buildSearchSuggestions()),
+        ],
       );
     }
 
-    return ListView.builder(
-      key: ValueKey('results-$_searchQuery'),
-      padding:
-          const EdgeInsets.fromLTRB(24, 16, 24, Spacing.scrollBottomPadding),
-      itemCount: results.length,
-      itemBuilder: (context, i) => _SearchResultItem(hobby: results[i]),
+    final results = _nlpSearch(allHobbies);
+    final fewResults = results.length < 3;
+    final isGenerating = genState.status == GenerationStatus.generating;
+
+    if (results.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          categoryRow,
+          const SizedBox(height: 16),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(MdiIcons.magnifyClose, size: 36, color: AppColors.textMuted),
+                    const SizedBox(height: 12),
+                    Text('No results for "$_searchQuery"',
+                        style: AppTypography.body.copyWith(color: AppColors.textMuted),
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 20),
+                    if (isGenerating) ...[
+                      const SizedBox(width: 24, height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral)),
+                      const SizedBox(height: 10),
+                      Text('Generating hobby...', style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
+                    ] else if (genState.status == GenerationStatus.error) ...[
+                      Text('Something went wrong. Try again?',
+                          style: AppTypography.caption.copyWith(color: AppColors.textMuted)),
+                      const SizedBox(height: 10),
+                      _buildGenerateButton(isPro, genState),
+                    ] else
+                      _buildGenerateButton(isPro, genState),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        categoryRow,
+        const SizedBox(height: 14),
+        Expanded(
+          child: ListView(
+            key: ValueKey('results-$_searchQuery'),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottomPadding),
+            children: [
+              // Result count
+              Row(children: [
+                Text('Top Results', style: AppTypography.title.copyWith(fontSize: 17)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(Spacing.radiusBadge)),
+                  child: Text('${results.length} found',
+                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary, fontSize: 11)),
+                ),
+              ]),
+              const SizedBox(height: 12),
+
+              // Results
+              ...results.map((h) => _SearchResultItem(hobby: h)),
+
+              // AI generation for Pro (few results)
+              if (isPro && fewResults && !isGenerating && genState.status != GenerationStatus.error)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: GestureDetector(
+                    onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.coral.withValues(alpha: 0.3))),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Icon(MdiIcons.creationOutline, size: 16, color: AppColors.coral),
+                        const SizedBox(width: 8),
+                        Text('Find more with AI', style: AppTypography.body.copyWith(
+                            color: AppColors.coral, fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
+                  ),
+                ),
+
+              if (isPro && fewResults && isGenerating)
+                Padding(padding: const EdgeInsets.only(top: 8), child: _AiSearchingTile()),
+
+              if (!isPro && fewResults)
+                _AiSearchLockedTile(
+                  onTap: () => showProUpgrade(context, 'AI Search finds custom hobbies when results are limited.'),
+                ),
+
+              if (isPro && fewResults && genState.status == GenerationStatus.error)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: GestureDetector(
+                    onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border)),
+                      child: Row(children: [
+                        Icon(Icons.refresh_rounded, size: 18, color: AppColors.coral),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text('AI suggestion failed. Tap to retry.',
+                            style: AppTypography.caption.copyWith(color: AppColors.textSecondary))),
+                      ]),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenerateButton(bool isPro, GenerationState genState) {
+    final isGenerating = genState.status == GenerationStatus.generating;
+    return GestureDetector(
+      onTap: isGenerating ? null : () {
+        if (!isPro) {
+          showProUpgrade(context, 'AI hobby generation is a Pro feature.');
+          return;
+        }
+        ref.read(generationProvider.notifier).generate(_searchQuery);
+      },
+      child: Opacity(
+        opacity: isGenerating ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+              color: AppColors.coral, borderRadius: BorderRadius.circular(Spacing.radiusButton)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(MdiIcons.creationOutline, size: 16, color: Colors.white),
+            const SizedBox(width: 8),
+            Text('Generate this hobby', style: AppTypography.body.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+      ),
     );
   }
 
   Widget _buildSearchSuggestions() {
-    const suggestions = [
-      'cheap creative hobby',
-      'hobby for anxiety',
-      'indoor winter hobby',
-      'social but low pressure',
-      'hobby for couples',
-      'solo at home',
-    ];
-
-    return ListView(
+    return SingleChildScrollView(
       key: const ValueKey('suggestions'),
-      padding:
-          const EdgeInsets.fromLTRB(24, 20, 24, Spacing.scrollBottomPadding),
-      children: [
-        Text('TRY SEARCHING FOR',
-            style: AppTypography.overline.copyWith(color: AppColors.textMuted)),
-        const SizedBox(height: 12),
-        ...suggestions.map((s) => GestureDetector(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, Spacing.scrollBottomPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('TRY SEARCHING FOR',
+              style: AppTypography.overline.copyWith(color: AppColors.textMuted)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _nlpSuggestions.map((s) => GestureDetector(
               onTap: () => setState(() {
                 _searchQuery = s;
                 _searchController.text = s;
-                _searchController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: s.length));
+                _searchController.selection =
+                    TextSelection.fromPosition(TextPosition(offset: s.length));
               }),
               child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: Row(
-                  children: [
-                    Icon(MdiIcons.magnify, size: 16, color: AppColors.textMuted),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(s,
-                          style: AppTypography.body
-                              .copyWith(color: AppColors.textSecondary)),
-                    ),
-                    Icon(Icons.north_west_rounded,
-                        size: 14, color: AppColors.textWhisper),
-                  ],
-                ),
+                child: Text(s,
+                    style: AppTypography.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600)),
               ),
-            )),
-      ],
+            )).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -637,8 +895,9 @@ class _HeroCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.glassBorder, width: 0.5),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
           fit: StackFit.expand,
           children: [
             // Background image
@@ -725,6 +984,7 @@ class _HeroCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -1047,6 +1307,155 @@ class _SearchResultItem extends StatelessWidget {
                   size: 18, color: AppColors.textWhisper),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEARCH CATEGORY CHIP
+// ═══════════════════════════════════════════════════════
+
+class _SearchChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SearchChip({required this.label, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.coral : AppColors.surface,
+          borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+        ),
+        child: Text(label,
+            style: AppTypography.caption.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            )),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  AI SEARCHING SHIMMER TILE
+// ═══════════════════════════════════════════════════════
+
+class _AiSearchingTile extends StatefulWidget {
+  @override
+  State<_AiSearchingTile> createState() => _AiSearchingTileState();
+}
+
+class _AiSearchingTileState extends State<_AiSearchingTile>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        final opacity = 0.4 + 0.3 * (0.5 + 0.5 * math.sin(_shimmerController.value * 2 * math.pi));
+        return Opacity(opacity: opacity, child: child);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(children: [
+          Container(
+            width: 56, height: 56,
+            decoration: BoxDecoration(color: AppColors.surfaceElevated, borderRadius: BorderRadius.circular(10)),
+            child: Center(child: Icon(MdiIcons.creationOutline, size: 22, color: AppColors.coral)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Finding more for you...', style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            const SizedBox(height: 4),
+            Text('AI is generating a custom hobby', style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
+          ])),
+          const SizedBox(width: 18, height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral)),
+        ]),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  AI SEARCH LOCKED TILE
+// ═══════════════════════════════════════════════════════
+
+class _AiSearchLockedTile extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AiSearchLockedTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Stack(children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border)),
+              child: Row(children: [
+                Container(width: 56, height: 56,
+                    decoration: BoxDecoration(color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(10))),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(width: 120, height: 12,
+                      decoration: BoxDecoration(color: AppColors.surfaceElevated, borderRadius: BorderRadius.circular(4))),
+                  const SizedBox(height: 8),
+                  Container(width: 80, height: 10,
+                      decoration: BoxDecoration(color: AppColors.surfaceElevated, borderRadius: BorderRadius.circular(4))),
+                ])),
+              ]),
+            ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(color: AppColors.background.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(14)),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.lock_rounded, size: 14, color: AppColors.coral),
+                  const SizedBox(width: 6),
+                  Text('Unlock AI search', style: AppTypography.caption.copyWith(
+                      color: AppColors.coral, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            ),
+          ]),
         ),
       ),
     );

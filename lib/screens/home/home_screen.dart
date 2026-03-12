@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
 import '../../components/logo_loader.dart';
 import '../../components/page_dots.dart';
@@ -87,14 +88,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     if (anyLoading) {
       return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: LogoLoader(),
+        backgroundColor: Colors.transparent,
+        body: AppBackground(tintTopLeft: false, child: LogoLoader()),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        tintTopLeft: false,
+        child: SafeArea(
         bottom: false,
         child: Stack(
           children: [
@@ -125,6 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -179,6 +183,7 @@ class _HobbyPageContent extends ConsumerStatefulWidget {
 }
 
 class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
+  bool _restartDismissed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +237,15 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
           child: SizedBox(
             height: 250,
             width: double.infinity,
-            child: Stack(
+            child: ShaderMask(
+              shaderCallback: (rect) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.white, Colors.transparent],
+                stops: [0.0, 0.25, 1.0],
+              ).createShader(rect),
+              blendMode: BlendMode.dstIn,
+              child: Stack(
               fit: StackFit.expand,
               children: [
                 CachedNetworkImage(
@@ -245,21 +258,6 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                     color: AppColors.surfaceElevated,
                     child: Icon(AppIcons.categoryIcon(hobby.category),
                         size: 48, color: AppColors.textMuted),
-                  ),
-                ),
-                // Gradient fade to background at bottom
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        AppColors.background.withAlpha(40),
-                        AppColors.background,
-                      ],
-                      stops: const [0.3, 0.7, 1.0],
-                    ),
                   ),
                 ),
                 // Category + streak badges
@@ -310,6 +308,7 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
             ),
           ),
         ),
+        ),
 
         // ── Content below image ──
         Padding(
@@ -330,13 +329,23 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
 
               // Restart prompt (stalled 3+ days)
               if (daysSinceActivity >= 3) ...[
-                _RestartCard(
-                  hobbyTitle: hobby.title,
-                  daysSince: daysSinceActivity,
-                  onPickUp: () => context.push('/hobby/${hobby.id}'),
-                  onSwitch: () => context.go('/discover'),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, anim) =>
+                      FadeTransition(opacity: anim, child: child),
+                  child: _restartDismissed
+                      ? const SizedBox.shrink(key: ValueKey('empty'))
+                      : _RestartCard(
+                          key: const ValueKey('restart'),
+                          hobbyTitle: hobby.title,
+                          daysSince: daysSinceActivity,
+                          onPickUp: () =>
+                              context.push('/hobby/${hobby.id}'),
+                          onSwitch: () =>
+                              setState(() => _restartDismissed = true),
+                        ),
                 ),
-                const SizedBox(height: 20),
+                if (!_restartDismissed) const SizedBox(height: 20),
               ],
 
               // ── 4-Stage Roadmap ──
@@ -528,6 +537,7 @@ class _RestartCard extends StatelessWidget {
   final VoidCallback onSwitch;
 
   const _RestartCard({
+    super.key,
     required this.hobbyTitle,
     required this.daysSince,
     required this.onPickUp,
@@ -655,8 +665,9 @@ class _EmptyHomeState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
@@ -697,6 +708,7 @@ class _EmptyHomeState extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

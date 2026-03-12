@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../components/app_background.dart';
 import '../../components/page_dots.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
@@ -15,7 +16,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 
-/// You tab — Collector Card redesign (P6).
+/// You tab — profile header + tab pills (Active / Saved / Tried).
 class YouScreen extends ConsumerStatefulWidget {
   const YouScreen({super.key});
 
@@ -25,18 +26,22 @@ class YouScreen extends ConsumerStatefulWidget {
 
 class _YouScreenState extends ConsumerState<YouScreen> {
   late PageController _hobbyPageController;
+  late PageController _savedPageController;
   int _currentHobbyPage = 0;
-  bool _showAllSaved = false;
+  int _savedPage = 0;
+  int _selectedTab = 0; // 0=Active, 1=Saved, 2=Tried
 
   @override
   void initState() {
     super.initState();
     _hobbyPageController = PageController(viewportFraction: 0.88);
+    _savedPageController = PageController(viewportFraction: 0.88);
   }
 
   @override
   void dispose() {
     _hobbyPageController.dispose();
+    _savedPageController.dispose();
     super.dispose();
   }
 
@@ -77,6 +82,10 @@ class _YouScreenState extends ConsumerState<YouScreen> {
     if (_currentHobbyPage >= activeEntries.length && activeEntries.isNotEmpty) {
       _currentHobbyPage = activeEntries.length - 1;
     }
+    if (_savedPage >= savedEntries.length && savedEntries.isNotEmpty) {
+      _savedPage = savedEntries.length - 1;
+    }
+    if (savedEntries.isEmpty) _savedPage = 0;
 
     final visibleMeta = activeEntries.isNotEmpty
         ? activeEntries[_currentHobbyPage.clamp(0, activeEntries.length - 1)]
@@ -89,215 +98,177 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         0, (best, m) => m.userHobby.streakDays > best ? m.userHobby.streakDays : best);
     final hobbiesExplored = allEntries.length;
 
+    final streakDays = visibleMeta != null
+        ? _computeStreak(visibleMeta.userHobby)
+        : 0;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.only(
-              top: 16, bottom: Spacing.scrollBottomPadding),
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: Stack(
           children: [
-            // ── Header ──
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _ProfileHeader(
-                displayName: displayName,
-                avatarUrl: avatarUrl,
-                streakDays: visibleMeta != null
-                    ? _computeStreak(visibleMeta.userHobby)
-                    : 0,
-                hobbiesExplored: hobbiesExplored,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── ACTIVE section ──
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: _SectionLabel('ACTIVE'),
-            ),
-            const SizedBox(height: 10),
-
-            if (activeEntries.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _EmptyActivePrompt(),
-              )
-            else ...[
-              if (activeEntries.length == 1)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _CollectorCard(meta: activeEntries.first),
-                )
-              else ...[
-                SizedBox(
-                  height: 130,
-                  child: PageView.builder(
-                    controller: _hobbyPageController,
-                    itemCount: activeEntries.length,
-                    onPageChanged: (i) =>
-                        setState(() => _currentHobbyPage = i),
-                    itemBuilder: (context, i) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: _CollectorCard(meta: activeEntries[i]),
+            SafeArea(
+              bottom: false,
+              child: ListView(
+                padding: const EdgeInsets.only(
+                    top: 16, bottom: Spacing.scrollBottomPadding),
+                children: [
+                  // ── Centered profile header ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _CenteredProfileHeader(
+                      displayName: displayName,
+                      avatarUrl: avatarUrl,
+                      streakDays: streakDays,
+                      activeCount: activeEntries.length,
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                PageDots(
-                  count: activeEntries.length,
-                  current: _currentHobbyPage,
-                ),
-              ],
-              const SizedBox(height: 10),
-              if (visibleMeta != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _StatsChipRow(meta: visibleMeta),
-                ),
-            ],
+                  const SizedBox(height: 20),
 
-            const SizedBox(height: 16),
+                  // ── Tab pills ──
+                  _TabPills(
+                    selected: _selectedTab,
+                    onSelect: (i) => setState(() => _selectedTab = i),
+                    activeCt: activeEntries.length,
+                    savedCt: savedEntries.length,
+                    triedCt: triedEntries.length,
+                  ),
+                  const SizedBox(height: 20),
 
-            if (savedEntries.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    const _SectionLabel('SAVED FOR LATER'),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppColors.border),
+                  // ── Tab content — AnimatedSize so height collapses smoothly ──
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    alignment: Alignment.topCenter,
+                    clipBehavior: Clip.none,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: child,
                       ),
-                      child: Text(
-                        '${savedEntries.length}',
-                        style: AppTypography.monoTiny
-                            .copyWith(color: AppColors.textMuted),
+                      layoutBuilder: (currentChild, previousChildren) => Stack(
+                        alignment: Alignment.topCenter,
+                        children: [
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...(_showAllSaved
-                      ? savedEntries
-                      : savedEntries.take(4).toList())
-                  .map((m) => Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
-                        child: _SavedHobbyCard(meta: m),
-                      )),
-              if (savedEntries.length > 4)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
-                  child: GestureDetector(
-                    onTap: () =>
-                        setState(() => _showAllSaved = !_showAllSaved),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _showAllSaved
-                              ? 'Show less'
-                              : 'See ${savedEntries.length - 4} more',
-                          style: AppTypography.caption
-                              .copyWith(color: AppColors.textSecondary),
-                        ),
+                      child: _buildTabContent(
+                        tab: _selectedTab,
+                        activeEntries: activeEntries,
+                        savedEntries: savedEntries,
+                        triedEntries: triedEntries,
+                        visibleMeta: visibleMeta,
                       ),
                     ),
                   ),
-                )
-              else
-                const SizedBox(height: 14),
-            ],
 
-            if (triedEntries.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24),
-                child: _SectionLabel('TRIED BEFORE'),
-              ),
-              const SizedBox(height: 10),
-              ...triedEntries.map((m) => Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
-                    child: _TriedHobbyCard(meta: m),
-                  )),
-              const SizedBox(height: 14),
-            ],
+                  const SizedBox(height: 24),
 
-            // ── Journey stats ──
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: _SectionLabel('YOUR JOURNEY'),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _JourneyStats(
-                stepsCompleted: totalStepsCompleted,
-                bestStreak: bestStreak,
-                hobbiesExplored: hobbiesExplored,
-              ),
-            ),
-            const SizedBox(height: 20),
+                  // ── Journey stats ──
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: _SectionLabel('YOUR JOURNEY'),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _JourneyStats(
+                      stepsCompleted: totalStepsCompleted,
+                      bestStreak: bestStreak,
+                      hobbiesExplored: hobbiesExplored,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-            // ── Nav rows ──
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _NavRow(
-                icon: MdiIcons.bookOpenPageVariantOutline,
-                iconBg: AppColors.surface,
-                iconBorder: AppColors.border,
-                iconColor: AppColors.textSecondary,
-                title: 'Journal',
-                titleStyle: AppTypography.sansLabel,
-                chevronColor: AppColors.textMuted,
-                onTap: () => context.push('/journal'),
+                  // ── Nav rows ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _NavRow(
+                      icon: MdiIcons.bookOpenPageVariantOutline,
+                      iconBg: AppColors.surface,
+                      iconBorder: AppColors.border,
+                      iconColor: AppColors.textSecondary,
+                      title: 'Journal',
+                      titleStyle: AppTypography.sansLabel,
+                      chevronColor: AppColors.textMuted,
+                      onTap: () => context.push('/journal'),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: _HairlineDivider(),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: _ProNavRow(proStatus: proStatus),
+                  ),
+                ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: _HairlineDivider(),
-            ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _ProNavRow(proStatus: proStatus),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: _HairlineDivider(),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _NavRow(
-                icon: MdiIcons.cogOutline,
-                iconBg: Colors.transparent,
-                iconBorder: Colors.transparent,
-                iconColor: AppColors.textMuted.withValues(alpha: 0.4),
-                title: 'Settings',
-                titleStyle: AppTypography.caption.copyWith(
-                  color: AppColors.textMuted,
-                ),
-                chevronColor: AppColors.textWhisper,
+            // ── Gear icon (top-right) ──
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              right: 16,
+              child: GestureDetector(
                 onTap: () => context.push('/settings'),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Icon(
+                    MdiIcons.cogOutline,
+                    size: 18,
+                    color: AppColors.textMuted,
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildTabContent({
+    required int tab,
+    required List<_HobbyWithMeta> activeEntries,
+    required List<_HobbyWithMeta> savedEntries,
+    required List<_HobbyWithMeta> triedEntries,
+    required _HobbyWithMeta? visibleMeta,
+  }) {
+    switch (tab) {
+      case 0:
+        return _ActiveTabContent(
+          key: const ValueKey('active'),
+          entries: activeEntries,
+          visibleMeta: visibleMeta,
+          hobbyPageController: _hobbyPageController,
+          currentPage: _currentHobbyPage,
+          onPageChanged: (i) => setState(() => _currentHobbyPage = i),
+        );
+      case 1:
+        return _SavedTabContent(
+          key: const ValueKey('saved'),
+          entries: savedEntries,
+          savedPage: _savedPage,
+          savedPageController: _savedPageController,
+          onPageChanged: (i) => setState(() => _savedPage = i),
+        );
+      case 2:
+        return _TriedTabContent(
+          key: const ValueKey('tried'),
+          entries: triedEntries,
+        );
+      default:
+        return const SizedBox.shrink(key: ValueKey('empty'));
+    }
   }
 }
 
@@ -325,91 +296,318 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Profile header ──
-class _ProfileHeader extends StatelessWidget {
+// ── Centered profile header ──
+class _CenteredProfileHeader extends StatelessWidget {
   final String displayName;
   final String? avatarUrl;
   final int streakDays;
-  final int hobbiesExplored;
+  final int activeCount;
 
-  const _ProfileHeader({
+  const _CenteredProfileHeader({
     required this.displayName,
     required this.avatarUrl,
     required this.streakDays,
-    required this.hobbiesExplored,
+    required this.activeCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
       children: [
-        // Avatar
+        // Avatar — centered, circular
         Container(
-          width: 64,
-          height: 64,
+          width: 84,
+          height: 84,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            shape: BoxShape.circle,
             gradient: const LinearGradient(
               colors: [Color(0xFF1A1520), Color(0xFF151A25)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.07),
+              color: Colors.white.withValues(alpha: 0.08),
+              width: 2,
             ),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: avatarUrl != null && avatarUrl!.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: avatarUrl!,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 128,
-                  placeholder: (_, __) => const SizedBox.shrink(),
-                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
-                )
-              : Center(
-                  child: Text(
-                    displayName.isNotEmpty
-                        ? displayName[0].toUpperCase()
-                        : '?',
-                    style: AppTypography.title.copyWith(
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ),
-        ),
-        const SizedBox(width: 16),
-        // Name + info chips
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                displayName,
-                style: AppTypography.title,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                children: [
-                  _MiniInfoChip(
-                    label: '$hobbiesExplored ${hobbiesExplored == 1 ? 'hobby' : 'hobbies'}',
-                  ),
-                  if (streakDays > 0)
-                    _MiniInfoChip(
-                      label: '$streakDays-day streak',
-                      accent: true,
-                    )
-                  else
-                    const _MiniInfoChip(label: 'Start your streak'),
-                ],
-              ),
-            ],
+          child: ClipOval(
+            child: avatarUrl != null && avatarUrl!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: avatarUrl!,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 168,
+                    placeholder: (_, __) => const SizedBox.shrink(),
+                    errorWidget: (_, __, ___) => _InitialsAvatar(name: displayName),
+                  )
+                : _InitialsAvatar(name: displayName),
           ),
         ),
+        const SizedBox(height: 12),
+
+        // Name
+        Text(
+          displayName,
+          style: AppTypography.title.copyWith(fontSize: 20),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
+
+        // Stats row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _MiniInfoChip(
+              label: '$activeCount active ${activeCount == 1 ? 'hobby' : 'hobbies'}',
+            ),
+            const SizedBox(width: 6),
+            if (streakDays > 0)
+              _MiniInfoChip(
+                label: '$streakDays-day streak',
+                accent: true,
+              )
+            else
+              GestureDetector(
+                onTap: () => context.go('/home'),
+                child: const _MiniInfoChip(
+                  label: 'Start your streak →',
+                  tappable: true,
+                ),
+              ),
+          ],
+        ),
       ],
+    );
+  }
+}
+
+class _InitialsAvatar extends StatelessWidget {
+  final String name;
+  const _InitialsAvatar({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: AppTypography.title.copyWith(
+          color: AppColors.textMuted,
+          fontSize: 28,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tab pills ──
+class _TabPills extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onSelect;
+  final int activeCt;
+  final int savedCt;
+  final int triedCt;
+
+  const _TabPills({
+    required this.selected,
+    required this.onSelect,
+    required this.activeCt,
+    required this.savedCt,
+    required this.triedCt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = [
+      ('Active', activeCt),
+      ('Saved', savedCt),
+      ('Tried', triedCt),
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: tabs.asMap().entries.map((entry) {
+        final i = entry.key;
+        final label = entry.value.$1;
+        final count = entry.value.$2;
+        final isSelected = i == selected;
+
+        return GestureDetector(
+          onTap: () => onSelect(i),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: EdgeInsets.only(right: i < tabs.length - 1 ? 8 : 0),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.accent.withValues(alpha: 0.10)
+                  : AppColors.surface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.accent.withValues(alpha: 0.40)
+                    : AppColors.border,
+              ),
+            ),
+            child: Text(
+              count > 0 ? '$label ($count)' : label,
+              style: AppTypography.monoTiny.copyWith(
+                color: isSelected ? AppColors.accent : AppColors.textMuted,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Active tab content ──
+class _ActiveTabContent extends StatelessWidget {
+  final List<_HobbyWithMeta> entries;
+  final _HobbyWithMeta? visibleMeta;
+  final PageController hobbyPageController;
+  final int currentPage;
+  final ValueChanged<int> onPageChanged;
+
+  const _ActiveTabContent({
+    super.key,
+    required this.entries,
+    required this.visibleMeta,
+    required this.hobbyPageController,
+    required this.currentPage,
+    required this.onPageChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: _EmptyActivePrompt(),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (entries.length == 1)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _CollectorCard(meta: entries.first),
+          )
+        else ...[
+          SizedBox(
+            height: 130,
+            child: PageView.builder(
+              controller: hobbyPageController,
+              itemCount: entries.length,
+              onPageChanged: onPageChanged,
+              itemBuilder: (context, i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _CollectorCard(meta: entries[i]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          PageDots(
+            count: entries.length,
+            current: currentPage,
+          ),
+        ],
+        const SizedBox(height: 10),
+        if (visibleMeta != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _StatsChipRow(meta: visibleMeta!),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Saved tab content ──
+class _SavedTabContent extends StatelessWidget {
+  final List<_HobbyWithMeta> entries;
+  final int savedPage;
+  final PageController savedPageController;
+  final ValueChanged<int> onPageChanged;
+
+  const _SavedTabContent({
+    super.key,
+    required this.entries,
+    required this.savedPage,
+    required this.savedPageController,
+    required this.onPageChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: _EmptyTabPrompt(
+          message: 'No saved hobbies yet',
+          detail: 'Heart a hobby to save it for later.',
+          actionLabel: 'Browse hobbies',
+          onAction: () => context.go('/discover'),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 130,
+          child: PageView.builder(
+            controller: savedPageController,
+            itemCount: entries.length,
+            onPageChanged: onPageChanged,
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: _SavedHobbySwipeCard(meta: entries[i]),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        PageDots(
+          count: entries.length,
+          current: savedPage,
+        ),
+      ],
+    );
+  }
+}
+
+// ── Tried tab content ──
+class _TriedTabContent extends StatelessWidget {
+  final List<_HobbyWithMeta> entries;
+
+  const _TriedTabContent({
+    super.key,
+    required this.entries,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24),
+        child: _EmptyTabPrompt(
+          message: 'Nothing tried yet',
+          detail: 'Complete a hobby or mark it as done to see it here.',
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: entries
+          .map((m) => Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+                child: _TriedHobbyCard(meta: m),
+              ))
+          .toList(),
     );
   }
 }
@@ -418,28 +616,35 @@ class _ProfileHeader extends StatelessWidget {
 class _MiniInfoChip extends StatelessWidget {
   final String label;
   final bool accent;
-  const _MiniInfoChip({required this.label, this.accent = false});
+  final bool tappable;
+  const _MiniInfoChip(
+      {required this.label, this.accent = false, this.tappable = false});
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = accent
+        ? AppColors.accent.withValues(alpha: 0.08)
+        : tappable
+            ? AppColors.accent.withValues(alpha: 0.05)
+            : AppColors.surface;
+    final borderColor = accent
+        ? AppColors.accent.withValues(alpha: 0.18)
+        : tappable
+            ? AppColors.accent.withValues(alpha: 0.25)
+            : AppColors.border;
+    final textColor =
+        accent || tappable ? AppColors.accent : AppColors.textMuted;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: accent
-            ? AppColors.accent.withValues(alpha: 0.08)
-            : AppColors.surface,
-        border: Border.all(
-          color: accent
-              ? AppColors.accent.withValues(alpha: 0.18)
-              : AppColors.border,
-        ),
-        borderRadius: BorderRadius.circular(6),
+        color: bgColor,
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: Text(
         label,
-        style: AppTypography.monoTiny.copyWith(
-          color: accent ? AppColors.accent : AppColors.textMuted,
-        ),
+        style: AppTypography.monoTiny.copyWith(color: textColor),
       ),
     );
   }
@@ -888,8 +1093,7 @@ class _EmptyActivePrompt extends StatelessWidget {
           Text(
             'Find something that fits your life and try it for a week.',
             textAlign: TextAlign.center,
-            style:
-                AppTypography.body.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           GestureDetector(
@@ -914,82 +1118,180 @@ class _EmptyActivePrompt extends StatelessWidget {
   }
 }
 
-// ── Saved hobby card ──
-class _SavedHobbyCard extends StatelessWidget {
-  final _HobbyWithMeta meta;
-  const _SavedHobbyCard({required this.meta});
+// ── Generic empty tab prompt ──
+class _EmptyTabPrompt extends StatelessWidget {
+  final String message;
+  final String detail;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _EmptyTabPrompt({
+    required this.message,
+    required this.detail,
+    this.actionLabel,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final hobby = meta.hobby;
-    return GestureDetector(
-      onTap: () => context.push('/hobby/${hobby.id}'),
-      child: Container(
-        height: 88,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Row(
-          children: [
-            // Hobby image
-            SizedBox(
-              width: 88,
-              child: CachedNetworkImage(
-                imageUrl: hobby.imageUrl,
-                fit: BoxFit.cover,
-                memCacheWidth: 176,
-                placeholder: (_, __) =>
-                    Container(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceElevated,
-                  child: Center(
-                    child: Icon(Icons.image_outlined,
-                        color: AppColors.textMuted, size: 24),
-                  ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Text(message, style: AppTypography.title.copyWith(fontSize: 16)),
+          const SizedBox(height: 6),
+          Text(
+            detail,
+            textAlign: TextAlign.center,
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: onAction,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(actionLabel!,
+                      style: AppTypography.button
+                          .copyWith(color: AppColors.background)),
                 ),
               ),
             ),
-            // Text content
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Saved hobby swipe card — matches CollectorCard dimensions exactly ──
+class _SavedHobbySwipeCard extends ConsumerWidget {
+  final _HobbyWithMeta meta;
+  const _SavedHobbySwipeCard({required this.meta});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hobby = meta.hobby;
+
+    return GestureDetector(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 130,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Image — same as CollectorCard
+              Transform.scale(
+                scale: 1.05,
+                child: CachedNetworkImage(
+                  imageUrl: hobby.imageUrl,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 800,
+                  placeholder: (_, __) =>
+                      Container(color: AppColors.surfaceElevated),
+                  errorWidget: (_, __, ___) =>
+                      Container(color: AppColors.surfaceElevated),
+                ),
+              ),
+              // Gradient — identical to CollectorCard
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x1A0A0A0F), Color(0xF80A0A0F)],
+                  ),
+                ),
+              ),
+              // Heart unsave — top right, tapping directly unsaves
+              Positioned(
+                top: 10,
+                right: 10,
+                child: GestureDetector(
+                  onTap: () => ref
+                      .read(userHobbiesProvider.notifier)
+                      .unsaveHobby(hobby.id),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.favorite_rounded,
+                      size: 18,
+                      color: AppColors.accent,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 8,
+                          color: AppColors.accent.withValues(alpha: 0.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Bottom content — same structure as CollectorCard
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 12,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      hobby.category.toUpperCase(),
+                      'SAVED FOR LATER',
                       style: AppTypography.overline.copyWith(
-                          color: AppColors.accent, fontSize: 9),
+                        color: AppColors.textPrimary.withValues(alpha: 0.35),
+                        fontSize: 9,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      hobby.title,
-                      style: AppTypography.title.copyWith(fontSize: 15),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${hobby.costText} · ${hobby.timeText}',
-                      style: AppTypography.caption.copyWith(
-                          color: AppColors.textMuted, fontSize: 11),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            hobby.title,
+                            style: AppTypography.title.copyWith(
+                              fontSize: 18,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          hobby.costText,
+                          style: AppTypography.monoTiny.copyWith(
+                            color: AppColors.textPrimary.withValues(alpha: 0.45),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ),
-            // Chevron
-            Padding(
-              padding: const EdgeInsets.only(right: 14),
-              child: Icon(Icons.chevron_right_rounded,
-                  size: 18, color: AppColors.textWhisper),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

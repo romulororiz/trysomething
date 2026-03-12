@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trysomething/core/analytics/analytics_service.dart';
 import 'package:trysomething/data/repositories/user_progress_repository.dart';
 import 'package:trysomething/models/hobby.dart';
 import 'package:trysomething/providers/user_provider.dart';
@@ -72,7 +73,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
     mockRepo = MockUserProgressRepository();
-    notifier = UserHobbiesNotifier(prefs, mockRepo);
+    notifier = UserHobbiesNotifier(prefs, mockRepo, AnalyticsService());
   });
 
   group('UserHobbiesNotifier', () {
@@ -222,7 +223,7 @@ void main() {
         final serverRepo = _ServerDataRepo([
           const UserHobby(hobbyId: 'server-hobby', status: HobbyStatus.active),
         ]);
-        final syncNotifier = UserHobbiesNotifier(prefs, serverRepo);
+        final syncNotifier = UserHobbiesNotifier(prefs, serverRepo, AnalyticsService());
         syncNotifier.saveHobby('local-hobby');
 
         await syncNotifier.syncFromServer();

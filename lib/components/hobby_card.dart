@@ -75,12 +75,14 @@ class HobbyCard extends StatelessWidget {
             child: _buildContentShelf(),
           ),
 
-          // Bottom CTA (must clear 85px nav bar)
+          // Bottom CTA (must clear 85px nav bar) — centered, constrained width
           Positioned(
-            left: 20,
-            right: 20,
+            left: 40,
+            right: 40,
             bottom: 120,
-            child: _buildCta(),
+            child: Center(
+              child: _buildCta(),
+            ),
           ),
         ],
       ),
