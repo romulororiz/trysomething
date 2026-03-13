@@ -252,24 +252,11 @@ class _RoadmapStepTileState extends State<RoadmapStepTile>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.step.title,
-                    style: AppTypography.sansLabel.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${widget.step.estimatedMinutes}min',
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 9,
-                    color: AppColors.accent.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
+            Text(
+              widget.step.title,
+              style: AppTypography.sansLabel.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 4),
             Text(

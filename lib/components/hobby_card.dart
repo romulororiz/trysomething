@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,6 +19,7 @@ class HobbyCard extends StatelessWidget {
   final VoidCallback? onShare;
   final bool isSaved;
   final bool compactCta;
+  final double parallaxOffset;
 
   const HobbyCard({
     super.key,
@@ -27,6 +29,7 @@ class HobbyCard extends StatelessWidget {
     this.onShare,
     this.isSaved = false,
     this.compactCta = false,
+    this.parallaxOffset = 0.0,
   });
 
   @override
@@ -36,8 +39,11 @@ class HobbyCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Full-bleed background image
-          _buildImage(),
+          // Full-bleed background image with parallax
+          Transform.translate(
+            offset: Offset(0, parallaxOffset * 50),
+            child: _buildImage(),
+          ),
 
           // Gradient overlay (heavier at bottom for readability)
           const DecoratedBox(
@@ -160,8 +166,8 @@ class HobbyCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          hobby.hook,
+        _TypewriterText(
+          text: hobby.hook,
           style: AppTypography.sansBodySmall.copyWith(
             color: Colors.white.withValues(alpha: 0.85),
             shadows: [
@@ -172,7 +178,6 @@ class HobbyCard extends StatelessWidget {
             ],
           ),
           maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 12),
         SpecBar(
@@ -419,6 +424,73 @@ class _FeedActionButtonState extends State<_FeedActionButton>
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Typewriter effect: characters appear one by one when the widget mounts.
+class _TypewriterText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final int maxLines;
+
+  const _TypewriterText({
+    required this.text,
+    required this.style,
+    this.maxLines = 2,
+  });
+
+  @override
+  State<_TypewriterText> createState() => _TypewriterTextState();
+}
+
+class _TypewriterTextState extends State<_TypewriterText> {
+  int _charCount = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTyping();
+  }
+
+  @override
+  void didUpdateWidget(_TypewriterText old) {
+    super.didUpdateWidget(old);
+    if (old.text != widget.text) {
+      _charCount = 0;
+      _timer?.cancel();
+      _startTyping();
+    }
+  }
+
+  void _startTyping() {
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+      if (_charCount >= widget.text.length) {
+        timer.cancel();
+        return;
+      }
+      if (mounted) {
+        setState(() => _charCount++);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      widget.text.substring(0, _charCount),
+      style: widget.style,
+      maxLines: widget.maxLines,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

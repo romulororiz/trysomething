@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../components/category_shape_painter.dart';
-import '../../components/session_glow_widget.dart';
+import '../../components/particle_timer_painter.dart';
 import '../../models/session.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/user_provider.dart';
@@ -109,6 +108,16 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     });
   }
 
+  double _computeProgress(SessionState session) {
+    if (session.phase == SessionPhase.prepare) return 0.0;
+    if (session.phase == SessionPhase.completing ||
+        session.phase == SessionPhase.reflect ||
+        session.phase == SessionPhase.complete) return 1.0;
+    final total = session.selectedMinutes * 60;
+    if (total <= 0) return 0.0;
+    return (session.elapsedSeconds / total).clamp(0.0, 1.0);
+  }
+
   void _exitSession() {
     final session = ref.read(sessionProvider);
     // Mark step complete in user state if session finished successfully
@@ -145,19 +154,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         backgroundColor: AppColors.background,
         body: Stack(
           children: [
-            // Layer 1: Ambient category shape
+            // Layer 1: Full-screen 3D particle field
             Positioned.fill(
-              child: CategoryShape(category: session.hobbyCategory),
-            ),
-
-            // Layer 2: Warm radial glow
-            Positioned.fill(
-              child: SessionGlow(
-                active: session.phase != SessionPhase.prepare,
+              child: SessionParticleField(
+                category: session.hobbyCategory,
+                progress: _computeProgress(session),
+                isActive: session.phase == SessionPhase.timer ||
+                    session.phase == SessionPhase.completing,
+                isCompleting: session.phase == SessionPhase.completing,
               ),
             ),
 
-            // Layer 3: Phase content
+            // Layer 2: Phase content
             Positioned.fill(
               child: SafeArea(
                 child: AnimatedSwitcher(

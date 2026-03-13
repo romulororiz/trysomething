@@ -7,6 +7,13 @@ import 'repository_providers.dart';
 import 'user_provider.dart';
 
 // ═══════════════════════════════════════════════════════
+//  SHELL LOADING STATE
+// ═══════════════════════════════════════════════════════
+
+/// When true, the main shell hides the navbar (e.g. while home screen loads).
+final shellLoadingProvider = StateProvider<bool>((ref) => true);
+
+// ═══════════════════════════════════════════════════════
 //  HOBBY PROVIDERS
 // ═══════════════════════════════════════════════════════
 

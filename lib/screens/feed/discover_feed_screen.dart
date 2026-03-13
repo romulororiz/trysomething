@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -298,54 +299,53 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       body: AppBackground(
         child: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: _buildSearchBar(),
+        child: hobbiesAsync.when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.accent),
+          ),
+          error: (e, _) => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(MdiIcons.alertCircleOutline,
+                    size: 32, color: AppColors.textMuted),
+                const SizedBox(height: 12),
+                Text('Something went wrong',
+                    style: AppTypography.body
+                        .copyWith(color: AppColors.textMuted)),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => ref.invalidate(hobbyListProvider),
+                  child: Text('Tap to retry',
+                      style: AppTypography.body
+                          .copyWith(color: AppColors.accent)),
+                ),
+              ],
             ),
-            Expanded(
-              child: hobbiesAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.accent),
-                ),
-                error: (e, _) => Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(MdiIcons.alertCircleOutline,
-                          size: 32, color: AppColors.textMuted),
-                      const SizedBox(height: 12),
-                      Text('Something went wrong',
-                          style: AppTypography.body
-                              .copyWith(color: AppColors.textMuted)),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => ref.invalidate(hobbyListProvider),
-                        child: Text('Tap to retry',
-                            style: AppTypography.body
-                                .copyWith(color: AppColors.accent)),
-                      ),
-                    ],
-                  ),
-                ),
-                data: (allHobbies) => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
-                  child: _searchActive
-                      ? _buildSearchView(allHobbies)
-                      : _buildDiscoverRails(allHobbies, prefs),
+          ),
+          data: (allHobbies) => Stack(
+            children: [
+              // Rails always present underneath — no rebuild on toggle
+              _buildDiscoverRails(allHobbies, prefs),
+              // Search overlay fades in on top
+              AnimatedOpacity(
+                opacity: _searchActive ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                child: IgnorePointer(
+                  ignoring: !_searchActive,
+                  child: _buildSearchViewScrollable(allHobbies),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       ),
     );
   }
+
+  // ── Search bar as a SliverPersistentHeader delegate ──
 
   Widget _buildSearchBar() {
     return Row(
@@ -391,6 +391,8 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                               decoration: InputDecoration(
                                 border: InputBorder.none,
                                 isDense: true,
+                                filled: true,
+                                fillColor: Colors.transparent,
                                 hintText: 'Search hobbies...',
                                 hintStyle: AppTypography.body.copyWith(
                                   fontSize: 13,
@@ -476,7 +478,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     final expandedTags = <String>{};
     for (final word in words) {
       for (final entry in _nlpKeywords.entries) {
-        if (word.contains(entry.key) || entry.key.contains(word)) {
+        if (word == entry.key || (word.length > 3 && entry.key.startsWith(word))) {
           expandedTags.addAll(entry.value);
         }
       }
@@ -499,8 +501,15 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       if (expandedTags.contains('easy') && h.difficultyText.toLowerCase() == 'easy') score += 2;
       if (expandedTags.contains('budget') || expandedTags.contains('free')) {
         final (_, max) = parseCostRange(h.costText);
-        if (max <= 30) score += 3;
+        if (max <= 30) score += 5;
       }
+      // Time/quick matching
+      if (words.any((w) => ['quick', 'fast', 'easy'].contains(w))) {
+        final hours = parseWeeklyHours(h.timeText);
+        if (hours <= 2) score += 5;
+      }
+      // WhyLove field matching
+      if (words.any((w) => h.whyLove.toLowerCase().contains(w))) score += 2;
       if (score > 0) scored.add((h, score));
     }
     scored.sort((a, b) => b.$2.compareTo(a.$2));
@@ -512,7 +521,30 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     return results;
   }
 
-  Widget _buildSearchView(List<Hobby> allHobbies) {
+  // ── Search view wrapped in a CustomScrollView with floating search bar ──
+  Widget _buildSearchViewScrollable(List<Hobby> allHobbies) {
+    return ColoredBox(
+      color: AppColors.background,
+      child: CustomScrollView(
+      key: const ValueKey('search-scroll'),
+      slivers: [
+        // Floating search bar header (pinned when search active)
+        SliverPersistentHeader(
+          pinned: _searchActive,
+          floating: true,
+          delegate: _SearchBarHeaderDelegate(
+            child: _buildSearchBar(),
+            searchActive: _searchActive,
+          ),
+        ),
+        // Search content as slivers
+        ..._buildSearchContentSlivers(allHobbies),
+      ],
+    ),
+    );
+  }
+
+  List<Widget> _buildSearchContentSlivers(List<Hobby> allHobbies) {
     final genState = ref.watch(generationProvider);
     final isPro = ref.watch(isProProvider);
 
@@ -525,41 +557,45 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     });
 
     // Category chips — always visible at top of search view
-    final categoryRow = SizedBox(
-      height: 34,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        children: [
-          _SearchChip(
-            label: 'All',
-            isSelected: _selectedSearchCategory == null,
-            onTap: () => setState(() => _selectedSearchCategory = null),
+    final categoryRow = SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: SizedBox(
+          height: 34,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            children: [
+              _SearchChip(
+                label: 'All',
+                isSelected: _selectedSearchCategory == null,
+                onTap: () => setState(() => _selectedSearchCategory = null),
+              ),
+              const SizedBox(width: 6),
+              ..._categoryFilters.map((f) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: _SearchChip(
+                  label: f.label,
+                  isSelected: _selectedSearchCategory == f.id,
+                  onTap: () => setState(() =>
+                      _selectedSearchCategory = _selectedSearchCategory == f.id ? null : f.id),
+                ),
+              )),
+            ],
           ),
-          const SizedBox(width: 6),
-          ..._categoryFilters.map((f) => Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: _SearchChip(
-              label: f.label,
-              isSelected: _selectedSearchCategory == f.id,
-              onTap: () => setState(() =>
-                  _selectedSearchCategory = _selectedSearchCategory == f.id ? null : f.id),
-            ),
-          )),
-        ],
+        ),
       ),
     );
 
     if (_searchQuery.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          categoryRow,
-          const SizedBox(height: 8),
-          Expanded(child: _buildSearchSuggestions()),
-        ],
-      );
+      return [
+        categoryRow,
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        SliverFillRemaining(
+          hasScrollBody: true,
+          child: _buildSearchSuggestions(),
+        ),
+      ];
     }
 
     final results = _nlpSearch(allHobbies);
@@ -567,127 +603,132 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     final isGenerating = genState.status == GenerationStatus.generating;
 
     if (results.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          categoryRow,
-          const SizedBox(height: 16),
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(MdiIcons.magnifyClose, size: 36, color: AppColors.textMuted),
-                    const SizedBox(height: 12),
-                    Text('No results for "$_searchQuery"',
-                        style: AppTypography.body.copyWith(color: AppColors.textMuted),
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 20),
-                    if (isGenerating) ...[
-                      const SizedBox(width: 24, height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral)),
-                      const SizedBox(height: 10),
-                      Text('Generating hobby...', style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
-                    ] else if (genState.status == GenerationStatus.error) ...[
-                      Text('Something went wrong. Try again?',
-                          style: AppTypography.caption.copyWith(color: AppColors.textMuted)),
-                      const SizedBox(height: 10),
-                      _buildGenerateButton(isPro, genState),
-                    ] else
-                      _buildGenerateButton(isPro, genState),
-                  ],
-                ),
+      return [
+        categoryRow,
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(MdiIcons.magnifyClose, size: 36, color: AppColors.textMuted),
+                  const SizedBox(height: 12),
+                  Text('No results for "$_searchQuery"',
+                      style: AppTypography.body.copyWith(color: AppColors.textMuted),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  if (isGenerating) ...[
+                    const SizedBox(width: 24, height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral)),
+                    const SizedBox(height: 10),
+                    Text('Generating hobby...', style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
+                  ] else if (genState.status == GenerationStatus.error) ...[
+                    Text('Something went wrong. Try again?',
+                        style: AppTypography.caption.copyWith(color: AppColors.textMuted)),
+                    const SizedBox(height: 10),
+                    _buildGenerateButton(isPro, genState),
+                  ] else
+                    _buildGenerateButton(isPro, genState),
+                ],
               ),
             ),
           ),
-        ],
-      );
+        ),
+      ];
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        categoryRow,
-        const SizedBox(height: 14),
-        Expanded(
-          child: ListView(
-            key: ValueKey('results-$_searchQuery'),
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottomPadding),
-            children: [
-              // Result count
-              Row(children: [
-                Text('Top Results', style: AppTypography.title.copyWith(fontSize: 17)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: AppColors.surfaceElevated,
-                      borderRadius: BorderRadius.circular(Spacing.radiusBadge)),
-                  child: Text('${results.length} found',
-                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary, fontSize: 11)),
-                ),
-              ]),
-              const SizedBox(height: 12),
-
-              // Results
-              ...results.map((h) => _SearchResultItem(hobby: h)),
-
-              // AI generation for Pro (few results)
-              if (isPro && fewResults && !isGenerating && genState.status != GenerationStatus.error)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: GestureDetector(
-                    onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.coral.withValues(alpha: 0.3))),
-                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(MdiIcons.creationOutline, size: 16, color: AppColors.coral),
-                        const SizedBox(width: 8),
-                        Text('Find more with AI', style: AppTypography.body.copyWith(
-                            color: AppColors.coral, fontWeight: FontWeight.w600)),
-                      ]),
-                    ),
-                  ),
-                ),
-
-              if (isPro && fewResults && isGenerating)
-                Padding(padding: const EdgeInsets.only(top: 8), child: _AiSearchingTile()),
-
-              if (!isPro && fewResults)
-                _AiSearchLockedTile(
-                  onTap: () => showProUpgrade(context, 'AI Search finds custom hobbies when results are limited.'),
-                ),
-
-              if (isPro && fewResults && genState.status == GenerationStatus.error)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: GestureDetector(
-                    onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.border)),
-                      child: Row(children: [
-                        Icon(Icons.refresh_rounded, size: 18, color: AppColors.coral),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text('AI suggestion failed. Tap to retry.',
-                            style: AppTypography.caption.copyWith(color: AppColors.textSecondary))),
-                      ]),
-                    ),
-                  ),
-                ),
-            ],
+    return [
+      categoryRow,
+      const SliverToBoxAdapter(child: SizedBox(height: 14)),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+        sliver: SliverToBoxAdapter(
+          child: Row(children: [
+            Text('Top Results', style: AppTypography.title.copyWith(fontSize: 17)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(Spacing.radiusBadge)),
+              child: Text('${results.length} found',
+                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary, fontSize: 11)),
+            ),
+          ]),
+        ),
+      ),
+      const SliverToBoxAdapter(child: SizedBox(height: 12)),
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _SearchResultItem(hobby: results[index]),
+            childCount: results.length,
           ),
         ),
-      ],
-    );
+      ),
+      // AI generation widgets
+      if (isPro && fewResults && !isGenerating && genState.status != GenerationStatus.error)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          sliver: SliverToBoxAdapter(
+            child: GestureDetector(
+              onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.coral.withValues(alpha: 0.3))),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(MdiIcons.creationOutline, size: 16, color: AppColors.coral),
+                  const SizedBox(width: 8),
+                  Text('Find more with AI', style: AppTypography.body.copyWith(
+                      color: AppColors.coral, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      if (isPro && fewResults && isGenerating)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          sliver: SliverToBoxAdapter(child: _AiSearchingTile()),
+        ),
+      if (!isPro && fewResults)
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          sliver: SliverToBoxAdapter(
+            child: _AiSearchLockedTile(
+              onTap: () => showProUpgrade(context, 'AI Search finds custom hobbies when results are limited.'),
+            ),
+          ),
+        ),
+      if (isPro && fewResults && genState.status == GenerationStatus.error)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          sliver: SliverToBoxAdapter(
+            child: GestureDetector(
+              onTap: () => ref.read(generationProvider.notifier).generate(_searchQuery),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border)),
+                child: Row(children: [
+                  Icon(Icons.refresh_rounded, size: 18, color: AppColors.coral),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('AI suggestion failed. Tap to retry.',
+                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary))),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      const SliverPadding(
+        padding: EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
+      ),
+    ];
   }
 
   Widget _buildGenerateButton(bool isPro, GenerationState genState) {
@@ -729,6 +770,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
+            alignment: WrapAlignment.center,
             children: _nlpSuggestions.map((s) => GestureDetector(
               onTap: () => setState(() {
                 _searchQuery = s;
@@ -766,6 +808,9 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
       return hours <= 2 && h.difficultyText.toLowerCase() == 'easy';
     }).toList());
 
+    // "Need a Different Vibe?" rail — lowest match scores
+    final vibeHobbies = _buildDifferentVibeList(allHobbies, prefs);
+
     final heroHobby = forYou.isNotEmpty ? forYou.first : null;
     final alternates =
         forYou.length > 1 ? forYou.skip(1).take(2).toList() : <Hobby>[];
@@ -773,11 +818,21 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     return CustomScrollView(
       key: const ValueKey('discover'),
       slivers: [
+        // ── Floating search bar ──
+        SliverPersistentHeader(
+          pinned: false,
+          floating: true,
+          delegate: _SearchBarHeaderDelegate(
+            child: _buildSearchBar(),
+            searchActive: false,
+          ),
+        ),
+
         // ── Hero card ──
         if (heroHobby != null)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
               child: _HeroCard(hobby: heroHobby),
             ),
           ),
@@ -822,6 +877,12 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             title: 'START THIS WEEK',
             hobbies: startThisWeek,
             routeId: 'start-this-week',
+          ),
+
+        // ── NEED A DIFFERENT VIBE? rail ──
+        if (vibeHobbies.isNotEmpty)
+          _SliverVibeRail(
+            hobbies: vibeHobbies,
           ),
 
         // Empty state
@@ -871,6 +932,53 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     scored.sort((a, b) => b.score.compareTo(a.score));
     return scored.take(10).map((e) => e.hobby).toList();
   }
+
+  /// Returns the lowest-scoring 6 hobbies for the "Need a Different Vibe?" rail.
+  List<Hobby> _buildDifferentVibeList(List<Hobby> allHobbies, UserPreferences prefs) {
+    final scored = allHobbies.map((h) {
+      final score = computeMatchScore(
+        hobby: h,
+        userHours: prefs.hoursPerWeek.toDouble(),
+        userBudgetLevel: prefs.budgetLevel,
+        userPrefersSocial: prefs.preferSocial,
+        userVibes: prefs.vibes,
+      );
+      return (hobby: h, score: score);
+    }).toList();
+    scored.sort((a, b) => a.score.compareTo(b.score)); // ascending — lowest first
+    return scored.take(6).map((e) => e.hobby).toList();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEARCH BAR PERSISTENT HEADER DELEGATE
+// ═══════════════════════════════════════════════════════
+
+class _SearchBarHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final bool searchActive;
+
+  _SearchBarHeaderDelegate({required this.child, required this.searchActive});
+
+  static const double _headerHeight = 70; // searchBarHeight + vertical padding
+
+  @override
+  double get minExtent => _headerHeight;
+
+  @override
+  double get maxExtent => _headerHeight;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _SearchBarHeaderDelegate oldDelegate) =>
+      searchActive != oldDelegate.searchActive || child != oldDelegate.child;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1111,23 +1219,45 @@ class _SliverCompactRail extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: AppTypography.overline
-                        .copyWith(color: AppColors.textMuted)),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => context.push(
-                      '/rail-feed/$routeId?title=${Uri.encodeComponent(title)}'),
-                  child: Text('See all',
-                      style: AppTypography.caption
-                          .copyWith(color: AppColors.textSecondary)),
+                Row(
+                  children: [
+                    Text(title,
+                        style: AppTypography.overline
+                            .copyWith(color: AppColors.textMuted)),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => context.push(
+                          '/rail-feed/$routeId?title=${Uri.encodeComponent(title)}'),
+                      child: Text('See all',
+                          style: AppTypography.caption
+                              .copyWith(color: AppColors.textSecondary)),
+                    ),
+                  ],
+                ),
+                // Rail header glow line
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        AppColors.coral.withValues(alpha: 0.3),
+                        AppColors.coral.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 12),
           SizedBox(
             height: 160,
             child: ListView.separated(
@@ -1136,7 +1266,10 @@ class _SliverCompactRail extends StatelessWidget {
               itemCount: hobbies.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) =>
-                  _CompactCard(hobby: hobbies[index]),
+                  _CompactCard(hobby: hobbies[index])
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: (index * 100).ms)
+                      .slideX(begin: 0.1, end: 0, duration: 400.ms, delay: (index * 100).ms, curve: Curves.easeOutCubic),
             ),
           ),
         ],
@@ -1146,85 +1279,284 @@ class _SliverCompactRail extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-//  COMPACT CARD — Small card for horizontal rails
+//  COMPACT CARD — Small card for horizontal rails (3D tilt)
 // ═══════════════════════════════════════════════════════
 
-class _CompactCard extends StatelessWidget {
+class _CompactCard extends StatefulWidget {
   final Hobby hobby;
 
   const _CompactCard({required this.hobby});
 
   @override
+  State<_CompactCard> createState() => _CompactCardState();
+}
+
+class _CompactCardState extends State<_CompactCard> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        context.push('/hobby/${widget.hobby.id}');
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: _isPressed ? 1.0 : 0.0),
+        duration: const Duration(milliseconds: 150),
+        builder: (context, value, child) {
+          return Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001) // perspective
+              ..rotateY(-0.03 * value) // subtle tilt
+              // ignore: deprecated_member_use
+              ..scale(1.0 - 0.03 * value, 1.0 - 0.03 * value, 1.0), // scale to 0.97
+            alignment: FractionalOffset.center,
+            child: child,
+          );
+        },
+        child: GlassCard(
+          padding: EdgeInsets.zero,
+          borderRadius: 14,
+          child: SizedBox(
+            width: 140,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.hobby.imageUrl,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 300,
+                    placeholder: (_, __) =>
+                        Container(color: AppColors.surfaceElevated),
+                    errorWidget: (_, __, ___) => Container(
+                      color: AppColors.surfaceElevated,
+                      child: Icon(AppIcons.categoryIcon(widget.hobby.category),
+                          size: 24, color: AppColors.textMuted),
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withAlpha(150),
+                        Colors.black.withAlpha(200),
+                      ],
+                      stops: const [0.3, 0.7, 1.0],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.hobby.title,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${widget.hobby.costText} · ${widget.hobby.timeText}',
+                        style: AppTypography.data.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  "NEED A DIFFERENT VIBE?" RAIL
+// ═══════════════════════════════════════════════════════
+
+class _SliverVibeRail extends StatelessWidget {
+  final List<Hobby> hobbies;
+
+  const _SliverVibeRail({required this.hobbies});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('NEED A DIFFERENT VIBE?',
+                    style: AppTypography.overline
+                        .copyWith(color: AppColors.textMuted)),
+                // Rail header glow line
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        AppColors.coral.withValues(alpha: 0.3),
+                        AppColors.coral.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 200,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              itemCount: hobbies.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) =>
+                  _VibeCard(hobby: hobbies[index])
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: (index * 100).ms)
+                      .slideX(begin: 0.1, end: 0, duration: 400.ms, delay: (index * 100).ms, curve: Curves.easeOutCubic),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  VIBE CARD — Larger card for "Different Vibe" rail
+// ═══════════════════════════════════════════════════════
+
+class _VibeCard extends StatelessWidget {
+  final Hobby hobby;
+
+  const _VibeCard({required this.hobby});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
       onTap: () => context.push('/hobby/${hobby.id}'),
-      padding: EdgeInsets.zero,
-      borderRadius: 14,
-      child: SizedBox(
-        width: 140,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: CachedNetworkImage(
+      child: Container(
+        width: 180,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.coral.withValues(alpha: 0.10),
+            width: 0.5,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Image
+              CachedNetworkImage(
                 imageUrl: hobby.imageUrl,
                 fit: BoxFit.cover,
-                memCacheWidth: 300,
+                memCacheWidth: 400,
                 placeholder: (_, __) =>
                     Container(color: AppColors.surfaceElevated),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.surfaceElevated,
                   child: Icon(AppIcons.categoryIcon(hobby.category),
-                      size: 24, color: AppColors.textMuted),
+                      size: 28, color: AppColors.textMuted),
                 ),
               ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withAlpha(150),
-                    Colors.black.withAlpha(200),
+
+              // Dramatic gradient — heavier at bottom
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withAlpha(80),
+                      Colors.black.withAlpha(190),
+                      Colors.black.withAlpha(230),
+                    ],
+                    stops: const [0.0, 0.3, 0.65, 1.0],
+                  ),
+                ),
+              ),
+
+              // Hook text overlaid on image
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      hobby.title,
+                      style: AppTypography.title.copyWith(
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hobby.hook,
+                      style: AppTypography.body.copyWith(
+                        color: Colors.white.withAlpha(180),
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${hobby.costText} · ${hobby.timeText}',
+                      style: AppTypography.data.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
                   ],
-                  stops: const [0.3, 0.7, 1.0],
                 ),
               ),
-            ),
-            Positioned(
-              left: 10,
-              right: 10,
-              bottom: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    hobby.title,
-                    style: AppTypography.body.copyWith(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${hobby.costText} · ${hobby.timeText}',
-                    style: AppTypography.data.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1329,7 +1661,9 @@ class _SearchChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? AppColors.coral : AppColors.surface,
           borderRadius: BorderRadius.circular(Spacing.radiusBadge),

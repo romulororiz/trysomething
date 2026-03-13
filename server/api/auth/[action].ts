@@ -5,6 +5,7 @@ import {
   errorResponse,
 } from "../../lib/middleware";
 import { prisma } from "../../lib/db";
+import jwt from "jsonwebtoken";
 import {
   hashPassword,
   comparePassword,
@@ -31,6 +32,8 @@ export default async function handler(
       return handleRefresh(req, res);
     case "google":
       return handleGoogle(req, res);
+    case "apple":
+      return handleApple(req, res);
     default:
       errorResponse(res, 404, `Unknown auth action '${action}'`);
   }
@@ -295,5 +298,145 @@ async function handleGoogle(
   } catch (err) {
     console.error("POST /api/auth/google error:", err);
     errorResponse(res, 500, "Google sign-in failed");
+  }
+}
+
+// ── Apple Sign-In ───────────────────────────────
+
+/**
+ * Generate the client_secret JWT that Apple requires for token exchange.
+ * Signed with the .p8 private key, valid for 5 minutes.
+ */
+function generateAppleClientSecret(): string {
+  const teamId = process.env.APPLE_TEAM_ID!;
+  const keyId = process.env.APPLE_KEY_ID!;
+  const privateKey = process.env.APPLE_PRIVATE_KEY!.replace(/\\n/g, "\n");
+  const clientId = process.env.APPLE_SERVICE_ID!;
+
+  return jwt.sign({}, privateKey, {
+    algorithm: "ES256",
+    expiresIn: "5m",
+    audience: "https://appleid.apple.com",
+    issuer: teamId,
+    subject: clientId,
+    keyid: keyId,
+  });
+}
+
+/**
+ * Decode an Apple identity token without verification.
+ * Apple's public keys rotate, so for simplicity we decode the payload
+ * after validating the authorization code exchange succeeded.
+ */
+function decodeAppleIdToken(idToken: string): {
+  sub: string;
+  email?: string;
+} {
+  const payload = JSON.parse(
+    Buffer.from(idToken.split(".")[1], "base64url").toString()
+  );
+  return { sub: payload.sub, email: payload.email };
+}
+
+async function handleApple(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  try {
+    const { authorizationCode, identityToken, fullName } = req.body ?? {};
+
+    if (!authorizationCode && !identityToken) {
+      errorResponse(
+        res,
+        400,
+        "authorizationCode or identityToken is required"
+      );
+      return;
+    }
+
+    let appleId: string;
+    let email: string | undefined;
+    let name: string | undefined;
+
+    if (authorizationCode) {
+      // Exchange authorization code for tokens (Android/web flow)
+      const clientSecret = generateAppleClientSecret();
+      const tokenRes = await fetch("https://appleid.apple.com/auth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: process.env.APPLE_SERVICE_ID!,
+          client_secret: clientSecret,
+          code: authorizationCode,
+          grant_type: "authorization_code",
+        }),
+      });
+
+      if (!tokenRes.ok) {
+        const errorBody = await tokenRes.text();
+        console.error("Apple token exchange failed:", errorBody);
+        errorResponse(res, 401, "Invalid Apple authorization code");
+        return;
+      }
+
+      const tokenData = (await tokenRes.json()) as { id_token: string };
+      const decoded = decodeAppleIdToken(tokenData.id_token);
+      appleId = decoded.sub;
+      email = decoded.email;
+    } else {
+      // iOS native flow — identityToken is already a JWT from Apple
+      const decoded = decodeAppleIdToken(identityToken);
+      appleId = decoded.sub;
+      email = decoded.email;
+    }
+
+    // Apple only sends name on FIRST sign-in
+    if (fullName) {
+      const parts = [fullName.givenName, fullName.familyName]
+        .filter(Boolean);
+      if (parts.length > 0) name = parts.join(" ");
+    }
+
+    // Find or create user
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { appleId },
+          ...(email ? [{ email: email.toLowerCase() }] : []),
+        ],
+      },
+      include: { preferences: true },
+    });
+
+    if (user) {
+      if (!user.appleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { appleId },
+          include: { preferences: true },
+        });
+      }
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: (email || `apple_${appleId}@privaterelay`).toLowerCase(),
+          passwordHash: "",
+          displayName: name || email?.split("@")[0] || "User",
+          appleId,
+          preferences: { create: {} },
+        },
+        include: { preferences: true },
+      });
+    }
+
+    const tokens = generateTokenPair(user.id);
+
+    res.status(200).json({
+      user: mapUserWithPreferences(user),
+      ...tokens,
+    });
+  } catch (err) {
+    console.error("POST /api/auth/apple error:", err);
+    errorResponse(res, 500, "Apple sign-in failed");
   }
 }

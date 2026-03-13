@@ -162,6 +162,7 @@ model User {
   bio          String          @default("")
   avatarUrl    String?
   googleId     String?         @unique
+  appleId      String?         @unique
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 

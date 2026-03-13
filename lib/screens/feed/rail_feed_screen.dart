@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../components/hobby_card.dart';
@@ -32,20 +33,58 @@ class RailFeedScreen extends ConsumerStatefulWidget {
 class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
   late PageController _pageController;
   bool _showSwipeHint = true;
+  int _currentPage = 0;
+  double _currentPageValue = 0.0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    Future.delayed(const Duration(seconds: 2), () {
+    _pageController.addListener(_onPageScroll);
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _showSwipeHint = false);
+    });
+  }
+
+  void _onPageScroll() {
+    if (!_pageController.position.haveDimensions) return;
+    final page = _pageController.page ?? 0.0;
+    setState(() {
+      _currentPageValue = page;
+      _currentPage = page.round();
     });
   }
 
   @override
   void dispose() {
+    _pageController.removeListener(_onPageScroll);
     _pageController.dispose();
     super.dispose();
+  }
+
+  Color _getCategoryGlowColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'creative':
+        return const Color(0xFFFF6B6B); // coral
+      case 'outdoors':
+        return const Color(0xFF06D6A0); // sage
+      case 'fitness':
+        return const Color(0xFFFFB347); // amber
+      case 'music':
+        return const Color(0xFF7B68EE); // indigo
+      case 'food':
+        return const Color(0xFFDAA520); // golden
+      case 'maker':
+        return const Color(0xFF87CEEB); // steel
+      case 'mind':
+        return const Color(0xFFDDA0DD); // lavender
+      case 'collecting':
+        return const Color(0xFFF5F0EB); // cream
+      case 'social':
+        return const Color(0xFFFFB6C1); // peach
+      default:
+        return const Color(0xFFF5F0EB);
+    }
   }
 
   List<Hobby> _filterHobbies(List<Hobby> all, UserPreferences prefs) {
@@ -102,7 +141,7 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
     final rootContext = context;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: hobbiesAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.coral),
@@ -117,8 +156,34 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
           if (hobbies.isEmpty) {
             return _buildEmpty();
           }
+          final currentHobby = hobbies[
+              _currentPage.clamp(0, hobbies.length - 1)];
           return Stack(
             children: [
+              // Category ambient glow (behind everything)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: IgnorePointer(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 600),
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.bottomCenter,
+                        radius: 1.2,
+                        colors: [
+                          _getCategoryGlowColor(currentHobby.category)
+                              .withValues(alpha: 0.05),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
               // TikTok-style vertical PageView
               PageView.builder(
                 controller: _pageController,
@@ -127,10 +192,15 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
                 itemBuilder: (itemCtx, index) {
                   final hobby = hobbies[index];
                   final isSaved = ref.watch(isHobbySavedProvider(hobby.id));
+                  double parallaxOffset = 0.0;
+                  if (_pageController.position.haveDimensions) {
+                    parallaxOffset = _currentPageValue - index;
+                  }
                   return HobbyCard(
                     hobby: hobby,
                     isSaved: isSaved,
                     compactCta: true,
+                    parallaxOffset: parallaxOffset,
                     onTap: () => itemCtx.push('/hobby/${hobby.id}'),
                     onSave: () => ref
                         .read(userHobbiesProvider.notifier)
@@ -181,7 +251,7 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
                 ),
               ),
 
-              // Swipe hint
+              // Swipe hint — animated chevron, fades after 3s
               if (_showSwipeHint)
                 Positioned(
                   left: 0,
@@ -189,13 +259,25 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
                   bottom: Spacing.scrollBottomPadding,
                   child: AnimatedOpacity(
                     opacity: _showSwipeHint ? 1.0 : 0.0,
-                    duration: Motion.normal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    duration: Motion.slow,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.keyboard_arrow_up_rounded,
-                            size: 18, color: Colors.white70),
-                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.keyboard_arrow_up_rounded,
+                          size: 24,
+                          color: Colors.white70,
+                        )
+                            .animate(
+                              onPlay: (c) => c.repeat(reverse: true),
+                            )
+                            .moveY(
+                              begin: 0,
+                              end: -6,
+                              duration: 1500.ms,
+                              curve: Curves.easeInOut,
+                            ),
+                        const SizedBox(height: 2),
                         Text(
                           'Swipe up to explore',
                           style: AppTypography.sansCaption.copyWith(

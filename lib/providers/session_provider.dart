@@ -148,7 +148,11 @@ class SessionNotifier extends StateNotifier<SessionState?> {
       elapsedSeconds: totalSec,
       phase: SessionPhase.completing,
     );
+    // Enhanced haptic alarm pattern
     HapticFeedback.mediumImpact();
+    Future.delayed(const Duration(milliseconds: 200), () => HapticFeedback.lightImpact());
+    Future.delayed(const Duration(milliseconds: 400), () => HapticFeedback.lightImpact());
+    Future.delayed(const Duration(milliseconds: 600), () => HapticFeedback.mediumImpact());
     debugPrint('[Session] Timer complete — entering completion moment');
 
     // Hold on the completion moment for 2 seconds, then advance.

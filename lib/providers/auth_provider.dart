@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../core/auth/token_storage.dart';
 import '../core/analytics/analytics_provider.dart';
 import '../core/analytics/analytics_service.dart';
@@ -15,7 +19,7 @@ import '../models/auth.dart';
 
 enum AuthStatus { unknown, unauthenticated, loading, authenticated }
 
-enum AuthMethod { none, email, google }
+enum AuthMethod { none, email, google, apple }
 
 class AuthState {
   final AuthStatus status;
@@ -201,6 +205,94 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('Error: $e');
       debugPrint('Stack: $stackTrace');
       debugPrint('══════════════════════════════════════════');
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        error: _extractError(e),
+      );
+      return false;
+    }
+  }
+
+  /// Generate a random nonce for Apple Sign In.
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  /// SHA256 hash of the nonce for Apple Sign In.
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  Future<bool> loginWithApple() async {
+    state = state.copyWith(status: AuthStatus.loading, error: null, loadingMethod: AuthMethod.apple);
+    try {
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+        webAuthenticationOptions: WebAuthenticationOptions(
+          clientId: const String.fromEnvironment(
+            'APPLE_SERVICE_ID',
+            defaultValue: 'com.romulororiz.trysomething.service',
+          ),
+          redirectUri: Uri.parse(
+            'https://server-psi-seven-49.vercel.app/api/auth/apple-callback',
+          ),
+        ),
+      );
+
+      if (credential.authorizationCode.isEmpty) {
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          error: 'Apple sign-in was cancelled',
+        );
+        return false;
+      }
+
+      debugPrint('[AppleAuth] Got credential, calling server...');
+
+      final response = await _repo.loginWithApple(
+        authorizationCode: credential.authorizationCode,
+        identityToken: credential.identityToken,
+        fullName: {
+          'givenName': credential.givenName,
+          'familyName': credential.familyName,
+        },
+      );
+
+      await TokenStorage.saveTokens(
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      );
+      debugPrint('[AppleAuth] Success!');
+      state = AuthState(status: AuthStatus.authenticated, user: response.user);
+      _analytics?.setUserId(response.user.id);
+      _analytics?.trackEvent('login_apple');
+      return true;
+    } catch (e, stackTrace) {
+      debugPrint('══════════════════════════════════════════');
+      debugPrint('Apple sign-in FAILED');
+      debugPrint('Type: ${e.runtimeType}');
+      debugPrint('Error: $e');
+      debugPrint('Stack: $stackTrace');
+      debugPrint('══════════════════════════════════════════');
+
+      // User cancelled — don't show error
+      if (e is SignInWithAppleAuthorizationException &&
+          e.code == AuthorizationErrorCode.canceled) {
+        state = const AuthState(status: AuthStatus.unauthenticated);
+        return false;
+      }
+
       state = AuthState(
         status: AuthStatus.unauthenticated,
         error: _extractError(e),

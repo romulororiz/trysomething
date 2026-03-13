@@ -16,6 +16,12 @@ abstract class AuthRepository {
 
   Future<AuthResponse> loginWithGoogle({String? idToken, String? accessToken});
 
+  Future<AuthResponse> loginWithApple({
+    String? authorizationCode,
+    String? identityToken,
+    Map<String, String?>? fullName,
+  });
+
   Future<Map<String, dynamic>> refreshToken({required String refreshToken});
 
   Future<AuthUser> getMe();

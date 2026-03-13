@@ -9,7 +9,7 @@ part of 'social.dart';
 _$JournalEntryImpl _$$JournalEntryImplFromJson(Map<String, dynamic> json) =>
     _$JournalEntryImpl(
       id: json['id'] as String,
-      hobbyId: json['hobbyId'] as String,
+      hobbyId: json['hobbyId'] as String?,
       text: json['text'] as String,
       photoUrl: json['photoUrl'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),

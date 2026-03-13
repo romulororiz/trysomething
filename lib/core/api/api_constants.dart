@@ -9,6 +9,7 @@ class ApiConstants {
   static const authLogin = '/auth/login';
   static const authRefresh = '/auth/refresh';
   static const authGoogle = '/auth/google';
+  static const authApple = '/auth/apple';
 
   // Users
   static const usersMe = '/users/me';

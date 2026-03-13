@@ -47,6 +47,8 @@ dependencies:
   # Auth
   flutter_secure_storage: ^9.2.4
   google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.6
 
   # Media
   image_picker: ^1.1.2

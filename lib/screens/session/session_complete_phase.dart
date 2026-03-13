@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../components/brushstroke_timer_painter.dart';
 import '../../models/session.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -49,11 +48,6 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Spacer(flex: 2),
-
-          // Completed brushstroke at full progress, slightly larger
-          const BrushstrokeTimer(progress: 1.0, size: 260),
-
-          const SizedBox(height: 32),
 
           // "Step complete" overline
           Text(

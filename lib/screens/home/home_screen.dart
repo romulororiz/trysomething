@@ -78,6 +78,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .toList();
 
     if (activeEntries.isEmpty) {
+      // Not loading — show navbar
+      Future.microtask(
+          () => ref.read(shellLoadingProvider.notifier).state = false);
       return _EmptyHomeState();
     }
 
@@ -87,11 +90,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (e) => ref.watch(hobbyByIdProvider(e.value.hobbyId)).isLoading,
     );
     if (anyLoading) {
+      // Hide navbar while loading
+      Future.microtask(
+          () => ref.read(shellLoadingProvider.notifier).state = true);
       return const Scaffold(
         backgroundColor: Colors.transparent,
         body: AppBackground(tintTopLeft: false, child: LogoLoader()),
       );
     }
+
+    // Content ready — show navbar
+    Future.microtask(
+        () => ref.read(shellLoadingProvider.notifier).state = false);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -328,25 +338,32 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               const SizedBox(height: 24),
 
               // Restart prompt (stalled 3+ days)
-              if (daysSinceActivity >= 3) ...[
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
-                  child: _restartDismissed
-                      ? const SizedBox.shrink(key: ValueKey('empty'))
-                      : _RestartCard(
-                          key: const ValueKey('restart'),
-                          hobbyTitle: hobby.title,
-                          daysSince: daysSinceActivity,
-                          onPickUp: () =>
-                              context.push('/hobby/${hobby.id}'),
-                          onSwitch: () =>
-                              setState(() => _restartDismissed = true),
-                        ),
+              if (daysSinceActivity >= 3)
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  clipBehavior: Clip.none,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, anim) =>
+                        FadeTransition(opacity: anim, child: child),
+                    child: _restartDismissed
+                        ? const SizedBox.shrink(key: ValueKey('empty'))
+                        : Padding(
+                            key: const ValueKey('restart'),
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: _RestartCard(
+                              hobbyTitle: hobby.title,
+                              daysSince: daysSinceActivity,
+                              onPickUp: () =>
+                                  context.push('/hobby/${hobby.id}'),
+                              onSwitch: () =>
+                                  setState(() => _restartDismissed = true),
+                            ),
+                          ),
+                  ),
                 ),
-                if (!_restartDismissed) const SizedBox(height: 20),
-              ],
 
               // ── 4-Stage Roadmap ──
               StageRoadmapCard(

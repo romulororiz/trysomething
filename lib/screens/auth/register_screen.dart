@@ -61,17 +61,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _googleSignUp() async {
     final success = await ref.read(authProvider.notifier).loginWithGoogle();
-    if (success && mounted) {
-      final user = ref.read(authProvider).user;
-      if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
-      ref.read(userHobbiesProvider.notifier).syncFromServer();
-      ref.read(journalProvider.notifier).loadFromServer();
-      ref.read(scheduleProvider.notifier).loadFromServer();
-      ref.read(storiesProvider.notifier).loadFromServer();
-      ref.read(buddyProvider.notifier).loadFromServer();
-      ref.read(challengeProvider.notifier).loadFromServer();
-      context.go('/onboarding');
-    }
+    if (success && mounted) _onAuthSuccess();
+  }
+
+  Future<void> _appleSignUp() async {
+    final success = await ref.read(authProvider.notifier).loginWithApple();
+    if (success && mounted) _onAuthSuccess();
+  }
+
+  void _onAuthSuccess() {
+    final user = ref.read(authProvider).user;
+    if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
+    ref.read(userHobbiesProvider.notifier).syncFromServer();
+    ref.read(journalProvider.notifier).loadFromServer();
+    ref.read(scheduleProvider.notifier).loadFromServer();
+    ref.read(storiesProvider.notifier).loadFromServer();
+    ref.read(buddyProvider.notifier).loadFromServer();
+    ref.read(challengeProvider.notifier).loadFromServer();
+    context.go('/onboarding');
   }
 
   @override
@@ -80,6 +87,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isLoading = authState.status == AuthStatus.loading;
     final isEmailLoading = isLoading && authState.loadingMethod == AuthMethod.email;
     final isGoogleLoading = isLoading && authState.loadingMethod == AuthMethod.google;
+    final isAppleLoading = isLoading && authState.loadingMethod == AuthMethod.apple;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -335,7 +343,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               child: _SocialButton(
                                 label: 'Apple',
                                 icon: Icons.apple,
-                                onTap: null, // placeholder
+                                isLoading: isAppleLoading,
+                                onTap: isLoading ? null : _appleSignUp,
                               ),
                             ),
                           ],

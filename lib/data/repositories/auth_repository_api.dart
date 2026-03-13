@@ -48,6 +48,20 @@ class AuthRepositoryApi implements AuthRepository {
   }
 
   @override
+  Future<AuthResponse> loginWithApple({
+    String? authorizationCode,
+    String? identityToken,
+    Map<String, String?>? fullName,
+  }) async {
+    final response = await _dio.post(ApiConstants.authApple, data: {
+      if (authorizationCode != null) 'authorizationCode': authorizationCode,
+      if (identityToken != null) 'identityToken': identityToken,
+      if (fullName != null) 'fullName': fullName,
+    });
+    return AuthResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
   Future<Map<String, dynamic>> refreshToken({
     required String refreshToken,
   }) async {

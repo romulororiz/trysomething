@@ -26,12 +26,16 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late bool _notificationsEnabled;
+  late bool _vibrationEnabled;
+  late bool _soundEnabled;
 
   @override
   void initState() {
     super.initState();
     final prefs = ref.read(sharedPreferencesProvider);
     _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    _vibrationEnabled = prefs.getBool('session_vibration') ?? true;
+    _soundEnabled = prefs.getBool('session_sound') ?? false;
   }
 
   @override
@@ -228,6 +232,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     icon: Icons.info_outline_rounded,
                     title: 'About',
                     subtitle: 'TrySomething v1.0.0',
+                  ),
+
+                  // ── Session ──
+                  const SizedBox(height: 20),
+                  const _SectionLabel(text: 'SESSION'),
+                  const SizedBox(height: 12),
+
+                  _SettingsTile(
+                    icon: Icons.vibration,
+                    title: 'Vibration on complete',
+                    subtitle: 'Haptic feedback when session ends',
+                    trailing: Switch.adaptive(
+                      value: _vibrationEnabled,
+                      onChanged: (v) {
+                        setState(() => _vibrationEnabled = v);
+                        ref.read(sharedPreferencesProvider).setBool('session_vibration', v);
+                      },
+                      activeColor: AppColors.coral,
+                    ),
+                  ),
+
+                  _SettingsTile(
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Sound on complete',
+                    subtitle: 'Play a gentle chime',
+                    trailing: Switch.adaptive(
+                      value: _soundEnabled,
+                      onChanged: (v) {
+                        setState(() => _soundEnabled = v);
+                        ref.read(sharedPreferencesProvider).setBool('session_sound', v);
+                      },
+                      activeColor: AppColors.coral,
+                    ),
                   ),
 
                   // ── Debug Pro Toggle (debug builds only) ──

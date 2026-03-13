@@ -54,17 +54,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _googleSignIn() async {
     final success = await ref.read(authProvider.notifier).loginWithGoogle();
-    if (success && mounted) {
-      final user = ref.read(authProvider).user;
-      if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
-      ref.read(userHobbiesProvider.notifier).syncFromServer();
-      ref.read(journalProvider.notifier).loadFromServer();
-      ref.read(scheduleProvider.notifier).loadFromServer();
-      ref.read(storiesProvider.notifier).loadFromServer();
-      ref.read(buddyProvider.notifier).loadFromServer();
-      ref.read(challengeProvider.notifier).loadFromServer();
-      context.go('/home');
-    }
+    if (success && mounted) _onAuthSuccess();
+  }
+
+  Future<void> _appleSignIn() async {
+    final success = await ref.read(authProvider.notifier).loginWithApple();
+    if (success && mounted) _onAuthSuccess();
+  }
+
+  void _onAuthSuccess() {
+    final user = ref.read(authProvider).user;
+    if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
+    ref.read(userHobbiesProvider.notifier).syncFromServer();
+    ref.read(journalProvider.notifier).loadFromServer();
+    ref.read(scheduleProvider.notifier).loadFromServer();
+    ref.read(storiesProvider.notifier).loadFromServer();
+    ref.read(buddyProvider.notifier).loadFromServer();
+    ref.read(challengeProvider.notifier).loadFromServer();
+    context.go('/home');
   }
 
   @override
@@ -75,6 +82,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         isLoading && authState.loadingMethod == AuthMethod.email;
     final isGoogleLoading =
         isLoading && authState.loadingMethod == AuthMethod.google;
+    final isAppleLoading =
+        isLoading && authState.loadingMethod == AuthMethod.apple;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -284,7 +293,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: _SocialButton(
                                 label: 'Apple',
                                 icon: Icons.apple,
-                                onTap: null, // placeholder
+                                isLoading: isAppleLoading,
+                                onTap: isLoading ? null : _appleSignIn,
                               ),
                             ),
                           ],
