@@ -615,7 +615,7 @@ The current coach logic is improved, but the screen still feels like a generic A
 
 The biggest missing premium layer is that coach responses are too flat. Replace plain assistant bubbles with structured, actionable response blocks.
 
-- [ ] **P.1 — Add structured response rendering system**
+- [x] **P.1 — Add structured response rendering system**
   - Support multiple assistant response types instead of only plain chat bubbles
   - At minimum, add rendering support for:
     - quick plan cards
@@ -626,7 +626,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
   - Keep a plain text fallback if needed, but premium cards should become the preferred experience
   - **Test:** assistant can render at least two non-bubble structured response types
 
-- [ ] **P.2 — Build “Tonight’s easiest plan” card**
+- [x] **P.2 — Build “Tonight’s easiest plan” card**
   - Card should include:
     - session length
     - what to use
@@ -637,7 +637,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
     - Adjust it
   - **Test:** card renders correctly and actions work
 
-- [ ] **P.3 — Build “Cheaper way to start” card**
+- [x] **P.3 — Build “Cheaper way to start” card**
   - Card should include:
     - what to buy now
     - what to skip
@@ -647,7 +647,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
     - Show starter kit
   - **Test:** card makes budget coaching feel premium and useful
 
-- [ ] **P.4 — Build “Restart gently” recovery card**
+- [x] **P.4 — Build “Restart gently” recovery card**
   - Card should appear for inactivity or rescue mode
   - Include:
     - one tiny restart action
@@ -658,7 +658,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
     - Maybe switch hobbies
   - **Test:** recovery card feels supportive and practical
 
-- [ ] **P.5 — Build reflection prompt card**
+- [x] **P.5 — Build reflection prompt card**
   - Card should support post-session reflection and route to the Journal where useful
   - Include:
     - one or two reflective prompts
@@ -668,7 +668,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
     - Skip for now
   - **Test:** reflection card integrates cleanly with journal flow
 
-- [ ] **P.6 — Build week-plan adjustment card**
+- [x] **P.6 — Build week-plan adjustment card**
   - Card should allow the coach to revise the user’s current week plan
   - Include:
     - what changed
@@ -679,7 +679,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
     - Keep original
   - **Test:** coach can propose and apply plan changes
 
-- [ ] **P.7 — Improve assistant message styling**
+- [x] **P.7 — Improve assistant message styling**
   - Even plain assistant messages should feel more premium:
     - more breathing room
     - better hierarchy

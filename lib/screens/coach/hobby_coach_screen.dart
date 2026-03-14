@@ -19,6 +19,7 @@ import '../../models/hobby.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import '../../components/coach_cards.dart';
 
 // ═══════════════════════════════════════════════════════
 //  CHAT MESSAGE MODEL
@@ -185,7 +186,11 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
         ApiConstants.coachChat,
         data: {
           'hobbyId': hobbyId,
-          'messages': state.map((m) => {'role': m.role, 'content': m.content}).toList(),
+          'message': message.trim(),
+          'conversationHistory': state
+              .take(state.length - 1) // exclude the just-added user message
+              .map((m) => {'role': m.role, 'content': m.content})
+              .toList(),
         },
         options: Options(receiveTimeout: const Duration(seconds: 30)),
       );
@@ -862,13 +867,13 @@ class _CoachBubble extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.only(top: 4, bottom: 4, left: 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.coral,
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft: const Radius.circular(18),
-              bottomRight: const Radius.circular(4),
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(4),
             ),
           ),
           child: Text(
@@ -883,7 +888,16 @@ class _CoachBubble extends StatelessWidget {
       );
     }
 
-    // Assistant — premium styled with more breathing room
+    // Assistant — try structured cards first, fall back to plain bubble
+    final cards = parseCoachResponse(message.content);
+    if (cards != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 6, bottom: 6, right: 16),
+        child: CoachCardList(cards: cards),
+      );
+    }
+
+    // Plain text fallback
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -891,11 +905,11 @@ class _CoachBubble extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.glassBackground,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: const Radius.circular(4),
-            bottomRight: const Radius.circular(18),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(18),
           ),
           border: Border.all(color: AppColors.glassBorder, width: 0.5),
         ),
