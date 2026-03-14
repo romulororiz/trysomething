@@ -32,7 +32,7 @@ import {
 const prisma = new PrismaClient();
 
 // ── Shared Anthropic client (coach uses this directly) ──
-const COACH_MODEL = "claude-sonnet-4-20250514";
+const COACH_MODEL = "claude-sonnet-4-6";
 const COACH_MAX_TOKENS = 512;
 
 let _anthropic: Anthropic | null = null;
@@ -377,7 +377,7 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
   const userId = requireAuth(req, res);
   if (!userId) return;
 
-  const { hobbyId, message, conversationHistory } = req.body ?? {};
+  const { hobbyId, message, conversationHistory, modeOverride } = req.body ?? {};
 
   if (!hobbyId || typeof hobbyId !== "string") {
     return errorResponse(res, 400, "hobbyId is required");
@@ -436,7 +436,11 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const mode = detectCoachMode(userState, daysSinceLastSession);
+    const validOverrides: CoachMode[] = ["START", "MOMENTUM", "RESCUE"];
+    const mode: CoachMode =
+      typeof modeOverride === "string" && validOverrides.includes(modeOverride as CoachMode)
+        ? (modeOverride as CoachMode)
+        : detectCoachMode(userState, daysSinceLastSession);
 
     const journalEntries = recentJournal.map(
       (j: any) => `[${new Date(j.createdAt).toLocaleDateString()}] ${(j.text ?? "").slice(0, 100)}`

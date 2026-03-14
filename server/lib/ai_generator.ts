@@ -17,7 +17,7 @@ function getClient(): Anthropic {
   return _client;
 }
 
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-4-6";
 
 // ═══════════════════════════════════════════════════
 //  VALID CATEGORIES — single source of truth

@@ -696,7 +696,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
 
 The coach should make it obvious what help is available before users type anything.
 
-- [ ] **Q.1 — Replace simple chips with premium quick-action cards**
+- [x] **Q.1 — Replace simple chips with premium quick-action cards**
   - Upgrade the current lightweight chips into more substantial quick-action surfaces
   - At minimum, support:
     - Help me start tonight

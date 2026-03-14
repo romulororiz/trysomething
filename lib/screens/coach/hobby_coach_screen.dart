@@ -151,6 +151,12 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     await box.put(hobbyId, state.map((m) => m.toJson()).toList());
   }
 
+  String _selectedMode = 'AUTO';
+
+  void setMode(String mode) {
+    _selectedMode = mode;
+  }
+
   Future<void> send(String message) async {
     if (_sending || message.trim().isEmpty) return;
     _limitHit = false;
@@ -187,6 +193,7 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
         data: {
           'hobbyId': hobbyId,
           'message': message.trim(),
+          'modeOverride': _selectedMode,
           'conversationHistory': state
               .take(state.length - 1) // exclude the just-added user message
               .map((m) => {'role': m.role, 'content': m.content})
@@ -195,7 +202,7 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
         options: Options(receiveTimeout: const Duration(seconds: 30)),
       );
 
-      final reply = response.data['reply'] as String? ?? '';
+      final reply = response.data['response'] as String? ?? '';
       final assistantMsg = ChatMessage(role: 'assistant', content: reply);
       state = [...state, assistantMsg];
 
@@ -280,6 +287,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     if (mode == _mode) return;
     HapticFeedback.lightImpact();
     setState(() => _mode = mode);
+    ref.read(coachProvider(widget.hobbyId).notifier).setMode(mode.name.toUpperCase());
   }
 
   void _send() {

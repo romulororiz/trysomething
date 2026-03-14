@@ -78,6 +78,8 @@ export default async function handler(
       return handleChallengesRoute(req, res);
     case "achievements":
       return handleAchievementsRoute(req, res);
+    case "revenuecat-webhook":
+      return handleRevenueCatWebhook(req, res);
     default:
       errorResponse(res, 404, `Unknown user path '${path}'`);
   }
@@ -1082,5 +1084,106 @@ async function handleAchievementsRoute(
   } catch (err) {
     console.error("GET /api/users/achievements error:", err);
     errorResponse(res, 500, "Failed to get achievements");
+  }
+}
+
+// ── /webhooks/revenuecat (merged to stay within 12-function limit) ──
+
+async function handleRevenueCatWebhook(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
+  if (secret) {
+    const auth = req.headers.authorization;
+    if (!auth || auth !== `Bearer ${secret}`) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+  }
+
+  try {
+    const event = req.body?.event;
+    if (!event) {
+      res.status(400).json({ error: "Missing event data" });
+      return;
+    }
+
+    const eventType: string = event.type;
+    const appUserId: string | undefined = event.app_user_id;
+    const expirationAtMs: number | undefined = event.expiration_at_ms;
+    const productId: string | undefined = event.product_id;
+
+    if (!appUserId || appUserId.startsWith("$RCAnonymousID")) {
+      res.status(200).json({ status: "skipped", reason: "anonymous_user" });
+      return;
+    }
+
+    let user = await prisma.user.findUnique({ where: { id: appUserId } });
+    if (!user) {
+      user = await prisma.user.findUnique({ where: { revenuecatId: appUserId } });
+      if (!user) {
+        res.status(200).json({ status: "skipped", reason: "user_not_found" });
+        return;
+      }
+    }
+
+    const userId = user.id;
+    const expiresAt = expirationAtMs ? new Date(expirationAtMs) : undefined;
+    const isLifetimeProduct = productId?.includes("lifetime") ?? false;
+
+    switch (eventType) {
+      case "INITIAL_PURCHASE":
+      case "RENEWAL":
+      case "UNCANCELLATION":
+      case "PRODUCT_CHANGE":
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            subscriptionTier: isLifetimeProduct ? "lifetime" : "pro",
+            proSince: user.proSince ?? new Date(),
+            proExpiresAt: isLifetimeProduct ? null : expiresAt,
+            isLifetime: isLifetimeProduct,
+            revenuecatId: appUserId,
+          },
+        });
+        break;
+      case "NON_RENEWING_PURCHASE":
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            subscriptionTier: "lifetime",
+            proSince: user.proSince ?? new Date(),
+            proExpiresAt: null,
+            isLifetime: true,
+            revenuecatId: appUserId,
+          },
+        });
+        break;
+      case "CANCELLATION":
+      case "EXPIRATION":
+        if (!user.isLifetime) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { subscriptionTier: "free", proExpiresAt: expiresAt },
+          });
+        }
+        break;
+      case "BILLING_ISSUE":
+        console.log(`[RC Webhook] Billing issue for user ${userId}, product: ${productId}`);
+        break;
+      default:
+        console.log(`[RC Webhook] Unhandled event type: ${eventType}`);
+    }
+
+    res.status(200).json({ status: "ok", event: eventType, userId });
+  } catch (error) {
+    console.error("[RC Webhook] Error:", error);
+    res.status(200).json({ status: "error", message: "Internal error logged" });
   }
 }
