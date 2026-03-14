@@ -555,7 +555,7 @@ This covers the next major opportunity:
 
 The current coach logic is improved, but the screen still feels like a generic AI chat wrapper. Rebuild it into a premium guidance workspace.
 
-- [ ] **O.1 — Redefine the coach screen as a guidance workspace**
+- [x] **O.1 — Redefine the coach screen as a guidance workspace**
   - Stop treating the coach primarily as a chat screen
   - The screen should visually communicate:
     - the current hobby
@@ -565,7 +565,7 @@ The current coach logic is improved, but the screen still feels like a generic A
   - Remove the “generic AI chat” feel as the dominant identity
   - **Test:** coach screen feels productized before the user sends a message
 
-- [ ] **O.2 — Add a premium context hero at the top**
+- [x] **O.2 — Add a premium context hero at the top**
   - Build a top context card showing:
     - hobby title
     - current mode
@@ -576,7 +576,7 @@ The current coach logic is improved, but the screen still feels like a generic A
   - It should feel like a premium support space, not a page title bar
   - **Test:** top of coach gives useful context even before interaction
 
-- [ ] **O.3 — Replace the thin header with a stronger premium header system**
+- [x] **O.3 — Replace the thin header with a stronger premium header system**
   - Remove or de-emphasize the current minimal “AI Coach” style header
   - Replace with:
     - hobby identity
@@ -585,7 +585,7 @@ The current coach logic is improved, but the screen still feels like a generic A
   - Refresh behavior, if kept, should be quieter and less utilitarian
   - **Test:** top chrome feels premium and intentional
 
-- [ ] **O.4 — Add explicit coach mode selector**
+- [x] **O.4 — Add explicit coach mode selector**
   - Add a segmented premium mode switch:
     - Start
     - Momentum
@@ -594,7 +594,7 @@ The current coach logic is improved, but the screen still feels like a generic A
   - Switching mode should change the quick actions and prompt framing
   - **Test:** mode changes are obvious, useful, and visually smooth
 
-- [ ] **O.5 — Rebuild the empty state**
+- [x] **O.5 — Rebuild the empty state**
   - Replace the current icon/title/chips empty state with a richer premium onboarding state for the coach
   - Empty state should communicate:
     - what this coach does
@@ -603,7 +603,7 @@ The current coach logic is improved, but the screen still feels like a generic A
   - Keep it calm, premium, and action-first
   - **Test:** first-time coach entry feels valuable before typing
 
-- [ ] **O.6 — Reduce the dominance of the raw text composer**
+- [x] **O.6 — Reduce the dominance of the raw text composer**
   - The text input should remain available, but it should not dominate the screen
   - The first interaction should feel guided, not blank-page conversational
   - Rebalance the layout so guided actions matter more than typing from scratch
