@@ -71,5 +71,5 @@ class ApiConstants {
   static const generateBudget = '/generate/budget';
 
   // AI Coach
-  static const coachChat = '/coach/chat';
+  static const coachChat = '/generate/coach';
 }
