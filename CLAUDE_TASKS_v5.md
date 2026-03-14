@@ -127,7 +127,7 @@ The current Discover is better than before, but still carries rail-based browse 
   - Ensure transitions between feed/list/search feel polished
   - **Test:** no jank on physical device, no black flashes, no content jumps
 
-- [ ] **G.11 — Redesign cost breakdown screen as premium interactive surface**
+- [x] **G.11 — Redesign cost breakdown screen as premium interactive surface**
   - Current cost calculator screen looks amateurish and non-functional
   - Rebuild as a premium interactive cost breakdown:
     - Visual cost breakdown chart (stacked bar, donut, or segmented visual)
