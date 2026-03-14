@@ -392,19 +392,19 @@ The biggest remaining product logic issue is still the coach gating.
 
 Keep the teal + burgundy atmosphere, but make the rest of the app harmonize with it.
 
-- [ ] **L.1 — Keep teal/burgundy background intentionally**
+- [x] **L.1 — Keep teal/burgundy background intentionally**
   - Retain the atmospheric teal + burgundy background treatment
   - Do not replace it with a different visual base
   - Instead, harmonize all surfaces, type, and accents with it
   - **Test:** background feels like atmosphere, not visual competition
 
-- [ ] **L.2 — Reduce accent overuse**
+- [x] **L.2 — Reduce accent overuse**
   - Audit screens for coral overuse
   - Keep one clear primary coral CTA per screen where possible
   - Demote competing accents to quiet neutrals
   - **Test:** screens feel calmer and more expensive
 
-- [ ] **L.3 — Audit card/material hierarchy**
+- [x] **L.3 — Audit card/material hierarchy**
   - Ensure all screens use a coherent material family:
     - grounded surfaces
     - floating surfaces
@@ -412,7 +412,7 @@ Keep the teal + burgundy atmosphere, but make the rest of the app harmonize with
   - Remove mixed old/new card language where it still exists
   - **Test:** screens feel built from the same system
 
-- [ ] **L.4 — Metadata consistency pass**
+- [x] **L.4 — Metadata consistency pass**
   - Ensure metadata treatment is consistent across:
     - feed cards
     - list cards
@@ -422,7 +422,7 @@ Keep the teal + burgundy atmosphere, but make the rest of the app harmonize with
     - roadmap
   - **Test:** metadata styling is quiet, premium, and consistent
 
-- [ ] **L.5 — CTA hierarchy consistency pass**
+- [x] **L.5 — CTA hierarchy consistency pass**
   - Audit every major screen for:
     - one primary action
     - quieter secondary actions
