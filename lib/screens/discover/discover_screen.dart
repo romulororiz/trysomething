@@ -751,7 +751,7 @@ class _DiscoverFeedCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'SEE THE EASY VERSION',
+                'Start with the basics',
                 style: AppTypography.button.copyWith(
                   fontSize: 13,
                   letterSpacing: 0.6,
