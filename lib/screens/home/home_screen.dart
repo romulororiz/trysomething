@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,19 +6,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
+import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
 import '../../components/page_dots.dart';
-import '../../components/stage_roadmap_card.dart';
-import '../../components/roadmap_step_tile.dart';
+import '../../components/pro_upgrade_sheet.dart';
+import '../../components/starter_kit_card.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/feature_providers.dart';
+import '../../providers/subscription_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
-import 'package:timelines_plus/timelines_plus.dart';
 
 /// Home tab — cinematic active hobby dashboard.
 class HomeScreen extends ConsumerStatefulWidget {
@@ -71,11 +73,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final userHobbies = ref.watch(userHobbiesProvider);
 
+    final isPro = ref.watch(isProProvider);
+
     final activeEntries = userHobbies.entries
         .where((e) =>
             e.value.status == HobbyStatus.trying ||
             e.value.status == HobbyStatus.active)
-        .toList();
+        .toList()
+      // Sort by most recently active first
+      ..sort((a, b) {
+        final aTime = a.value.lastActivityAt ?? a.value.startedAt;
+        final bTime = b.value.lastActivityAt ?? b.value.startedAt;
+        if (aTime == null && bTime == null) return 0;
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
 
     if (activeEntries.isEmpty) {
       // Not loading — show navbar
@@ -118,11 +131,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPageChanged: (i) => setState(() => _currentPage = i),
               itemBuilder: (context, i) {
                 final userHobby = activeEntries[i].value;
-                return _HobbyPage(
+                final isLocked = !isPro && i > 0;
+                final page = _HobbyPage(
                   key: ValueKey(userHobby.hobbyId),
                   userHobby: userHobby,
                   greeting: _greeting(),
                 );
+                if (!isLocked) return page;
+                return _ProLockedOverlay(child: page);
               },
             ),
             // Page dots overlaid on hero image
@@ -140,6 +156,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PRO LOCKED OVERLAY — glass blur + upgrade CTA
+// ═══════════════════════════════════════════════════════
+
+class _ProLockedOverlay extends StatelessWidget {
+  final Widget child;
+  const _ProLockedOverlay({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Render the hobby page underneath (blurred)
+        child,
+        // Blur + dark tint
+        Positioned.fill(
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(color: AppColors.background.withValues(alpha: 0.55)),
+            ),
+          ),
+        ),
+        // CTA card
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.coral.withValues(alpha: 0.15),
+                    ),
+                    child: const Icon(Icons.lock_rounded, color: AppColors.coral, size: 28),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Multi-Hobby Tracking',
+                    style: AppTypography.title.copyWith(color: AppColors.textPrimary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Free accounts support one active hobby.\nUpgrade to Pro to track multiple hobbies at once.',
+                    style: AppTypography.sansBodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () => showProUpgrade(
+                        context,
+                        'Track multiple hobbies at once with Pro.',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.coral,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text('Unlock Pro', style: AppTypography.button),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -205,10 +308,6 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
     final validStepIds = hobby.roadmapSteps.map((s) => s.id).toSet();
     final completedValid =
         userHobby.completedStepIds.intersection(validStepIds);
-    final totalSteps = hobby.roadmapSteps.length;
-    final progress =
-        totalSteps > 0 ? completedValid.length / totalSteps : 0.0;
-
     final hobbySchedule =
         scheduleEvents.where((e) => e.hobbyId == hobby.id).toList();
     final hobbyJournal =
@@ -234,12 +333,8 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
       }
     }
 
-    final startedAt = userHobby.startedAt ?? DateTime.now();
-    final weekNum =
-        (DateTime.now().difference(startedAt).inDays / 7).floor() + 1;
-
     return ListView(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, Spacing.scrollBottomPadding),
+      padding: EdgeInsets.fromLTRB(0, 0, 0, Spacing.scrollBottom(context)),
       children: [
         // ── Hero image with gradient overlay ──
         GestureDetector(
@@ -326,13 +421,7 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting + overline
-              const SizedBox(height: 4),
-              Text(
-                'Week $weekNum of ${hobby.title}'.toUpperCase(),
-                style:
-                    AppTypography.overline.copyWith(color: AppColors.textMuted),
-              ),
+              // Greeting
               const SizedBox(height: 4),
               Text(widget.greeting, style: AppTypography.hero),
               const SizedBox(height: 24),
@@ -365,69 +454,78 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   ),
                 ),
 
-              // ── 4-Stage Roadmap ──
-              StageRoadmapCard(
-                currentWeek: weekNum,
-                hobbyId: hobby.id,
-                completedSteps: completedValid.length,
-                totalSteps: totalSteps,
-              ),
-              const SizedBox(height: 16),
+              // ── Next Step (highlighted) ──
+              if (nextStep != null) ...[
+                Builder(builder: (context) {
+                  final ns = nextStep!;
+                  return _NextStepCard(
+                    step: ns,
+                    onTap: () {
+                      final i = hobby.roadmapSteps.indexWhere((s) => s.id == ns.id);
+                      final followingTitle = i + 1 < hobby.roadmapSteps.length
+                          ? hobby.roadmapSteps[i + 1].title
+                          : null;
+                      context.push(
+                        '/session/${hobby.id}/${ns.id}',
+                        extra: <String, dynamic>{
+                          'hobbyTitle': hobby.title,
+                          'hobbyCategory': hobby.category,
+                          'stepTitle': ns.title,
+                          'stepDescription': ns.description,
+                          'stepInstructions': '',
+                          'whatYouNeed': '',
+                          'recommendedMinutes': ns.estimatedMinutes,
+                          'completionMode': ns.effectiveMode,
+                          'nextStepTitle': followingTitle,
+                        },
+                      );
+                    },
+                  );
+                }),
+                const SizedBox(height: 16),
+              ],
 
-              // ── Roadmap steps checklist ──
+              // ── Compact step checklist ──
               Text('YOUR STEPS',
                   style: AppTypography.overline
                       .copyWith(color: AppColors.textMuted)),
               const SizedBox(height: 10),
-              FixedTimeline(
-                theme: TimelineThemeData(
-                  nodePosition: 0,
-                  color: AppColors.border,
-                  connectorTheme: const ConnectorThemeData(
-                    thickness: 1.5,
-                    color: AppColors.border,
-                  ),
-                  indicatorTheme: const IndicatorThemeData(
-                    size: 26,
-                  ),
-                ),
-                children: List.generate(hobby.roadmapSteps.length, (i) {
-                  final step = hobby.roadmapSteps[i];
-                  final isCompleted = completedValid.contains(step.id);
-                  final isCurrent = step.id == nextStep?.id;
-                  final followingTitle = i + 1 < hobby.roadmapSteps.length
-                      ? hobby.roadmapSteps[i + 1].title
-                      : null;
-                  return RoadmapStepTile(
-                    step: step,
-                    stepNumber: i + 1,
-                    isCompleted: isCompleted,
-                    isCurrent: isCurrent,
-                    onToggle: () {
-                      if (isCompleted) {
-                        ref
-                            .read(userHobbiesProvider.notifier)
-                            .toggleStep(hobby.id, step.id);
-                      } else {
-                        context.push(
-                          '/session/${hobby.id}/${step.id}',
-                          extra: <String, dynamic>{
-                            'hobbyTitle': hobby.title,
-                            'hobbyCategory': hobby.category,
-                            'stepTitle': step.title,
-                            'stepDescription': step.description,
-                            'stepInstructions': '',
-                            'whatYouNeed': '',
-                            'recommendedMinutes': step.estimatedMinutes,
-                            'completionMode': step.effectiveMode,
-                            'nextStepTitle': followingTitle,
-                          },
-                        );
-                      }
-                    },
-                  );
-                }),
-              ),
+              ...List.generate(hobby.roadmapSteps.length, (i) {
+                final step = hobby.roadmapSteps[i];
+                final isCompleted = completedValid.contains(step.id);
+                final isCurrent = step.id == nextStep?.id;
+                return _CompactStepRow(
+                  title: step.title,
+                  stepNumber: i + 1,
+                  isCompleted: isCompleted,
+                  isCurrent: isCurrent,
+                  onTap: () {
+                    if (isCompleted) {
+                      ref
+                          .read(userHobbiesProvider.notifier)
+                          .toggleStep(hobby.id, step.id);
+                    } else {
+                      final followingTitle = i + 1 < hobby.roadmapSteps.length
+                          ? hobby.roadmapSteps[i + 1].title
+                          : null;
+                      context.push(
+                        '/session/${hobby.id}/${step.id}',
+                        extra: <String, dynamic>{
+                          'hobbyTitle': hobby.title,
+                          'hobbyCategory': hobby.category,
+                          'stepTitle': step.title,
+                          'stepDescription': step.description,
+                          'stepInstructions': '',
+                          'whatYouNeed': '',
+                          'recommendedMinutes': step.estimatedMinutes,
+                          'completionMode': step.effectiveMode,
+                          'nextStepTitle': followingTitle,
+                        },
+                      );
+                    }
+                  },
+                );
+              }),
               const SizedBox(height: 16),
 
               // ── This week's plan ──
@@ -502,6 +600,16 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               ),
               const SizedBox(height: 16),
 
+              // ── Starter kit ──
+              if (hobby.starterKit.isNotEmpty) ...[
+                StarterKitCard(hobby: hobby),
+                const SizedBox(height: 16),
+              ],
+
+              // ── Cost breakdown & Beginner FAQ ──
+              HobbyQuickLinks(hobbyId: hobby.id),
+              const SizedBox(height: 16),
+
               // ── Recent progress ──
               Text('RECENT PROGRESS',
                   style: AppTypography.overline
@@ -554,7 +662,6 @@ class _RestartCard extends StatelessWidget {
   final VoidCallback onSwitch;
 
   const _RestartCard({
-    super.key,
     required this.hobbyTitle,
     required this.daysSince,
     required this.onPickUp,
@@ -726,6 +833,140 @@ class _EmptyHomeState extends StatelessWidget {
           ),
         ),
       ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NEXT STEP CARD (coral-tinted highlight)
+// ═══════════════════════════════════════════════════════
+
+class _NextStepCard extends StatelessWidget {
+  final RoadmapStep step;
+  final VoidCallback onTap;
+
+  const _NextStepCard({required this.step, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.07),
+          border: Border.all(
+            color: AppColors.accent.withValues(alpha: 0.18),
+            width: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('NEXT STEP',
+                style: AppTypography.overline.copyWith(color: AppColors.accent)),
+            const SizedBox(height: 4),
+            Text(step.title,
+                style: AppTypography.sansLabel.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                )),
+            if (step.description.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(step.description,
+                  style: AppTypography.sansBodySmall
+                      .copyWith(color: AppColors.textSecondary)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  COMPACT STEP ROW (replaces heavy timeline)
+// ═══════════════════════════════════════════════════════
+
+class _CompactStepRow extends StatelessWidget {
+  final String title;
+  final int stepNumber;
+  final bool isCompleted;
+  final bool isCurrent;
+  final VoidCallback onTap;
+
+  const _CompactStepRow({
+    required this.title,
+    required this.stepNumber,
+    required this.isCompleted,
+    required this.isCurrent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            // Step indicator dot
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: isCompleted
+                    ? AppColors.sage
+                    : (isCurrent ? AppColors.accent : Colors.transparent),
+                border: !isCompleted && !isCurrent
+                    ? Border.all(color: AppColors.textMuted, width: 1)
+                    : null,
+                shape: BoxShape.circle,
+                boxShadow: isCurrent
+                    ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.3), blurRadius: 6)]
+                    : null,
+              ),
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+                    : Text(
+                        '$stepNumber',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isCurrent ? Colors.white : AppColors.textMuted,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Step title
+            Expanded(
+              child: Text(
+                title,
+                style: isCompleted
+                    ? AppTypography.body.copyWith(
+                        color: AppColors.textMuted,
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: AppColors.textMuted,
+                      )
+                    : isCurrent
+                        ? AppTypography.body.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          )
+                        : AppTypography.body.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

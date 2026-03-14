@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../components/app_background.dart';
 import '../../components/try_today_button.dart';
 import '../../components/glass_card.dart';
+import '../../components/starter_kit_card.dart';
+import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
 import '../../components/pro_upgrade_sheet.dart';
 import '../../components/share_card.dart';
@@ -33,7 +34,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0;
-  bool _showBestValue = false;
 
   late final AnimationController _entryController;
   late final Animation<double> _detailsOpacity;
@@ -173,8 +173,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     24,
                     0,
                     24,
-                    MediaQuery.of(context).padding.bottom +
-                        Spacing.scrollBottomPadding),
+                    MediaQuery.of(context).padding.bottom + 110),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 24),
@@ -199,7 +198,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     ],
 
                     // 4. Starter Kit glass card
-                    _staggeredCard(4, _buildStarterKit(hobby)),
+                    _staggeredCard(4, StarterKitCard(hobby: hobby)),
                     const SizedBox(height: 16),
 
                     // 5. Coach teaser
@@ -207,7 +206,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     const SizedBox(height: 16),
 
                     // 6. Quick links
-                    _staggeredCard(6, _buildQuickLinks()),
+                    _staggeredCard(6, HobbyQuickLinks(hobbyId: widget.hobbyId)),
                   ]),
                 ),
               ),
@@ -789,176 +788,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
   }
 
   // ═══════════════════════════════════════════════════════
-  //  4. STARTER KIT
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildStarterKit(Hobby hobby) {
-    final essentialItems =
-        hobby.starterKit.where((k) => !k.isOptional).toList();
-    final allItems = hobby.starterKit;
-    final displayItems = _showBestValue ? allItems : essentialItems;
-    final total =
-        displayItems.fold(0, (sum, item) => sum + item.cost);
-
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.shopping_bag_outlined,
-                  size: 16, color: AppColors.coral),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('Starter kit',
-                    style: AppTypography.sansLabel.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    )),
-              ),
-              if (total > 0)
-                Text('~ CHF $total',
-                    style: AppTypography.monoBadge
-                        .copyWith(color: AppColors.textMuted)),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Minimum / Best Value toggle
-          if (allItems.length > essentialItems.length)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  _KitToggle(
-                    label: 'Minimum',
-                    selected: !_showBestValue,
-                    onTap: () => setState(() => _showBestValue = false),
-                  ),
-                  const SizedBox(width: 8),
-                  _KitToggle(
-                    label: 'Best value',
-                    selected: _showBestValue,
-                    onTap: () => setState(() => _showBestValue = true),
-                  ),
-                ],
-              ),
-            ),
-
-          // Kit items
-          ...displayItems.map((item) => _buildKitRow(item)),
-
-          // Shopping checklist link
-          if (hobby.starterKit.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => context.push('/shopping/${widget.hobbyId}'),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(AppIcons.shoppingList,
-                      size: 14, color: AppColors.coral),
-                  const SizedBox(width: 6),
-                  Text('Open Shopping Checklist',
-                      style: AppTypography.sansTiny
-                          .copyWith(color: AppColors.coral)),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKitRow(KitItem item) {
-    return GestureDetector(
-      onTap: () => _openAffiliateLink(item),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Row(
-          children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: item.imageUrl!,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 88,
-                        placeholder: (_, __) =>
-                            Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => Container(
-                          color: AppColors.surfaceElevated,
-                          child: const Icon(Icons.image_outlined,
-                              size: 16, color: AppColors.textWhisper),
-                        ),
-                      )
-                    : Container(
-                        color: AppColors.surfaceElevated,
-                        child: Icon(
-                          item.isOptional
-                              ? Icons.add_circle_outline
-                              : Icons.check_circle_outline,
-                          size: 18,
-                          color: AppColors.textWhisper,
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.name,
-                      style: AppTypography.sansBodySmall.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  if (item.isOptional)
-                    Text('Optional',
-                        style: AppTypography.sansTiny
-                            .copyWith(color: AppColors.textMuted)),
-                ],
-              ),
-            ),
-            if (item.cost > 0)
-              Text('CHF ${item.cost}',
-                  style: AppTypography.monoBadge.copyWith(
-                    color: AppColors.coral,
-                    fontWeight: FontWeight.w700,
-                  ))
-            else
-              Text('FREE',
-                  style: AppTypography.monoBadge.copyWith(
-                    color: AppColors.sage,
-                    fontWeight: FontWeight.w700,
-                  )),
-            const SizedBox(width: 6),
-            const Icon(Icons.open_in_new_rounded,
-                size: 12, color: AppColors.textWhisper),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openAffiliateLink(KitItem item) async {
-    final url = item.affiliateUrl ??
-        'https://www.amazon.de/s?k=${Uri.encodeComponent(item.name)}&tag=trysomething-21';
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════
   //  5. COACH TEASER
   // ═══════════════════════════════════════════════════════
 
@@ -1003,119 +832,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  6. QUICK LINKS
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildQuickLinks() {
-    return Row(
-      children: [
-        Expanded(
-          child: GlassCard(
-            onTap: () => context.push('/cost/${widget.hobbyId}'),
-            padding: const EdgeInsets.all(14),
-            borderRadius: 14,
-            child: Row(
-              children: [
-                Icon(AppIcons.badgeCost,
-                    size: 16, color: AppColors.coral),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Cost Breakdown',
-                          style: AppTypography.caption.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          )),
-                      Text('Year 1 projection',
-                          style: AppTypography.sansTiny
-                              .copyWith(color: AppColors.textMuted)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: GlassCard(
-            onTap: () => context.push('/faq/${widget.hobbyId}'),
-            padding: const EdgeInsets.all(14),
-            borderRadius: 14,
-            child: Row(
-              children: [
-                const Icon(Icons.help_outline_rounded,
-                    size: 16, color: AppColors.textMuted),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Beginner FAQ',
-                          style: AppTypography.caption.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          )),
-                      Text('Common questions',
-                          style: AppTypography.sansTiny
-                              .copyWith(color: AppColors.textMuted)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  KIT TOGGLE PILL
-// ═══════════════════════════════════════════════════════
-
-class _KitToggle extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _KitToggle({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: Motion.fast,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.coral.withValues(alpha: 0.12)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-          border: Border.all(
-            color: selected ? AppColors.coral : AppColors.border,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.sansTiny.copyWith(
-            color: selected ? AppColors.coral : AppColors.textSecondary,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ═══════════════════════════════════════════════════════

@@ -34,12 +34,14 @@ void main() async {
   final reporter = ErrorReporter();
   final analytics = AnalyticsService();
 
-  // System UI style — match Midnight Neon dark theme
+  // Edge-to-edge: app draws behind both system bars
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF141420),
+    systemNavigationBarColor: Colors.transparent,
     systemNavigationBarIconBrightness: Brightness.light,
+    systemNavigationBarContrastEnforced: false,
   ));
 
   // Initialize Firebase (not configured for web yet)
@@ -142,7 +144,7 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
         // and re-schedule whenever hobby state changes
         if (!kIsWeb) {
           _rescheduleNotifications();
-          ref.listen(userHobbiesProvider, (prev, next) {
+          ref.listenManual(userHobbiesProvider, (prev, next) {
             _rescheduleNotifications();
           });
         }
@@ -244,7 +246,8 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
           children: [
             child!,
             // Splash overlay while session is being restored
-            if (authStatus == AuthStatus.unknown)
+            if (authStatus == AuthStatus.unknown ||
+                authStatus == AuthStatus.loading)
               const _SplashOverlay(),
           ],
         );
