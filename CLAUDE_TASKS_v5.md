@@ -435,7 +435,7 @@ Keep the teal + burgundy atmosphere, but make the rest of the app harmonize with
 
 The redesign has landed, but the screen files are still too large.
 
-- [ ] **M.1 — Refactor Discover into sections/components**
+- [x] **M.1 — Refactor Discover into sections/components**
   - Break out:
     - top chrome
     - feed wrapper
@@ -445,7 +445,7 @@ The redesign has landed, but the screen files are still too large.
     - empty states
   - **Test:** Discover becomes easier to reason about and maintain
 
-- [ ] **M.2 — Refactor You into smaller sections**
+- [x] **M.2 — Refactor You into smaller sections**
   - Break out:
     - header
     - Active section
@@ -454,19 +454,19 @@ The redesign has landed, but the screen files are still too large.
     - utility rows
   - **Test:** You screen is easier to evolve cleanly
 
-- [ ] **M.3 — Refactor Search**
+- [x] **M.3 — Refactor Search**
   - Break out search chrome, suggestions, result groups, and cards
   - **Test:** Search becomes cleaner and easier to polish
 
-- [ ] **M.4 — Refactor Detail**
+- [x] **M.4 — Refactor Detail**
   - Extract upper hero, quick-start section, why-fits section, roadmap block, coach teaser, CTA area
   - **Test:** detail page becomes easier to tune
 
-- [ ] **M.5 — Refactor Home**
+- [x] **M.5 — Refactor Home**
   - Extract active hobby hero, next-step block, week plan, coach module, restart prompt
   - **Test:** Home becomes easier to polish without regressions
 
-- [ ] **M.6 — Remove or isolate legacy product mass**
+- [x] **M.6 — Remove or isolate legacy product mass**
   - Audit older secondary screens still living in the repo
   - Hide, isolate, or clearly mark legacy/secondary surfaces that should not influence the main product direction
   - **Test:** legacy features stop exerting structural pressure on the main app
@@ -477,12 +477,12 @@ The redesign has landed, but the screen files are still too large.
 
 This is the last stretch from “very improved” to “finished premium beta.”
 
-- [ ] **N.1 — Motion consistency pass**
+- [x] **N.1 — Motion consistency pass**
   - Standardize tap, screen, and card transitions
   - Ensure motion is calm, tactile, and not busy
   - **Test:** app interactions feel expensive and coherent
 
-- [ ] **N.2 — Haptic pass**
+- [x] **N.2 — Haptic pass**
   - Add or refine haptics for:
     - save
     - tab switch
@@ -492,12 +492,12 @@ This is the last stretch from “very improved” to “finished premium beta.�
     - confirmation flows
   - **Test:** haptics feel supportive, not noisy
 
-- [ ] **N.3 — Empty states + loading states QA**
+- [x] **N.3 — Empty states + loading states QA**
   - Ensure all empty/loading/error states follow the premium system
   - No ugly defaults or low-effort placeholders
   - **Test:** all states feel designed
 
-- [ ] **N.4 — Device visual QA**
+- [x] **N.4 — Device visual QA**
   - Test on physical device:
     - Discover feed and list
     - Search transition
@@ -514,7 +514,7 @@ This is the last stretch from “very improved” to “finished premium beta.�
     - no awkward overlays
   - **Test:** no major visual inconsistencies remain
 
-- [ ] **N.5 — End-to-end premium QA**
+- [x] **N.5 — End-to-end premium QA**
   - Run through:
     - onboarding → match → start → week 1 → coach → return
     - free → hit meaningful limitation → upgrade
