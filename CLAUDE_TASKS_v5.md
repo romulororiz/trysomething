@@ -146,7 +146,7 @@ The current Discover is better than before, but still carries rail-based browse 
 
 Typography is still not fully resolved. The app needs a calmer, more coherent voice.
 
-- [ ] **H.1 — Simplify the type system**
+- [x] **H.1 — Simplify the type system**
   - Replace the current multi-voice feel with a more disciplined hierarchy
   - Recommended direction:
     - Primary UI/body/headings: `Manrope`
@@ -155,7 +155,7 @@ Typography is still not fully resolved. The app needs a calmer, more coherent vo
   - If serif is retained, use it sparingly and intentionally
   - **Test:** all core screens render correctly with the new type hierarchy
 
-- [ ] **H.2 — Apply new type hierarchy rules**
+- [x] **H.2 — Apply new type hierarchy rules**
   - Serif only for:
     - welcome headline
     - occasional hero statement
@@ -171,13 +171,13 @@ Typography is still not fully resolved. The app needs a calmer, more coherent vo
   - Mono only if strictly functional (for example, session timer)
   - **Test:** typography feels more coherent across screens
 
-- [ ] **H.3 — Reduce over-designed typography moments**
+- [x] **H.3 — Reduce over-designed typography moments**
   - Audit screens for overly stylized or competing type moments
   - Reduce decorative hierarchy where it weakens clarity
   - Improve spacing, line-height, and contrast between hero vs utility text
   - **Test:** typography feels premium and calm, not self-conscious
 
-- [ ] **H.4 — Screen-by-screen typography QA**
+- [x] **H.4 — Screen-by-screen typography QA**
   - Check:
     - Welcome
     - Onboarding

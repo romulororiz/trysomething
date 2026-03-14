@@ -2,47 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// TrySomething — Cinematic Typography Scale
+/// TrySomething — Premium Typography Scale
 ///
-/// Dramatic hierarchy: hero (36pt) → caption (12pt) = 3x ratio.
-/// Headings: Source Serif 4 (warm editorial)
-/// Body:     DM Sans (clean geometric sans)
-/// Data:     IBM Plex Mono (stats, specs, numbers)
+/// Disciplined 2-voice hierarchy:
+///   Headings + Body:  Manrope (warm geometric humanist sans)
+///   Hero moments only: Instrument Serif (editorial, cinematic)
+///   Data/timer only:   IBM Plex Mono (functional, never decorative)
+///
+/// Serif appears in ≤5 places across the entire app:
+///   splash headline, onboarding hero, match results, detail hero, paywall hero.
+/// Everything else is Manrope.
 class AppTypography {
   AppTypography._();
 
   // ═══════════════════════════════════════════════════
-  //  NEW SEMANTIC SCALE — Warm Cinematic Minimalism
+  //  HERO — Instrument Serif (editorial moments ONLY)
   // ═══════════════════════════════════════════════════
 
-  /// Hero — 36pt, cinematic screen headlines
-  static TextStyle get hero => GoogleFonts.sourceSerif4(
+  /// Hero — 36pt, cinematic headlines (splash, onboarding, paywall, detail hero)
+  static TextStyle get hero => GoogleFonts.instrumentSerif(
         fontSize: 36,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w400, // Instrument Serif is already bold at 400
         color: AppColors.textPrimary,
         height: 1.1,
         letterSpacing: -0.5,
       );
 
-  /// Display — 28pt, section titles and emphasis
-  static TextStyle get display => GoogleFonts.sourceSerif4(
+  // ═══════════════════════════════════════════════════
+  //  PRIMARY SCALE — Manrope (everything else)
+  // ═══════════════════════════════════════════════════
+
+  /// Display — 28pt, large section headers
+  static TextStyle get display => GoogleFonts.manrope(
         fontSize: 28,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.2,
         letterSpacing: -0.3,
       );
 
-  /// Title — 20pt, card titles and sub-sections
-  static TextStyle get title => GoogleFonts.sourceSerif4(
+  /// Title — 20pt, card titles, sub-sections, screen titles
+  static TextStyle get title => GoogleFonts.manrope(
         fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.3,
       );
 
   /// Body — 15pt, standard reading text
-  static TextStyle get body => GoogleFonts.dmSans(
+  static TextStyle get body => GoogleFonts.manrope(
         fontSize: 15,
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
@@ -50,16 +58,29 @@ class AppTypography {
         letterSpacing: 0.1,
       );
 
-  /// Caption — 12pt, metadata and labels
-  static TextStyle get caption => GoogleFonts.dmSans(
+  /// Caption — 12pt, metadata, labels, chips
+  static TextStyle get caption => GoogleFonts.manrope(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.textMuted,
         height: 1.4,
-        letterSpacing: 0.3,
+        letterSpacing: 0.2,
       );
 
-  /// Data — 13pt mono, specs and badges as warm gray text
+  /// Button — 16pt, CTA text
+  static TextStyle get button => GoogleFonts.manrope(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: AppColors.background,
+        height: 1.0,
+        letterSpacing: 0.5,
+      );
+
+  // ═══════════════════════════════════════════════════
+  //  DATA — IBM Plex Mono (functional only: timer, specs)
+  // ═══════════════════════════════════════════════════
+
+  /// Data — 13pt mono, specs and cost text
   static TextStyle get data => GoogleFonts.ibmPlexMono(
         fontSize: 13,
         fontWeight: FontWeight.w500,
@@ -67,7 +88,7 @@ class AppTypography {
         height: 1.4,
       );
 
-  /// DataLarge — 48pt mono, big stat numbers
+  /// DataLarge — 48pt mono, session timer and big stat numbers
   static TextStyle get dataLarge => GoogleFonts.ibmPlexMono(
         fontSize: 48,
         fontWeight: FontWeight.w300,
@@ -75,42 +96,23 @@ class AppTypography {
         height: 1.0,
       );
 
-  /// Button — 16pt, CTA text (dark on coral)
-  static TextStyle get button => GoogleFonts.dmSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: AppColors.background,
-        height: 1.0,
-        letterSpacing: 0.5,
-      );
-
   // ═══════════════════════════════════════════════════
-  //  LEGACY NAMES — mapped to cinematic scale
-  //  Kept to avoid breaking existing references.
+  //  LEGACY ALIASES — all redirected to Manrope
+  //  These prevent breaking existing screen references.
+  //  All serif aliases now point to Manrope equivalents
+  //  EXCEPT serifDisplay/serifHero which stay as hero.
   // ═══════════════════════════════════════════════════
 
-  // Serif headings — remapped to cinematic sizes
-  static TextStyle get serifDisplay => hero; // 36pt (was 38pt)
+  // Serif aliases — hero stays Instrument Serif, rest → Manrope
+  static TextStyle get serifDisplay => hero; // 36pt Instrument Serif
+  static TextStyle get serifHero => hero; // 36pt Instrument Serif
+  static TextStyle get serifTitle => display; // 28pt Manrope (was serif)
+  static TextStyle get serifHeading => title.copyWith(fontSize: 24); // Manrope
+  static TextStyle get serifSubheading => title; // 20pt Manrope
+  static TextStyle get serifCardTitle => display; // 28pt Manrope
 
-  static TextStyle get serifHero => hero; // 36pt
-
-  static TextStyle get serifTitle => display; // 28pt (was 32pt)
-
-  static TextStyle get serifHeading => GoogleFonts.sourceSerif4(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-        height: 1.2,
-      );
-
-  static TextStyle get serifSubheading => title; // 20pt (was 22pt)
-
-  static TextStyle get serifCardTitle => display.copyWith(
-        color: AppColors.textPrimary,
-      );
-
-  // Sans body — remapped with warm colors
-  static TextStyle get sansSection => GoogleFonts.dmSans(
+  // Sans aliases — all Manrope now (were DM Sans)
+  static TextStyle get sansSection => GoogleFonts.manrope(
         fontSize: 17,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
@@ -118,14 +120,14 @@ class AppTypography {
 
   static TextStyle get sansBody => body;
 
-  static TextStyle get sansBodySmall => GoogleFonts.dmSans(
+  static TextStyle get sansBodySmall => GoogleFonts.manrope(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.5,
         color: AppColors.textSecondary,
       );
 
-  static TextStyle get sansLabel => GoogleFonts.dmSans(
+  static TextStyle get sansLabel => GoogleFonts.manrope(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
@@ -133,26 +135,26 @@ class AppTypography {
 
   static TextStyle get sansCaption => caption;
 
-  static TextStyle get sansTiny => GoogleFonts.dmSans(
+  static TextStyle get sansTiny => GoogleFonts.manrope(
         fontSize: 11,
         fontWeight: FontWeight.w500,
         color: AppColors.textMuted,
       );
 
-  static TextStyle get sansNav => GoogleFonts.dmSans(
+  static TextStyle get sansNav => GoogleFonts.manrope(
         fontSize: 10,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
       );
 
-  static TextStyle get sansCta => GoogleFonts.dmSans(
+  static TextStyle get sansCta => GoogleFonts.manrope(
         fontSize: 14,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.8,
         color: AppColors.textPrimary,
       );
 
-  static TextStyle get sansCtaSecondary => GoogleFonts.dmSans(
+  static TextStyle get sansCtaSecondary => GoogleFonts.manrope(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppColors.accent,
@@ -161,7 +163,7 @@ class AppTypography {
   static TextStyle get sansButton => button;
 
   // Overline
-  static TextStyle get overline => GoogleFonts.dmSans(
+  static TextStyle get overline => GoogleFonts.manrope(
         fontSize: 11,
         fontWeight: FontWeight.w600,
         letterSpacing: 1.5,
@@ -171,7 +173,7 @@ class AppTypography {
 
   static TextStyle get categoryLabel => overline;
 
-  // Mono — remapped with warm colors, no more coral tints
+  // Mono aliases — IBM Plex Mono, kept for functional use only
   static TextStyle get monoTimer => dataLarge;
 
   static TextStyle get monoLarge => GoogleFonts.ibmPlexMono(
