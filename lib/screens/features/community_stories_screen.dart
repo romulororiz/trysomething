@@ -86,7 +86,7 @@ class CommunityStoriesScreen extends ConsumerWidget {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, Spacing.scrollBottomPadding),
+                      padding: EdgeInsets.fromLTRB(24, 8, 24, Spacing.scrollBottom(context)),
                       itemCount: stories.length,
                       itemBuilder: (context, index) {
                         final tint = _tintColors[index % _tintColors.length];

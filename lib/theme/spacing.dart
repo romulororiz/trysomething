@@ -45,11 +45,22 @@ class Spacing {
   // ═══════════════════════════════════════════════════
   static const double cardHeight = 480;
   static const double heroHeight = 350;
-  static const double bottomNavHeight = 70;
+  static const double bottomNavHeight = 62;
 
   /// Bottom padding for scrollable content in tab screens.
   /// Accounts for floating glass dock + safe area + breathing room.
-  static const double scrollBottomPadding = 100;
+  /// @deprecated Use [scrollBottom] for device-accurate padding.
+  static const double scrollBottomPadding = 120;
+
+  /// Dynamic bottom padding that accounts for the actual device safe area.
+  /// Use this instead of [scrollBottomPadding] in all scrollable tab screens.
+  ///
+  /// Calculation: system nav inset + dock height (~62px) + dock margin (12px)
+  /// + breathing room (26px) = inset + 100.
+  static double scrollBottom(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    return bottomInset + 20;
+  }
   static const double buttonCtaHeight = 56;
   static const double buttonPrimaryHeight = 54;
   static const double buttonSecondaryHeight = 46;
@@ -136,5 +147,5 @@ class Spacing {
   // ═══════════════════════════════════════════════════
   static const EdgeInsets pagePadding = EdgeInsets.symmetric(horizontal: 24);
   static const EdgeInsets screenPaddingTop = EdgeInsets.only(top: 52);
-  static const EdgeInsets screenPaddingBottom = EdgeInsets.only(bottom: 82);
+  static const EdgeInsets screenPaddingBottom = EdgeInsets.only(bottom: 100);
 }

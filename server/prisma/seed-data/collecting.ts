@@ -84,7 +84,7 @@ export const collectingHobbies = [
     title: "Stamps",
     hook: "Tiny windows into every culture on Earth.",
     categoryId: "collecting",
-    imageUrl: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600&h=800&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1767869168914-100b439f9c81?w=800&h=1066&fit=crop&q=85",
     tags: ["solo", "relaxing"],
     costText: "CHF 5–50",
     timeText: "1h/week",

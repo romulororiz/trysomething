@@ -317,7 +317,7 @@ class CompareModeScreen extends ConsumerWidget {
 
           // Dual CTAs
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottomPadding),
+            padding: EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottom(context)),
             child: Row(
               children: [
                 Expanded(

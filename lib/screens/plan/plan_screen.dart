@@ -36,13 +36,13 @@ class PlanScreen extends ConsumerWidget {
             _buildDayHeaders(),
             const SizedBox(height: 8),
             Expanded(
-              child: _buildScrollableGrid(ref, events),
+              child: _buildScrollableGrid(context, ref, events),
             ),
           ],
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
+        padding: EdgeInsets.only(bottom: Spacing.scrollBottom(context)),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddSessionSheet(context, ref),
           backgroundColor: AppColors.coral,
@@ -105,13 +105,13 @@ class PlanScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildScrollableGrid(WidgetRef ref, List<ScheduleEvent> events) {
+  Widget _buildScrollableGrid(BuildContext context, WidgetRef ref, List<ScheduleEvent> events) {
     const totalHours = _endHour - _startHour;
     const topPad = 10.0; // space so 07:00 label isn't clipped
     const gridHeight = totalHours * _hourHeight;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
+      padding: EdgeInsets.only(bottom: Spacing.scrollBottom(context)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: SizedBox(

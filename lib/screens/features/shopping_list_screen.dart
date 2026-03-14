@@ -113,7 +113,7 @@ class ShoppingListScreen extends ConsumerWidget {
               child: items.isEmpty
                   ? _buildEmptyState('No starter kit items for this hobby.')
                   : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottomPadding),
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottom(context)),
                       itemCount: items.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {

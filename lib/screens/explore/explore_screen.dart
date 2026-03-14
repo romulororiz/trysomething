@@ -498,7 +498,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, Spacing.scrollBottomPadding),
+      padding: EdgeInsets.fromLTRB(24, 4, 24, Spacing.scrollBottom(context)),
       itemCount: results.length,
       itemBuilder: (context, i) => _buildSearchTile(results[i]),
     );
@@ -591,7 +591,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget _buildExploreContent(List<HobbyCategory> categories) {
     return SingleChildScrollView(
       physics: const TryScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, Spacing.scrollBottomPadding),
+      padding: EdgeInsets.fromLTRB(24, 4, 24, Spacing.scrollBottom(context)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

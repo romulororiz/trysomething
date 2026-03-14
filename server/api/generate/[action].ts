@@ -4,6 +4,9 @@
 //  POST /api/generate/faq    → Generate FAQ (tier 2)
 //  POST /api/generate/cost   → Generate cost breakdown (tier 2)
 //  POST /api/generate/budget → Generate budget alternatives (tier 2)
+//  POST /api/generate/coach  → AI hobby coach (Sonnet)
+//
+//  Model: claude-sonnet-4-20250514 (all endpoints)
 // ═══════════════════════════════════════════════════
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
@@ -28,8 +31,10 @@ import {
 
 const prisma = new PrismaClient();
 
-// Coach: lazy Anthropic client
-const COACH_MODEL = "claude-haiku-4-5-20251001";
+// ── Shared Anthropic client (coach uses this directly) ──
+const COACH_MODEL = "claude-sonnet-4-20250514";
+const COACH_MAX_TOKENS = 512;
+
 let _anthropic: Anthropic | null = null;
 function getAnthropicClient(): Anthropic {
   if (!_anthropic) {
@@ -63,7 +68,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// ── Generate hobby (Tier 1) ─────────────────────
+// ═══════════════════════════════════════════════════
+//  Generate hobby (Tier 1)
+// ═══════════════════════════════════════════════════
 
 async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
   const userId = requireAuth(req, res);
@@ -111,7 +118,7 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Parallel: Claude + Unsplash (image uses query as hint, category resolved after)
+    // Parallel: Claude + Unsplash
     const [content, defaultImage] = await Promise.all([
       generateHobbyContent(trimmed),
       fetchHobbyImage(trimmed),
@@ -125,8 +132,7 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
       return errorResponse(res, 500, "Generated content failed validation. Please try a different query.");
     }
 
-    // Post-generation duplicate check: the AI may generate a title that
-    // already exists even though the raw query didn't match
+    // Post-generation duplicate check
     const generatedTitle = content.title as string;
     const postGenDupe = await prisma.hobby.findFirst({
       where: { title: { equals: generatedTitle, mode: "insensitive" } },
@@ -147,7 +153,6 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
-    // Check slug doesn't already exist
     const slugExists = await prisma.hobby.findUnique({ where: { id: slug } });
     const hobbyId = slugExists ? `${slug}-${Date.now().toString(36)}` : slug;
 
@@ -210,7 +215,9 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// ── Generate FAQ (Tier 2) ───────────────────────
+// ═══════════════════════════════════════════════════
+//  Generate FAQ (Tier 2)
+// ═══════════════════════════════════════════════════
 
 async function handleGenerateFaq(req: VercelRequest, res: VercelResponse) {
   const userId = requireAuth(req, res);
@@ -221,7 +228,6 @@ async function handleGenerateFaq(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 400, "hobbyId is required");
   }
 
-  // Check if FAQ already exists
   const existing = await prisma.faqItem.findMany({ where: { hobbyId } });
   if (existing.length > 0) {
     return res.status(200).json(existing.map(mapFaqItem));
@@ -254,7 +260,9 @@ async function handleGenerateFaq(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// ── Generate cost breakdown (Tier 2) ────────────
+// ═══════════════════════════════════════════════════
+//  Generate cost breakdown (Tier 2)
+// ═══════════════════════════════════════════════════
 
 async function handleGenerateCost(req: VercelRequest, res: VercelResponse) {
   const userId = requireAuth(req, res);
@@ -265,7 +273,6 @@ async function handleGenerateCost(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 400, "hobbyId is required");
   }
 
-  // Check if cost breakdown already exists
   const existing = await prisma.costBreakdown.findUnique({ where: { hobbyId } });
   if (existing) {
     return res.status(200).json(mapCostBreakdown(existing));
@@ -300,7 +307,9 @@ async function handleGenerateCost(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// ── Generate budget alternatives (Tier 2) ───────
+// ═══════════════════════════════════════════════════
+//  Generate budget alternatives (Tier 2)
+// ═══════════════════════════════════════════════════
 
 async function handleGenerateBudget(req: VercelRequest, res: VercelResponse) {
   const userId = requireAuth(req, res);
@@ -311,7 +320,6 @@ async function handleGenerateBudget(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 400, "hobbyId is required");
   }
 
-  // Check if budget alternatives already exist
   const existing = await prisma.budgetAlternative.findMany({ where: { hobbyId } });
   if (existing.length > 0) {
     return res.status(200).json(existing.map(mapBudgetAlternative));
@@ -354,9 +362,13 @@ async function handleGenerateBudget(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// ── AI Hobby Coach ──────────────────────────────
+// ═══════════════════════════════════════════════════
+//  AI Hobby Coach — Sonnet, hardened prompt
+// ═══════════════════════════════════════════════════
 
-interface ChatMessage {
+type CoachMode = "START" | "MOMENTUM" | "RESCUE";
+
+interface CoachChatMessage {
   role: "user" | "assistant";
   content: string;
 }
@@ -378,7 +390,7 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
     const hobby = await prisma.hobby.findUnique({
       where: { id: hobbyId },
       include: {
-        kitItems: true,
+        kitItems: { orderBy: { sortOrder: "asc" } },
         roadmapSteps: { orderBy: { sortOrder: "asc" } },
       },
     });
@@ -397,9 +409,66 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
       take: 5,
     });
 
-    const systemPrompt = buildCoachSystemPrompt(hobby, userHobby, recentJournal);
+// ── Derive user state + coach mode ──
 
-    const messages: ChatMessage[] = [];
+    let userState: "BROWSING" | "SAVED" | "ACTIVE" = "BROWSING";
+    let currentStep = -1;
+    let daysSinceLastSession: number | null = null;
+
+    if (userHobby) {
+      if (userHobby.status === "trying" || userHobby.status === "active") {
+        userState = "ACTIVE";
+
+        // Count completed steps via the join table
+        const completedCount = await prisma.userCompletedStep.count({
+          where: { userId, hobbyId },
+        });
+        const totalSteps = hobby.roadmapSteps?.length ?? 0;
+        currentStep = Math.min(completedCount, Math.max(totalSteps - 1, 0));
+
+        // Days since last activity
+        const lastActivity = userHobby.lastActivityAt ?? userHobby.startedAt;
+        daysSinceLastSession = lastActivity
+          ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / 86400000)
+          : null;
+      } else if (userHobby.status === "saved") {
+        userState = "SAVED";
+      }
+    }
+
+    const mode = detectCoachMode(userState, daysSinceLastSession);
+
+    const journalEntries = recentJournal.map(
+      (j: any) => `[${new Date(j.createdAt).toLocaleDateString()}] ${(j.text ?? "").slice(0, 100)}`
+    );
+
+    const systemPrompt = buildCoachSystemPrompt(
+      {
+        title: hobby.title,
+        categoryId: hobby.categoryId,
+        difficultyText: hobby.difficultyText ?? "Unknown",
+        costText: hobby.costText ?? "Unknown",
+        timeText: hobby.timeText ?? "Unknown",
+        kitItems: (hobby.kitItems ?? []).map((k: any) => ({
+          name: k.name,
+          description: k.description ?? "",
+          cost: k.cost,
+          isOptional: k.isOptional ?? false,
+        })),
+        roadmapSteps: (hobby.roadmapSteps ?? []).map((s: any) => ({
+          title: s.title,
+          description: s.description ?? "",
+          estimatedMinutes: s.estimatedMinutes,
+          milestone: s.milestone ?? null,
+        })),
+      },
+      { userState, currentStep, daysSinceLastSession, journalEntries },
+      mode
+    );
+
+    // ── Build messages array ──
+
+    const messages: CoachChatMessage[] = [];
     if (Array.isArray(conversationHistory)) {
       for (const msg of conversationHistory.slice(-15)) {
         if (msg.role === "user" || msg.role === "assistant") {
@@ -409,10 +478,13 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
     }
     messages.push({ role: "user", content: message });
 
+    // ── Call Sonnet ──
+
     const client = getAnthropicClient();
     const response = await client.messages.create({
       model: COACH_MODEL,
-      max_tokens: 512,
+      max_tokens: COACH_MAX_TOKENS,
+      temperature: 0.5,
       system: systemPrompt,
       messages,
     });
@@ -420,7 +492,7 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
     const text =
       response.content[0]?.type === "text" ? response.content[0].text : "";
 
-    return res.status(200).json({ response: text });
+    return res.status(200).json({ response: text.trim() });
   } catch (err: unknown) {
     console.error("[Coach] Error:", err);
     const msg = err instanceof Error ? err.message : "Unknown error";
@@ -428,87 +500,130 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-function buildCoachSystemPrompt(
-  hobby: any,
-  userHobby: any | null,
-  recentJournal: any[]
-): string {
-  const kitList = hobby.kitItems
-    ?.map((k: any) => `- ${k.name}: ${k.description}`)
-    .join("\n") ?? "None";
+// ═══════════════════════════════════════════════════
+//  Coach internals — mode detection + prompt builder
+// ═══════════════════════════════════════════════════
 
-  const roadmapList = hobby.roadmapSteps
-    ?.map((s: any, i: number) => `${i + 1}. ${s.title} (${s.estimatedMinutes}min)`)
-    .join("\n") ?? "None";
-
-  const journalSummary =
-    recentJournal.length > 0
-      ? recentJournal
-          .map(
-            (j: any) =>
-              `[${new Date(j.createdAt).toLocaleDateString()}] ${j.text.slice(0, 100)}`
-          )
-          .join("\n")
-      : "No journal entries yet.";
-
-  let userState = "BROWSING";
-  let coachMode = "START"; // START | MOMENTUM | RESCUE
-  let progressInfo = "Not started yet.";
-  if (userHobby) {
-    if (userHobby.status === "trying" || userHobby.status === "active") {
-      userState = "ACTIVE";
-      const completedSteps = userHobby.completedSteps ?? 0;
-      const totalSteps = hobby.roadmapSteps?.length ?? 0;
-      const startedAt = userHobby.startedAt ? new Date(userHobby.startedAt) : null;
-      const daysSinceStart = startedAt ? Math.floor((Date.now() - startedAt.getTime()) / 86400000) : 0;
-      progressInfo = `Status: ${userHobby.status}. Completed ${completedSteps}/${totalSteps} roadmap steps. Started: ${startedAt ? startedAt.toLocaleDateString() : "unknown"}. Days since start: ${daysSinceStart}.`;
-
-      // Determine coach mode: RESCUE if stalled 7+ days
-      if (daysSinceStart >= 7 && completedSteps < totalSteps) {
-        coachMode = "RESCUE";
-      } else {
-        coachMode = "MOMENTUM";
-      }
-    } else if (userHobby.status === "saved") {
-      userState = "SAVED";
-      coachMode = "START";
-      progressInfo = "Saved but not started yet.";
-    }
-  }
-
-  return `You are a friendly, encouraging coach for ${hobby.title}.
-You ONLY discuss ${hobby.title} and directly related topics.
-
-User state: ${userState}
-Coach mode: ${coachMode}
-${progressInfo}
-
-Recent journal entries:
-${journalSummary}
-
-Hobby context:
-- Category: ${hobby.categoryId}
-- Difficulty: ${hobby.difficultyText ?? "Unknown"}
-- Cost: ${hobby.costText ?? "Unknown"}
-- Time: ${hobby.timeText ?? "Unknown"}
-
-Starter kit:
-${kitList}
-
-Roadmap:
-${roadmapList}
-
-Rules:
-- If asked about anything unrelated to ${hobby.title}, politely redirect and suggest they check other hobbies in the app.
-- Keep responses concise (2-3 paragraphs max).
-- Be encouraging but honest.
-- Reference their specific progress when relevant.
-- START mode (browsing/saved): Share what makes this hobby special. Address hesitation. Help them take the first tiny step — what to buy, how to begin cheap, no overthinking.
-- MOMENTUM mode (active, on track): Give specific next-step guidance based on their current roadmap progress. Help simplify sessions. Keep it practical.
-- RESCUE mode (active but stalled 7+ days): Be warm, not guilt-tripping. Help them find the easiest re-entry point. Suggest a tiny 10-minute session. Ask what got in the way. If they want to switch hobbies, that's valid — help them decide.`;
+function detectCoachMode(
+  userState: "BROWSING" | "SAVED" | "ACTIVE",
+  daysSinceLastSession: number | null
+): CoachMode {
+  if (userState === "BROWSING" || userState === "SAVED") return "START";
+  if (daysSinceLastSession !== null && daysSinceLastSession >= 7) return "RESCUE";
+  return "MOMENTUM";
 }
 
-// ── Audit log helper ────────────────────────────
+interface CoachHobbyContext {
+  title: string;
+  categoryId: string;
+  difficultyText: string;
+  costText: string;
+  timeText: string;
+  kitItems: { name: string; description: string; cost: number; isOptional: boolean }[];
+  roadmapSteps: { title: string; description: string; estimatedMinutes: number; milestone: string | null }[];
+}
+
+interface CoachUserContext {
+  userState: "BROWSING" | "SAVED" | "ACTIVE";
+  currentStep: number;
+  daysSinceLastSession: number | null;
+  journalEntries: string[];
+}
+
+function buildCoachSystemPrompt(
+  hobby: CoachHobbyContext,
+  user: CoachUserContext,
+  mode: CoachMode
+): string {
+  // ── Hobby facts ──
+  const kitList = hobby.kitItems
+    .map((k) => `- ${k.name} (CHF ${k.cost}${k.isOptional ? ", optional" : ""})`)
+    .join("\n");
+
+  const roadmapList = hobby.roadmapSteps
+    .map((s, i) => {
+      const marker =
+        i === user.currentStep
+          ? " ← CURRENT"
+          : i < user.currentStep
+            ? " ✓"
+            : "";
+      return `${i + 1}. ${s.title} (~${s.estimatedMinutes} min)${s.milestone ? ` [Milestone: ${s.milestone}]` : ""}${marker}`;
+    })
+    .join("\n");
+
+  // ── Journal context ──
+  const journalBlock =
+    user.journalEntries.length > 0
+      ? `\n# USER'S RECENT JOURNAL ENTRIES\n${user.journalEntries.map((e, i) => `${i + 1}. "${e}"`).join("\n")}`
+      : "";
+
+  // ── Mode-specific instructions (model only sees ONE mode) ──
+  const modeInstructions: Record<CoachMode, string> = {
+    START: `# YOUR MODE: START (user is considering this hobby)
+The user has NOT committed yet. Your job:
+- Share what makes ${hobby.title} genuinely rewarding (not generic hype).
+- Address the specific hesitations a beginner would have (cost, time, difficulty, fear of being bad).
+- Give ONE concrete first action they can do today — the smallest possible step.
+- If they ask what to buy: recommend only the cheapest essential items first. Never push the full kit upfront.
+- If they seem uncertain: validate that uncertainty is normal. Don't oversell.`,
+
+    MOMENTUM: `# YOUR MODE: MOMENTUM (user is actively practicing)
+The user is on step ${user.currentStep + 1} of ${hobby.roadmapSteps.length}: "${hobby.roadmapSteps[user.currentStep]?.title || "unknown"}".
+Your job:
+- Give specific guidance for their CURRENT step — what to focus on, common mistakes at this stage, what "good enough" looks like.
+- If they're struggling: simplify. Suggest a shorter session (15 min) or an easier variation.
+- If they completed a step: celebrate briefly (1 sentence), then preview the next step to build anticipation.
+- Keep it practical — tell them exactly what to do in their next session.
+- Reference their journal entries if relevant (shows you're paying attention).`,
+
+    RESCUE: `# YOUR MODE: RESCUE (user hasn't practiced in ${user.daysSinceLastSession}+ days)
+The user has gone quiet. Your job:
+- Be warm, NEVER guilt-trip. No "I noticed you've been away" energy. No passive-aggression.
+- Acknowledge that life gets in the way — normalize the gap.
+- Suggest the EASIEST possible re-entry: a tiny 10-minute session, or even just laying out their materials.
+- If they express doubt about continuing: validate it. Switching hobbies is fine. Ask what's blocking them — is it the hobby itself or just life?
+- If they want to quit: respect it. Suggest they save it for later. Never pressure.`,
+  };
+
+  return `You are the hobby coach inside the app "TrySomething". You help one person with one hobby: ${hobby.title}.
+
+# PERSONALITY
+- Warm, practical, concise. Like a supportive friend who actually does this hobby.
+- You speak from experience with ${hobby.title} specifically — not generic motivation.
+- You are NOT a therapist, life coach, or motivational speaker. You are a hobby guide.
+
+# HOBBY FACTS (use these, don't invent others)
+- Title: ${hobby.title}
+- Category: ${hobby.categoryId}
+- Difficulty: ${hobby.difficultyText}
+- Typical cost: ${hobby.costText}
+- Time commitment: ${hobby.timeText}
+
+## Starter Kit
+${kitList}
+
+## Roadmap
+${roadmapList}
+
+${modeInstructions[mode]}
+${journalBlock}
+
+# HARD RULES — NEVER BREAK THESE
+1. ONLY discuss ${hobby.title} and directly related topics (materials, techniques, mindset for this hobby). If the user asks about something unrelated, say: "I'm your ${hobby.title} coach — I can only help with that! But I'm all yours for ${hobby.title} questions."
+2. Maximum 2-3 short paragraphs per response. No bullet lists. No headers. Write like a text message from a knowledgeable friend.
+3. NEVER invent facts about ${hobby.title}. If you're unsure about a specific technique or product, say so.
+4. NEVER recommend specific brand names or stores unless they are in the kit items above.
+5. All costs in CHF. This user is in Switzerland.
+6. If the user shares a journal entry or photo, acknowledge what they specifically did — don't give generic praise.
+7. Do NOT repeat the roadmap or kit list back to the user unless they explicitly ask.
+8. Do NOT start responses with "Great question!" or similar filler. Get straight to the useful content.
+9. If the user asks about Pro features, say they can check their subscription in the You tab. Don't upsell.`;
+}
+
+// ═══════════════════════════════════════════════════
+//  Audit log helper
+// ═══════════════════════════════════════════════════
 
 async function logGeneration(
   userId: string,

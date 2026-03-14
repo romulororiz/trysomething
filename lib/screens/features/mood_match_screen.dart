@@ -278,8 +278,8 @@ class _MoodMatchScreenState extends ConsumerState<MoodMatchScreen> {
           ],
 
           // Bottom padding
-          const SliverToBoxAdapter(
-              child: SizedBox(height: Spacing.scrollBottomPadding)),
+          SliverToBoxAdapter(
+              child: SizedBox(height: Spacing.scrollBottom(context))),
         ],
       ),
     );

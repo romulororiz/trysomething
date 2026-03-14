@@ -256,7 +256,7 @@ class _RailFeedScreenState extends ConsumerState<RailFeedScreen> {
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: Spacing.scrollBottomPadding,
+                  bottom: Spacing.scrollBottom(context),
                   child: AnimatedOpacity(
                     opacity: _showSwipeHint ? 1.0 : 0.0,
                     duration: Motion.slow,

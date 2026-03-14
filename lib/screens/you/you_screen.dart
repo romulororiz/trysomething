@@ -110,8 +110,8 @@ class _YouScreenState extends ConsumerState<YouScreen> {
             SafeArea(
               bottom: false,
               child: ListView(
-                padding: const EdgeInsets.only(
-                    top: 16, bottom: Spacing.scrollBottomPadding),
+                padding: EdgeInsets.only(
+                    top: 16, bottom: Spacing.scrollBottom(context)),
                 children: [
                   // ── Centered profile header ──
                   Padding(

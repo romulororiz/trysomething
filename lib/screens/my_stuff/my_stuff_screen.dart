@@ -173,7 +173,7 @@ class _MyStuffScreenState extends ConsumerState<MyStuffScreen> {
                 ? _buildEmptyState()
                 : ListView.builder(
                     physics: const TryScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 14, 24, Spacing.scrollBottomPadding),
+                    padding: EdgeInsets.fromLTRB(24, 14, 24, Spacing.scrollBottom(context)),
                     itemCount: filteredUserHobbies.length,
                     itemBuilder: (context, index) {
                       final uh = filteredUserHobbies[index];

@@ -16,16 +16,16 @@ class AppTypography {
   AppTypography._();
 
   // ═══════════════════════════════════════════════════
-  //  HERO — Instrument Serif (editorial moments ONLY)
+  //  HERO — Manrope ExtraBold (clean, smooth, impactful)
   // ═══════════════════════════════════════════════════
 
   /// Hero — 36pt, cinematic headlines (splash, onboarding, paywall, detail hero)
-  static TextStyle get hero => GoogleFonts.instrumentSerif(
+  static TextStyle get hero => GoogleFonts.manrope(
         fontSize: 36,
-        fontWeight: FontWeight.w400, // Instrument Serif is already bold at 400
+        fontWeight: FontWeight.w800,
         color: AppColors.textPrimary,
         height: 1.1,
-        letterSpacing: -0.5,
+        letterSpacing: -0.8,
       );
 
   // ═══════════════════════════════════════════════════

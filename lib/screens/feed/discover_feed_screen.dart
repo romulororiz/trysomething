@@ -725,8 +725,8 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             ),
           ),
         ),
-      const SliverPadding(
-        padding: EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: Spacing.scrollBottom(context)),
       ),
     ];
   }
@@ -760,7 +760,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   Widget _buildSearchSuggestions() {
     return SingleChildScrollView(
       key: const ValueKey('suggestions'),
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, Spacing.scrollBottomPadding),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, Spacing.scrollBottom(context)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -911,8 +911,8 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             ),
           ),
 
-        const SliverPadding(
-          padding: EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
+        SliverPadding(
+          padding: EdgeInsets.only(bottom: Spacing.scrollBottom(context)),
         ),
       ],
     );

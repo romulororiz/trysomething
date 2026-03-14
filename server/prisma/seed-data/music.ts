@@ -31,7 +31,7 @@ export const musicHobbies = [
     hook: "Four strings, instant joy, zero excuses.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1578579653953-64e944c3741b?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "relaxing", "portable", "beginner-friendly"],
     costText: "CHF 30–120",
     timeText: "2h/week",
@@ -163,7 +163,7 @@ export const musicHobbies = [
     hook: "Build entire songs from your laptop screen.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1658247060442-9cc9b2e2a3f9?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "technical", "digital", "solo"],
     costText: "CHF 0–400",
     timeText: "4h/week",
@@ -185,7 +185,7 @@ export const musicHobbies = [
     hook: "Pocket-sized instrument, full-sized soul.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1517498206-2b9d47634bb9?w=800&h=1066&fit=crop&q=85",
     tags: ["portable", "blues", "folk", "beginner-friendly"],
     costText: "CHF 20–80",
     timeText: "2h/week",
@@ -207,7 +207,7 @@ export const musicHobbies = [
     hook: "Lock in the groove. Be the backbone.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1512404871764-1cf03a297841?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "rhythmic", "social", "band-essential"],
     costText: "CHF 100–400",
     timeText: "3h/week",
@@ -229,7 +229,7 @@ export const musicHobbies = [
     hook: "Breathe life into pure, crystalline melody.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1690181307176-95fde5584eed?w=800&h=1066&fit=crop&q=85",
     tags: ["classical", "meditative", "portable", "elegant"],
     costText: "CHF 80–400",
     timeText: "3h/week",
@@ -273,7 +273,7 @@ export const musicHobbies = [
     hook: "A wooden box that becomes a full drum kit.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1543443258-92b04ad5ec6b?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1620564131209-6df84641fe87?w=800&h=1066&fit=crop&q=85",
     tags: ["rhythmic", "portable", "acoustic", "social"],
     costText: "CHF 60–250",
     timeText: "2h/week",
@@ -295,7 +295,7 @@ export const musicHobbies = [
     hook: "Your mouth is the only instrument you need.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1504732099162-d8c9d5ba3bfd?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "zero-cost", "portable", "hip-hop"],
     costText: "CHF 0",
     timeText: "2h/week",
@@ -317,7 +317,7 @@ export const musicHobbies = [
     hook: "Turn your feelings into melodies and words.",
     categoryId: "music",
     imageUrl:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1593698054498-56898cbad8af?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "introspective", "expressive", "literary"],
     costText: "CHF 0–50",
     timeText: "3h/week",
