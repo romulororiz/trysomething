@@ -69,17 +69,24 @@ class _CoachLimitTracker {
   }
 
   /// Returns the message limit for this hobby based on user state.
-  /// null = unlimited.
+  /// null = unlimited (Pro users bypass this entirely).
+  ///
+  /// Strategy: free users get enough to feel value, then Pro converts
+  /// at the moment of highest engagement (active + stuck).
+  ///   Browsing (unsaved): 3 messages — taste the value, then save/start
+  ///   Saved:              5 messages — exploring, building commitment
+  ///   Active/Trying:      5 messages — enough to get hooked on support
+  ///   Done:               2 messages — light check-in only
   static int? limitForState(HobbyStatus? status) {
-    if (status == null) return null; // not saved = unlimited (evangelist)
+    if (status == null) return 3; // browsing — taste value
     switch (status) {
       case HobbyStatus.saved:
         return 5;
       case HobbyStatus.trying:
       case HobbyStatus.active:
-        return 3;
+        return 5;
       case HobbyStatus.done:
-        return 3;
+        return 2;
     }
   }
 }
@@ -255,7 +262,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
         final title = hobby?.title ?? 'this hobby';
         showProUpgrade(
           context,
-          'You\'ve used your free coach messages for $title this month',
+          'Keep getting personal guidance for $title. Pro gives you unlimited coach support to stay on track.',
         );
       }
     });

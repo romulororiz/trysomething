@@ -273,7 +273,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     if (!canStart) {
                       showProUpgrade(
                         context,
-                        'Free users can have one active hobby. Upgrade to Pro for unlimited.',
+                        'You\'re already working on a hobby. Pro lets you explore multiple hobbies at once.',
                       );
                       return;
                     }

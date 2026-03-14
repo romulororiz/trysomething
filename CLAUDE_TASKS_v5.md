@@ -354,12 +354,12 @@ The main architecture is right. Now each major surface must feel fully designed.
 
 The biggest remaining product logic issue is still the coach gating.
 
-- [ ] **K.1 — Fix current coach usage logic**
+- [x] **K.1 — Fix current coach usage logic**
   - Current pattern is strategically wrong if unsaved hobbies get more generous access than active ones
   - Refactor so the coach’s value appears strongest when the user is actively trying to continue
   - **Test:** coach access logic aligns with product strategy
 
-- [ ] **K.2 — Reframe free vs Pro around continuity**
+- [x] **K.2 — Reframe free vs Pro around continuity**
   - Free should help users:
     - start
     - ask one or two meaningful starter questions
@@ -370,7 +370,7 @@ The biggest remaining product logic issue is still the coach gating.
     - get ongoing support through friction
   - **Test:** free/Pro boundary feels intuitive and fair
 
-- [ ] **K.3 — Improve upgrade timing**
+- [x] **K.3 — Improve upgrade timing**
   - Trigger premium moments after:
     - useful coach value
     - recovery moments
@@ -378,7 +378,7 @@ The biggest remaining product logic issue is still the coach gating.
   - Avoid upgrade pressure before value is felt
   - **Test:** paywall timing feels more natural
 
-- [ ] **K.4 — Align upgrade language with coach value**
+- [x] **K.4 — Align upgrade language with coach value**
   - Emphasize:
     - know the next step
     - get unstuck
