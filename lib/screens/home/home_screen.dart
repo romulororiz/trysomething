@@ -125,9 +125,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Stack(
           children: [
             // Full-bleed swipeable hobby pages
+            // Free users: can only see hobby 1 + blurred hobby 2 (scroll stops there)
             PageView.builder(
               controller: _pageController,
-              itemCount: activeEntries.length,
+              itemCount: isPro
+                  ? activeEntries.length
+                  : activeEntries.length.clamp(0, 2),
               onPageChanged: (i) => setState(() => _currentPage = i),
               itemBuilder: (context, i) {
                 final userHobby = activeEntries[i].value;
