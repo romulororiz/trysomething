@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/features.dart';
 import '../../models/hobby.dart';
 import '../../providers/feature_providers.dart';
@@ -98,6 +99,13 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
       }
     }
     return total;
+  }
+
+  Future<void> _openAffiliateLink(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _toggleItem(int index) {
@@ -265,21 +273,24 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          SizedBox(
-            height: 200,
-            child: AnimatedBuilder(
-              animation: _chartProgress,
-              builder: (context, _) {
-                return CustomPaint(
-                  size: const Size(200, 200),
-                  painter: _DonutChartPainter(
-                    segments: segments,
-                    progress: _chartProgress.value,
-                    centerText: 'CHF $total',
-                    centerLabel: _selectedTier.label,
-                  ),
-                );
-              },
+          Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: AnimatedBuilder(
+                animation: _chartProgress,
+                builder: (context, _) {
+                  return CustomPaint(
+                    size: const Size(200, 200),
+                    painter: _DonutChartPainter(
+                      segments: segments,
+                      progress: _chartProgress.value,
+                      centerText: 'CHF $total',
+                      centerLabel: _selectedTier.label,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -564,20 +575,47 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
 
               const SizedBox(width: 8),
 
-              // Cost + toggle
+              // Cost + buy link + toggle
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 250),
-                    style: AppTypography.data.copyWith(
-                      color: isDisabled
-                          ? AppColors.textMuted
-                          : AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    child: Text('CHF ${item.cost}'),
+                  // Cost + buy link row
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 250),
+                        style: AppTypography.data.copyWith(
+                          color: isDisabled
+                              ? AppColors.textMuted
+                              : AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        child: Text('CHF ${item.cost}'),
+                      ),
+                      if (item.affiliateUrl != null &&
+                          item.affiliateUrl!.isNotEmpty &&
+                          !isDisabled) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () => _openAffiliateLink(item.affiliateUrl!),
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.open_in_new_rounded,
+                              size: 13,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   if (canToggle)
                     Padding(
