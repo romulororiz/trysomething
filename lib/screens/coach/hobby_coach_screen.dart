@@ -156,6 +156,10 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
         final count = await _CoachLimitTracker.getCount(hobbyId);
         if (count >= limit) {
           _limitHit = true;
+          ref.read(analyticsProvider).trackEvent('coach_limit_reached', {
+            'hobby_id': hobbyId,
+            'limit': limit,
+          });
           // Trigger UI rebuild so the screen can show upgrade sheet
           state = [...state];
           return;

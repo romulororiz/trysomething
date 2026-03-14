@@ -17,6 +17,7 @@ import '../../theme/motion.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
 import '../../components/app_overlays.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -202,7 +203,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 20),
 
                   // ── TrySomething Pro ──
-                  _ProSettingsRow(ref: ref, onTap: () => context.push('/pro')),
+                  _ProSettingsRow(
+                    ref: ref,
+                    onTap: () => context.push('/pro'),
+                    onManage: () => _openCustomerCenter(context),
+                  ),
                   const SizedBox(height: 20),
 
                   // ── Preferences section ──
@@ -537,6 +542,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       ),
     );
+  }
+
+  Future<void> _openCustomerCenter(BuildContext context) async {
+    try {
+      await RevenueCatUI.presentCustomerCenter();
+    } catch (e) {
+      if (context.mounted) {
+        showAppSnackbar(context,
+            message: 'Unable to open subscription manager.',
+            type: AppSnackbarType.error);
+      }
+    }
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
@@ -1376,10 +1393,12 @@ class _DebugProToggle extends ConsumerWidget {
 class _ProSettingsRow extends StatelessWidget {
   final WidgetRef ref;
   final VoidCallback onTap;
+  final VoidCallback? onManage;
 
-  const _ProSettingsRow({required this.ref, required this.onTap});
+  const _ProSettingsRow({required this.ref, required this.onTap, this.onManage});
 
   String _statusLabel(ProStatus status) {
+    if (status.isLifetime) return 'Lifetime';
     if (status.isTrialing) return 'Trial (${status.trialDaysRemaining} days left)';
     if (status.isPro) return 'Pro';
     return 'Free Plan';
@@ -1390,7 +1409,7 @@ class _ProSettingsRow extends StatelessWidget {
     final status = ref.watch(proStatusProvider);
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: status.isPro ? onManage : onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

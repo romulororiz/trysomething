@@ -12,11 +12,13 @@ final subscriptionProvider = Provider<SubscriptionService>((ref) {
 class ProStatus {
   final bool isPro;
   final bool isTrialing;
+  final bool isLifetime;
   final int trialDaysRemaining;
 
   const ProStatus({
     this.isPro = false,
     this.isTrialing = false,
+    this.isLifetime = false,
     this.trialDaysRemaining = 0,
   });
 }
@@ -55,6 +57,7 @@ class ProStatusNotifier extends StateNotifier<ProStatus> {
     state = ProStatus(
       isPro: _service.isPro,
       isTrialing: _service.isTrialing,
+      isLifetime: _service.isLifetime,
       trialDaysRemaining: _service.trialDaysRemaining,
     );
   }
@@ -65,6 +68,7 @@ class ProStatusNotifier extends StateNotifier<ProStatus> {
     state = ProStatus(
       isPro: _service.isPro,
       isTrialing: _service.isTrialing,
+      isLifetime: _service.isLifetime,
       trialDaysRemaining: _service.trialDaysRemaining,
     );
   }

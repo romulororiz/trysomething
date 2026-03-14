@@ -1,20 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../core/analytics/analytics_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_overlays.dart';
 
-/// Show the Pro upgrade bottom sheet from any screen.
-void showProUpgrade(BuildContext context, String triggerMessage) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => _ProUpgradeSheet(triggerMessage: triggerMessage),
-  );
+/// Show the Pro upgrade — uses RevenueCat's native paywall if available,
+/// falls back to the custom sheet if RC paywall isn't configured.
+Future<void> showProUpgrade(BuildContext context, String triggerMessage) async {
+  // Track analytics before showing
+  final container = ProviderScope.containerOf(context, listen: false);
+  container.read(analyticsProvider).trackEvent('paywall_shown', {
+    'trigger': triggerMessage,
+  });
+
+  // Try RevenueCat's native paywall first (designed in RC dashboard)
+  if (!kIsWeb) {
+    try {
+      final result = await RevenueCatUI.presentPaywallIfNeeded('pro');
+      if (result == PaywallResult.purchased ||
+          result == PaywallResult.restored) {
+        container.read(proStatusProvider.notifier).sync();
+        // Track purchase event
+        final isPro = container.read(subscriptionProvider).isPro;
+        if (isPro) {
+          final isTrialing = container.read(subscriptionProvider).isTrialing;
+          container.read(analyticsProvider).trackEvent(
+            isTrialing ? 'trial_started' : 'subscription_purchased',
+            {'trigger': triggerMessage},
+          );
+        }
+      }
+      return;
+    } catch (e) {
+      debugPrint('[Paywall] RC paywall failed, falling back to custom: $e');
+    }
+  }
+
+  // Fallback: custom bottom sheet (for web or when RC paywall isn't configured)
+  if (context.mounted) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ProUpgradeSheet(triggerMessage: triggerMessage),
+    );
+  }
 }
 
 class _ProUpgradeSheet extends ConsumerStatefulWidget {

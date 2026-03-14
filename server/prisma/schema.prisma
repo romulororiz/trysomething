@@ -167,9 +167,10 @@ model User {
   updatedAt    DateTime        @updatedAt
 
   // Subscription
-  subscriptionTier   String    @default("free") // "free", "trial", "pro"
+  subscriptionTier   String    @default("free") // "free", "trial", "pro", "lifetime"
   proSince           DateTime?
   proExpiresAt       DateTime?
+  isLifetime         Boolean   @default(false)
   revenuecatId       String?   @unique
 
   preferences    UserPreference?

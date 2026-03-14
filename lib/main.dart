@@ -126,7 +126,10 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
       if (authState.status == AuthStatus.authenticated) {
         if (authState.user != null) {
           ref.read(profileProvider.notifier).initFromAuth(authState.user!);
+          // Link RevenueCat to authenticated user and refresh subscription
+          ref.read(subscriptionProvider).setUserId(authState.user!.id);
         }
+        ref.read(proStatusProvider.notifier).refresh();
         ref.read(userHobbiesProvider.notifier).syncFromServer();
         ref.read(journalProvider.notifier).loadFromServer();
         ref.read(scheduleProvider.notifier).loadFromServer();
