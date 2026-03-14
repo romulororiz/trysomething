@@ -199,7 +199,7 @@ Typography is still not fully resolved. The app needs a calmer, more coherent vo
 
 Current overlays are inconsistent and break the premium feel.
 
-- [ ] **I.1 — Create one shared overlay system**
+- [x] **I.1 — Create one shared overlay system**
   - Build reusable overlay families:
     - `AppSheet`
     - `AppConfirmDialog`
@@ -208,7 +208,7 @@ Current overlays are inconsistent and break the premium feel.
   - These must replace mixed stock/legacy dialogs and ad hoc bottom sheets
   - **Test:** the app has one coherent overlay language
 
-- [ ] **I.2 — Build premium AppSheet**
+- [x] **I.2 — Build premium AppSheet**
   - Use for:
     - edit profile
     - hobby actions
@@ -225,7 +225,7 @@ Current overlays are inconsistent and break the premium feel.
     - same glass/surface language
   - **Test:** all sheets feel consistent and premium
 
-- [ ] **I.3 — Build AppConfirmDialog**
+- [x] **I.3 — Build AppConfirmDialog**
   - Use for:
     - logout
     - destructive actions
@@ -234,7 +234,7 @@ Current overlays are inconsistent and break the premium feel.
   - Remove stock-feeling `AlertDialog` usage where possible
   - **Test:** confirmation dialogs no longer break the visual identity
 
-- [ ] **I.4 — Standardize snackbars and transient messages**
+- [x] **I.4 — Standardize snackbars and transient messages**
   - Create one premium snackbar/toast style
   - Use for:
     - success
@@ -242,7 +242,7 @@ Current overlays are inconsistent and break the premium feel.
     - non-blocking errors
   - **Test:** transient messages feel like part of the product
 
-- [ ] **I.5 — Replace legacy overlays screen by screen**
+- [x] **I.5 — Replace legacy overlays screen by screen**
   - Audit and replace legacy popups/dialogs in:
     - Settings
     - Profile edit

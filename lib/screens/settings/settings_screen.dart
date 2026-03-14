@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import '../../core/media/image_upload.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/feature_providers.dart';
@@ -14,7 +16,7 @@ import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
-import '../../utils/app_dialog.dart';
+import '../../components/app_overlays.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -36,6 +38,103 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     _vibrationEnabled = prefs.getBool('session_vibration') ?? true;
     _soundEnabled = prefs.getBool('session_sound') ?? false;
+  }
+
+  void _showAboutSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: AppColors.textMuted.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // App name
+            RichText(
+              text: TextSpan(
+                style: AppTypography.display,
+                children: [
+                  TextSpan(text: 'Try', style: TextStyle(color: AppColors.accent)),
+                  TextSpan(text: 'Something', style: TextStyle(color: AppColors.textPrimary)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Tagline
+            Text(
+              'Stop scrolling. Start something.',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Description
+            Text(
+              'TrySomething helps you find a hobby that fits your life \u2014 '
+              'your budget, your schedule, your energy \u2014 and gives you a '
+              'simple plan to actually start it. No pressure. No hustle culture. '
+              'Just one good hobby, tried for 30 days.',
+              textAlign: TextAlign.center,
+              style: AppTypography.sansBodySmall
+                  .copyWith(color: AppColors.textSecondary, height: 1.6),
+            ),
+            const SizedBox(height: 20),
+            // Version
+            Text(
+              'Version 1.0.0 (build 1)',
+              style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 20),
+            // Links
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/privacy-policy');
+                  },
+                  child: Text('Privacy Policy',
+                      style: AppTypography.caption.copyWith(color: AppColors.accent)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('\u00b7',
+                      style: TextStyle(color: AppColors.textMuted)),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/terms-of-service');
+                  },
+                  child: Text('Terms of Service',
+                      style: AppTypography.caption.copyWith(color: AppColors.accent)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Made with \u2665 in Zurich',
+              style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -232,6 +331,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     icon: Icons.info_outline_rounded,
                     title: 'About',
                     subtitle: 'TrySomething v1.0.0',
+                    onTap: () => _showAboutSheet(context),
                   ),
 
                   // ── Session ──
@@ -304,9 +404,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onTap: () async {
                         await ref.read(userHobbiesProvider.notifier).syncFromServer();
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Synced from server')),
-                          );
+                          showAppSnackbar(context,
+                              message: 'Synced from server',
+                              type: AppSnackbarType.success);
                         }
                       },
                       child: GlassCard(
@@ -440,98 +540,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showFadeDialog(
+    showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.background,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Log out?', style: AppTypography.sansSection),
-        content: Text(
-          'You\'ll need to sign in again to access your data.',
-          style: AppTypography.sansBodySmall.copyWith(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () async {
-              await ref.read(authProvider.notifier).logout();
-              if (ctx.mounted) Navigator.of(ctx).pop();
-              if (context.mounted) context.go('/login');
-            },
-            child: Text('Log out', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
-          ),
-        ],
-      ),
+      title: 'Log out?',
+      message: 'You\'ll need to sign in again to access your data.',
+      confirmLabel: 'Log out',
+      isDestructive: true,
+      onConfirm: () async {
+        await ref.read(authProvider.notifier).logout();
+        if (context.mounted) context.go('/login');
+      },
     );
   }
 
   void _showClearDataDialog(BuildContext context, WidgetRef ref) {
-    showFadeDialog(
+    showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.background,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Clear local data?', style: AppTypography.sansSection),
-        content: Text(
-          'This will reset onboarding, preferences, and cached hobbies. You\'ll go through onboarding again.',
-          style: AppTypography.sansBodySmall.copyWith(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () async {
-              ref.read(onboardingCompleteProvider.notifier).reset();
-              final prefs = ref.read(sharedPreferencesProvider);
-              await prefs.remove('user_hobbies');
-              await prefs.remove('user_preferences');
-              if (ctx.mounted) Navigator.of(ctx).pop();
-              if (context.mounted) context.go('/onboarding');
-            },
-            child: Text('Clear data', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
-          ),
-        ],
-      ),
+      title: 'Clear local data?',
+      message: 'This will reset onboarding, preferences, and cached hobbies. You\'ll go through onboarding again.',
+      confirmLabel: 'Clear data',
+      isDestructive: true,
+      onConfirm: () async {
+        ref.read(onboardingCompleteProvider.notifier).reset();
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.remove('user_hobbies');
+        await prefs.remove('user_preferences');
+        if (context.mounted) context.go('/onboarding');
+      },
     );
   }
 
   void _showResetHobbiesDialog(BuildContext context, WidgetRef ref) {
-    showFadeDialog(
+    showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.background,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Reset hobby data?', style: AppTypography.sansSection),
-        content: Text(
-          'This clears all saved/active hobbies locally. Onboarding stays intact.',
-          style: AppTypography.sansBodySmall.copyWith(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () async {
-              final prefs = ref.read(sharedPreferencesProvider);
-              await prefs.remove('user_hobbies');
-              ref.invalidate(userHobbiesProvider);
-              if (ctx.mounted) Navigator.of(ctx).pop();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Hobby data cleared')),
-                );
-              }
-            },
-            child: Text('Reset', style: AppTypography.sansLabel.copyWith(color: AppColors.rose)),
-          ),
-        ],
-      ),
+      title: 'Reset hobby data?',
+      message: 'This clears all saved/active hobbies locally. Onboarding stays intact.',
+      confirmLabel: 'Reset',
+      isDestructive: true,
+      onConfirm: () async {
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.remove('user_hobbies');
+        ref.invalidate(userHobbiesProvider);
+        if (context.mounted) {
+          showAppSnackbar(context,
+              message: 'Hobby data cleared',
+              type: AppSnackbarType.success);
+        }
+      },
     );
   }
 
@@ -680,6 +735,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   late final TextEditingController _bioCtrl;
   String? _pendingAvatarUrl;
   bool _saving = false;
+  bool _picking = false;
 
   @override
   void initState() {
@@ -696,11 +752,31 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   }
 
   Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (file == null) return;
-    // For now store the path/URL locally — upload logic goes through updateProfile
-    setState(() => _pendingAvatarUrl = file.path);
+    if (_picking) return;
+    _picking = true;
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+      setState(() => _saving = true);
+      final url = await ImageUpload.uploadImage(File(picked.path));
+      if (!mounted) return;
+      setState(() => _saving = false);
+      if (url != null) {
+        setState(() => _pendingAvatarUrl = url);
+      } else {
+        showAppSnackbar(context,
+            message: 'Failed to upload photo',
+            type: AppSnackbarType.error);
+      }
+    } finally {
+      _picking = false;
+    }
   }
 
   Future<void> _save() async {
@@ -1071,12 +1147,14 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   const _SettingsTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     this.trailing,
+    this.onTap,
   });
 
   @override
@@ -1084,6 +1162,7 @@ class _SettingsTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
+        onTap: onTap,
         padding: const EdgeInsets.all(14),
         borderRadius: 14,
         child: Row(

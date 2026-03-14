@@ -18,6 +18,7 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../providers/subscription_provider.dart';
 import '../../components/pro_upgrade_sheet.dart';
+import '../../components/app_overlays.dart';
 import '../../utils/app_dialog.dart';
 
 /// Profile tab — photo, editable name/bio, heatmap, radar, gallery, passport.
@@ -1373,6 +1374,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _pickAndUpload(ImageSource source) async {
+    if (_uploading) return;
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: source,
@@ -1390,16 +1392,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (url != null) {
       ref.read(profileProvider.notifier).updateAvatar(url);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to upload photo',
-              style: AppTypography.sansLabel.copyWith(color: Colors.white)),
-          backgroundColor: AppColors.coral,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      showAppSnackbar(context,
+          message: 'Failed to upload photo',
+          type: AppSnackbarType.error);
     }
   }
 

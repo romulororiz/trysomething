@@ -5,6 +5,7 @@ import '../core/analytics/analytics_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'app_overlays.dart';
 
 /// Show the Pro upgrade bottom sheet from any screen.
 void showProUpgrade(BuildContext context, String triggerMessage) {
@@ -271,10 +272,9 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
     if (offering == null) {
       setState(() => _purchasing = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('No plans available. Try again later.')),
-        );
+        showAppSnackbar(context,
+            message: 'No plans available. Try again later.',
+            type: AppSnackbarType.error);
       }
       return;
     }
@@ -304,9 +304,9 @@ class _ProUpgradeSheetState extends ConsumerState<_ProUpgradeSheet> {
       if (mounted) Navigator.of(context).pop();
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No previous purchase found.')),
-        );
+        showAppSnackbar(context,
+            message: 'No previous purchase found.',
+            type: AppSnackbarType.info);
       }
     }
   }

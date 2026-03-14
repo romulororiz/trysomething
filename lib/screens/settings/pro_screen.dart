@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/glass_card.dart';
+import '../../components/app_overlays.dart';
 
 /// Dedicated TrySomething Pro screen with full feature list, plan comparison,
 /// and trial/upgrade CTA.
@@ -274,9 +275,9 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     if (offering == null) {
       setState(() => _purchasing = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No plans available. Try again later.')),
-        );
+        showAppSnackbar(context,
+            message: 'No plans available. Try again later.',
+            type: AppSnackbarType.error);
       }
       return;
     }
@@ -301,9 +302,9 @@ class _ProScreenState extends ConsumerState<ProScreen> {
       if (mounted) context.pop();
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No previous purchase found.')),
-        );
+        showAppSnackbar(context,
+            message: 'No previous purchase found.',
+            type: AppSnackbarType.info);
       }
     }
   }

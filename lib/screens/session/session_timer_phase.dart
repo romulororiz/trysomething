@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../models/session.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/app_dialog.dart';
+import '../../components/app_overlays.dart';
 
 /// Phase 2: Timer — the sacred core of the session.
 ///
@@ -471,33 +471,17 @@ class _EndEarlyLink extends StatelessWidget {
   }
 
   void _showConfirmation(BuildContext context) {
-    showFadeDialog(
+    showAppConfirmDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'End without completing this step?',
-          style: AppTypography.title.copyWith(fontSize: 18),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('No',
-                style: AppTypography.body
-                    .copyWith(color: AppColors.textPrimary)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // close dialog
-              onEndEarly();
-              onEndEarlyExit();
-            },
-            child: Text('Yes',
-                style: AppTypography.body.copyWith(color: AppColors.accent)),
-          ),
-        ],
-      ),
+      title: 'End without completing this step?',
+      message: 'Your progress for this step won\'t be saved.',
+      confirmLabel: 'End session',
+      cancelLabel: 'Keep going',
+      isDestructive: true,
+      onConfirm: () {
+        onEndEarly();
+        onEndEarlyExit();
+      },
     );
   }
 }
