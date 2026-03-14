@@ -260,93 +260,93 @@ Current overlays are inconsistent and break the premium feel.
 The main architecture is right. Now each major surface must feel fully designed.
 
 ### J.1 — Welcome / Entry
-- [ ] Reduce explanatory clutter
-- [ ] Strengthen one hero statement
-- [ ] Improve CTA confidence
-- [ ] Make first impression feel more iconic and less generic
-- [ ] **Test:** welcome feels premium and decisive
+- [x] Reduce explanatory clutter
+- [x] Strengthen one hero statement
+- [x] Improve CTA confidence
+- [x] Make first impression feel more iconic and less generic
+- [x] **Test:** welcome feels premium and decisive
 
 ### J.2 — Onboarding
-- [ ] Simplify each question screen
-- [ ] Reduce decorative complexity
-- [ ] Improve selected states and spacing
-- [ ] Make progress feel premium, not utility-like
-- [ ] **Test:** onboarding feels calm, focused, and confident
+- [x] Simplify each question screen
+- [x] Reduce decorative complexity
+- [x] Improve selected states and spacing
+- [x] Make progress feel premium, not utility-like
+- [x] **Test:** onboarding feels calm, focused, and confident
 
 ### J.3 — Match Results
-- [ ] Make best match more dominant
-- [ ] Make alternatives clearly secondary
-- [ ] Strengthen “why this fits” scanability
-- [ ] Improve CTA singularity
-- [ ] **Test:** results feel decisive, not list-like
+- [x] Make best match more dominant
+- [x] Make alternatives clearly secondary
+- [x] Strengthen “why this fits” scanability
+- [x] Improve CTA singularity
+- [x] **Test:** results feel decisive, not list-like
 
 ### J.4 — Search
-- [ ] Make search feel like a premium intelligence surface
-- [ ] Improve query suggestions
-- [ ] Improve result grouping
-- [ ] Make results feel closer to recommendation logic than catalog logic
-- [ ] **Test:** search feels helpful, not utility-heavy
+- [x] Make search feel like a premium intelligence surface
+- [x] Improve query suggestions
+- [x] Improve result grouping
+- [x] Make results feel closer to recommendation logic than catalog logic
+- [x] **Test:** search feels helpful, not utility-heavy
 
 ### J.5 — Hobby Detail
-- [ ] Push quick-start content higher if needed
-- [ ] Simplify visual density in upper half
-- [ ] Make easiest-start content even more obvious
-- [ ] Improve CTA stack clarity
-- [ ] **Test:** detail page strongly converts to “start now”
+- [x] Push quick-start content higher if needed
+- [x] Simplify visual density in upper half
+- [x] Make easiest-start content even more obvious
+- [x] Improve CTA stack clarity
+- [x] **Test:** detail page strongly converts to “start now”
 
 ### J.6 — Start Now / Week 1 Setup
-- [ ] Make setup feel lighter and less configurational
-- [ ] Reduce the number of visible decisions at once
-- [ ] Improve transitions between setup steps
-- [ ] Improve generated Week 1 success state
-- [ ] **Test:** setup feels easy and inevitable
+- [x] Make setup feel lighter and less configurational
+- [x] Reduce the number of visible decisions at once
+- [x] Improve transitions between setup steps
+- [x] Improve generated Week 1 success state
+- [x] **Test:** setup feels easy and inevitable
 
 ### J.7 — Home
-- [ ] Reduce dashboard feeling
-- [ ] Make active hobby more singular and emotionally central
-- [ ] Clarify next-step hierarchy
-- [ ] Remove any leftover browse noise
-- [ ] **Test:** Home feels like an operating center, not a dashboard
+- [x] Reduce dashboard feeling
+- [x] Make active hobby more singular and emotionally central
+- [x] Clarify next-step hierarchy
+- [x] Remove any leftover browse noise
+- [x] **Test:** Home feels like an operating center, not a dashboard
 
 ### J.8 — Roadmap / Progress
-- [ ] Emphasize current stage over future stages
-- [ ] Make roadmap feel like a narrative ladder, not task UI
-- [ ] Improve “stuck?” integration
-- [ ] Reduce status clutter
-- [ ] **Test:** roadmap feels humane and calm
+- [x] Emphasize current stage over future stages
+- [x] Make roadmap feel like a narrative ladder, not task UI
+- [x] Improve “stuck?” integration
+- [x] Reduce status clutter
+- [x] **Test:** roadmap feels humane and calm
 
 ### J.9 — Coach
-- [ ] Make chips the dominant entry
-- [ ] Reduce generic chat feel
-- [ ] Improve visual scanability of replies
-- [ ] Strengthen Start / Momentum / Rescue clarity
-- [ ] **Test:** coach feels like support UI, not chatbot UI
+- [x] Make chips the dominant entry
+- [x] Reduce generic chat feel
+- [x] Improve visual scanability of replies
+- [x] Strengthen Start / Momentum / Rescue clarity
+- [x] **Test:** coach feels like support UI, not chatbot UI
 
 ### J.10 — Journal
-- [ ] Make journal more reflective and less form-like
-- [ ] Emphasize “What should be simpler next time?”
-- [ ] Improve visual softness and calm
-- [ ] **Test:** journal feels emotionally useful, not bolted on
+- [x] Make journal more reflective and less form-like
+- [x] Emphasize “What should be simpler next time?”
+- [x] Improve visual softness and calm
+- [x] **Test:** journal feels emotionally useful, not bolted on
 
 ### J.11 — You
-- [ ] Reduce accent overload
-- [ ] Improve distinction between Active / Saved / Tried
-- [ ] Reduce account-area feel
-- [ ] Make Active the clear emotional center
-- [ ] **Test:** You feels like “my hobby life,” not settings-plus
+- [x] Reduce accent overload
+- [x] Improve distinction between Active / Saved / Tried
+- [x] Reduce account-area feel
+- [x] Make Active the clear emotional center
+- [x] **Test:** You feels like “my hobby life,” not settings-plus
 
 ### J.12 — Settings
-- [ ] Improve row spacing and visual hierarchy
-- [ ] Rebuild settings confirmations with new overlay system
-- [ ] Reduce stock Material feel
-- [ ] **Test:** settings no longer break the premium illusion
+- [x] Improve row spacing and visual hierarchy
+- [x] Rebuild settings confirmations with new overlay system
+- [x] Reduce stock Material feel
+- [x] **Test:** settings no longer break the premium illusion
 
 ### J.13 — Paywall / Pro
-- [ ] Tighten hero composition
-- [ ] Improve whitespace confidence
-- [ ] Improve plan selector styling
-- [ ] Make premium feel like continuity support, not monetization UI
-- [ ] **Test:** paywall feels premium and emotionally coherent
+- [x] Tighten hero composition
+- [x] Improve whitespace confidence
+- [x] Improve plan selector styling
+- [x] Make premium feel like continuity support, not monetization UI
+- [x] **Test:** paywall feels premium and emotionally coherent
 
 ---
 

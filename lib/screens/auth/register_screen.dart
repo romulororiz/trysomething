@@ -152,30 +152,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       children: [
                         // ── Logo ──
                         Center(
-                          child: Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: AppColors.coralPale,
-                              borderRadius: BorderRadius.circular(22),
-                            ),
-                            child: Center(
-                              child: Icon(Icons.auto_awesome,
-                                  size: 32, color: AppColors.coral),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              'assets/images/app_logo.png',
+                              width: 80,
+                              height: 80,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 24),
                         Center(
-                          child: Text('Create account',
-                              style: AppTypography.display),
+                          child: Text('Start something new',
+                              style: AppTypography.hero.copyWith(fontSize: 28)),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Center(
                           child: Text(
-                            'Start discovering hobbies you\u2019ll love',
-                            style: AppTypography.sansBodySmall
-                                .copyWith(color: AppColors.textSecondary),
+                            'Find a hobby you\u2019ll actually stick with.',
+                            style: AppTypography.body
+                                .copyWith(color: AppColors.textMuted),
                           ),
                         ),
                         const SizedBox(height: 32),

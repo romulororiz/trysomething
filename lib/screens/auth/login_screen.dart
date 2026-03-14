@@ -138,30 +138,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         // ── Logo ──
                         Center(
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(22),
-                              child: Image.asset(
-                                'assets/images/app_logo.png',
-                                width: 100,
-                                height: 100,
-                              ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              'assets/images/app_logo.png',
+                              width: 80,
+                              height: 80,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 24),
                         Center(
                           child: Text('Welcome back',
-                              style: AppTypography.display),
+                              style: AppTypography.hero.copyWith(fontSize: 30)),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Center(
                           child: Text(
-                            'Ready to start a new hobby?',
-                            style: AppTypography.sansBodySmall
-                                .copyWith(color: AppColors.textSecondary),
+                            'Pick up where you left off.',
+                            style: AppTypography.body
+                                .copyWith(color: AppColors.textMuted),
                           ),
                         ),
                         const SizedBox(height: 36),
