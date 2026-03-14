@@ -10,7 +10,7 @@ import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/onboarding/trial_offer_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/feed/discover_feed_screen.dart';
+import 'screens/discover/discover_screen.dart';
 import 'screens/feed/rail_feed_screen.dart';
 import 'screens/you/you_screen.dart';
 import 'screens/search/search_screen.dart';
@@ -19,6 +19,8 @@ import 'screens/quickstart/quickstart_screen.dart';
 import 'screens/coach/hobby_coach_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/pro_screen.dart';
+import 'screens/settings/privacy_policy_screen.dart';
+import 'screens/settings/terms_of_service_screen.dart';
 import 'models/hobby.dart' show CompletionMode;
 import 'screens/session/session_screen.dart';
 import 'screens/features/beginner_faq_screen.dart';
@@ -122,7 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/discover',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: DiscoverFeedScreen(),
+              child: DiscoverScreen(),
             ),
           ),
           GoRoute(
@@ -130,15 +132,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: YouScreen(),
             ),
-          ),
-          GoRoute(
-            path: '/search',
-            pageBuilder: (context, state) {
-              final initialQuery = state.uri.queryParameters['q'] ?? '';
-              return NoTransitionPage(
-                child: SearchScreen(initialQuery: initialQuery),
-              );
-            },
           ),
           // Rail feed — inside shell so navbar stays visible
           GoRoute(
@@ -162,6 +155,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ═══════════════════════════════════════════════════
       //  PUSHED SCREENS (on top of shell)
       // ═══════════════════════════════════════════════════
+
+      // Search — full-screen fade, covers shell for clean transition
+      GoRoute(
+        path: '/search',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final initialQuery = state.uri.queryParameters['q'] ?? '';
+          return CustomTransitionPage(
+            child: SearchScreen(initialQuery: initialQuery),
+            transitionsBuilder: (context, animation, _, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: Motion.slow,
+            reverseTransitionDuration: Motion.slow,
+          );
+        },
+      ),
 
       // Hobby detail
       GoRoute(
@@ -268,6 +278,30 @@ final routerProvider = Provider<GoRouter>((ref) {
             reverseTransitionDuration: Motion.navBack,
           );
         },
+      ),
+
+      // Privacy Policy
+      GoRoute(
+        path: '/privacy-policy',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const PrivacyPolicyScreen(),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
+          transitionDuration: Motion.navForward,
+          reverseTransitionDuration: Motion.navBack,
+        ),
+      ),
+
+      // Terms of Service
+      GoRoute(
+        path: '/terms-of-service',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const TermsOfServiceScreen(),
+          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
+          transitionDuration: Motion.navForward,
+          reverseTransitionDuration: Motion.navBack,
+        ),
       ),
 
       // ═══════════════════════════════════════════════════

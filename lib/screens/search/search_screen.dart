@@ -15,6 +15,7 @@ import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
 import '../../components/pro_upgrade_sheet.dart';
+import '../../components/app_background.dart';
 
 // ═══════════════════════════════════════════════════════
 //  NATURAL LANGUAGE KEYWORD MAP
@@ -249,7 +250,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       }
     });
 
-    return allHobbiesAsync.when(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: allHobbiesAsync.when(
       loading: () =>
           const SafeArea(child: Center(child: CircularProgressIndicator())),
       error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
@@ -266,20 +270,30 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // Header — title left, X close right
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 12, 16, 0),
                 child: Row(
                   children: [
+                    Text('Search', style: AppTypography.title.copyWith(
+                      fontSize: 18,
+                      color: AppColors.textPrimary,
+                    )),
+                    const Spacer(),
                     GestureDetector(
                       onTap: () => context.pop(),
-                      child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.textSecondary),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.glassBackground,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                        ),
+                        child: const Icon(Icons.close_rounded,
+                            size: 18, color: AppColors.textSecondary),
+                      ),
                     ),
-                    const Spacer(),
-                    Text('Search Hobbies', style: AppTypography.title.copyWith(fontSize: 17)),
-                    const Spacer(),
-                    const SizedBox(width: 20),
                   ],
                 ),
               ),
@@ -427,6 +441,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         );
       },
+    ),
+    ),
     );
   }
 
@@ -442,7 +458,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final isPro = ref.watch(isProProvider);
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: Spacing.scrollBottomPadding),
+      padding: EdgeInsets.only(bottom: Spacing.scrollBottom(context)),
       children: [
         // Top Results header
         Padding(
@@ -829,17 +845,26 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.coral : AppColors.surface,
+          color: isSelected
+              ? AppColors.accent.withValues(alpha: 0.15)
+              : AppColors.glassBackground,
           borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.accent.withValues(alpha: 0.4)
+                : AppColors.glassBorder,
+            width: 0.5,
+          ),
         ),
         child: Text(
           label,
           style: AppTypography.caption.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? AppColors.accent : AppColors.textSecondary,
           ),
         ),
       ),
