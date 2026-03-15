@@ -696,7 +696,7 @@ The biggest missing premium layer is that coach responses are too flat. Replace 
 
 The coach should make it obvious what help is available before users type anything.
 
-- [x] **Q.1 — Replace simple chips with premium quick-action cards**
+- [x] **Q.1 — Replace simple chips with premium quick-action cards** ✓
   - Upgrade the current lightweight chips into more substantial quick-action surfaces
   - At minimum, support:
     - Help me start tonight
@@ -707,7 +707,7 @@ The coach should make it obvious what help is available before users type anythi
     - Maybe this hobby isn’t for me
   - **Test:** quick actions feel premium and useful, not like placeholder chips
 
-- [ ] **Q.2 — Make quick actions mode-aware**
+- [x] **Q.2 — Make quick actions mode-aware**
   - Start mode should emphasize:
     - first session
     - starter kit
@@ -723,7 +723,7 @@ The coach should make it obvious what help is available before users type anythi
     - switch decision support
   - **Test:** each mode surfaces clearly different guidance
 
-- [ ] **Q.3 — Add “continue or switch?” support**
+- [x] **Q.3 — Add “continue or switch?” support**
   - Build a dedicated coach flow for:
     - “Maybe this hobby isn’t for me”
   - Flow should help user decide whether to:
@@ -732,17 +732,17 @@ The coach should make it obvious what help is available before users type anythi
     - switch to a better adjacent hobby
   - **Test:** flow feels supportive, not judgmental
 
-- [ ] **Q.4 — Add “what should I do next?” guidance flow**
+- [x] **Q.4 — Add “what should I do next?” guidance flow**
   - When triggered, the coach should respond with a practical, stage-aware suggestion
   - Prefer structured response cards over plain text
   - **Test:** next-step guidance feels tied to real progress context
 
-- [ ] **Q.5 — Add “make this cheaper” guidance flow**
+- [x] **Q.5 — Add “make this cheaper” guidance flow**
   - Connect to hobby starter-kit logic and budget framing
   - The result should feel like real budget coaching, not generic text
   - **Test:** cheaper-flow responses are specific and useful
 
-- [ ] **Q.6 — Add “start tonight” guidance flow**
+- [x] **Q.6 — Add “start tonight” guidance flow**
   - This should be one of the strongest default premium-feeling actions
   - Coach should provide:
     - tiny session plan
@@ -756,7 +756,7 @@ The coach should make it obvious what help is available before users type anythi
 
 The coach should not feel isolated. It should feel embedded in the product.
 
-- [ ] **R.1 — Strengthen coach entry from Home**
+- [x] **R.1 — Strengthen coach entry from Home**
   - Make Home → Coach entry context-rich
   - Pass:
     - current stage
@@ -764,24 +764,24 @@ The coach should not feel isolated. It should feel embedded in the product.
     - inactivity signal if relevant
   - **Test:** coach opens already knowing why the user came
 
-- [ ] **R.2 — Strengthen coach entry from Hobby Detail**
+- [x] **R.2 — Strengthen coach entry from Hobby Detail**
   - Coach should understand:
     - this hobby is not yet active
     - user may be exploring
     - user may need cheapest/easiest start
   - **Test:** detail-page coach feels tailored to pre-commitment state
 
-- [ ] **R.3 — Strengthen coach entry from Roadmap**
+- [x] **R.3 — Strengthen coach entry from Roadmap**
   - “Stuck?” should route to coach with stage-aware context
   - Coach should answer in terms of the specific current stage
   - **Test:** roadmap-to-coach flow feels coherent and useful
 
-- [ ] **R.4 — Connect reflection prompts to Journal**
+- [x] **R.4 — Connect reflection prompts to Journal**
   - Coach reflection cards should route smoothly into journal flows where appropriate
   - Coach should be able to reference recent journal insights in later guidance
   - **Test:** Journal and Coach feel connected, not separate features
 
-- [ ] **R.5 — Connect week-plan adjustments back into Home**
+- [x] **R.5 — Connect week-plan adjustments back into Home**
   - If the coach simplifies or changes the week plan, Home should reflect the new plan
   - **Test:** coach changes visibly update the main product flow
 
@@ -791,7 +791,7 @@ The coach should not feel isolated. It should feel embedded in the product.
 
 The coach should visually and functionally feel like a reason to pay.
 
-- [ ] **S.1 — Reframe coach premium promise in UI copy**
+- [x] **S.1 — Reframe coach premium promise in UI copy**
   - Change coach-adjacent copy from generic AI framing to premium support framing
   - Emphasize:
     - know the next step
@@ -800,14 +800,14 @@ The coach should visually and functionally feel like a reason to pay.
     - keep the hobby alive after week 1
   - **Test:** coach language sounds like a premium guidance product
 
-- [ ] **S.2 — Improve free coach experience so value is obvious**
+- [x] **S.2 — Improve free coach experience so value is obvious**
   - Free users should still experience:
     - one or two genuinely useful starter interactions
     - one meaningful recovery/support moment
   - Do not make the free experience feel too crippled to understand the value
   - **Test:** free users can understand why the coach matters
 
-- [ ] **S.3 — Make Pro feel like continuity ownership**
+- [x] **S.3 — Make Pro feel like continuity ownership**
   - Pro coach value should center on:
     - ongoing guidance
     - rescue support
@@ -816,7 +816,7 @@ The coach should visually and functionally feel like a reason to pay.
   - Avoid making premium feel like only “more messages”
   - **Test:** Pro feels like deeper support, not just usage volume
 
-- [ ] **S.4 — Improve coach-related paywall triggers**
+- [x] **S.4 — Improve coach-related paywall triggers**
   - Coach-related upgrade prompts should appear after meaningful value moments
   - Good trigger examples:
     - after a useful quick plan
@@ -825,7 +825,7 @@ The coach should visually and functionally feel like a reason to pay.
   - Avoid pushing upgrade before the user sees the difference
   - **Test:** upgrade moments feel natural and contextually justified
 
-- [ ] **S.5 — Add premium coach feature cues inside the screen**
+- [x] **S.5 — Add premium coach feature cues inside the screen**
   - Make the coach screen itself visually suggest premium depth:
     - adaptive plans
     - rescue help
@@ -840,7 +840,7 @@ The coach should visually and functionally feel like a reason to pay.
 
 Once the coach architecture and response system are rebuilt, finish the premium quality pass.
 
-- [ ] **T.1 — Motion pass for coach**
+- [x] **T.1 — Motion pass for coach**
   - Add calm, tactile animations for:
     - mode switching
     - quick-action expansion
@@ -849,7 +849,7 @@ Once the coach architecture and response system are rebuilt, finish the premium 
   - Motion must feel premium, not noisy
   - **Test:** coach interactions feel alive and expensive
 
-- [ ] **T.2 — Haptic pass for coach**
+- [x] **T.2 — Haptic pass for coach**
   - Add haptics for:
     - quick-action tap
     - mode switch
@@ -858,7 +858,7 @@ Once the coach architecture and response system are rebuilt, finish the premium 
     - successful coach action completion
   - **Test:** haptics feel subtle and useful
 
-- [ ] **T.3 — Empty/loading/error state QA**
+- [x] **T.3 — Empty/loading/error state QA**
   - Ensure:
     - empty state
     - loading replies
