@@ -21,26 +21,9 @@ class ProScreen extends ConsumerStatefulWidget {
   ConsumerState<ProScreen> createState() => _ProScreenState();
 }
 
-class _ProScreenState extends ConsumerState<ProScreen>
-    with SingleTickerProviderStateMixin {
+class _ProScreenState extends ConsumerState<ProScreen> {
   int _selectedPlan = 1; // 0=monthly, 1=annual, 2=lifetime
   bool _purchasing = false;
-  late final AnimationController _fadeCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _fadeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _fadeCtrl.dispose();
-    super.dispose();
-  }
 
   static const _benefits = [
     _ProFeature(
@@ -68,11 +51,9 @@ class _ProScreenState extends ConsumerState<ProScreen>
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: FadeTransition(
-        opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
-        child: AppBackground(
-          child: Stack(
+      backgroundColor: AppColors.background,
+      body: AppBackground(
+        child: Stack(
             children: [
               // Scrollable content
               SafeArea(
@@ -312,9 +293,9 @@ class _ProScreenState extends ConsumerState<ProScreen>
             ],
           ),
         ),
-      ),
     );
   }
+
 
   // ═══════════════════════════════════════════════════════
   //  FEATURED PLAN TILE (Annual — full width, elevated)
