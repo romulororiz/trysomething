@@ -62,13 +62,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
-
   @override
   Widget build(BuildContext context) {
     final userHobbies = ref.watch(userHobbiesProvider);
@@ -138,7 +131,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 final page = _HobbyPage(
                   key: ValueKey(userHobby.hobbyId),
                   userHobby: userHobby,
-                  greeting: _greeting(),
                 );
                 if (!isLocked) return page;
                 return _ProLockedOverlay(child: page);
@@ -256,9 +248,8 @@ class _ProLockedOverlay extends StatelessWidget {
 
 class _HobbyPage extends ConsumerWidget {
   final UserHobby userHobby;
-  final String greeting;
 
-  const _HobbyPage({super.key, required this.userHobby, required this.greeting});
+  const _HobbyPage({super.key, required this.userHobby});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -275,8 +266,7 @@ class _HobbyPage extends ConsumerWidget {
               child: Text('Hobby not found',
                   style: TextStyle(color: AppColors.textMuted)));
         }
-        return _HobbyPageContent(
-            hobby: hobby, userHobby: userHobby, greeting: greeting);
+        return _HobbyPageContent(hobby: hobby, userHobby: userHobby);
       },
     );
   }
@@ -285,12 +275,10 @@ class _HobbyPage extends ConsumerWidget {
 class _HobbyPageContent extends ConsumerStatefulWidget {
   final Hobby hobby;
   final UserHobby userHobby;
-  final String greeting;
 
   const _HobbyPageContent({
     required this.hobby,
     required this.userHobby,
-    required this.greeting,
   });
 
   @override
@@ -424,9 +412,27 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting
+              // Hobby title
               const SizedBox(height: 4),
-              Text(widget.greeting, style: AppTypography.hero),
+              Builder(builder: (_) {
+                final words = hobby.title.split(' ');
+                if (words.length <= 1) {
+                  return Text(hobby.title, style: AppTypography.hero);
+                }
+                return Text.rich(
+                  TextSpan(children: [
+                    TextSpan(
+                      text: words.first,
+                      style: AppTypography.hero
+                          .copyWith(color: AppColors.coral),
+                    ),
+                    TextSpan(
+                      text: ' ${words.skip(1).join(' ')}',
+                      style: AppTypography.hero,
+                    ),
+                  ]),
+                );
+              }),
               const SizedBox(height: 24),
 
               // Restart prompt (stalled 3+ days)
@@ -575,32 +581,63 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               ],
 
               // ── Coach entry ──
-              GlassCard(
-                onTap: () => context.push('/coach/${hobby.id}'),
-                child: Row(
-                  children: [
-                    Icon(MdiIcons.chatProcessingOutline,
-                        size: 22, color: AppColors.textSecondary),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Need help?',
-                              style:
-                                  AppTypography.title.copyWith(fontSize: 16)),
-                          const SizedBox(height: 2),
-                          Text('Ask your coach for guidance',
-                              style: AppTypography.body
-                                  .copyWith(color: AppColors.textSecondary)),
-                        ],
+              Builder(builder: (context) {
+                final stepsCompleted = completedValid.length;
+                final totalSteps = hobby.roadmapSteps.length;
+
+                String coachTitle;
+                String coachSubtitle;
+                String coachMessage;
+                String coachMode;
+
+                if (daysSinceActivity >= 7) {
+                  coachTitle = 'Get back on track';
+                  coachSubtitle = 'It\'s been $daysSinceActivity days — let\'s restart gently';
+                  coachMessage = 'I skipped $daysSinceActivity days of ${hobby.title}. Help me restart gently.';
+                  coachMode = 'rescue';
+                } else if (stepsCompleted == 0) {
+                  coachTitle = 'Plan your first session';
+                  coachSubtitle = 'Get a tiny, doable plan for tonight';
+                  coachMessage = 'Help me start tonight. I want a tiny first session plan for ${hobby.title}.';
+                  coachMode = 'start';
+                } else {
+                  coachTitle = 'What should I do next?';
+                  coachSubtitle = '$stepsCompleted of $totalSteps steps done';
+                  coachMessage = 'What should I do next? I\'ve completed $stepsCompleted of $totalSteps steps.';
+                  coachMode = 'momentum';
+                }
+
+                return GlassCard(
+                  onTap: () => context.push('/coach/${hobby.id}', extra: {
+                    'message': coachMessage,
+                    'mode': coachMode,
+                    'autoSend': true,
+                  }),
+                  child: Row(
+                    children: [
+                      Icon(MdiIcons.chatProcessingOutline,
+                          size: 22, color: AppColors.textSecondary),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(coachTitle,
+                                style: AppTypography.title
+                                    .copyWith(fontSize: 16)),
+                            const SizedBox(height: 2),
+                            Text(coachSubtitle,
+                                style: AppTypography.body.copyWith(
+                                    color: AppColors.textSecondary)),
+                          ],
+                        ),
                       ),
-                    ),
-                    Icon(MdiIcons.chevronRight,
-                        size: 20, color: AppColors.textMuted),
-                  ],
-                ),
-              ),
+                      Icon(MdiIcons.chevronRight,
+                          size: 20, color: AppColors.textMuted),
+                    ],
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
 
               // ── Starter kit ──

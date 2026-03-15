@@ -378,7 +378,7 @@ class PrimaryCtaButton extends StatelessWidget {
                 )
               : Text(
                   label,
-                  style: AppTypography.sansCta,
+                  style: AppTypography.sansCta.copyWith(color: Colors.white),
                 ),
         ),
       ),

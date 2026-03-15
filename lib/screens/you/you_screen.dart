@@ -210,23 +210,14 @@ class _YouScreenState extends ConsumerState<YouScreen> {
 
             // ── Gear icon (top-right) ──
             Positioned(
-              top: MediaQuery.of(context).padding.top + 10,
-              right: 16,
+              top: MediaQuery.of(context).padding.top + 20,
+              right: 20,
               child: GestureDetector(
                 onTap: () => context.push('/settings'),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Icon(
-                    MdiIcons.cogOutline,
-                    size: 18,
-                    color: AppColors.textMuted,
-                  ),
+                child: Icon(
+                  MdiIcons.cogOutline,
+                  size: 22,
+                  color: AppColors.textMuted,
                 ),
               ),
             ),

@@ -376,7 +376,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     elevation: 0,
                   ),
                   child: Text(labels[_currentPage],
-                      style: AppTypography.sansButton),
+                      style: AppTypography.sansButton.copyWith(color: Colors.white)),
                 ),
               ),
             ),

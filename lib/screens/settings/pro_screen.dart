@@ -7,9 +7,13 @@ import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/glass_card.dart';
 import '../../components/app_overlays.dart';
+import '../../components/app_background.dart';
 
-/// Dedicated TrySomething Pro screen with full feature list, plan comparison,
-/// and trial/upgrade CTA.
+/// TrySomething Pro — premium upgrade screen.
+///
+/// Design: stacked plan cards (all visible, no carousel) with the
+/// recommended plan visually elevated. Based on highest-converting
+/// paywall patterns from Superwall/Adapty research.
 class ProScreen extends ConsumerStatefulWidget {
   const ProScreen({super.key});
 
@@ -17,9 +21,46 @@ class ProScreen extends ConsumerStatefulWidget {
   ConsumerState<ProScreen> createState() => _ProScreenState();
 }
 
-class _ProScreenState extends ConsumerState<ProScreen> {
-  bool _annualSelected = true;
+class _ProScreenState extends ConsumerState<ProScreen>
+    with SingleTickerProviderStateMixin {
+  int _selectedPlan = 1; // 0=monthly, 1=annual, 2=lifetime
   bool _purchasing = false;
+  late final AnimationController _fadeCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
+
+  static const _benefits = [
+    _ProFeature(
+      icon: Icons.route_outlined,
+      title: 'Know the next right step',
+      subtitle:
+          'Your coach tells you exactly what to do next — no overthinking.',
+    ),
+    _ProFeature(
+      icon: Icons.auto_awesome,
+      title: 'Get unstuck fast',
+      subtitle:
+          'Skipped a few days? Your coach helps you restart in 10 minutes.',
+    ),
+    _ProFeature(
+      icon: Icons.camera_alt_outlined,
+      title: 'Track real progress',
+      subtitle: 'Photo journal and reflections that show how far you\'ve come.',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -27,241 +68,607 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.glassBackground,
-                      ),
-                      child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.textSecondary),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text('TrySomething Pro', style: AppTypography.display.copyWith(fontSize: 24)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.only(bottom: bottomPad + 120),
-                children: [
-                  // Status badge
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: status.isPro
-                            ? AppColors.sage.withValues(alpha: 0.15)
-                            : AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        _statusText(status),
-                        style: AppTypography.monoBadge.copyWith(
-                          color: status.isPro ? AppColors.sage : AppColors.textSecondary,
+      backgroundColor: Colors.transparent,
+      body: FadeTransition(
+        opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
+        child: AppBackground(
+          child: Stack(
+            children: [
+              // Scrollable content
+              SafeArea(
+                child: Column(
+                  children: [
+                    // Back button
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, top: 8),
+                        child: GestureDetector(
+                          onTap: () => context.pop(),
+                          child: const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(Icons.arrow_back,
+                                size: 20, color: AppColors.textSecondary),
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 28),
+                    // Scrollable body
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.only(bottom: bottomPad + 120),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 8),
 
-                  // Hero
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.coral.withValues(alpha: 0.2),
-                                AppColors.textMuted.withValues(alpha: 0.2),
-                              ],
+                            // Brand wordmark
+                            RichText(
+                              text: TextSpan(children: [
+                                TextSpan(
+                                  text: 'Try',
+                                  style: AppTypography.hero.copyWith(
+                                      fontSize: 20, color: AppColors.coral),
+                                ),
+                                TextSpan(
+                                  text: 'Something ',
+                                  style: AppTypography.hero.copyWith(
+                                      fontSize: 20,
+                                      color: AppColors.textPrimary),
+                                ),
+                                TextSpan(
+                                  text: 'Pro',
+                                  style: AppTypography.hero.copyWith(
+                                    fontSize: 20,
+                                    color: AppColors.textPrimary,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ]),
                             ),
-                          ),
-                          child: const Icon(Icons.auto_awesome,
-                              size: 32, color: AppColors.coral),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Unlock the full experience',
-                          style: AppTypography.title,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'AI coaching, photo journals, buddy matching,\nand much more.',
-                          style: AppTypography.sansCaption
-                              .copyWith(color: AppColors.textSecondary),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+                            const SizedBox(height: 16),
 
-                  const SizedBox(height: 28),
-
-                  // Feature list
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(20),
-                      borderRadius: 18,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Everything in Pro',
-                              style: AppTypography.title.copyWith(fontSize: 17)),
-                          const SizedBox(height: 16),
-                          ..._proFeatures.map((f) => _FeatureItem(
-                                icon: f.$1,
-                                label: f.$2,
-                                desc: f.$3,
-                              )),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Plan toggle
-                  if (!status.isPro) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _PlanCard(
-                              label: 'Monthly',
-                              price: 'CHF 4.99',
-                              sub: '/month',
-                              selected: !_annualSelected,
-                              onTap: () =>
-                                  setState(() => _annualSelected = false),
+                            // Heading
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Unlock',
+                                    style: AppTypography.hero.copyWith(
+                                      fontSize: 32,
+                                      color: AppColors.coral,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' the full\nexperience',
+                                    style: AppTypography.hero
+                                        .copyWith(fontSize: 32),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _PlanCard(
-                              label: 'Annual',
-                              price: 'CHF 39.99',
-                              sub: '/year · save 33%',
-                              selected: _annualSelected,
-                              onTap: () =>
-                                  setState(() => _annualSelected = true),
+                            const SizedBox(height: 36),
+
+                            // Benefit cards
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: Column(
+                                children: _benefits
+                                    .map((b) => Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 12),
+                                          child: _buildFeatureCard(b),
+                                        ))
+                                    .toList(),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                            const SizedBox(height: 28),
 
-                    const SizedBox(height: 16),
+                            // ── Plan selector ──
+                            if (!status.isPro) ...[
+                              Text(
+                                'Choose your plan',
+                                style: AppTypography.sansLabel
+                                    .copyWith(color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 16),
 
-                    // Restore purchase
-                    Center(
-                      child: GestureDetector(
-                        onTap: _handleRestore,
-                        child: Text(
-                          'Restore purchase',
-                          style: AppTypography.sansCaption.copyWith(
-                            color: AppColors.textSecondary,
-                            decoration: TextDecoration.underline,
-                          ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 24),
+                                child: Column(
+                                  children: [
+                                    _buildPlanTile(
+                                      index: 1,
+                                      label: 'Annual',
+                                      price: 'CHF 39.99',
+                                      period: '/year',
+                                      perMonthPrice: 'CHF 3.33/mo',
+                                      savingsPercent: 33,
+                                      badge: 'MOST POPULAR',
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _buildCompactPlanTile(
+                                            index: 0,
+                                            label: 'Monthly',
+                                            price: 'CHF 4.99',
+                                            period: '/month',
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: _buildCompactPlanTile(
+                                            index: 2,
+                                            label: 'Lifetime',
+                                            price: 'CHF 99.99',
+                                            period: 'one-time',
+                                            badge: 'BEST VALUE',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              GestureDetector(
+                                onTap: _handleRestore,
+                                child: Text(
+                                  'Restore purchase',
+                                  style: AppTypography.sansCaption.copyWith(
+                                    color: AppColors.textSecondary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Subscriptions are managed by your app store.',
+                                style: AppTypography.sansTiny
+                                    .copyWith(color: AppColors.textMuted),
+                              ),
+                            ],
+
+                            // Already Pro
+                            if (status.isPro) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.sage.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Text(
+                                  _statusText(status),
+                                  style: AppTypography.monoBadge
+                                      .copyWith(color: AppColors.sage),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Manage subscription (for existing subscribers)
-                    Center(
-                      child: Text(
-                        'Subscriptions are managed by your app store.',
-                        style: AppTypography.sansTiny
-                            .copyWith(color: AppColors.textMuted),
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
+
+              // Floating CTA — positioned over the gradient
+              if (!status.isPro)
+                Positioned(
+                  left: 24,
+                  right: 24,
+                  bottom: bottomPad + 16,
+                  child: GestureDetector(
+                    onTap: _purchasing ? null : _handlePurchase,
+                    child: Container(
+                      width: double.infinity,
+                      height: Spacing.buttonCtaHeight,
+                      decoration: BoxDecoration(
+                        color: AppColors.coral,
+                        borderRadius:
+                            BorderRadius.circular(Spacing.radiusCta),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.coral.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: _purchasing
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text(
+                                _ctaLabel,
+                                style: AppTypography.sansLabel.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  FEATURED PLAN TILE (Annual — full width, elevated)
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildPlanTile({
+    required int index,
+    required String label,
+    required String price,
+    required String period,
+    String? perMonthPrice,
+    int savingsPercent = 0,
+    String? badge,
+  }) {
+    final selected = _selectedPlan == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPlan = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.coral.withValues(alpha: 0.06)
+              : AppColors.glassBackground,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? AppColors.coral : AppColors.glassBorder,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: selected
+                  ? AppColors.coral.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              blurRadius: 24,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Badge row
+            if (badge != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.coral.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    badge,
+                    style: AppTypography.monoBadge.copyWith(
+                      color: AppColors.coral,
+                      fontSize: 9,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Main content row
+            Row(
+              children: [
+                // Radio indicator
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeInOut,
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected ? AppColors.coral : AppColors.textWhisper,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: selected
+                      ? Center(
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.coral,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 14),
+
+                // Plan info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: AppTypography.sansLabel.copyWith(
+                          color: selected
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (perMonthPrice != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          perMonthPrice,
+                          style: AppTypography.sansTiny
+                              .copyWith(color: AppColors.textMuted),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                // Price + savings
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      price,
+                      style: AppTypography.title.copyWith(
+                        fontSize: 18,
+                        color: selected
+                            ? AppColors.coral
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          period,
+                          style: AppTypography.sansTiny
+                              .copyWith(color: AppColors.textMuted),
+                        ),
+                        if (savingsPercent > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.sage.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '-$savingsPercent%',
+                              style: AppTypography.monoBadge.copyWith(
+                                color: AppColors.sage,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ),
-      // Floating CTA
-      bottomSheet: status.isPro
-          ? null
-          : Container(
-              color: AppColors.background,
-              padding: EdgeInsets.fromLTRB(24, 12, 24, bottomPad + 16),
-              child: GestureDetector(
-                onTap: _purchasing ? null : _handlePurchase,
-                child: Container(
-                  width: double.infinity,
-                  height: Spacing.buttonCtaHeight,
-                  decoration: BoxDecoration(
-                    color: AppColors.coral,
-                    borderRadius: BorderRadius.circular(Spacing.radiusCta),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.coral.withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: _purchasing
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : Text(
-                            'Start Free Trial',
-                            style: AppTypography.sansLabel.copyWith(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════
+  //  COMPACT PLAN TILE (Monthly / Lifetime — half width)
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildCompactPlanTile({
+    required int index,
+    required String label,
+    required String price,
+    required String period,
+    String? badge,
+  }) {
+    final selected = _selectedPlan == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPlan = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.coral.withValues(alpha: 0.06)
+              : AppColors.glassBackground,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? AppColors.coral : AppColors.glassBorder,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: selected
+                  ? AppColors.coral.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              blurRadius: 24,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Badge
+            if (badge != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.sage.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    badge,
+                    style: AppTypography.monoBadge.copyWith(
+                      color: AppColors.sage,
+                      fontSize: 8,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              )
+            else
+              const SizedBox(height: 19),
+
+            // Radio
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeInOut,
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? AppColors.coral : AppColors.textWhisper,
+                  width: 1.5,
+                ),
+              ),
+              child: selected
+                  ? Center(
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.coral,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 10),
+
+            // Label
+            Text(
+              label,
+              style: AppTypography.sansLabel.copyWith(
+                color:
+                    selected ? AppColors.textPrimary : AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            // Price
+            Text(
+              price,
+              style: AppTypography.title.copyWith(
+                fontSize: 17,
+                color: selected ? AppColors.coral : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+
+            // Period
+            Text(
+              period,
+              style:
+                  AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  FEATURE CARD
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildFeatureCard(_ProFeature feature) {
+    return GlassCard(
+      blur: false,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.coral.withValues(alpha: 0.12),
+            ),
+            child: Icon(feature.icon, size: 22, color: AppColors.coral),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(feature.title, style: AppTypography.sansLabel),
+                const SizedBox(height: 2),
+                Text(
+                  feature.subtitle,
+                  style: AppTypography.sansTiny
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  HELPERS
+  // ═══════════════════════════════════════════════════════
+
+  String get _ctaLabel => switch (_selectedPlan) {
+        0 => 'Start Free Trial',
+        1 => 'Start Free Trial',
+        2 => 'Get Lifetime Access',
+        _ => 'Start Free Trial',
+      };
 
   String _statusText(ProStatus status) {
     if (status.isTrialing) {
       return 'TRIAL · ${status.trialDaysRemaining} DAYS LEFT';
     }
+    if (status.isLifetime) return 'LIFETIME PRO';
     if (status.isPro) return 'PRO ACTIVE';
     return 'FREE PLAN';
   }
@@ -282,9 +689,20 @@ class _ProScreenState extends ConsumerState<ProScreen> {
       return;
     }
 
-    final package = _annualSelected ? offering.annual : offering.monthly;
+    final package = switch (_selectedPlan) {
+      0 => offering.monthly,
+      1 => offering.annual,
+      2 => offering.lifetime,
+      _ => offering.annual,
+    };
+
     if (package == null) {
       setState(() => _purchasing = false);
+      if (mounted) {
+        showAppSnackbar(context,
+            message: 'This plan is not available yet.',
+            type: AppSnackbarType.error);
+      }
       return;
     }
 
@@ -308,129 +726,20 @@ class _ProScreenState extends ConsumerState<ProScreen> {
       }
     }
   }
-
-  static const _proFeatures = [
-    (Icons.auto_awesome, 'Unlimited AI Hobby Coach', 'Personalized guidance for every hobby'),
-    (Icons.camera_alt_outlined, 'Photo Journal', 'Add photos to your journal entries'),
-    (Icons.shuffle_rounded, '"Surprise Me" Generator', 'AI-generated custom hobbies from a prompt'),
-    (Icons.search_rounded, 'AI Search', 'Generate hobbies when catalog doesn\'t match'),
-    (Icons.insights_outlined, 'Advanced Stats & Radar', 'Detailed skill breakdowns and year-in-review'),
-    (Icons.people_outline, 'Buddy Mode', 'Find and pair with hobby partners'),
-    (Icons.emoji_events_outlined, 'Advanced Achievements', 'Unlock the full achievement set'),
-    (Icons.ios_share_rounded, 'Export Journal as PDF', 'Share your hobby journey'),
-    (Icons.card_membership_outlined, 'Hobby Passport', 'Collect stamps for completed hobbies'),
-  ];
 }
 
 // ═══════════════════════════════════════════════════════
-//  FEATURE ITEM
+//  DATA CLASSES
 // ═══════════════════════════════════════════════════════
 
-class _FeatureItem extends StatelessWidget {
+class _ProFeature {
   final IconData icon;
-  final String label;
-  final String desc;
+  final String title;
+  final String subtitle;
 
-  const _FeatureItem({
+  const _ProFeature({
     required this.icon,
-    required this.label,
-    required this.desc,
+    required this.title,
+    required this.subtitle,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AppColors.coral.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: AppColors.coral),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: AppTypography.sansLabel
-                        .copyWith(color: AppColors.textSecondary)),
-                const SizedBox(height: 2),
-                Text(desc,
-                    style: AppTypography.sansTiny
-                        .copyWith(color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-          const Icon(Icons.check_circle, size: 18, color: AppColors.coral),
-        ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  PLAN CARD
-// ═══════════════════════════════════════════════════════
-
-class _PlanCard extends StatelessWidget {
-  final String label;
-  final String price;
-  final String sub;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _PlanCard({
-    required this.label,
-    required this.price,
-    required this.sub,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.coral.withValues(alpha: 0.08)
-              : AppColors.glassBackground,
-          borderRadius: BorderRadius.circular(Spacing.radiusButton),
-          border: Border.all(
-            color: selected ? AppColors.coral : AppColors.glassBorder,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: AppTypography.sansLabel.copyWith(
-                  color: selected ? AppColors.coral : AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                )),
-            const SizedBox(height: 4),
-            Text(price,
-                style: AppTypography.title.copyWith(
-                  fontSize: 20,
-                  color: selected ? AppColors.coral : AppColors.textPrimary,
-                )),
-            const SizedBox(height: 2),
-            Text(sub,
-                style: AppTypography.sansTiny
-                    .copyWith(color: AppColors.textSecondary)),
-          ],
-        ),
-      ),
-    );
-  }
 }

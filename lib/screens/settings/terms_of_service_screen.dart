@@ -142,23 +142,29 @@ class TermsOfServiceScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
-                      Text(
-                        'TERMS OF SERVICE',
-                        style: AppTypography.overline.copyWith(
-                          color: AppColors.textMuted,
-                          letterSpacing: 2.0,
+                      // Title — centered header
+                      Center(
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Try',
+                                style: AppTypography.display.copyWith(color: AppColors.accent),
+                              ),
+                              TextSpan(
+                                text: 'Something',
+                                style: AppTypography.display.copyWith(color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'TrySomething',
-                        style: AppTypography.display.copyWith(color: AppColors.textPrimary),
-                      ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Effective date: 14 March 2026',
-                        style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                      Center(
+                        child: Text(
+                          'Effective date: 14 March 2026',
+                          style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                        ),
                       ),
 
                       // Section 1
@@ -194,7 +200,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                         'All activity that occurs under your account.',
                       ),
                       _buildBulletPoint(
-                        'Notifying us immediately at romulo@trysomething.com if you suspect unauthorized access.',
+                        'Notifying us immediately at support@trysomething.io if you suspect unauthorized access.',
                       ),
                       _buildBody(
                         'We reserve the right to suspend or terminate accounts that violate these Terms.',
@@ -412,7 +418,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                       // Section 14
                       _buildSectionTitle('14. Termination'),
                       _buildBody(
-                        'You may stop using the App and request account deletion at any time by contacting romulo@trysomething.com.',
+                        'You may stop using the App and request account deletion at any time by contacting support@trysomething.io.',
                       ),
                       _buildBody(
                         'We may terminate or suspend your account at our discretion if you violate these Terms, with or without notice.',
@@ -439,7 +445,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                         'If you have questions about these Terms, please contact us at:',
                       ),
                       _buildContactBlock({
-                        'Email': 'romulo@trysomething.com',
+                        'Email': 'support@trysomething.io',
                         'Location': 'Zurich, Switzerland',
                       }),
                     ],

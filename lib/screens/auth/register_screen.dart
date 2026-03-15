@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -94,48 +95,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: AppBackground(child: SafeArea(
         child: Column(
           children: [
-            // ── Top header: back + "Already have an account? Sign in" ──
+            // ── Top header: "Already have an account? Sign in" ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).maybePop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppColors.glassBackground,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new,
-                            size: 16, color: AppColors.textPrimary),
-                      ),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(authProvider.notifier).clearError();
+                    context.go('/login');
+                  },
+                  child: Text.rich(
+                    TextSpan(
+                      text: 'Have an account?  ',
+                      style: AppTypography.sansCaption
+                          .copyWith(color: AppColors.textMuted),
+                      children: [
+                        TextSpan(
+                          text: 'Sign in',
+                          style: AppTypography.sansLabel
+                              .copyWith(color: AppColors.coral),
+                        ),
+                      ],
                     ),
                   ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(authProvider.notifier).clearError();
-                      context.go('/login');
-                    },
-                    child: Text.rich(
-                      TextSpan(
-                        text: 'Have an account?  ',
-                        style: AppTypography.sansCaption
-                            .copyWith(color: AppColors.textMuted),
-                        children: [
-                          TextSpan(
-                            text: 'Sign in',
-                            style: AppTypography.sansLabel
-                                .copyWith(color: AppColors.coral),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
 
@@ -163,8 +147,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 24),
                         Center(
-                          child: Text('Start something new',
-                              style: AppTypography.hero.copyWith(fontSize: 28)),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Start',
+                                  style: AppTypography.hero.copyWith(
+                                    fontSize: 28,
+                                    color: AppColors.coral,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' something new',
+                                  style: AppTypography.hero
+                                      .copyWith(fontSize: 28),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Center(
@@ -349,8 +349,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                         // ── Terms text ──
                         Center(
-                          child: Text.rich(
-                            TextSpan(
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
                               text: 'By creating an account, you agree to our ',
                               style: AppTypography.sansTiny,
                               children: [
@@ -358,17 +359,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   text: 'Terms of Service',
                                   style: AppTypography.sansTiny
                                       .copyWith(color: AppColors.coral),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => context.push('/terms-of-service'),
                                 ),
                                 const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
                                   style: AppTypography.sansTiny
                                       .copyWith(color: AppColors.coral),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => context.push('/privacy-policy'),
                                 ),
                                 const TextSpan(text: '.'),
                               ],
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ),
                         const SizedBox(height: 24),

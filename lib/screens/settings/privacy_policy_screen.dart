@@ -174,23 +174,29 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
-                      Text(
-                        'PRIVACY POLICY',
-                        style: AppTypography.overline.copyWith(
-                          color: AppColors.textMuted,
-                          letterSpacing: 2.0,
+                      // Title — centered header
+                      Center(
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Try',
+                                style: AppTypography.display.copyWith(color: AppColors.accent),
+                              ),
+                              TextSpan(
+                                text: 'Something',
+                                style: AppTypography.display.copyWith(color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'TrySomething',
-                        style: AppTypography.display.copyWith(color: AppColors.textPrimary),
-                      ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Effective date: 14 March 2026',
-                        style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                      Center(
+                        child: Text(
+                          'Effective date: 14 March 2026',
+                          style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildBody(
@@ -207,7 +213,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       ),
                       _buildContactBlock({
                         'Name': 'Romulo Roriz',
-                        'Email': 'romulo@trysomethingapp.com',
+                        'Email': 'support@trysomething.io',
                         'Location': 'Zurich, Switzerland',
                       }),
 
@@ -468,7 +474,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         'Right to rectification: You may correct inaccurate data via the App\'s profile settings, or by contacting us.',
                       ),
                       _buildBulletPoint(
-                        'Right to deletion: You may request deletion of your account and all associated data by emailing romulo@trysomething.com. We will process your request within 30 days.',
+                        'Right to deletion: You may request deletion of your account and all associated data by emailing support@trysomething.io. We will process your request within 30 days.',
                       ),
                       _buildBulletPoint(
                         'Right to data portability: You may request your data in a structured, machine-readable format (JSON export).',
@@ -484,7 +490,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       _buildBody(
-                        'To exercise any of these rights, contact us at romulo@trysomething.com. We will respond within 30 days.',
+                        'To exercise any of these rights, contact us at support@trysomething.io. We will respond within 30 days.',
                       ),
 
                       // Section 9
@@ -493,7 +499,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         'TrySomething is not directed at children under 16. We do not knowingly collect personal data from children under 16. If we become aware that a child under 16 has provided personal data, we will take steps to delete that data promptly.',
                       ),
                       _buildBody(
-                        'If you are a parent or guardian and believe your child has provided us with personal data, please contact us at romulo@trysomething.com.',
+                        'If you are a parent or guardian and believe your child has provided us with personal data, please contact us at support@trysomething.io.',
                       ),
 
                       // Section 10
@@ -511,7 +517,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         'For any privacy-related questions, data access requests, or complaints:',
                       ),
                       _buildContactBlock({
-                        'Email': 'romulo@trysomething.com',
+                        'Email': 'support@trysomething.io',
                         'Data Controller': 'Romulo Roriz',
                         'Location': 'Zurich, Switzerland',
                       }),

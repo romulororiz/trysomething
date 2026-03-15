@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -90,38 +91,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: AppBackground(child: SafeArea(
         child: Column(
           children: [
-            // ── Top header: back + "New here? Create account" ──
+            // ── Top header: "New here? Create account" ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).maybePop(),
-                    child: const Icon(Icons.arrow_back_rounded,
-                        size: 24, color: AppColors.textPrimary),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(authProvider.notifier).clearError();
-                      context.go('/register');
-                    },
-                    child: Text.rich(
-                      TextSpan(
-                        text: 'New here?  ',
-                        style: AppTypography.sansCaption
-                            .copyWith(color: AppColors.textMuted),
-                        children: [
-                          TextSpan(
-                            text: 'Create account',
-                            style: AppTypography.sansLabel
-                                .copyWith(color: AppColors.coral),
-                          ),
-                        ],
-                      ),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(authProvider.notifier).clearError();
+                    context.go('/register');
+                  },
+                  child: Text.rich(
+                    TextSpan(
+                      text: 'New here?  ',
+                      style: AppTypography.sansCaption
+                          .copyWith(color: AppColors.textMuted),
+                      children: [
+                        TextSpan(
+                          text: 'Create account',
+                          style: AppTypography.sansLabel
+                              .copyWith(color: AppColors.coral),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
 
@@ -149,8 +143,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         Center(
-                          child: Text('Welcome back',
-                              style: AppTypography.hero.copyWith(fontSize: 30)),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Welcome',
+                                  style: AppTypography.hero.copyWith(
+                                    fontSize: 30,
+                                    color: AppColors.coral,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' back',
+                                  style: AppTypography.hero
+                                      .copyWith(fontSize: 30),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Center(
@@ -299,8 +309,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         // ── Terms text ──
                         Center(
-                          child: Text.rich(
-                            TextSpan(
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
                               text: 'By signing in, you agree to our ',
                               style: AppTypography.sansTiny,
                               children: [
@@ -308,17 +319,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   text: 'Terms of Service',
                                   style: AppTypography.sansTiny
                                       .copyWith(color: AppColors.coral),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => context.push('/terms-of-service'),
                                 ),
                                 const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
                                   style: AppTypography.sansTiny
                                       .copyWith(color: AppColors.coral),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => context.push('/privacy-policy'),
                                 ),
                                 const TextSpan(text: '.'),
                               ],
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ),
                         const SizedBox(height: 24),

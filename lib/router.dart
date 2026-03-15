@@ -237,8 +237,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          CoachEntryContext? entryContext;
+          if (extra != null) {
+            entryContext = CoachEntryContext(
+              prefilledMessage: extra['message'] as String?,
+              forceMode: extra['mode'] != null
+                  ? CoachMode.values.firstWhere(
+                      (m) => m.name == extra['mode'],
+                      orElse: () => CoachMode.start,
+                    )
+                  : null,
+              autoSend: (extra['autoSend'] as bool?) ?? false,
+            );
+          }
           return CustomTransitionPage(
-            child: HobbyCoachScreen(hobbyId: hobbyId),
+            child: HobbyCoachScreen(hobbyId: hobbyId, entryContext: entryContext),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return buildSlideRightTransition(animation, child);
             },
@@ -419,6 +433,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final path = state.uri.path;
       final isAuthRoute = path == '/login' || path == '/register';
       final isOnboarding = path == '/onboarding';
+      final isPublicRoute = path == '/terms-of-service' ||
+          path == '/privacy-policy';
 
       if (auth.status == AuthStatus.unknown ||
           auth.status == AuthStatus.loading) {
@@ -426,7 +442,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (auth.status == AuthStatus.unauthenticated) {
-        if (!isAuthRoute) return '/login';
+        if (!isAuthRoute && !isPublicRoute) return '/login';
         return null;
       }
 
@@ -443,7 +459,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (onboarded && !trialOfferShown && !isTrialOffer && !isAuthRoute && !isOnboarding) {
         return '/trial-offer';
       }
-      if (trialOfferShown && isTrialOffer) return '/home';
+      final isDebugNav = state.uri.queryParameters.containsKey('debug');
+      if (trialOfferShown && isTrialOffer && !isDebugNav) return '/home';
 
       return null;
     },

@@ -437,6 +437,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () => context.push('/trial-offer?debug'),
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(14),
+                        borderRadius: 14,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.card_giftcard_outlined, size: 16, color: AppColors.textMuted),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Show trial screen',
+                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
+                                  const SizedBox(height: 2),
+                                  Text('Open the trial offer screen',
+                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () => context.push('/pro'),
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(14),
+                        borderRadius: 14,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.workspace_premium_outlined, size: 16, color: AppColors.textMuted),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Show Pro screen',
+                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
+                                  const SizedBox(height: 2),
+                                  Text('Open the Pro upgrade screen',
+                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
 
                   const SizedBox(height: 28),

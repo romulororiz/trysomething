@@ -30,7 +30,7 @@ Future<T?> showAppSheet<T>({
     enableDrag: enableDrag,
     useSafeArea: useSafeArea,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black54,
+    barrierColor: Colors.black.withValues(alpha: 0.82),
     builder: (ctx) => _AppSheetWrapper(
       title: title,
       child: builder(ctx),
@@ -149,11 +149,16 @@ Future<bool?> showAppConfirmDialog({
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black54,
+    barrierColor: Colors.black.withValues(alpha: 0.82),
     transitionDuration: const Duration(milliseconds: 220),
     transitionBuilder: (ctx, anim, _, child) => FadeTransition(
       opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
-      child: child,
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.94, end: 1.0).animate(
+          CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+        ),
+        child: child,
+      ),
     ),
     pageBuilder: (ctx, _, __) => _AppConfirmDialogContent(
       title: title,
@@ -185,115 +190,132 @@ class _AppConfirmDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.glassBorder, width: 0.5),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      title,
-                      style: AppTypography.title.copyWith(fontSize: 18),
-                    ),
-                    const SizedBox(height: 8),
-                    // Message
-                    Text(
-                      message,
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
-                        height: 1.5,
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(false),
+      child: Material(
+        color: Colors.transparent,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: GestureDetector(
+              onTap: () {}, // absorb taps on the dialog itself
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        title,
+                        style: AppTypography.title.copyWith(
+                          fontSize: 18,
+                          decoration: TextDecoration.none,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Buttons
-                    Row(
-                      children: [
-                        // Cancel
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => Navigator.of(context).pop(false),
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: AppColors.glassBackground,
-                                borderRadius:
-                                    BorderRadius.circular(Spacing.radiusButton),
-                                border: Border.all(
-                                    color: AppColors.glassBorder, width: 0.5),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  cancelLabel,
-                                  style: AppTypography.body.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                      const SizedBox(height: 8),
+                      // Message
+                      Text(
+                        message,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textMuted,
+                          fontSize: 14,
+                          height: 1.5,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Buttons
+                      Row(
+                        children: [
+                          // Cancel
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(false),
+                              child: Container(
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.glassBackground,
+                                  borderRadius: BorderRadius.circular(
+                                      Spacing.radiusButton),
+                                  border: Border.all(
+                                      color: AppColors.glassBorder,
+                                      width: 0.5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    cancelLabel,
+                                    style: AppTypography.body.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.none,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        // Confirm
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pop(true);
-                              onConfirm?.call();
-                            },
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: isDestructive
-                                    ? AppColors.accent
-                                    : AppColors.accent.withValues(alpha: 0.15),
-                                borderRadius:
-                                    BorderRadius.circular(Spacing.radiusButton),
-                                border: isDestructive
-                                    ? null
-                                    : Border.all(
-                                        color: AppColors.accent
-                                            .withValues(alpha: 0.3),
-                                        width: 0.5),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  confirmLabel,
-                                  style: AppTypography.body.copyWith(
-                                    color: isDestructive
-                                        ? Colors.white
-                                        : AppColors.accent,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
+                          const SizedBox(width: 10),
+                          // Confirm
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pop(true);
+                                onConfirm?.call();
+                              },
+                              child: Container(
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: isDestructive
+                                      ? AppColors.accent
+                                      : AppColors.accent
+                                          .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(
+                                      Spacing.radiusButton),
+                                  border: isDestructive
+                                      ? null
+                                      : Border.all(
+                                          color: AppColors.accent
+                                              .withValues(alpha: 0.3),
+                                          width: 0.5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    confirmLabel,
+                                    style: AppTypography.body.copyWith(
+                                      color: isDestructive
+                                          ? Colors.white
+                                          : AppColors.accent,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.none,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
+          ),
+        ),
         ),
       ),
     );

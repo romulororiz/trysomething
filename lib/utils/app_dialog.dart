@@ -6,7 +6,7 @@ Future<T?> showFadeDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool barrierDismissible = true,
-  Color barrierColor = Colors.black54,
+  Color barrierColor = const Color(0xD1000000), // ~82% opacity
 }) {
   return showGeneralDialog<T>(
     context: context,

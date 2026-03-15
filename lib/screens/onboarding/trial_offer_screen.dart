@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/glass_card.dart';
+import '../../components/app_background.dart';
 
 /// One-time trial offer screen shown after onboarding, before first feed view.
 class TrialOfferScreen extends ConsumerStatefulWidget {
@@ -59,58 +60,19 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: FadeTransition(
         opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
-        child: Stack(
-          children: [
-            // Background glow
-            Positioned(
-              top: -100,
-              right: -80,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.coral.withValues(alpha: 0.12),
-                      AppColors.coral.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -50,
-              left: -60,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.textMuted.withValues(alpha: 0.1),
-                      AppColors.textMuted.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Content
-            SafeArea(
+        child: AppBackground(
+          child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    SizedBox(height: topPad > 40 ? 16 : 32),
+                    const Spacer(flex: 3),
 
                     // Sparkle badge
                     Container(
@@ -131,7 +93,7 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     // Brand wordmark
                     RichText(
@@ -156,21 +118,55 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                             style: AppTypography.hero.copyWith(
                               fontSize: 20,
                               color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Heading
-                    Text(
-                      'Start hobbies you\nactually stick with',
-                      style: AppTypography.hero.copyWith(fontSize: 32),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Start',
+                            style: AppTypography.hero.copyWith(
+                              fontSize: 32,
+                              color: AppColors.coral,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' hobbies you\n',
+                            style: AppTypography.hero.copyWith(fontSize: 32),
+                          ),
+                          TextSpan(
+                            text: 'actually stick with',
+                            style: AppTypography.hero.copyWith(
+                              fontSize: 32,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    // Wave underline beneath "actually stick with"
+                    AnimatedBuilder(
+                      animation: _fadeCtrl,
+                      builder: (_, __) => SizedBox(
+                        width: 220,
+                        height: 8,
+                        child: CustomPaint(
+                          painter: _WaveUnderlinePainter(
+                            progress: _fadeCtrl.value,
+                            color: AppColors.coral.withAlpha(160),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Text(
                       'Get step-by-step support for your first 30 days,\nplus tools to keep momentum when it drops.',
                       style: AppTypography.sansCaption.copyWith(
@@ -178,18 +174,15 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 36),
 
                     // Benefit blocks
-                    Expanded(
-                      child: ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: _benefits.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (_, i) => _buildFeatureCard(_benefits[i]),
-                      ),
-                    ),
+                    ..._benefits.expand((b) => [
+                      _buildFeatureCard(b),
+                      const SizedBox(height: 12),
+                    ]),
+
+                    const Spacer(flex: 3),
 
                     // CTA
                     GestureDetector(
@@ -249,7 +242,6 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                 ),
               ),
             ),
-          ],
         ),
       ),
     );
@@ -329,4 +321,42 @@ class _ProFeature {
     required this.title,
     required this.subtitle,
   });
+}
+
+class _WaveUnderlinePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _WaveUnderlinePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    final w = size.width;
+    final h = size.height / 2;
+    final path = Path()
+      ..moveTo(0, h)
+      ..quadraticBezierTo(w * 0.18, h - 3, w * 0.35, h + 0.5)
+      ..quadraticBezierTo(w * 0.52, h + 3.5, w * 0.68, h - 1)
+      ..quadraticBezierTo(w * 0.84, h - 3.5, w, h + 1);
+
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return;
+
+    final drawn =
+        metrics.first.extractPath(0, metrics.first.length * progress);
+    canvas.drawPath(
+      drawn,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_WaveUnderlinePainter old) =>
+      old.progress != progress;
 }
