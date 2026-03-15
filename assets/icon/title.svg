@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="80" viewBox="0 0 420 80">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@700&display=swap');
+      .title {
+        font-family: 'Manrope', sans-serif;
+        font-size: 48px;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+
+  <rect width="100%" height="100%" fill="transparent"/>
+
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="title">
+    <tspan fill="#FF6B6B">Try</tspan><tspan fill="#FFFFFF">Something</tspan>
+  </text>
+</svg>
