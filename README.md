@@ -1,187 +1,389 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/TrySomething-Find%20hobbies%20you'll%20actually%20do-E8734A?style=for-the-badge&labelColor=1E1A17" alt="TrySomething" />
-</p>
 
-<h1 align="center">
-  🧭 TrySomething
-</h1>
+<div align="center"> <img src="assets/icon/app_icon_foreground.png" width="120" height="120" alt="TrySomething" />
 
 <p align="center">
-  <strong>A hobby discovery and onboarding platform that helps people find activities they'll actually stick with.</strong>
+  <img src="assets/icon/title.svg" width="420">
 </p>
 
-<p align="center">
-  <a href="#-the-problem"><img src="https://img.shields.io/badge/Problem-Why%20this%20exists-E8734A?style=flat-square" /></a>
-  <a href="#-how-it-works"><img src="https://img.shields.io/badge/Solution-How%20it%20works-E5A630?style=flat-square" /></a>
-  <a href="#-features"><img src="https://img.shields.io/badge/Features-What%20it%20does-5B6AAF?style=flat-square" /></a>
-  <a href="#-tech-stack"><img src="https://img.shields.io/badge/Stack-Built%20with-7EA47E?style=flat-square" /></a>
-</p>
+**Choose a hobby. Start it. Stick with it for 30 days.**
 
----
+A mobile app for overwhelmed adults who want a new hobby but don't know where to start.
 
-## 💡 The Problem
+[![Flutter](https://img.shields.io/badge/Flutter-3.6-02569B?style=flat&logo=flutter&logoColor=white)](https://claude.ai/chat/3f428beb-42d3-434e-b12c-e5bffc59ee7c#tech-stack) [![Dart](https://img.shields.io/badge/Dart-3.6-0175C2?style=flat&logo=dart&logoColor=white)](https://claude.ai/chat/3f428beb-42d3-434e-b12c-e5bffc59ee7c#tech-stack) [![Claude](https://img.shields.io/badge/AI-Claude_Sonnet_4.6-CC785C?style=flat)](https://claude.ai/chat/3f428beb-42d3-434e-b12c-e5bffc59ee7c#ai-powered) [![License](https://img.shields.io/badge/License-MIT-FF6B6B?style=flat)](https://claude.ai/chat/3f428beb-42d3-434e-b12c-e5bffc59ee7c#license)
 
-Most people *want* hobbies but never start — or start and quit within two weeks.
+</div>
 
-The friction isn't motivation. It's **overwhelm**: *What do I need? How much does it cost? Where do I begin? Will I even like this?*
+----------
 
-Existing solutions are either full-blown course platforms (too much commitment), Reddit threads (too scattered), or Pinterest boards (pretty but useless for actually starting). There's no app that sits in the sweet spot of *"here's a hobby that fits your life, here's exactly how to start in the next 30 minutes, and here's what to do when you get stuck."*
+## The Problem
 
-**TrySomething fills that gap.**
+Most people want hobbies but never start — or quit within two weeks.
 
----
+The friction isn't motivation. It's **overwhelm**: too many options, unclear costs, no starting point, and no structure for the critical first weeks. Existing solutions are either full course platforms (too much commitment), scattered Reddit threads, or Pinterest boards (pretty but useless for actually beginning).
 
-## 🧭 How It Works
+There's no app that says: _"Here's a hobby that fits your life. Here's exactly how to start in 30 minutes. And here's what to do when you get stuck."_
 
-TrySomething guides users through three phases:
+TrySomething fills that gap.
 
-### 1. Discover → *"What fits me?"*
-A 30-second vibe quiz captures your time, budget, social preference, and energy — then matches you with hobbies that fit your actual life. Not "top 50 hobbies" listicles. Personalized, filtered, and honest about what each hobby demands.
+----------
 
-### 2. Decide → *"Should I try this?"*
-Every hobby has a detail page that answers the questions people actually ask before starting: how much it really costs, what makes it hard, what gear you truly need (and what's optional), common beginner mistakes, and why people who do it love it. No fluff.
+## How It Works
 
-### 3. Do → *"Okay, now what?"*
-A step-by-step roadmap with a **"First 30 Minutes"** quickstart — a checklist of 3–5 things you can do *right now* with a built-in timer. Progress tracking, milestones, and soft streaks keep momentum without gamification pressure.
+```
+Onboarding quiz → 3 personalized matches → Pick one → See the easiest way to start
+→ Commitment flow → Week 1 plan → Immersive session with timer
+→ Reflect → Return tomorrow → 30 days of AI-guided support
 
----
-
-## ✨ Features
-
-### Discovery & Matching
-- **Onboarding Quiz** — Time, budget, solo/social, vibe preferences in 30 seconds
-- **Discovery Feed** — Swipeable hobby cards with cost, time, and difficulty badges
-- **Explore** — Browse by dynamic categories, quick-pick filters, and curated packs
-- **Search** — Find any hobby by name, tag, or intent (*"something relaxing"*)
-- **Mood Match** — Emotional entry point: *"I'm stressed"* → calming hobbies
-
-### Hobby Detail
-- **Spec Bar** — Cost range, weekly time, difficulty — always visible
-- **Why People Love It** — The emotional hook, not a Wikipedia summary
-- **Starter Kit** — Minimum gear with prices, optional items flagged
-- **Beginner Pitfalls** — Mistakes to avoid before you waste time or money
-- **Difficulty Explainer** — What specifically makes it hard (and what doesn't)
-
-### Progress & Engagement
-- **First 30 Minutes** — Quickstart checklist with focus timer
-- **Roadmap** — Step-by-step progression with checkable milestones
-- **Soft Streaks** — Day count without aggressive gamification
-- **My Stuff** — Organized tabs: Saved → Trying → Active → Done
-- **Hobby Journal** — Photo + text entries per hobby, private by default
-
-### Social & Community
-- **Buddy Mode** — Invite a friend, shared progress, gentle nudges
-- **Local Discovery** — See who near you is trying the same hobby (opt-in, privacy-first)
-- **Community Stories** — Curated real stories, not UGC chaos
-- **Shareable Cards** — *"I'm trying pottery this week"* → social sharing
-
-### Smart Recommendations
-- **Hobby Combos** — *"People who love pottery also try sketching"*
-- **Seasonal Picks** — Context-aware: outdoor hobbies in spring, crafts in winter
-- **Re-engagement Quiz** — After 2 weeks inactive, re-personalize without starting over
-
-### Utility
-- **Cost Calculator** — Starter vs 3-month vs 1-year cost breakdown
-- **Shopping List** — Aggregated starter kit items across saved hobbies
-- **Compare Mode** — Side-by-side comparison of 2–3 hobbies
-- **Hobby Scheduler** — Block time in your calendar with Google/Apple integration
-- **60-Second Tips** — Short curated video clips per roadmap step
-
-### Tasteful Gamification
-- **Identity Badges** — *"Curious Maker"* → evolving title as you progress
-- **Weekly Challenge** — One micro-challenge, opt-in, low pressure
-- **Hobby Passport** — Stamp collection for each hobby you try
-- **Year in Hobbies** — Annual recap, Spotify Wrapped–style, shareable
-
-### AI-Powered *(v2+)*
-- **AI Roadmap Generator** — *"I have 1h/week and want to make a mug in 30 days"*
-- **AI Beginner Coach** — Context-aware chat that knows your progress
-- **Smart Summaries** — Personalized hobby descriptions based on your preferences
-- **Progress Vision** — Upload a photo of your work, get coaching (not judgment)
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Mobile | Flutter |
-| Backend | Supabase (Auth, DB, Storage, Realtime) |
-| AI Features | Anthropic Claude API |
-| Payments | Stripe / RevenueCat |
-| Analytics | PostHog |
-| Push Notifications | OneSignal |
-
----
-
-## 🗺 Roadmap
-
-**Phase 1 — MVP**
-Core discovery feed, hobby detail pages, onboarding quiz, first 30 minutes quickstart, basic progress tracking.
-
-**Phase 2 — Engagement**
-Buddy mode, journal, streaks, identity system, weekly challenges, hobby passport.
-
-**Phase 3 — Smart**
-AI coach, AI roadmap generator, mood matching, seasonal picks, cost calculator, compare mode.
-
-**Phase 4 — Community**
-Local discovery, community stories, creator roadmaps, curated packs marketplace.
-
----
-
-## 🚀 Getting Started
-
-```bash
-# Clone the repository
-git clone https://github.com/romulororiz/trysomething.git
-cd trysomething
-
-# Install dependencies
-flutter pub get
-
-# Set up environment variables
-cp .env.example .env
-# Fill in your Supabase URL, anon key, and other secrets
-
-# Run the app
-flutter run
 ```
 
----
+### 1. Discover — _"What fits me?"_
 
-## 📁 Project Structure
+A 6-question quiz captures your budget, time, location, social preference, and emotional state. The matching algorithm filters 150+ hobbies and returns 3 personalized recommendations with honest cost estimates, time commitments, and a "why this fits you" explanation.
+
+### 2. Decide — _"Should I try this?"_
+
+Every hobby has a conversion-focused detail page: the easiest way to start, common reasons people quit (trust-building honesty), a starter kit with real CHF prices, and a progressive roadmap. No fluff, no Wikipedia summaries.
+
+### 3. Do — _"Now what?"_
+
+An immersive session screen takes over the device. A particle-formation timer visualizes progress as 250 floating particles converge into a shape representing your hobby's category. After the timer: structured reflection prompts. An AI coach provides guidance through three modes — helping you start, maintain momentum, or recover after a gap.
+
+----------
+
+## Features
+
+### Discovery & Matching
+
+-   **Onboarding Quiz** — 6 questions: why, budget, time, where, solo/social, emotional state
+-   **Smart Matching** — Ranks hobbies by budget fit, time fit, location, social preference, and vibe
+-   **Discover Feed** — 4 curated tabs: For You, Start Cheap, This Week, Different Vibe
+-   **Feed/List Toggle** — Switch between cinematic card feed and compact list view
+-   **Search** — Natural language: _"cheap creative hobby"_, _"indoor winter hobby"_, _"hobby for anxiety"_
+
+### Hobby Detail
+
+-   **Quick Start Snapshot** — Budget, time, difficulty, setup friction at a glance
+-   **"Why This Fits You"** — Personalized match explanation from onboarding data
+-   **Common Reasons People Quit** — Honest, trust-building section
+-   **Starter Kit** — Essential items with CHF prices, product images, and affiliate buy links
+-   **Budget Alternatives** — DIY / Budget / Premium options per item
+-   **4-Stage Roadmap** — Week 1 (Try) → Week 2 (Repeat) → Week 3 (Reduce friction) → Week 4 (Decide)
+-   **Beginner FAQ** — AI-generated, practical Q&A
+-   **Cost Calculator** — Starter / 3-month / 1-year projections with money-saving tips
+
+### Session Experience
+
+-   **Immersive Timer** — Full-screen, no distractions. 250 particles form your hobby's category shape as time progresses
+-   **3 Completion Modes** — Timer (default), Photo Proof (Pro), Check-in (hold-to-complete)
+-   **Structured Reflection** — "What did you try?" / "What felt good?" / "What was annoying?"
+-   **Session Glow** — Ambient visual feedback during active sessions
+
+### AI Hobby Coach (Claude Sonnet 4.6)
+
+-   **3 Auto-Detected Modes** — START (pre-commitment), MOMENTUM (active), RESCUE (stalled 7+ days)
+-   **Structured Response Cards** — Tonight's plan, cheaper alternatives, restart gently, reflection prompts
+-   **Quick Actions** — Contextual suggestion chips, not a blank chatbot
+-   **Full Context** — Knows your hobby, roadmap progress, journal entries, and conversation history
+-   **On-Demand Generation** — Search for any hobby not in the catalog; AI creates a complete profile
+
+### Personal Tools
+
+-   **Hobby Journal** — Text entries (free) + photo entries (Pro) with reflection prompts
+-   **Personal Notes** — Per roadmap step
+-   **Schedule Planner** — Set recurring practice times
+-   **Shopping Checklist** — Track kit items you've purchased
+
+### Progress
+
+-   **Active / Saved / Tried** — Three clear hobby states, permission to switch
+-   **Streak Tracking** — Soft encouragement, not aggressive gamification
+-   **Step Completion** — Track progress through roadmap milestones
+
+----------
+
+## Tech Stack
+
+### Mobile App
+
+Layer
+
+Technology
+
+Framework
+
+Flutter 3.6 + Dart 3.6
+
+State
+
+Riverpod 2.6
+
+Routing
+
+GoRouter 14.8
+
+Models
+
+Freezed + json_serializable
+
+Typography
+
+Google Fonts (Manrope, Instrument Serif, IBM Plex Mono)
+
+Animation
+
+flutter_animate 4.5
+
+Networking
+
+Dio 5.7 + cached_network_image
+
+Auth
+
+flutter_secure_storage + Google Sign-In + Apple Sign-In
+
+Payments
+
+RevenueCat 9.14 (native paywall UI)
+
+Analytics
+
+PostHog
+
+Crash Reporting
+
+Sentry
+
+Push
+
+Firebase Cloud Messaging
+
+Storage
+
+Hive (encrypted cache) + SharedPreferences
+
+### Backend
+
+Layer
+
+Technology
+
+Runtime
+
+Node.js + TypeScript on Vercel Serverless
+
+Database
+
+PostgreSQL (Neon, EU Frankfurt)
+
+ORM
+
+Prisma 6.4
+
+AI
+
+Claude Sonnet 4.6 via Anthropic API
+
+Auth
+
+bcrypt (12 rounds) + JWT (15-min access / 30-day refresh)
+
+Images
+
+Unsplash API
+
+Testing
+
+Vitest
+
+### Website
+
+Layer
+
+Technology
+
+Framework
+
+Next.js 16 + React 19
+
+Styling
+
+Tailwind CSS 4
+
+Animation
+
+GSAP + Framer Motion + Lenis
+
+3D
+
+Three.js + React Three Fiber
+
+----------
+
+## AI-Powered
+
+TrySomething uses **Claude Sonnet 4.6** for two core features:
+
+### Hobby Generation
+
+When you search for a hobby that doesn't exist in the catalog, the AI generates a complete profile in ~3-5 seconds: title, description, category, cost estimate (CHF), time commitment, difficulty, starter kit (2-6 items with prices), roadmap (3-7 progressive steps), pitfalls, and emotional hook.
+
+Content safety: 4-layer defense with input blocklists, prompt constraints, output schema validation with runtime type checking, and rate limiting (20 generations per user per day).
+
+### AI Coach
+
+A conversational hobby coach that knows your specific hobby, your progress, your journal entries, and adapts its guidance based on your state. Three modes (auto-detected or manually selectable): START helps you begin, MOMENTUM keeps you going, RESCUE brings you back after a gap — without guilt-tripping.
+
+----------
+
+## Design
+
+**"Warm Cinematic Minimalism"** — editorial + tactile + warm. Inspired by DoReset's restraint, Headspace's warmth, and Kinfolk magazine's editorial quality.
+
+-   **Palette:** Deep black (`#0A0A0F`) + warm cream text (`#F5F0EB`) + ONE coral accent (`#FF6B6B`) for CTAs only
+-   **Typography:** Single-voice system built on **Manrope** (warm geometric humanist sans) for everything. Instrument Serif appears in ≤5 hero moments across the entire app (splash, onboarding, match results, detail hero, paywall). IBM Plex Mono for data/timer only.
+-   **Surfaces:** Glass cards (white at 8% opacity) with subtle blur
+-   **Navigation:** Floating glass dock — 3 icons, no labels
+-   **Motion:** Staggered fade-ups, scale-on-press (0.975), crossfade transitions, haptic feedback, reduced-motion support
+-   **Spacing:** 4px grid system, 22px card radius, 24px page padding
+-   **Rule:** One coral CTA per screen. Everything else is secondary.
+
+----------
+
+## Project Structure
 
 ```
 trysomething/
-├── lib/
-│   ├── core/           # Theme, constants, utils, palette
-│   ├── features/       # Feature-based modules
-│   │   ├── onboarding/ # Quiz flow & vibe matching
-│   │   ├── discover/   # Feed, cards, category browsing
-│   │   ├── detail/     # Hobby detail & starter kit
-│   │   ├── quickstart/ # First 30 minutes flow
-│   │   ├── progress/   # Roadmap, streaks, milestones
-│   │   ├── my_stuff/   # Saved/Trying/Active/Done tabs
-│   │   ├── explore/    # Search, filters, curated packs
-│   │   ├── social/     # Buddy mode, journal, local
-│   │   └── ai/         # Coach, roadmap gen, summaries
-│   ├── shared/         # Reusable widgets & components
-│   └── main.dart
-├── assets/             # Images, icons, animations
-├── supabase/           # Migrations, edge functions, seed data
-├── test/               # Unit & widget tests
-└── pubspec.yaml
+├── lib/                               # Flutter app (~42K LOC)
+│   ├── main.dart                      # Entry point
+│   ├── router.dart                    # All routes (GoRouter)
+│   ├── core/                          # Services: analytics, API, auth, notifications, storage, subscriptions
+│   ├── components/                    # 31 shared UI components (glass cards, timers, overlays, coach cards)
+│   ├── data/repositories/             # Repository pattern: interface → API → Hive cache → seed fallback
+│   ├── models/                        # Freezed data classes (hobby, session, auth, social, gamification)
+│   ├── providers/                     # Riverpod state management (auth, hobby, session, subscription)
+│   ├── screens/                       # 43 screens across auth, tabs, detail, session, coach, settings
+│   └── theme/                         # Colors, typography, motion, spacing
+├── server/                            # Backend API (~17K LOC)
+│   ├── api/                           # Vercel serverless endpoints (auth, generate, users, hobbies)
+│   ├── lib/                           # AI generator, auth, content guard, mappers, middleware
+│   ├── prisma/schema.prisma           # 25 database models
+│   └── scripts/                       # Seed generation, kit image backfill
+├── website/                           # Next.js 16 landing page
+├── test/                              # 37 test files (golden, unit, widget)
+├── assets/                            # Fonts, icons, images
+└── docs/                              # Mockups, plans, superpowers research
+
 ```
 
----
+----------
 
-## 📄 License
+## Getting Started
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+```bash
+# Clone
+git clone https://github.com/romulofreires1/trysomething.git
+cd trysomething
 
----
+# Flutter app
+flutter pub get
+flutter run
 
-<p align="center">
-  <sub>Built with ☕ and curiosity in Zürich 🇨🇭</sub>
-</p>
+# Server (requires .env with DATABASE_URL, ANTHROPIC_API_KEY, JWT_SECRET, etc.)
+cd server
+npm install
+npx prisma generate
+npm run dev
+
+```
+
+### Prerequisites
+
+-   Flutter 3.6+ / Dart 3.6+
+-   Node.js 18+
+-   PostgreSQL (Neon free tier works)
+-   Anthropic API key
+-   RevenueCat account (for subscriptions)
+
+### Environment Variables
+
+**Flutter** (compile-time via `--dart-define`):
+
+-   `POSTHOG_API_KEY`
+-   `REVENUECAT_API_KEY`
+-   `SENTRY_DSN`
+
+**Server** (`.env`):
+
+-   `DATABASE_URL` — Neon PostgreSQL connection string
+-   `ANTHROPIC_API_KEY` — Claude API
+-   `JWT_SECRET` / `JWT_REFRESH_SECRET`
+-   `UNSPLASH_ACCESS_KEY`
+
+----------
+
+## Business Model
+
+Free
+
+Pro (CHF 4.99/mo · CHF 39.99/yr · Lifetime)
+
+Hobby catalog (150+)
+
+✓
+
+✓
+
+Roadmaps & starter kits
+
+✓
+
+✓
+
+Active hobbies
+
+1
+
+Unlimited
+
+AI coach
+
+3 msg/month
+
+Unlimited
+
+Journal
+
+Text only
+
+Text + photo
+
+30-day guided support
+
+—
+
+✓
+
+Rescue mode
+
+—
+
+✓
+
+Affiliate revenue from starter kit buy links supplements subscription income.
+
+----------
+
+## License
+
+MIT License — see [LICENSE](https://claude.ai/chat/LICENSE) for details.
+
+----------
+
+<div align="center">
+
+**TrySomething** — because the best hobby is the one you actually start.
+
+Built with ☕ and curiosity in Zürich 🇨🇭
+Built with ☕ and curiosity in Zürich 🇨🇭
+
+</div>
