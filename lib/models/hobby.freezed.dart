@@ -790,6 +790,8 @@ mixin _$RoadmapStep {
   String get description => throw _privateConstructorUsedError;
   int get estimatedMinutes => throw _privateConstructorUsedError;
   String? get milestone => throw _privateConstructorUsedError;
+  String? get coachTip => throw _privateConstructorUsedError;
+  String? get completionMessage => throw _privateConstructorUsedError;
   CompletionMode? get completionMode => throw _privateConstructorUsedError;
 
   /// Serializes this RoadmapStep to a JSON map.
@@ -814,6 +816,8 @@ abstract class $RoadmapStepCopyWith<$Res> {
       String description,
       int estimatedMinutes,
       String? milestone,
+      String? coachTip,
+      String? completionMessage,
       CompletionMode? completionMode});
 }
 
@@ -837,6 +841,8 @@ class _$RoadmapStepCopyWithImpl<$Res, $Val extends RoadmapStep>
     Object? description = null,
     Object? estimatedMinutes = null,
     Object? milestone = freezed,
+    Object? coachTip = freezed,
+    Object? completionMessage = freezed,
     Object? completionMode = freezed,
   }) {
     return _then(_value.copyWith(
@@ -860,6 +866,14 @@ class _$RoadmapStepCopyWithImpl<$Res, $Val extends RoadmapStep>
           ? _value.milestone
           : milestone // ignore: cast_nullable_to_non_nullable
               as String?,
+      coachTip: freezed == coachTip
+          ? _value.coachTip
+          : coachTip // ignore: cast_nullable_to_non_nullable
+              as String?,
+      completionMessage: freezed == completionMessage
+          ? _value.completionMessage
+          : completionMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
       completionMode: freezed == completionMode
           ? _value.completionMode
           : completionMode // ignore: cast_nullable_to_non_nullable
@@ -882,6 +896,8 @@ abstract class _$$RoadmapStepImplCopyWith<$Res>
       String description,
       int estimatedMinutes,
       String? milestone,
+      String? coachTip,
+      String? completionMessage,
       CompletionMode? completionMode});
 }
 
@@ -903,6 +919,8 @@ class __$$RoadmapStepImplCopyWithImpl<$Res>
     Object? description = null,
     Object? estimatedMinutes = null,
     Object? milestone = freezed,
+    Object? coachTip = freezed,
+    Object? completionMessage = freezed,
     Object? completionMode = freezed,
   }) {
     return _then(_$RoadmapStepImpl(
@@ -926,6 +944,14 @@ class __$$RoadmapStepImplCopyWithImpl<$Res>
           ? _value.milestone
           : milestone // ignore: cast_nullable_to_non_nullable
               as String?,
+      coachTip: freezed == coachTip
+          ? _value.coachTip
+          : coachTip // ignore: cast_nullable_to_non_nullable
+              as String?,
+      completionMessage: freezed == completionMessage
+          ? _value.completionMessage
+          : completionMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
       completionMode: freezed == completionMode
           ? _value.completionMode
           : completionMode // ignore: cast_nullable_to_non_nullable
@@ -943,6 +969,8 @@ class _$RoadmapStepImpl extends _RoadmapStep {
       required this.description,
       required this.estimatedMinutes,
       this.milestone,
+      this.coachTip,
+      this.completionMessage,
       this.completionMode})
       : super._();
 
@@ -960,11 +988,15 @@ class _$RoadmapStepImpl extends _RoadmapStep {
   @override
   final String? milestone;
   @override
+  final String? coachTip;
+  @override
+  final String? completionMessage;
+  @override
   final CompletionMode? completionMode;
 
   @override
   String toString() {
-    return 'RoadmapStep(id: $id, title: $title, description: $description, estimatedMinutes: $estimatedMinutes, milestone: $milestone, completionMode: $completionMode)';
+    return 'RoadmapStep(id: $id, title: $title, description: $description, estimatedMinutes: $estimatedMinutes, milestone: $milestone, coachTip: $coachTip, completionMessage: $completionMessage, completionMode: $completionMode)';
   }
 
   @override
@@ -980,6 +1012,10 @@ class _$RoadmapStepImpl extends _RoadmapStep {
                 other.estimatedMinutes == estimatedMinutes) &&
             (identical(other.milestone, milestone) ||
                 other.milestone == milestone) &&
+            (identical(other.coachTip, coachTip) ||
+                other.coachTip == coachTip) &&
+            (identical(other.completionMessage, completionMessage) ||
+                other.completionMessage == completionMessage) &&
             (identical(other.completionMode, completionMode) ||
                 other.completionMode == completionMode));
   }
@@ -987,7 +1023,7 @@ class _$RoadmapStepImpl extends _RoadmapStep {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, title, description,
-      estimatedMinutes, milestone, completionMode);
+      estimatedMinutes, milestone, coachTip, completionMessage, completionMode);
 
   /// Create a copy of RoadmapStep
   /// with the given fields replaced by the non-null parameter values.
@@ -1012,6 +1048,8 @@ abstract class _RoadmapStep extends RoadmapStep {
       required final String description,
       required final int estimatedMinutes,
       final String? milestone,
+      final String? coachTip,
+      final String? completionMessage,
       final CompletionMode? completionMode}) = _$RoadmapStepImpl;
   const _RoadmapStep._() : super._();
 
@@ -1028,6 +1066,10 @@ abstract class _RoadmapStep extends RoadmapStep {
   int get estimatedMinutes;
   @override
   String? get milestone;
+  @override
+  String? get coachTip;
+  @override
+  String? get completionMessage;
   @override
   CompletionMode? get completionMode;
 

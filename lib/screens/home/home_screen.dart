@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
 import '../../components/hobby_quick_links.dart';
@@ -38,7 +40,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Find initial page index if a specific hobby was requested
     final initialIndex = _findHobbyIndex(widget.initialHobbyId);
     _currentPage = initialIndex;
     _pageController = PageController(initialPage: initialIndex);
@@ -65,7 +66,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userHobbies = ref.watch(userHobbiesProvider);
-
     final isPro = ref.watch(isProProvider);
 
     final activeEntries = userHobbies.entries
@@ -73,7 +73,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             e.value.status == HobbyStatus.trying ||
             e.value.status == HobbyStatus.active)
         .toList()
-      // Sort by most recently active first
       ..sort((a, b) {
         final aTime = a.value.lastActivityAt ?? a.value.startedAt;
         final bTime = b.value.lastActivityAt ?? b.value.startedAt;
@@ -84,19 +83,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       });
 
     if (activeEntries.isEmpty) {
-      // Not loading — show navbar
       Future.microtask(
           () => ref.read(shellLoadingProvider.notifier).state = false);
       return _EmptyHomeState();
     }
 
-    // Show the logo loader until ALL active hobby data is ready so the page
-    // dots and partial UI never flash while content is still fetching.
     final anyLoading = activeEntries.any(
       (e) => ref.watch(hobbyByIdProvider(e.value.hobbyId)).isLoading,
     );
     if (anyLoading) {
-      // Hide navbar while loading
       Future.microtask(
           () => ref.read(shellLoadingProvider.notifier).state = true);
       return const Scaffold(
@@ -105,7 +100,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
-    // Content ready — show navbar
     Future.microtask(
         () => ref.read(shellLoadingProvider.notifier).state = false);
 
@@ -114,49 +108,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: AppBackground(
         tintTopLeft: false,
         child: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            // Full-bleed swipeable hobby pages
-            // Free users: can only see hobby 1 + blurred hobby 2 (scroll stops there)
-            PageView.builder(
-              controller: _pageController,
-              itemCount: isPro
-                  ? activeEntries.length
-                  : activeEntries.length.clamp(0, 2),
-              onPageChanged: (i) => setState(() => _currentPage = i),
-              itemBuilder: (context, i) {
-                final userHobby = activeEntries[i].value;
-                final isLocked = !isPro && i > 0;
-                final page = _HobbyPage(
-                  key: ValueKey(userHobby.hobbyId),
-                  userHobby: userHobby,
-                );
-                if (!isLocked) return page;
-                return _ProLockedOverlay(child: page);
-              },
-            ),
-            // Page dots overlaid on hero image
-            if (activeEntries.length > 1)
-              Positioned(
-                top: 8,
-                left: 0,
-                right: 0,
-                child: PageDots(
-                  count: activeEntries.length,
-                  current: _currentPage,
-                ),
+          bottom: false,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: isPro
+                    ? activeEntries.length
+                    : activeEntries.length.clamp(0, 2),
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemBuilder: (context, i) {
+                  final userHobby = activeEntries[i].value;
+                  final isLocked = !isPro && i > 0;
+                  final page = _HobbyPage(
+                    key: ValueKey(userHobby.hobbyId),
+                    userHobby: userHobby,
+                  );
+                  if (!isLocked) return page;
+                  return _ProLockedOverlay(child: page);
+                },
               ),
-          ],
+              if (activeEntries.length > 1)
+                Positioned(
+                  top: 8,
+                  left: 0,
+                  right: 0,
+                  child: PageDots(
+                    count: activeEntries.length,
+                    current: _currentPage,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════
-//  PRO LOCKED OVERLAY — glass blur + upgrade CTA
+//  PRO LOCKED OVERLAY
 // ═══════════════════════════════════════════════════════
 
 class _ProLockedOverlay extends StatelessWidget {
@@ -168,23 +159,22 @@ class _ProLockedOverlay extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Render the hobby page underneath (blurred)
         child,
-        // Blur + dark tint
         Positioned.fill(
           child: ClipRect(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(color: AppColors.background.withValues(alpha: 0.55)),
+              child: Container(
+                  color: AppColors.background.withValues(alpha: 0.55)),
             ),
           ),
         ),
-        // CTA card
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: GlassCard(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -195,21 +185,19 @@ class _ProLockedOverlay extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: AppColors.coral.withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.lock_rounded, color: AppColors.coral, size: 28),
+                    child: const Icon(Icons.lock_rounded,
+                        color: AppColors.coral, size: 28),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'Multi-Hobby Tracking',
-                    style: AppTypography.title.copyWith(color: AppColors.textPrimary),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text('Multi-Hobby Tracking',
+                      style: AppTypography.title
+                          .copyWith(color: AppColors.textPrimary),
+                      textAlign: TextAlign.center),
                   const SizedBox(height: 10),
                   Text(
                     'Free accounts support one active hobby.\nUpgrade to Pro to track multiple hobbies at once.',
                     style: AppTypography.sansBodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
+                        color: AppColors.textSecondary, height: 1.5),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -218,18 +206,17 @@ class _ProLockedOverlay extends StatelessWidget {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () => showProUpgrade(
-                        context,
-                        'Track multiple hobbies at once with Pro.',
-                      ),
+                          context,
+                          'Track multiple hobbies at once with Pro.'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.coral,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                            borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
                       ),
-                      child: Text('Unlock Pro', style: AppTypography.button),
+                      child:
+                          Text('Unlock Pro', style: AppTypography.button),
                     ),
                   ),
                 ],
@@ -310,17 +297,13 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
             ? DateTime.now().difference(userHobby.startedAt!).inDays
             : 0);
 
-    // Find current step
-    RoadmapStep? nextStep;
+    // Default active step = first non-completed in order
+    String? defaultActiveStepId;
     for (int i = 0; i < hobby.roadmapSteps.length; i++) {
       final step = hobby.roadmapSteps[i];
       if (!completedValid.contains(step.id)) {
-        final prevDone = i == 0 ||
-            completedValid.contains(hobby.roadmapSteps[i - 1].id);
-        if (prevDone) {
-          nextStep = step;
-          break;
-        }
+        defaultActiveStepId = step.id;
+        break;
       }
     }
 
@@ -342,42 +325,23 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               ).createShader(rect),
               blendMode: BlendMode.dstIn,
               child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedNetworkImage(
-                  imageUrl: hobby.imageUrl,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 800,
-                  placeholder: (_, __) =>
-                      Container(color: AppColors.surfaceElevated),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surfaceElevated,
-                    child: Icon(AppIcons.categoryIcon(hobby.category),
-                        size: 48, color: AppColors.textMuted),
-                  ),
-                ),
-                // Category + streak badges
-                Positioned(
-                  top: 12,
-                  left: 24,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.background.withAlpha(180),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      hobby.category.toUpperCase(),
-                      style: AppTypography.overline
-                          .copyWith(color: AppColors.textSecondary),
+                fit: StackFit.expand,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: hobby.imageUrl,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 800,
+                    placeholder: (_, __) =>
+                        Container(color: AppColors.surfaceElevated),
+                    errorWidget: (_, __, ___) => Container(
+                      color: AppColors.surfaceElevated,
+                      child: Icon(AppIcons.categoryIcon(hobby.category),
+                          size: 48, color: AppColors.textMuted),
                     ),
                   ),
-                ),
-                if (userHobby.streakDays > 0)
                   Positioned(
                     top: 12,
-                    right: 24,
+                    left: 24,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
@@ -385,25 +349,43 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                         color: AppColors.background.withAlpha(180),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(MdiIcons.fire,
-                              size: 14, color: AppColors.accent),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${userHobby.streakDays}d streak',
-                            style: AppTypography.data
-                                .copyWith(color: AppColors.textPrimary),
-                          ),
-                        ],
+                      child: Text(
+                        hobby.category.toUpperCase(),
+                        style: AppTypography.overline
+                            .copyWith(color: AppColors.textSecondary),
                       ),
                     ),
                   ),
-              ],
+                  if (userHobby.streakDays > 0)
+                    Positioned(
+                      top: 12,
+                      right: 24,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.background.withAlpha(180),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(MdiIcons.fire,
+                                size: 14, color: AppColors.accent),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${userHobby.streakDays}d streak',
+                              style: AppTypography.data
+                                  .copyWith(color: AppColors.textPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
         ),
 
         // ── Content below image ──
@@ -412,7 +394,6 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hobby title
               const SizedBox(height: 4),
               Builder(builder: (_) {
                 final words = hobby.title.split(' ');
@@ -463,78 +444,12 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   ),
                 ),
 
-              // ── Next Step (highlighted) ──
-              if (nextStep != null) ...[
-                Builder(builder: (context) {
-                  final ns = nextStep!;
-                  return _NextStepCard(
-                    step: ns,
-                    onTap: () {
-                      final i = hobby.roadmapSteps.indexWhere((s) => s.id == ns.id);
-                      final followingTitle = i + 1 < hobby.roadmapSteps.length
-                          ? hobby.roadmapSteps[i + 1].title
-                          : null;
-                      context.push(
-                        '/session/${hobby.id}/${ns.id}',
-                        extra: <String, dynamic>{
-                          'hobbyTitle': hobby.title,
-                          'hobbyCategory': hobby.category,
-                          'stepTitle': ns.title,
-                          'stepDescription': ns.description,
-                          'stepInstructions': '',
-                          'whatYouNeed': '',
-                          'recommendedMinutes': ns.estimatedMinutes,
-                          'completionMode': ns.effectiveMode,
-                          'nextStepTitle': followingTitle,
-                        },
-                      );
-                    },
-                  );
-                }),
-                const SizedBox(height: 16),
-              ],
-
-              // ── Compact step checklist ──
-              Text('YOUR STEPS',
-                  style: AppTypography.overline
-                      .copyWith(color: AppColors.textMuted)),
-              const SizedBox(height: 10),
-              ...List.generate(hobby.roadmapSteps.length, (i) {
-                final step = hobby.roadmapSteps[i];
-                final isCompleted = completedValid.contains(step.id);
-                final isCurrent = step.id == nextStep?.id;
-                return _CompactStepRow(
-                  title: step.title,
-                  stepNumber: i + 1,
-                  isCompleted: isCompleted,
-                  isCurrent: isCurrent,
-                  onTap: () {
-                    if (isCompleted) {
-                      ref
-                          .read(userHobbiesProvider.notifier)
-                          .toggleStep(hobby.id, step.id);
-                    } else {
-                      final followingTitle = i + 1 < hobby.roadmapSteps.length
-                          ? hobby.roadmapSteps[i + 1].title
-                          : null;
-                      context.push(
-                        '/session/${hobby.id}/${step.id}',
-                        extra: <String, dynamic>{
-                          'hobbyTitle': hobby.title,
-                          'hobbyCategory': hobby.category,
-                          'stepTitle': step.title,
-                          'stepDescription': step.description,
-                          'stepInstructions': '',
-                          'whatYouNeed': '',
-                          'recommendedMinutes': step.estimatedMinutes,
-                          'completionMode': step.effectiveMode,
-                          'nextStepTitle': followingTitle,
-                        },
-                      );
-                    }
-                  },
-                );
-              }),
+              // ── Roadmap Journey ──
+              _RoadmapJourney(
+                hobby: hobby,
+                completedStepIds: completedValid,
+                defaultActiveStepId: defaultActiveStepId,
+              ),
               const SizedBox(height: 16),
 
               // ── This week's plan ──
@@ -592,23 +507,29 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
 
                 if (daysSinceActivity >= 7) {
                   coachTitle = 'Get back on track';
-                  coachSubtitle = 'It\'s been $daysSinceActivity days — let\'s restart gently';
-                  coachMessage = 'I skipped $daysSinceActivity days of ${hobby.title}. Help me restart gently.';
+                  coachSubtitle =
+                      'It\'s been $daysSinceActivity days — let\'s restart gently';
+                  coachMessage =
+                      'I skipped $daysSinceActivity days of ${hobby.title}. Help me restart gently.';
                   coachMode = 'rescue';
                 } else if (stepsCompleted == 0) {
                   coachTitle = 'Plan your first session';
                   coachSubtitle = 'Get a tiny, doable plan for tonight';
-                  coachMessage = 'Help me start tonight. I want a tiny first session plan for ${hobby.title}.';
+                  coachMessage =
+                      'Help me start tonight. I want a tiny first session plan for ${hobby.title}.';
                   coachMode = 'start';
                 } else {
                   coachTitle = 'What should I do next?';
-                  coachSubtitle = '$stepsCompleted of $totalSteps steps done';
-                  coachMessage = 'What should I do next? I\'ve completed $stepsCompleted of $totalSteps steps.';
+                  coachSubtitle =
+                      '$stepsCompleted of $totalSteps steps done';
+                  coachMessage =
+                      'What should I do next? I\'ve completed $stepsCompleted of $totalSteps steps.';
                   coachMode = 'momentum';
                 }
 
                 return GlassCard(
-                  onTap: () => context.push('/coach/${hobby.id}', extra: {
+                  onTap: () =>
+                      context.push('/coach/${hobby.id}', extra: {
                     'message': coachMessage,
                     'mode': coachMode,
                     'autoSend': true,
@@ -670,8 +591,8 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                             size: 28, color: AppColors.textMuted),
                         const SizedBox(height: 10),
                         Text('No journal entries yet',
-                            style: AppTypography.body
-                                .copyWith(color: AppColors.textSecondary)),
+                            style: AppTypography.body.copyWith(
+                                color: AppColors.textSecondary)),
                         const SizedBox(height: 4),
                         Text(
                           'After your first session, write down how it went.',
@@ -692,7 +613,7 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
 }
 
 // ═══════════════════════════════════════════════════════
-//  RESTART CARD (stalled 3+ days)
+//  RESTART CARD
 // ═══════════════════════════════════════════════════════
 
 class _RestartCard extends StatelessWidget {
@@ -716,7 +637,8 @@ class _RestartCard extends StatelessWidget {
         children: [
           Text(
             'It\'s been $daysSince days since your last session.',
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            style:
+                AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 6),
           Text(
@@ -752,13 +674,13 @@ class _RestartCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: AppColors.glassBorder, width: 0.5),
+                      border: Border.all(
+                          color: AppColors.glassBorder, width: 0.5),
                     ),
                     child: Center(
                       child: Text('Maybe later',
-                          style: AppTypography.body
-                              .copyWith(color: AppColors.textSecondary)),
+                          style: AppTypography.body.copyWith(
+                              color: AppColors.textSecondary)),
                     ),
                   ),
                 ),
@@ -813,7 +735,8 @@ class _JournalPreviewCard extends StatelessWidget {
             entry.text as String,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.body
+                .copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -822,7 +745,7 @@ class _JournalPreviewCard extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-//  EMPTY HOME STATE (no active hobby)
+//  EMPTY HOME STATE
 // ═══════════════════════════════════════════════════════
 
 class _EmptyHomeState extends StatelessWidget {
@@ -832,181 +755,1223 @@ class _EmptyHomeState extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: AppBackground(
         child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(MdiIcons.compassOutline,
-                  size: 48, color: AppColors.textMuted),
-              const SizedBox(height: 24),
-              Text(
-                'Ready to find\nyour thing?',
-                textAlign: TextAlign.center,
-                style: AppTypography.hero,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Pick a hobby that fits your life.\nWe\'ll help you actually start it.',
-                textAlign: TextAlign.center,
-                style:
-                    AppTypography.body.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 36),
-              GestureDetector(
-                onTap: () => context.go('/discover'),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Text('Discover hobbies',
-                        style: AppTypography.button
-                            .copyWith(color: AppColors.background)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(MdiIcons.compassOutline,
+                    size: 48, color: AppColors.textMuted),
+                const SizedBox(height: 24),
+                Text('Ready to find\nyour thing?',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.hero),
+                const SizedBox(height: 12),
+                Text(
+                  'Pick a hobby that fits your life.\nWe\'ll help you actually start it.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.body
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 36),
+                GestureDetector(
+                  onTap: () => context.go('/discover'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text('Discover hobbies',
+                          style: AppTypography.button
+                              .copyWith(color: AppColors.background)),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  NEXT STEP CARD (coral-tinted highlight)
-// ═══════════════════════════════════════════════════════
-
-class _NextStepCard extends StatelessWidget {
-  final RoadmapStep step;
-  final VoidCallback onTap;
-
-  const _NextStepCard({required this.step, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.accent.withValues(alpha: 0.07),
-          border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.18),
-            width: 0.5,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('NEXT STEP',
-                style: AppTypography.overline.copyWith(color: AppColors.accent)),
-            const SizedBox(height: 4),
-            Text(step.title,
-                style: AppTypography.sansLabel.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                )),
-            if (step.description.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(step.description,
-                  style: AppTypography.sansBodySmall
-                      .copyWith(color: AppColors.textSecondary)),
-            ],
-          ],
         ),
       ),
     );
   }
 }
 
+
 // ═══════════════════════════════════════════════════════
-//  COMPACT STEP ROW (replaces heavy timeline)
+//  ROADMAP JOURNEY
 // ═══════════════════════════════════════════════════════
 
-class _CompactStepRow extends StatelessWidget {
-  final String title;
-  final int stepNumber;
-  final bool isCompleted;
-  final bool isCurrent;
-  final VoidCallback onTap;
+const _tealBg = Color(0x0A068BA8);
+const _tealBgActive = Color(0x14068BA8);
+const _tealBorder = Color(0x14068BA8);
+const _tealBorderActive = Color(0x33068BA8);
+const _tealText = Color(0x805CB8C9);
+const _tealTextBright = Color(0xFF5CB8C9);
+const _tealBar = Color(0x995CB8C9);
 
-  const _CompactStepRow({
-    required this.title,
-    required this.stepNumber,
-    required this.isCompleted,
-    required this.isCurrent,
-    required this.onTap,
+class _RoadmapJourney extends ConsumerStatefulWidget {
+  final Hobby hobby;
+  final Set<String> completedStepIds;
+  final String? defaultActiveStepId;
+
+  const _RoadmapJourney({
+    required this.hobby,
+    required this.completedStepIds,
+    this.defaultActiveStepId,
   });
 
   @override
+  ConsumerState<_RoadmapJourney> createState() => _RoadmapJourneyState();
+}
+
+class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
+  String? _expandedTipStepId;
+  String? _focusedStepId;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusedStepId = widget.defaultActiveStepId;
+  }
+
+  @override
+  void didUpdateWidget(covariant _RoadmapJourney old) {
+    super.didUpdateWidget(old);
+    if (_focusedStepId != null &&
+        widget.completedStepIds.contains(_focusedStepId) &&
+        !old.completedStepIds.contains(_focusedStepId!)) {
+      for (final step in widget.hobby.roadmapSteps) {
+        if (!widget.completedStepIds.contains(step.id)) {
+          setState(() { _focusedStepId = step.id; _expandedTipStepId = null; });
+          return;
+        }
+      }
+      setState(() => _focusedStepId = null);
+    }
+  }
+
+  void _setFocusedStep(String stepId) {
+    if (_focusedStepId == stepId) return;
+    HapticFeedback.selectionClick();
+    setState(() { _focusedStepId = stepId; _expandedTipStepId = null; });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
+    final steps = widget.hobby.roadmapSteps;
+    final completed = widget.completedStepIds;
+    final total = steps.length;
+    final doneCount = completed.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            // Step indicator dot
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? AppColors.sage
-                    : (isCurrent ? AppColors.accent : Colors.transparent),
-                border: !isCompleted && !isCurrent
-                    ? Border.all(color: AppColors.textMuted, width: 1)
-                    : null,
-                shape: BoxShape.circle,
-                boxShadow: isCurrent
-                    ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.3), blurRadius: 6)]
-                    : null,
-              ),
-              child: Center(
-                child: isCompleted
-                    ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
-                    : Text(
-                        '$stepNumber',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: isCurrent ? Colors.white : AppColors.textMuted,
-                        ),
-                      ),
+            Text('YOUR JOURNEY',
+                style: AppTypography.overline.copyWith(color: AppColors.textMuted)),
+            const Spacer(),
+            Text('$doneCount / $total',
+                style: AppTypography.monoBadge.copyWith(color: AppColors.textMuted)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: LinearProgressIndicator(
+            value: total > 0 ? doneCount / total : 0,
+            backgroundColor: AppColors.textWhisper,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
+            minHeight: 3,
+          ),
+        ),
+        const SizedBox(height: 20),
+        ...List.generate(steps.length, (i) {
+          final step = steps[i];
+          final isCompleted = completed.contains(step.id);
+          final isFocused = step.id == _focusedStepId && !isCompleted;
+          final isLast = i == steps.length - 1;
+          Color lineColor = AppColors.textWhisper;
+          if (!isLast && isCompleted && completed.contains(steps[i + 1].id)) {
+            lineColor = AppColors.success;
+          }
+          return _StepItem(
+            key: ValueKey('step_${step.id}'),
+            step: step, stepNumber: i + 1,
+            isCompleted: isCompleted, isFocused: isFocused,
+            isLast: isLast, lineColor: lineColor, hobby: widget.hobby,
+            tipExpanded: _expandedTipStepId == step.id,
+            onToggleTip: () => setState(() {
+              _expandedTipStepId = _expandedTipStepId == step.id ? null : step.id;
+            }),
+            onTap: () {
+              if (isCompleted) {
+                ref.read(userHobbiesProvider.notifier).toggleStep(widget.hobby.id, step.id);
+              } else if (!isFocused) {
+                _setFocusedStep(step.id);
+              }
+            },
+            staggerIndex: i,
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  STEP ITEM
+//
+//  Architecture:
+//  - IntrinsicHeight + CrossAxisAlignment.stretch so the
+//    left rail line ALWAYS fills the full row height
+//  - Right side: a single Column. Each expandable section
+//    uses AnimatedSize → SizedBox.shrink() when hidden.
+//    NO SizedBox(width: double.infinity) — that causes
+//    layout conflicts during animation.
+//  - Card background: AnimatedContainer wrapping the Column,
+//    transitions decoration from BoxDecoration() to the coral card.
+//  - Title row: simple. No nested Rows that can overflow.
+//    "UP NEXT" + milestone shown ABOVE the title when focused.
+// ═══════════════════════════════════════════════════════
+
+class _StepItem extends ConsumerWidget {
+  final RoadmapStep step;
+  final int stepNumber;
+  final bool isCompleted;
+  final bool isFocused;
+  final bool isLast;
+  final Color lineColor;
+  final Hobby hobby;
+  final bool tipExpanded;
+  final VoidCallback onToggleTip;
+  final VoidCallback onTap;
+  final int staggerIndex;
+
+  const _StepItem({
+    super.key,
+    required this.step, required this.stepNumber,
+    required this.isCompleted, required this.isFocused,
+    required this.isLast, required this.lineColor,
+    required this.hobby, required this.tipExpanded,
+    required this.onToggleTip, required this.onTap,
+    required this.staggerIndex,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final coachTip = step.coachTip;
+    final completionMessage = step.completionMessage;
+    final isFuture = !isCompleted && !isFocused;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ═══ LEFT RAIL ═══
+            SizedBox(
+              width: 40,
+              child: Column(
+                children: [
+                  SizedBox(height: isFocused ? 22 : 8),
+                  // Node — instant color/size change (150ms)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOut,
+                    width: isFocused ? 36 : (isCompleted ? 26 : 22),
+                    height: isFocused ? 36 : (isCompleted ? 26 : 22),
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? AppColors.success
+                          : isFocused
+                              ? AppColors.accent
+                              : Colors.transparent,
+                      border: !isCompleted && !isFocused
+                          ? Border.all(color: AppColors.textWhisper, width: 1.5)
+                          : null,
+                      shape: BoxShape.circle,
+                      boxShadow: isFocused
+                          ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.4), blurRadius: 12)]
+                          : isCompleted
+                              ? [BoxShadow(color: AppColors.success.withValues(alpha: 0.2), blurRadius: 6)]
+                              : null,
+                    ),
+                    child: Center(
+                      child: isCompleted
+                          ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                          : Text(
+                              '$stepNumber',
+                              style: TextStyle(
+                                fontSize: isFocused ? 14 : 10,
+                                fontWeight: FontWeight.w800,
+                                color: isFocused ? Colors.white : AppColors.textMuted,
+                              ),
+                            ),
+                    ),
+                  ),
+                  if (!isLast)
+                    Expanded(child: Center(child: Container(width: 2, color: lineColor))),
+                  if (!isLast) const SizedBox(height: 2),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            // Step title
+            const SizedBox(width: 10),
+
+            // ═══ RIGHT CONTENT — single AnimatedSize wraps everything ═══
+            // ═══ RIGHT CONTENT ═══
             Expanded(
-              child: Text(
-                title,
-                style: isCompleted
-                    ? AppTypography.body.copyWith(
-                        color: AppColors.textMuted,
-                        decoration: TextDecoration.lineThrough,
-                        decorationColor: AppColors.textMuted,
-                      )
-                    : isCurrent
-                        ? AppTypography.body.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          )
-                        : AppTypography.body.copyWith(
-                            color: AppColors.textMuted,
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                alignment: Alignment.topLeft,
+                clipBehavior: Clip.hardEdge,
+                child: Container(
+                  padding: isFocused
+                      ? const EdgeInsets.all(16)
+                      : const EdgeInsets.symmetric(vertical: 8),
+                  margin: isFocused
+                      ? const EdgeInsets.only(top: 4, bottom: 8)
+                      : EdgeInsets.zero,
+                  decoration: isFocused
+                      ? BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                              color: AppColors.accent.withValues(alpha: 0.18),
+                              width: 1),
+                        )
+                      : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // UP NEXT (focused only)
+                      if (isFocused) ...[
+                        Row(
+                          children: [
+                            Text('UP NEXT',
+                                style: AppTypography.overline
+                                    .copyWith(color: AppColors.accent)),
+                            if (step.milestone != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent
+                                      .withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Text(
+                                  '\u{1F3C6} ${step.milestone}',
+                                  style: AppTypography.monoBadge.copyWith(
+                                      color: AppColors.accent, fontSize: 9),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+
+                      // Title (always)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              step.title,
+                              style: isCompleted
+                                  ? AppTypography.body.copyWith(
+                                      color: AppColors.textMuted,
+                                      decoration: TextDecoration.lineThrough,
+                                      decorationColor: AppColors.textWhisper)
+                                  : isFocused
+                                      ? AppTypography.title
+                                          .copyWith(fontSize: 17)
+                                      : AppTypography.body.copyWith(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500),
+                            ),
                           ),
+                          if (!isFocused && !isCompleted && step.milestone != null)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Text('\u{1F3C6}',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                          if (!isFocused && isFuture && coachTip != null)
+                            GestureDetector(
+                              onTap: onToggleTip,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 6),
+                                child: Text('\u2726',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: tipExpanded
+                                          ? _tealTextBright
+                                          : const Color(0x665CB8C9),
+                                    )),
+                              ),
+                            ),
+                        ],
+                      ),
+
+                      // Description (focused only)
+                      if (isFocused && step.description.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(step.description,
+                            style: AppTypography.sansBodySmall
+                                .copyWith(color: AppColors.textSecondary)),
+                      ],
+
+                      // Coach tip (focused only)
+                      if (isFocused) ...[
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: onToggleTip,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: tipExpanded ? _tealBgActive : _tealBg,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: tipExpanded
+                                      ? _tealBorderActive
+                                      : _tealBorder,
+                                  width: 1),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  const Text('\u2726',
+                                      style: TextStyle(
+                                          fontSize: 15, color: _tealText)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    tipExpanded
+                                        ? 'Coach tip'
+                                        : (coachTip != null
+                                            ? 'Tap for a coach tip'
+                                            : 'Coach tip coming soon'),
+                                    style: AppTypography.sansTiny.copyWith(
+                                      color: _tealText,
+                                      fontWeight: tipExpanded
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                                  ),
+                                ]),
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                  alignment: Alignment.topLeft,
+                                  clipBehavior: Clip.hardEdge,
+                                  child: tipExpanded && coachTip != null
+                                      ? Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 8),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                width: 2.5,
+                                                height: 40,
+                                                margin: const EdgeInsets.only(
+                                                    left: 6, right: 14),
+                                                decoration: BoxDecoration(
+                                                    color: _tealBar,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            2)),
+                                              ),
+                                              Expanded(
+                                                child: Text(coachTip,
+                                                    style: AppTypography
+                                                        .sansBodySmall
+                                                        .copyWith(
+                                                            color: AppColors
+                                                                .textSecondary)),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : const SizedBox(
+                                          width: double.infinity, height: 0),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Start session CTA (focused only)
+                      if (isFocused) ...[
+                        const SizedBox(height: 14),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            final i = hobby.roadmapSteps
+                                .indexWhere((s) => s.id == step.id);
+                            final followingTitle =
+                                i + 1 < hobby.roadmapSteps.length
+                                    ? hobby.roadmapSteps[i + 1].title
+                                    : null;
+                            context.push(
+                              '/session/${hobby.id}/${step.id}',
+                              extra: <String, dynamic>{
+                                'hobbyTitle': hobby.title,
+                                'hobbyCategory': hobby.category,
+                                'stepTitle': step.title,
+                                'stepDescription': step.description,
+                                'stepInstructions': '',
+                                'whatYouNeed': '',
+                                'recommendedMinutes': step.estimatedMinutes,
+                                'completionMode': step.effectiveMode,
+                                'nextStepTitle': followingTitle,
+                                'completionMessage': completionMessage,
+                              },
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              borderRadius: BorderRadius.circular(13),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: AppColors.accent
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 3)),
+                              ],
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.play_arrow_rounded,
+                                      size: 18, color: Colors.white),
+                                  const SizedBox(width: 6),
+                                  Text('Start session',
+                                      style: AppTypography.sansLabel
+                                          .copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Ask more (focused + tip open) — slides in smoothly
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topLeft,
+                        clipBehavior: Clip.hardEdge,
+                        child: isFocused && tipExpanded && coachTip != null
+                            ? Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 10, bottom: 4),
+                                child: GestureDetector(
+                                  onTap: () => context.push(
+                                    '/coach/${hobby.id}',
+                                    extra: {
+                                      'message':
+                                          'Tell me more about "${step.title}" — any tips?',
+                                      'mode': 'momentum',
+                                      'autoSend': true,
+                                    },
+                                  ),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: _tealBg,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: _tealBorder, width: 1),
+                                    ),
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text('\u2726',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: _tealText)),
+                                          const SizedBox(width: 6),
+                                          Text('Ask more about this step',
+                                              style: AppTypography.sansTiny
+                                                  .copyWith(color: _tealText)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(
+                                width: double.infinity, height: 0),
+                      ),
+
+                      // Inline tip (compact future only)
+                      if (isFuture && !isFocused && tipExpanded && coachTip != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 2,
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                  color: _tealBar,
+                                  borderRadius: BorderRadius.circular(1)),
+                            ),
+                            Expanded(
+                              child: Text(coachTip,
+                                  style: AppTypography.sansTiny.copyWith(
+                                      color: AppColors.textSecondary)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
         ),
+      ),
+    ).animate().fadeIn(
+          duration: 500.ms,
+          curve: Curves.easeOutCubic,
+          delay: (80 * staggerIndex).ms,
+        );
+  }
+
+  // ── Single widget with accordion reveal ──
+  Widget _buildStepContent(BuildContext context, bool isFocused,
+      bool isFuture, String? coachTip, String? completionMessage) {
+    const dur = Duration(milliseconds: 350);
+    const curve = Curves.easeOutCubic;
+
+    return AnimatedContainer(
+      duration: dur,
+      curve: curve,
+      padding: isFocused
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(vertical: 8),
+      margin: isFocused
+          ? const EdgeInsets.only(top: 4, bottom: 8)
+          : EdgeInsets.zero,
+      decoration: BoxDecoration(
+        color: isFocused
+            ? AppColors.accent.withValues(alpha: 0.07)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(isFocused ? 18 : 0),
+        border: isFocused
+            ? Border.all(
+                color: AppColors.accent.withValues(alpha: 0.18), width: 1)
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── UP NEXT + milestone (revealed when focused) ──
+          AnimatedSize(
+            duration: dur,
+            curve: curve,
+            alignment: Alignment.topLeft,
+            clipBehavior: Clip.hardEdge,
+            child: isFocused
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Text('UP NEXT',
+                            style: AppTypography.overline
+                                .copyWith(color: AppColors.accent)),
+                        if (step.milestone != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.accent.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              '\u{1F3C6} ${step.milestone}',
+                              style: AppTypography.monoBadge.copyWith(
+                                  color: AppColors.accent, fontSize: 9),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
+
+          // ── Title row (ALWAYS visible) ──
+          Row(
+            children: [
+              Expanded(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: isCompleted
+                      ? AppTypography.body.copyWith(
+                          color: AppColors.textMuted,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: AppColors.textWhisper)
+                      : isFocused
+                          ? AppTypography.title.copyWith(fontSize: 17)
+                          : AppTypography.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500),
+                  child: Text(step.title),
+                ),
+              ),
+              // Compact-only badges (fade out when focused)
+              if (!isFocused && !isCompleted && step.milestone != null)
+                const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Text('\u{1F3C6}', style: TextStyle(fontSize: 12)),
+                ),
+              if (!isFocused && isFuture && coachTip != null)
+                GestureDetector(
+                  onTap: onToggleTip,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Text('\u2726',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: tipExpanded
+                              ? _tealTextBright
+                              : const Color(0x665CB8C9),
+                        )),
+                  ),
+                ),
+            ],
+          ),
+
+          // ── Description (revealed when focused) ──
+          AnimatedSize(
+            duration: dur,
+            curve: curve,
+            alignment: Alignment.topLeft,
+            clipBehavior: Clip.hardEdge,
+            child: isFocused && step.description.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(step.description,
+                        style: AppTypography.sansBodySmall
+                            .copyWith(color: AppColors.textSecondary)),
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
+
+          // ── Coach tip block (revealed when focused) ──
+          AnimatedSize(
+            duration: dur,
+            curve: curve,
+            alignment: Alignment.topLeft,
+            clipBehavior: Clip.hardEdge,
+            child: isFocused
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: GestureDetector(
+                      onTap: onToggleTip,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: tipExpanded ? _tealBgActive : _tealBg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: tipExpanded
+                                  ? _tealBorderActive
+                                  : _tealBorder,
+                              width: 1),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(children: [
+                              const Text('\u2726',
+                                  style: TextStyle(
+                                      fontSize: 15, color: _tealText)),
+                              const SizedBox(width: 8),
+                              Text(
+                                tipExpanded
+                                    ? 'Coach tip'
+                                    : (coachTip != null
+                                        ? 'Tap for a coach tip'
+                                        : 'Coach tip coming soon'),
+                                style: AppTypography.sansTiny.copyWith(
+                                  color: _tealText,
+                                  fontWeight: tipExpanded
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ]),
+                            // Tip text
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: curve,
+                              alignment: Alignment.topLeft,
+                              clipBehavior: Clip.hardEdge,
+                              child: tipExpanded && coachTip != null
+                                  ? Padding(
+                                      padding:
+                                          const EdgeInsets.only(top: 8),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 2.5,
+                                            height: 40,
+                                            margin: const EdgeInsets.only(
+                                                left: 6, right: 14),
+                                            decoration: BoxDecoration(
+                                                color: _tealBar,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        2)),
+                                          ),
+                                          Expanded(
+                                            child: Text(coachTip,
+                                                style: AppTypography
+                                                    .sansBodySmall
+                                                    .copyWith(
+                                                        color: AppColors
+                                                            .textSecondary)),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : const SizedBox(
+                                      width: double.infinity, height: 0),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
+
+          // ── Start session CTA (revealed when focused) ──
+          AnimatedSize(
+            duration: dur,
+            curve: curve,
+            alignment: Alignment.topLeft,
+            clipBehavior: Clip.hardEdge,
+            child: isFocused
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        final i = hobby.roadmapSteps
+                            .indexWhere((s) => s.id == step.id);
+                        final followingTitle =
+                            i + 1 < hobby.roadmapSteps.length
+                                ? hobby.roadmapSteps[i + 1].title
+                                : null;
+                        context.push(
+                          '/session/${hobby.id}/${step.id}',
+                          extra: <String, dynamic>{
+                            'hobbyTitle': hobby.title,
+                            'hobbyCategory': hobby.category,
+                            'stepTitle': step.title,
+                            'stepDescription': step.description,
+                            'stepInstructions': '',
+                            'whatYouNeed': '',
+                            'recommendedMinutes': step.estimatedMinutes,
+                            'completionMode': step.effectiveMode,
+                            'nextStepTitle': followingTitle,
+                            'completionMessage': completionMessage,
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          borderRadius: BorderRadius.circular(13),
+                          boxShadow: [
+                            BoxShadow(
+                                color: AppColors.accent
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 3)),
+                          ],
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.play_arrow_rounded,
+                                  size: 18, color: Colors.white),
+                              const SizedBox(width: 6),
+                              Text('Start session',
+                                  style: AppTypography.sansLabel.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
+
+          // ── Ask more link (focused + tip open) ──
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: curve,
+            alignment: Alignment.topLeft,
+            clipBehavior: Clip.hardEdge,
+            child: isFocused && tipExpanded && coachTip != null
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 4),
+                    child: GestureDetector(
+                      onTap: () => context.push(
+                        '/coach/${hobby.id}',
+                        extra: {
+                          'message':
+                              'Tell me more about "${step.title}" — any tips?',
+                          'mode': 'momentum',
+                          'autoSend': true,
+                        },
+                      ),
+                      child: Center(
+                        child: Text('Ask more about this step',
+                            style: AppTypography.sansCaption.copyWith(
+                              color: AppColors.textSecondary,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.textSecondary,
+                            )),
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
+
+          // ── Inline tip for compact future steps ──
+          AnimatedSize(
+            duration: dur,
+            curve: curve,
+            alignment: Alignment.topLeft,
+            clipBehavior: Clip.hardEdge,
+            child: isFuture && !isFocused && tipExpanded && coachTip != null
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 2,
+                          height: 32,
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                              color: _tealBar,
+                              borderRadius: BorderRadius.circular(1)),
+                        ),
+                        Expanded(
+                          child: Text(coachTip,
+                              style: AppTypography.sansTiny.copyWith(
+                                  color: AppColors.textSecondary)),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity, height: 0),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element, unused_element_parameter
+  Widget _buildExpandedCard(
+      BuildContext context, String? coachTip, String? completionMessage) {
+    return Container(
+      key: const ValueKey('expanded'),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 4, bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+            color: AppColors.accent.withValues(alpha: 0.18), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // UP NEXT + milestone
+          Row(
+            children: [
+              Text('UP NEXT',
+                  style:
+                      AppTypography.overline.copyWith(color: AppColors.accent)),
+              if (step.milestone != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    '\u{1F3C6} ${step.milestone}',
+                    style: AppTypography.monoBadge
+                        .copyWith(color: AppColors.accent, fontSize: 9),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Title
+          Text(step.title, style: AppTypography.title.copyWith(fontSize: 17)),
+          // Description
+          if (step.description.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(step.description,
+                style: AppTypography.sansBodySmall
+                    .copyWith(color: AppColors.textSecondary)),
+          ],
+          // Coach tip block
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: onToggleTip,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: tipExpanded ? _tealBgActive : _tealBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: tipExpanded ? _tealBorderActive : _tealBorder,
+                    width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Text('\u2726',
+                        style: TextStyle(fontSize: 15, color: _tealText)),
+                    const SizedBox(width: 8),
+                    Text(
+                      tipExpanded
+                          ? 'Coach tip'
+                          : (coachTip != null
+                              ? 'Tap for a coach tip'
+                              : 'Coach tip coming soon'),
+                      style: AppTypography.sansTiny.copyWith(
+                        color: _tealText,
+                        fontWeight:
+                            tipExpanded ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ]),
+                  if (tipExpanded && coachTip != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 2.5,
+                          height: 40,
+                          margin: const EdgeInsets.only(left: 6, right: 14),
+                          decoration: BoxDecoration(
+                              color: _tealBar,
+                              borderRadius: BorderRadius.circular(2)),
+                        ),
+                        Expanded(
+                          child: Text(coachTip,
+                              style: AppTypography.sansBodySmall
+                                  .copyWith(color: AppColors.textSecondary)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          // Start session CTA
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              final i =
+                  hobby.roadmapSteps.indexWhere((s) => s.id == step.id);
+              final followingTitle = i + 1 < hobby.roadmapSteps.length
+                  ? hobby.roadmapSteps[i + 1].title
+                  : null;
+              context.push(
+                '/session/${hobby.id}/${step.id}',
+                extra: <String, dynamic>{
+                  'hobbyTitle': hobby.title,
+                  'hobbyCategory': hobby.category,
+                  'stepTitle': step.title,
+                  'stepDescription': step.description,
+                  'stepInstructions': '',
+                  'whatYouNeed': '',
+                  'recommendedMinutes': step.estimatedMinutes,
+                  'completionMode': step.effectiveMode,
+                  'nextStepTitle': followingTitle,
+                  'completionMessage': completionMessage,
+                },
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: [
+                  BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3)),
+                ],
+              ),
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.play_arrow_rounded,
+                        size: 18, color: Colors.white),
+                    const SizedBox(width: 6),
+                    Text('Start session',
+                        style: AppTypography.sansLabel.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Ask more link
+          if (tipExpanded && coachTip != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: GestureDetector(
+                onTap: () => context.push(
+                  '/coach/${hobby.id}',
+                  extra: {
+                    'message':
+                        'Tell me more about "${step.title}" — any tips?',
+                    'mode': 'momentum',
+                    'autoSend': true,
+                  },
+                ),
+                child: Center(
+                  child: Text('Ask more about this step',
+                      style: AppTypography.sansCaption.copyWith(
+                        color: AppColors.textSecondary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.textSecondary,
+                      )),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element, unused_element_parameter
+  Widget _buildCompactRow(String? coachTip, bool isFuture) {
+    return Padding(
+      key: const ValueKey('compact'),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  step.title,
+                  style: isCompleted
+                      ? AppTypography.body.copyWith(
+                          color: AppColors.textMuted,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: AppColors.textWhisper)
+                      : AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500),
+                ),
+              ),
+              if (!isCompleted && step.milestone != null)
+                const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Text('\u{1F3C6}', style: TextStyle(fontSize: 12)),
+                ),
+              if (isFuture && coachTip != null)
+                GestureDetector(
+                  onTap: onToggleTip,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Text('\u2726',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: tipExpanded
+                              ? _tealTextBright
+                              : const Color(0x665CB8C9),
+                        )),
+                  ),
+                ),
+            ],
+          ),
+          // Inline tip for future steps
+          if (isFuture && tipExpanded && coachTip != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 2,
+                  height: 32,
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                      color: _tealBar, borderRadius: BorderRadius.circular(1)),
+                ),
+                Expanded(
+                  child: Text(coachTip,
+                      style: AppTypography.sansTiny
+                          .copyWith(color: AppColors.textSecondary)),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -38,5 +38,6 @@ class SessionState with _$SessionState {
     String? journalText,
     String? photoPath,
     String? nextStepTitle,
+    String? completionMessage,
   }) = _SessionState;
 }

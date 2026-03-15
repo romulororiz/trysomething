@@ -12,7 +12,6 @@ import '../../components/glass_card.dart';
 import '../../components/starter_kit_card.dart';
 import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/share_card.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
@@ -267,14 +266,11 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               child: SafeArea(
                 top: false,
                 child: TryTodayButton(
-                  text: 'Start with the basics',
+                  text: 'Start hobby',
                   onPressed: () {
                     final canStart = ref.read(canStartHobbyProvider(widget.hobbyId));
                     if (!canStart) {
-                      showProUpgrade(
-                        context,
-                        'You\'re already working on a hobby. Pro lets you explore multiple hobbies at once.',
-                      );
+                      context.push('/pro');
                       return;
                     }
                     context.push('/quickstart/${widget.hobbyId}');

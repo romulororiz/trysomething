@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
-import '../theme/motion.dart';
 import 'glass_card.dart';
 
 /// 4-stage roadmap card for the Home tab.
@@ -191,7 +190,11 @@ class StageRoadmapCard extends StatelessWidget {
 
           // Stuck? button
           GestureDetector(
-            onTap: () => context.push('/coach/$hobbyId'),
+            onTap: () => context.push('/coach/$hobbyId', extra: {
+              'message': 'I\'m stuck on "${stage.title}". Help me get past this step.',
+              'mode': 'momentum',
+              'autoSend': true,
+            }),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),

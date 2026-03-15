@@ -21,7 +21,7 @@ class AppTypography {
 
   /// Hero — 36pt, cinematic headlines (splash, onboarding, paywall, detail hero)
   static TextStyle get hero => GoogleFonts.manrope(
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: FontWeight.w800,
         color: AppColors.textPrimary,
         height: 1.1,
@@ -74,6 +74,14 @@ class AppTypography {
         color: AppColors.background,
         height: 1.0,
         letterSpacing: 0.5,
+      );
+
+  /// Thing — 10pt, fine print, disclaimers
+  static TextStyle get thing => GoogleFonts.manrope(
+        fontSize: 10,
+        fontWeight: FontWeight.w200,
+        color: AppColors.textMuted,
+        height: 1.4,
       );
 
   // ═══════════════════════════════════════════════════

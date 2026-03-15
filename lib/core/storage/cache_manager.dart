@@ -6,6 +6,10 @@ import 'local_storage.dart';
 class CacheManager {
   static const Duration defaultTtl = Duration(hours: 1);
 
+  /// Bump this when the API response shape changes (e.g. new fields added).
+  /// All cached entries from a previous version are treated as expired.
+  static const int _cacheVersion = 2; // v2: added coachTip + completionMessage
+
   static late Box<String> _dataBox;
   static late Box<int> _metaBox;
   static bool _initialized = false;
@@ -16,6 +20,14 @@ class CacheManager {
     _dataBox = await Hive.openBox<String>(LocalStorage.hobbyBox);
     _metaBox = await Hive.openBox<int>(LocalStorage.cacheMetaBox);
     _initialized = true;
+
+    // Clear all caches if version changed
+    final storedVersion = _metaBox.get('__cache_version__') ?? 0;
+    if (storedVersion < _cacheVersion) {
+      await _dataBox.clear();
+      await _metaBox.clear();
+      await _metaBox.put('__cache_version__', _cacheVersion);
+    }
   }
 
   /// Returns cached JSON string, or null if missing/expired.

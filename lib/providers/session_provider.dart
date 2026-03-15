@@ -39,6 +39,7 @@ class SessionNotifier extends StateNotifier<SessionState?> {
     required int recommendedMinutes,
     required CompletionMode completionMode,
     String? nextStepTitle,
+    String? completionMessage,
   }) {
     state = SessionState(
       hobbyId: hobbyId,
@@ -53,6 +54,7 @@ class SessionNotifier extends StateNotifier<SessionState?> {
       completionMode: completionMode,
       selectedMinutes: recommendedMinutes,
       nextStepTitle: nextStepTitle,
+      completionMessage: completionMessage,
     );
     debugPrint('[Session] Started for "$hobbyTitle" — step "$stepTitle"');
   }

@@ -89,10 +89,17 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                   ? _buildEmptyState()
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 14),
+                      itemCount: filtered.length + 1,
+                      separatorBuilder: (_, index) =>
+                          index < filtered.length - 1
+                              ? const SizedBox(height: 14)
+                              : const SizedBox.shrink(),
                       itemBuilder: (context, index) {
-                        return _JournalEntryCard(entry: filtered[index]);
+                        if (index < filtered.length) {
+                          return _JournalEntryCard(entry: filtered[index]);
+                        }
+                        // ── Post-reflection coach nudge ──
+                        return _buildCoachNudge(context);
                       },
                     ),
             ),
@@ -171,6 +178,56 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
               style: AppTypography.sansBodySmall
                   .copyWith(color: AppColors.textSecondary.withAlpha(80)),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  COACH NUDGE — post-reflection CTA
+  // ═══════════════════════════════════════════════════════
+
+  Widget _buildCoachNudge(BuildContext context) {
+    // Find the active hobby id to route the coach to.
+    final userHobbies = ref.read(userHobbiesProvider);
+    final activeEntries = userHobbies.entries.where(
+      (e) =>
+          e.value.status == HobbyStatus.active ||
+          e.value.status == HobbyStatus.trying,
+    );
+    final hobbyId = activeEntries.isNotEmpty
+        ? activeEntries.first.key
+        : (userHobbies.isNotEmpty ? userHobbies.keys.first : '');
+
+    if (hobbyId.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: GlassCard(
+        onTap: () => context.push('/coach/$hobbyId', extra: {
+          'message':
+              'I just added a journal entry. Help me plan my next session based on what I reflected on.',
+          'mode': 'momentum',
+          'autoSend': false,
+        }),
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome,
+                size: 16, color: AppColors.coral),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Turn this reflection into a plan',
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 16, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -351,7 +408,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                         children: [
                           Stack(
                             children: [
-                              Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.textSecondary),
+                              const Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.textSecondary),
                               if (!ref.read(isProProvider))
                                 Positioned(
                                   right: -2,
@@ -509,14 +566,14 @@ class _JournalEntryCard extends ConsumerWidget {
                 placeholder: (_, __) => Container(
                   height: 160,
                   color: AppColors.surfaceElevated,
-                  child: Center(
+                  child: const Center(
                     child: Icon(Icons.camera_alt_outlined, size: 28, color: AppColors.textMuted),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   height: 160,
                   color: AppColors.surfaceElevated,
-                  child: Center(
+                  child: const Center(
                     child: Icon(Icons.image_outlined, size: 28, color: AppColors.textMuted),
                   ),
                 ),

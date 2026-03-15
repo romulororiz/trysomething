@@ -13,7 +13,7 @@ class TryTodayButton extends StatefulWidget {
   const TryTodayButton({
     super.key,
     this.onPressed,
-    this.text = 'Start the easy version',
+    this.text = 'Start hobby',
     this.icon,
   });
 

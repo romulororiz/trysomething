@@ -35,6 +35,7 @@ mixin _$SessionState {
   String? get journalText => throw _privateConstructorUsedError;
   String? get photoPath => throw _privateConstructorUsedError;
   String? get nextStepTitle => throw _privateConstructorUsedError;
+  String? get completionMessage => throw _privateConstructorUsedError;
 
   /// Create a copy of SessionState
   /// with the given fields replaced by the non-null parameter values.
@@ -68,7 +69,8 @@ abstract class $SessionStateCopyWith<$Res> {
       ReflectionChoice? reflection,
       String? journalText,
       String? photoPath,
-      String? nextStepTitle});
+      String? nextStepTitle,
+      String? completionMessage});
 }
 
 /// @nodoc
@@ -95,7 +97,7 @@ class _$SessionStateCopyWithImpl<$Res, $Val extends SessionState>
     Object? stepInstructions = null,
     Object? whatYouNeed = null,
     Object? recommendedMinutes = null,
-    Object? completionMode = freezed,
+    Object? completionMode = null,
     Object? phase = null,
     Object? selectedMinutes = null,
     Object? elapsedSeconds = null,
@@ -105,6 +107,7 @@ class _$SessionStateCopyWithImpl<$Res, $Val extends SessionState>
     Object? journalText = freezed,
     Object? photoPath = freezed,
     Object? nextStepTitle = freezed,
+    Object? completionMessage = freezed,
   }) {
     return _then(_value.copyWith(
       hobbyId: null == hobbyId
@@ -143,7 +146,7 @@ class _$SessionStateCopyWithImpl<$Res, $Val extends SessionState>
           ? _value.recommendedMinutes
           : recommendedMinutes // ignore: cast_nullable_to_non_nullable
               as int,
-      completionMode: freezed == completionMode
+      completionMode: null == completionMode
           ? _value.completionMode
           : completionMode // ignore: cast_nullable_to_non_nullable
               as CompletionMode,
@@ -183,6 +186,10 @@ class _$SessionStateCopyWithImpl<$Res, $Val extends SessionState>
           ? _value.nextStepTitle
           : nextStepTitle // ignore: cast_nullable_to_non_nullable
               as String?,
+      completionMessage: freezed == completionMessage
+          ? _value.completionMessage
+          : completionMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -214,7 +221,8 @@ abstract class _$$SessionStateImplCopyWith<$Res>
       ReflectionChoice? reflection,
       String? journalText,
       String? photoPath,
-      String? nextStepTitle});
+      String? nextStepTitle,
+      String? completionMessage});
 }
 
 /// @nodoc
@@ -239,7 +247,7 @@ class __$$SessionStateImplCopyWithImpl<$Res>
     Object? stepInstructions = null,
     Object? whatYouNeed = null,
     Object? recommendedMinutes = null,
-    Object? completionMode = freezed,
+    Object? completionMode = null,
     Object? phase = null,
     Object? selectedMinutes = null,
     Object? elapsedSeconds = null,
@@ -249,6 +257,7 @@ class __$$SessionStateImplCopyWithImpl<$Res>
     Object? journalText = freezed,
     Object? photoPath = freezed,
     Object? nextStepTitle = freezed,
+    Object? completionMessage = freezed,
   }) {
     return _then(_$SessionStateImpl(
       hobbyId: null == hobbyId
@@ -287,7 +296,7 @@ class __$$SessionStateImplCopyWithImpl<$Res>
           ? _value.recommendedMinutes
           : recommendedMinutes // ignore: cast_nullable_to_non_nullable
               as int,
-      completionMode: freezed == completionMode
+      completionMode: null == completionMode
           ? _value.completionMode
           : completionMode // ignore: cast_nullable_to_non_nullable
               as CompletionMode,
@@ -327,6 +336,10 @@ class __$$SessionStateImplCopyWithImpl<$Res>
           ? _value.nextStepTitle
           : nextStepTitle // ignore: cast_nullable_to_non_nullable
               as String?,
+      completionMessage: freezed == completionMessage
+          ? _value.completionMessage
+          : completionMessage // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -353,7 +366,8 @@ class _$SessionStateImpl implements _SessionState {
       this.reflection,
       this.journalText,
       this.photoPath,
-      this.nextStepTitle});
+      this.nextStepTitle,
+      this.completionMessage});
 
   @override
   final String hobbyId;
@@ -398,10 +412,12 @@ class _$SessionStateImpl implements _SessionState {
   final String? photoPath;
   @override
   final String? nextStepTitle;
+  @override
+  final String? completionMessage;
 
   @override
   String toString() {
-    return 'SessionState(hobbyId: $hobbyId, hobbyTitle: $hobbyTitle, hobbyCategory: $hobbyCategory, stepId: $stepId, stepTitle: $stepTitle, stepDescription: $stepDescription, stepInstructions: $stepInstructions, whatYouNeed: $whatYouNeed, recommendedMinutes: $recommendedMinutes, completionMode: $completionMode, phase: $phase, selectedMinutes: $selectedMinutes, elapsedSeconds: $elapsedSeconds, isPaused: $isPaused, isComplete: $isComplete, reflection: $reflection, journalText: $journalText, photoPath: $photoPath, nextStepTitle: $nextStepTitle)';
+    return 'SessionState(hobbyId: $hobbyId, hobbyTitle: $hobbyTitle, hobbyCategory: $hobbyCategory, stepId: $stepId, stepTitle: $stepTitle, stepDescription: $stepDescription, stepInstructions: $stepInstructions, whatYouNeed: $whatYouNeed, recommendedMinutes: $recommendedMinutes, completionMode: $completionMode, phase: $phase, selectedMinutes: $selectedMinutes, elapsedSeconds: $elapsedSeconds, isPaused: $isPaused, isComplete: $isComplete, reflection: $reflection, journalText: $journalText, photoPath: $photoPath, nextStepTitle: $nextStepTitle, completionMessage: $completionMessage)';
   }
 
   @override
@@ -425,8 +441,8 @@ class _$SessionStateImpl implements _SessionState {
                 other.whatYouNeed == whatYouNeed) &&
             (identical(other.recommendedMinutes, recommendedMinutes) ||
                 other.recommendedMinutes == recommendedMinutes) &&
-            const DeepCollectionEquality()
-                .equals(other.completionMode, completionMode) &&
+            (identical(other.completionMode, completionMode) ||
+                other.completionMode == completionMode) &&
             (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.selectedMinutes, selectedMinutes) ||
                 other.selectedMinutes == selectedMinutes) &&
@@ -443,7 +459,9 @@ class _$SessionStateImpl implements _SessionState {
             (identical(other.photoPath, photoPath) ||
                 other.photoPath == photoPath) &&
             (identical(other.nextStepTitle, nextStepTitle) ||
-                other.nextStepTitle == nextStepTitle));
+                other.nextStepTitle == nextStepTitle) &&
+            (identical(other.completionMessage, completionMessage) ||
+                other.completionMessage == completionMessage));
   }
 
   @override
@@ -458,7 +476,7 @@ class _$SessionStateImpl implements _SessionState {
         stepInstructions,
         whatYouNeed,
         recommendedMinutes,
-        const DeepCollectionEquality().hash(completionMode),
+        completionMode,
         phase,
         selectedMinutes,
         elapsedSeconds,
@@ -467,7 +485,8 @@ class _$SessionStateImpl implements _SessionState {
         reflection,
         journalText,
         photoPath,
-        nextStepTitle
+        nextStepTitle,
+        completionMessage
       ]);
 
   /// Create a copy of SessionState
@@ -499,7 +518,8 @@ abstract class _SessionState implements SessionState {
       final ReflectionChoice? reflection,
       final String? journalText,
       final String? photoPath,
-      final String? nextStepTitle}) = _$SessionStateImpl;
+      final String? nextStepTitle,
+      final String? completionMessage}) = _$SessionStateImpl;
 
   @override
   String get hobbyId;
@@ -539,6 +559,8 @@ abstract class _SessionState implements SessionState {
   String? get photoPath;
   @override
   String? get nextStepTitle;
+  @override
+  String? get completionMessage;
 
   /// Create a copy of SessionState
   /// with the given fields replaced by the non-null parameter values.

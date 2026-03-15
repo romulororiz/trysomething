@@ -115,7 +115,7 @@ class ShoppingListScreen extends ConsumerWidget {
                   : ListView.separated(
                       padding: EdgeInsets.fromLTRB(24, 0, 24, Spacing.scrollBottom(context)),
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => const SizedBox(height: 6),
                       itemBuilder: (context, index) {
                         final item = items[index];
                         final key = '${hobbyId}_${item.name}';
@@ -237,7 +237,7 @@ class ShoppingListScreen extends ConsumerWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-//  SHOPPING ITEM CARD — with product image + buy link
+//  SHOPPING ITEM ROW — no image, clean checklist style
 // ═══════════════════════════════════════════════════════
 
 class _ShoppingItemCard extends StatelessWidget {
@@ -262,185 +262,167 @@ class _ShoppingItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
-
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isChecked
-            ? AppColors.sagePale.withValues(alpha: 0.5)
+            ? AppColors.sagePale.withValues(alpha: 0.35)
             : AppColors.warmWhite,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isChecked
-              ? AppColors.sage.withValues(alpha: 0.3)
-              : Colors.transparent,
+              ? AppColors.sage.withValues(alpha: 0.25)
+              : AppColors.sandDark.withValues(alpha: 0.5),
+          width: 0.5,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Product image + checkbox overlay
+          // ── Checkbox ──
           GestureDetector(
             onTap: onToggle,
-            child: SizedBox(
-              height: 100,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                    child: hasImage
-                        ? Image.network(
-                            item.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: AppColors.sand,
-                              child: Center(
-                                child: Icon(Icons.shopping_bag_outlined,
-                                    size: 28, color: AppColors.warmGray),
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: AppColors.sand,
-                            child: Center(
-                              child: Icon(Icons.shopping_bag_outlined,
-                                  size: 28, color: AppColors.warmGray),
-                            ),
-                          ),
-                  ),
-                  // Checked overlay
-                  if (isChecked)
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                      child: Container(
-                        color: AppColors.sage.withValues(alpha: 0.3),
-                        child: Center(
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.sage,
-                            ),
-                            child: Center(
-                              child: Icon(AppIcons.check, size: 22, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Checkbox — top left
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isChecked ? AppColors.sage : Colors.black.withValues(alpha: 0.4),
-                        border: Border.all(
-                          color: isChecked ? AppColors.sage : Colors.white.withValues(alpha: 0.6),
-                          width: 2,
-                        ),
-                      ),
-                      child: isChecked
-                          ? Center(child: Icon(AppIcons.check, size: 14, color: Colors.white))
-                          : null,
-                    ),
-                  ),
-                  // Optional badge — top right
-                  if (item.isOptional)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text('OPTIONAL',
-                            style: AppTypography.monoBadgeSmall.copyWith(
-                              color: Colors.white,
-                              fontSize: 8,
-                            )),
-                      ),
-                    ),
-                ],
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isChecked ? AppColors.sage : Colors.transparent,
+                border: Border.all(
+                  color: isChecked
+                      ? AppColors.sage
+                      : AppColors.warmGray.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
               ),
+              child: isChecked
+                  ? Icon(AppIcons.check, size: 14, color: Colors.white)
+                  : null,
             ),
           ),
+          const SizedBox(width: 14),
 
-          // Content area
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Row(
+          // ── Name + badges ──
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
                         item.name,
-                        style: AppTypography.sansCaption.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isChecked ? AppColors.warmGray : AppColors.nearBlack,
-                          decoration: isChecked ? TextDecoration.lineThrough : null,
+                        style: AppTypography.sansLabel.copyWith(
+                          color: isChecked
+                              ? AppColors.warmGray
+                              : AppColors.nearBlack,
+                          decoration: isChecked
+                              ? TextDecoration.lineThrough
+                              : null,
                           decorationColor: AppColors.warmGray,
+                          fontWeight: FontWeight.w600,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (item.cost > 0)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 3),
-                          child: Text(
-                            'CHF ${item.cost}',
-                            style: AppTypography.monoBadge.copyWith(
-                              color: isChecked ? AppColors.warmGray : AppColors.coral,
-                              fontWeight: FontWeight.w700,
-                            ),
+                    ),
+                    if (item.isOptional) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.sand,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'OPTIONAL',
+                          style: AppTypography.monoBadgeSmall.copyWith(
+                            color: AppColors.driftwood,
+                            fontSize: 8,
                           ),
                         ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (item.description.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    item.description,
+                    style: AppTypography.sansCaption.copyWith(
+                      color: AppColors.driftwood,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // ── Cost + Buy ──
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (item.cost > 0)
+                Text(
+                  'CHF ${item.cost}',
+                  style: AppTypography.monoBadge.copyWith(
+                    color: isChecked ? AppColors.warmGray : AppColors.coral,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: isChecked ? null : _openAffiliateLink,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isChecked
+                        ? AppColors.sand
+                        : AppColors.coral.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isChecked
+                          ? Colors.transparent
+                          : AppColors.coral.withValues(alpha: 0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.open_in_new_rounded,
+                        size: 11,
+                        color: isChecked
+                            ? AppColors.warmGray
+                            : AppColors.coral,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Buy',
+                        style: AppTypography.sansCaption.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: isChecked
+                              ? AppColors.warmGray
+                              : AppColors.coral,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                // Buy button
-                GestureDetector(
-                  onTap: isChecked ? null : _openAffiliateLink,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isChecked ? AppColors.sand : AppColors.coral,
-                      borderRadius: BorderRadius.circular(Spacing.radiusButton),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 14,
-                          color: isChecked ? AppColors.warmGray : Colors.white,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Buy',
-                          style: AppTypography.sansCaption.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: isChecked ? AppColors.warmGray : Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

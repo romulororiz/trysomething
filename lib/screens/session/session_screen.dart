@@ -30,6 +30,7 @@ class SessionScreen extends ConsumerStatefulWidget {
   final int recommendedMinutes;
   final CompletionMode completionMode;
   final String? nextStepTitle;
+  final String? completionMessage;
 
   const SessionScreen({
     super.key,
@@ -44,6 +45,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     required this.recommendedMinutes,
     required this.completionMode,
     this.nextStepTitle,
+    this.completionMessage,
   });
 
   /// Custom page route with cinematic fade transition.
@@ -59,6 +61,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     required int recommendedMinutes,
     required CompletionMode completionMode,
     String? nextStepTitle,
+    String? completionMessage,
   }) {
     return PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 500),
@@ -75,6 +78,7 @@ class SessionScreen extends ConsumerStatefulWidget {
         recommendedMinutes: recommendedMinutes,
         completionMode: completionMode,
         nextStepTitle: nextStepTitle,
+        completionMessage: completionMessage,
       ),
       transitionsBuilder: (_, animation, __, child) {
         return FadeTransition(opacity: animation, child: child);
@@ -104,6 +108,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             recommendedMinutes: widget.recommendedMinutes,
             completionMode: widget.completionMode,
             nextStepTitle: widget.nextStepTitle,
+            completionMessage: widget.completionMessage,
           );
     });
   }

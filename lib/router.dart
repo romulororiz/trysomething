@@ -8,6 +8,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/onboarding/match_results_screen.dart';
 import 'screens/onboarding/trial_offer_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/discover/discover_screen.dart';
@@ -88,6 +89,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           transitionsBuilder: (context, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
+          transitionDuration: Motion.slow,
+        ),
+      ),
+
+      // Match results — shown once after onboarding, before trial offer
+      GoRoute(
+        path: '/match-results',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const MatchResultsScreen(),
+          transitionsBuilder: (_, a, __, c) =>
+              FadeTransition(opacity: a, child: c),
           transitionDuration: Motion.slow,
         ),
       ),
@@ -221,6 +234,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               recommendedMinutes: extra['recommendedMinutes'] as int,
               completionMode: extra['completionMode'] as CompletionMode,
               nextStepTitle: extra['nextStepTitle'] as String?,
+              completionMessage: extra['completionMessage'] as String?,
             ),
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(opacity: animation, child: child);
@@ -451,12 +465,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!onboarded && !isOnboarding) return '/onboarding';
-      if (onboarded && isOnboarding) return '/home';
+      if (onboarded && isOnboarding) return '/match-results';
 
-      // Trial offer guard — show once after onboarding
+      // Match results guard — show once after onboarding
+      final isMatchResults = path == '/match-results';
+      final matchResultsSeen = ref.read(sharedPreferencesProvider)
+          .getBool('matchResultsSeen') ?? false;
+      if (onboarded && !matchResultsSeen && !isMatchResults && !isOnboarding && !isAuthRoute) {
+        return '/match-results';
+      }
+      if (isMatchResults) return null;
+
+      // Trial offer guard — show once (AFTER match results)
+      // Only intercept shell destinations (home/discover/you), not content
+      // pages like /hobby/:id that the user intentionally navigated to.
       final isTrialOffer = path == '/trial-offer';
+      final isShellRoute = path == '/home' || path == '/discover' || path == '/you';
       final trialOfferShown = ref.read(sharedPreferencesProvider).getBool('trialOfferShown') ?? false;
-      if (onboarded && !trialOfferShown && !isTrialOffer && !isAuthRoute && !isOnboarding) {
+      if (onboarded && matchResultsSeen && !trialOfferShown && !isTrialOffer
+          && isShellRoute) {
         return '/trial-offer';
       }
       final isDebugNav = state.uri.queryParameters.containsKey('debug');

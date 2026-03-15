@@ -168,7 +168,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       vibes: _vibes,
     );
 
-    context.go('/home');
+    context.go('/match-results');
   }
 
   // ── Matching ──

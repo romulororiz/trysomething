@@ -208,7 +208,7 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
 
     await logGeneration(userId, trimmed, "success", null, hobbyId);
 
-    return res.status(201).json({ hobby: mapHobby(hobby), existed: false });
+    return res.status(201).json({  hobby: mapHobby(hobby), existed: false });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     await logGeneration(userId, trimmed, "error", message).catch(() => {});

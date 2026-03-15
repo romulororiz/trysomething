@@ -85,6 +85,8 @@ class RoadmapStep with _$RoadmapStep {
     required String description,
     required int estimatedMinutes,
     String? milestone,
+    String? coachTip,
+    String? completionMessage,
     CompletionMode? completionMode,
   }) = _RoadmapStep;
 

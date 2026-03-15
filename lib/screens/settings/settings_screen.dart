@@ -14,9 +14,13 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/motion.dart';
+import '../../theme/spacing.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
 import '../../components/app_overlays.dart';
+import '../../components/updated_matches_sheet.dart';
+import '../../core/analytics/analytics_provider.dart';
+import '../../models/hobby.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
@@ -31,6 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late bool _notificationsEnabled;
   late bool _vibrationEnabled;
   late bool _soundEnabled;
+  late UserPreferences _initialPrefs;
 
   @override
   void initState() {
@@ -39,6 +44,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     _vibrationEnabled = prefs.getBool('session_vibration') ?? true;
     _soundEnabled = prefs.getBool('session_sound') ?? false;
+    _initialPrefs = ref.read(userPreferencesProvider);
   }
 
   void _showAboutSheet(BuildContext context) {
@@ -311,6 +317,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       );
                     }).toList(),
                   ),
+
+                  // ── See updated matches button ──
+                  if (prefs != _initialPrefs) ...[
+                    const SizedBox(height: 20),
+                    AnimatedOpacity(
+                      opacity: prefs != _initialPrefs ? 1.0 : 0.0,
+                      duration: Motion.normal,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: Spacing.buttonPrimaryHeight,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // 1. Sync to server
+                            ref.read(authRepositoryProvider).updatePreferences(
+                              hoursPerWeek: prefs.hoursPerWeek,
+                              budgetLevel: prefs.budgetLevel,
+                              preferSocial: prefs.preferSocial,
+                              vibes: prefs.vibes,
+                            );
+                            // 2. Analytics
+                            ref.read(analyticsProvider).trackEvent('preferences_changed');
+                            // 3. Show updated matches
+                            showUpdatedMatchesSheet(context, ref);
+                            // 4. Reset change tracking
+                            setState(() => _initialPrefs = prefs);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(Spacing.radiusCta),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text('See updated matches', style: AppTypography.button.copyWith(color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 28),
 

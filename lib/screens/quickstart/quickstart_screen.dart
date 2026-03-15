@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../theme/motion.dart';
+import '../../components/app_background.dart';
 
 /// Commitment flow bottom sheet: Save vs Start → mini setup → Week 1 plan.
 class QuickstartScreen extends ConsumerStatefulWidget {
@@ -62,8 +63,9 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
     if (hobby == null) return const SizedBox.shrink();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -85,6 +87,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -457,7 +460,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
           const Spacer(),
 
           _CoralButton(
-            label: 'Let\'s go \u2192',
+            label: 'Let\'s go',
             onTap: _finishSetup,
           ),
           const SizedBox(height: 8),
@@ -483,30 +486,9 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
   // ═══════════════════════════════════════════════════════
 
   Widget _buildNavButtons() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: _prevStep,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(Icons.arrow_back_rounded,
-                size: 20, color: AppColors.textSecondary),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _CoralButton(
-            label: 'Continue \u2192',
-            onTap: _nextStep,
-          ),
-        ),
-      ],
+    return _CoralButton(
+      label: 'Continue',
+      onTap: _nextStep,
     );
   }
 }
@@ -635,7 +617,7 @@ class _CoralButton extends StatelessWidget {
         height: Spacing.buttonCtaHeight,
         decoration: BoxDecoration(
           color: AppColors.coral,
-          borderRadius: BorderRadius.circular(Spacing.radiusCta),
+          borderRadius: BorderRadius.circular(100),
           boxShadow: [
             BoxShadow(
               color: AppColors.coral.withValues(alpha: 0.4),
@@ -645,7 +627,8 @@ class _CoralButton extends StatelessWidget {
           ],
         ),
         child: Center(
-          child: Text(label, style: AppTypography.sansCta),
+          child: Text(label,
+              style: AppTypography.sansCta.copyWith(color: Colors.white)),
         ),
       ),
     );

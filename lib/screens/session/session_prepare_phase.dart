@@ -213,7 +213,7 @@ class _CoralButton extends StatelessWidget {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: AppTypography.button,
+          style: AppTypography.button.copyWith(color: Colors.white),
         ),
       ),
     );

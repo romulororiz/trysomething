@@ -38,18 +38,24 @@ class CoachCard {
 
 /// Attempts to parse a coach response into structured cards.
 /// Returns null if the response is plain text with no detectable structure.
+///
+/// Only detects **headers** that appear at the START of a line (not inline bold).
+/// This avoids splitting numbered lists like "1. **Google** something" into cards.
 List<CoachCard>? parseCoachResponse(String text) {
   final cards = <CoachCard>[];
 
-  // Detect section headers marked with ** or ##
-  final sectionPattern = RegExp(r'(?:\*\*|##)\s*(.+?)(?:\*\*|$)', multiLine: true);
+  // Only match **text** or ## text at the START of a line (^)
+  final sectionPattern = RegExp(
+    r'^(?:\*\*(.+?)\*\*|##\s*(.+))$',
+    multiLine: true,
+  );
   final matches = sectionPattern.allMatches(text).toList();
 
   if (matches.length < 2) return null; // Not enough structure
 
   // Extract sections between headers
   for (int i = 0; i < matches.length; i++) {
-    final header = matches[i].group(1)?.trim() ?? '';
+    final header = (matches[i].group(1) ?? matches[i].group(2))?.trim() ?? '';
     final start = matches[i].end;
     final end = i + 1 < matches.length ? matches[i + 1].start : text.length;
     final body = text.substring(start, end).trim();
@@ -174,13 +180,10 @@ class CoachCardList extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            item,
-                            style: AppTypography.body.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: 13,
-                              height: 1.5,
-                            ),
+                          child: CoachMarkdownText(
+                            text: item,
+                            textColor: AppColors.textSecondary,
+                            fontSize: 13,
                           ),
                         ),
                       ],
@@ -280,5 +283,229 @@ class CoachCardList extends StatelessWidget {
       case CoachCardType.plain:
         return (Icons.chat_bubble_outline_rounded, AppColors.textMuted);
     }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  COACH MARKDOWN TEXT — lightweight inline markdown
+// ═══════════════════════════════════════════════════════
+
+/// Renders coach AI text with basic markdown support:
+/// **bold**, *italic*, `code`, - bullets, ## headers, numbered lists.
+/// No external dependencies — purpose-built for coach bubble styling.
+class CoachMarkdownText extends StatelessWidget {
+  final String text;
+  final Color textColor;
+  final double fontSize;
+
+  const CoachMarkdownText({
+    super.key,
+    required this.text,
+    this.textColor = AppColors.textSecondary,
+    this.fontSize = 14,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final blocks = _parseBlocks(text);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: blocks,
+    );
+  }
+
+  List<Widget> _parseBlocks(String raw) {
+    final lines = raw.split('\n');
+    final widgets = <Widget>[];
+    var i = 0;
+
+    while (i < lines.length) {
+      final line = lines[i].trim();
+
+      // Skip empty lines — add small spacing
+      if (line.isEmpty) {
+        if (widgets.isNotEmpty) {
+          widgets.add(const SizedBox(height: 8));
+        }
+        i++;
+        continue;
+      }
+
+      // ## Header
+      final headerMatch = RegExp(r'^##\s+(.+)$').firstMatch(line);
+      if (headerMatch != null) {
+        widgets.add(Padding(
+          padding: EdgeInsets.only(top: widgets.isNotEmpty ? 12 : 0, bottom: 4),
+          child: Text(
+            headerMatch.group(1)!.trim(),
+            style: AppTypography.body.copyWith(
+              color: AppColors.textPrimary,
+              fontSize: fontSize + 1,
+              fontWeight: FontWeight.w700,
+              height: 1.4,
+            ),
+          ),
+        ));
+        i++;
+        continue;
+      }
+
+      // **Bold header line** (standalone bold — not inline)
+      final boldLineMatch = RegExp(r'^\*\*(.+?)\*\*\s*$').firstMatch(line);
+      if (boldLineMatch != null) {
+        widgets.add(Padding(
+          padding: EdgeInsets.only(top: widgets.isNotEmpty ? 10 : 0, bottom: 4),
+          child: Text(
+            boldLineMatch.group(1)!.trim(),
+            style: AppTypography.body.copyWith(
+              color: AppColors.textPrimary,
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+              height: 1.4,
+            ),
+          ),
+        ));
+        i++;
+        continue;
+      }
+
+      // Bullet line: - text or • text or * text (but not **bold**)
+      final bulletMatch = RegExp(r'^[-•]\s+(.+)$').firstMatch(line);
+      final starBulletMatch =
+          bulletMatch ?? RegExp(r'^\*\s+(?!\*)(.+)$').firstMatch(line);
+      if (starBulletMatch != null) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 7, left: 4),
+                child: Container(
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: textColor.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildRichLine(starBulletMatch.group(1)!.trim()),
+              ),
+            ],
+          ),
+        ));
+        i++;
+        continue;
+      }
+
+      // Numbered list: 1. text, 2. text, etc.
+      final numberedMatch = RegExp(r'^(\d+)\.\s+(.+)$').firstMatch(line);
+      if (numberedMatch != null) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 20,
+                child: Text(
+                  '${numberedMatch.group(1)}.',
+                  style: AppTypography.body.copyWith(
+                    color: textColor.withValues(alpha: 0.6),
+                    fontSize: fontSize,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildRichLine(numberedMatch.group(2)!.trim()),
+              ),
+            ],
+          ),
+        ));
+        i++;
+        continue;
+      }
+
+      // Regular paragraph text
+      widgets.add(_buildRichLine(line));
+      i++;
+    }
+
+    return widgets;
+  }
+
+  /// Renders a single line with inline **bold**, *italic*, and `code`.
+  Widget _buildRichLine(String line) {
+    return RichText(
+      text: TextSpan(
+        style: AppTypography.body.copyWith(
+          color: textColor,
+          fontSize: fontSize,
+          height: 1.6,
+        ),
+        children: _parseInlineSpans(line),
+      ),
+    );
+  }
+
+  /// Parses inline markdown: **bold**, *italic*, `code`
+  List<InlineSpan> _parseInlineSpans(String text) {
+    final spans = <InlineSpan>[];
+    final pattern = RegExp(
+      r'(\*\*(.+?)\*\*'  // **bold**
+      r'|\*(.+?)\*'       // *italic*
+      r'|`(.+?)`'         // `code`
+      r')',
+    );
+
+    var lastEnd = 0;
+    for (final match in pattern.allMatches(text)) {
+      // Plain text before this match
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
+      }
+
+      if (match.group(2) != null) {
+        // **bold**
+        spans.add(TextSpan(
+          text: match.group(2),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ));
+      } else if (match.group(3) != null) {
+        // *italic*
+        spans.add(TextSpan(
+          text: match.group(3),
+          style: const TextStyle(fontStyle: FontStyle.italic),
+        ));
+      } else if (match.group(4) != null) {
+        // `code`
+        spans.add(TextSpan(
+          text: match.group(4),
+          style: TextStyle(
+            fontFamily: 'IBM Plex Mono',
+            fontSize: fontSize - 1,
+            color: AppColors.textPrimary,
+            backgroundColor: AppColors.glassBackground,
+          ),
+        ));
+      }
+
+      lastEnd = match.end;
+    }
+
+    // Remaining plain text
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd)));
+    }
+
+    return spans;
   }
 }

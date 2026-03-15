@@ -45,8 +45,14 @@ class HobbyRepositoryApi implements HobbyRepository {
     try {
       final cached = CacheManager.get(key);
       if (cached != null) {
-        return _enrichFromSeed(
+        final hobby = _enrichFromSeed(
             Hobby.fromJson(json.decode(cached) as Map<String, dynamic>));
+        // Re-fetch if cached data is missing new fields (coachTip)
+        final hasNewFields = hobby.roadmapSteps.isEmpty ||
+            hobby.roadmapSteps.first.coachTip != null;
+        if (hasNewFields) return hobby;
+        // Otherwise fall through to fresh fetch
+        await CacheManager.invalidate(key);
       }
 
       final response = await _dio.get(ApiConstants.hobby(id));
