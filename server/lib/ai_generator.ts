@@ -77,10 +77,28 @@ Given a hobby query, return a SINGLE JSON object describing that hobby.
       "title": "<string, step title, imperative verb form, e.g. 'Make your first pinch pot'>",
       "description": "<string, 1-2 sentences, what to do and why>",
       "estimatedMinutes": <integer, range 15-240>,
-      "milestone": "<string or null, achievement name if this step is a milestone, null otherwise>"
+      "milestone": "<string or null, achievement name if this step is a milestone, null otherwise>",
+      "coachTip": "<string, 1-2 sentences max, the single most useful practical tip for THIS step>",
+      "completionMessage": "<string, 1-2 sentences, a warm specific reaction to completing THIS step>"
     }
   ]
 }
+
+# COACH TIP RULES
+- coachTip must differ from description. Description = WHAT to do. coachTip = HOW to do it better.
+- Must be specific to this step, not general hobby advice.
+- Sound like an experienced practitioner, not a textbook.
+- Maximum 2 sentences. Prefer 1.
+- GOOD: "Cut the clay in half to check for air bubbles — if you see tiny holes, keep wedging."
+- BAD: "Take your time and enjoy the process."
+
+# COMPLETION MESSAGE RULES
+- completionMessage is shown AFTER the user finishes a session for this step.
+- Acknowledge what they specifically did in this step — reference the technique/activity.
+- 1-2 sentences. Warm but not over-the-top. Like a friend who does this hobby saying "nice."
+- For final steps: acknowledge journey completion and prompt reflection.
+- GOOD: "Your first pinch pot! The shape doesn't matter — what matters is you felt the clay respond."
+- BAD: "Great job! You completed this step!"
 
 # ARRAY CONSTRAINTS
 - kitItems: minimum 2, maximum 6. At least 1 must have isOptional=false. Mix essential and optional.
@@ -114,7 +132,7 @@ export async function generateHobbyContent(
 
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 2500,
+    max_tokens: 3000,
     temperature: 0.3, // Low temperature for consistent structured output
     messages: [
       {
@@ -229,6 +247,16 @@ function validateHobbyOutput(data: Record<string, unknown>): void {
       }
       if (step.milestone !== null && (typeof step.milestone !== "string" || !step.milestone.trim())) {
         errors.push(`roadmapSteps[${i}].milestone must be non-empty string or null`);
+      }
+      if (step.coachTip != null) {
+        if (typeof step.coachTip !== "string" || step.coachTip.trim().length < 10) {
+          errors.push(`roadmapSteps[${i}].coachTip too short`);
+        }
+      }
+      if (step.completionMessage != null) {
+        if (typeof step.completionMessage !== "string" || step.completionMessage.trim().length < 10) {
+          errors.push(`roadmapSteps[${i}].completionMessage too short`);
+        }
       }
     }
   }

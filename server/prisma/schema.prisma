@@ -70,13 +70,15 @@ model KitItem {
 }
 
 model RoadmapStep {
-  id               String  @id
-  hobbyId          String
-  title            String
-  description      String
-  estimatedMinutes Int
-  milestone        String?
-  sortOrder        Int     @default(0)
+  id                String  @id
+  hobbyId           String
+  title             String
+  description       String
+  estimatedMinutes  Int
+  milestone         String?
+  coachTip          String?
+  completionMessage String?
+  sortOrder         Int     @default(0)
 
   hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
 }

@@ -52,6 +52,8 @@ describe("mapHobby", () => {
         description: "Make a pinch pot",
         estimatedMinutes: 60,
         milestone: "First piece",
+        coachTip: "Cut the clay in half to check for air bubbles.",
+        completionMessage: "Your first pinch pot! The shape doesn't matter.",
         sortOrder: 0,
       },
     ],

@@ -147,7 +147,9 @@ export function validateOutput(hobby: Record<string, unknown>): ValidationResult
     ...(hobby.pitfalls as string[]),
     ...(hobby.tags as string[]),
     ...(hobby.kitItems as Record<string, unknown>[]).map((k) => `${k.name} ${k.description}`),
-    ...(hobby.roadmapSteps as Record<string, unknown>[]).map((s) => `${s.title} ${s.description}`),
+    ...(hobby.roadmapSteps as Record<string, unknown>[]).map(
+      (s) => `${s.title} ${s.description} ${s.coachTip ?? ''} ${s.completionMessage ?? ''}`
+    ),
   ].join(" ");
 
   const blocked = containsBlockedTerm(allText);

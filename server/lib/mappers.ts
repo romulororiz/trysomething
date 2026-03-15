@@ -41,6 +41,8 @@ type PrismaRoadmapStep = {
   description: string;
   estimatedMinutes: number;
   milestone: string | null;
+  coachTip: string | null;
+  completionMessage: string | null;
   sortOrder: number;
 };
 
@@ -134,6 +136,8 @@ function mapRoadmapStep(s: PrismaRoadmapStep) {
     description: s.description,
     estimatedMinutes: s.estimatedMinutes,
     milestone: s.milestone,
+    coachTip: s.coachTip,
+    completionMessage: s.completionMessage,
   };
 }
 
