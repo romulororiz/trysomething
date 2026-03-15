@@ -1059,15 +1059,31 @@ class _HeroCard extends StatelessWidget {
                   const SizedBox(height: 6),
 
                   // Hobby title — hero text
-                  Text(
-                    hobby.title,
-                    style: AppTypography.hero.copyWith(
-                      color: Colors.white,
-                      fontSize: 32,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Builder(builder: (_) {
+                    final words = hobby.title.split(' ');
+                    if (words.length <= 1) {
+                      return Text(
+                        hobby.title,
+                        style: AppTypography.hero.copyWith(color: Colors.white, fontSize: 32),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    }
+                    return Text.rich(
+                      TextSpan(children: [
+                        TextSpan(
+                          text: words.first,
+                          style: AppTypography.hero.copyWith(color: AppColors.coral, fontSize: 32),
+                        ),
+                        TextSpan(
+                          text: ' ${words.skip(1).join(' ')}',
+                          style: AppTypography.hero.copyWith(color: Colors.white, fontSize: 32),
+                        ),
+                      ]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
                   const SizedBox(height: 8),
 
                   // Hook line

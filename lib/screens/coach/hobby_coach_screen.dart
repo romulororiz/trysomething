@@ -55,9 +55,9 @@ class ChatMessage {
 // ═══════════════════════════════════════════════════════
 
 enum CoachMode {
-  start('Start', 'Begin your journey', Icons.play_arrow_rounded),
-  momentum('Momentum', 'Keep going strong', Icons.trending_up_rounded),
-  rescue('Rescue', 'Get back on track', Icons.support_rounded);
+  start('Start', 'Your first session, made simple', Icons.play_arrow_rounded),
+  momentum('Momentum', 'What to do next, exactly', Icons.trending_up_rounded),
+  rescue('Rescue', 'No guilt. Easy restart.', Icons.support_rounded);
 
   final String label;
   final String subtitle;
@@ -238,13 +238,40 @@ final coachProvider = StateNotifierProvider.autoDispose
 );
 
 // ═══════════════════════════════════════════════════════
+//  COACH ENTRY CONTEXT — passed from entry points
+// ═══════════════════════════════════════════════════════
+
+/// Context passed when opening the coach from a specific entry point.
+class CoachEntryContext {
+  /// Shown in text field (autoSend=false) or auto-sent (autoSend=true).
+  final String? prefilledMessage;
+
+  /// Override the auto-detected coach mode.
+  final CoachMode? forceMode;
+
+  /// If true, the prefilled message is sent automatically after first frame.
+  final bool autoSend;
+
+  const CoachEntryContext({
+    this.prefilledMessage,
+    this.forceMode,
+    this.autoSend = false,
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 //  HOBBY COACH SCREEN — Premium Guidance Workspace
 // ═══════════════════════════════════════════════════════
 
 class HobbyCoachScreen extends ConsumerStatefulWidget {
   final String hobbyId;
+  final CoachEntryContext? entryContext;
 
-  const HobbyCoachScreen({super.key, required this.hobbyId});
+  const HobbyCoachScreen({
+    super.key,
+    required this.hobbyId,
+    this.entryContext,
+  });
 
   @override
   ConsumerState<HobbyCoachScreen> createState() => _HobbyCoachScreenState();
@@ -258,7 +285,23 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
   @override
   void initState() {
     super.initState();
-    _mode = _detectMode();
+    _mode = widget.entryContext?.forceMode ?? _detectMode();
+
+    final ctx = widget.entryContext;
+    if (ctx?.prefilledMessage != null) {
+      if (ctx!.autoSend) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref
+                .read(coachProvider(widget.hobbyId).notifier)
+                .send(ctx.prefilledMessage!);
+            _scrollToBottom();
+          }
+        });
+      } else {
+        _textController.text = ctx.prefilledMessage!;
+      }
+    }
   }
 
   @override
@@ -293,6 +336,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
   void _send() {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+    HapticFeedback.lightImpact();
     _textController.clear();
     ref.read(coachProvider(widget.hobbyId).notifier).send(text).then((_) {
       final notifier = ref.read(coachProvider(widget.hobbyId).notifier);
@@ -301,8 +345,10 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
         final title = hobby?.title ?? 'this hobby';
         showProUpgrade(
           context,
-          'Keep getting personal guidance for $title. Pro gives you unlimited coach support to stay on track.',
+          'You\'re making real progress with $title. Pro keeps your coach available whenever you need it — to get unstuck, simplify, or plan your next session.',
         );
+      } else if (mounted) {
+        HapticFeedback.mediumImpact();
       }
     });
     _scrollToBottom();
@@ -310,8 +356,119 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
 
   void _sendChip(String text) {
     HapticFeedback.lightImpact();
-    _textController.text = text;
+    // Enrich certain chips with user context for better server responses
+    final enriched = _enrichChipMessage(text);
+    _textController.text = enriched;
     _send();
+  }
+
+  /// Enriches quick-action chip messages with user context so the server
+  /// gives more specific, stage-aware guidance.
+  String _enrichChipMessage(String chip) {
+    final hobby = ref.read(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
+    final userHobbies = ref.read(userHobbiesProvider);
+    final userHobby = userHobbies[widget.hobbyId];
+    final stepsCompleted = userHobby?.completedStepIds.length ?? 0;
+    final totalSteps = hobby?.roadmapSteps.length ?? 0;
+    final hobbyTitle = hobby?.title ?? 'this hobby';
+
+    switch (chip) {
+      // Q.6 — Start tonight
+      case 'Help me start tonight':
+        return 'Help me start tonight. I want a tiny first session plan for $hobbyTitle that I can do right now.';
+
+      // Q.5 — Make this cheaper
+      case 'Make this cheaper':
+        return 'Make this cheaper. What\'s the absolute minimum I need to spend to start $hobbyTitle?';
+
+      // Q.4 — What should I do next
+      case 'What should I do next?':
+        if (totalSteps > 0) {
+          return 'What should I do next? I\'ve completed $stepsCompleted of $totalSteps steps.';
+        }
+        return chip;
+
+      // Q.3 — Continue or switch (rescue)
+      case 'Maybe this hobby isn\'t for me':
+        final lastActive = userHobby?.lastActivityAt ?? userHobby?.startedAt;
+        final days = lastActive != null
+            ? DateTime.now().difference(lastActive).inDays
+            : 0;
+        return 'Maybe this hobby isn\'t for me. I\'ve been doing $hobbyTitle for a while '
+            '($stepsCompleted steps done) but haven\'t practiced in $days days. '
+            'Help me figure out if I should continue with a simpler version or switch to something else.';
+
+      // Momentum — losing motivation
+      case 'I\'m losing motivation':
+        return 'I\'m losing motivation with $hobbyTitle. '
+            'I\'ve done $stepsCompleted of $totalSteps steps. What small win can I get today?';
+
+      // Rescue — skipped days
+      case 'I skipped a few days':
+        final lastActive = userHobby?.lastActivityAt ?? userHobby?.startedAt;
+        final days = lastActive != null
+            ? DateTime.now().difference(lastActive).inDays
+            : 0;
+        return 'I skipped $days days of $hobbyTitle. Help me restart gently.';
+
+      // Make this easier (momentum)
+      case 'Make this easier':
+        if (totalSteps > 0 && stepsCompleted < totalSteps) {
+          final currentStepTitle = hobby!.roadmapSteps[stepsCompleted].title;
+          return 'Make this easier. I\'m on step "$currentStepTitle" and it feels too hard.';
+        }
+        return chip;
+
+      default:
+        return chip;
+    }
+  }
+
+  /// Handles taps on structured card action buttons.
+  void _handleCardAction(String action) {
+    HapticFeedback.lightImpact();
+    switch (action) {
+      // Plan card actions
+      case 'Start this session':
+        // Navigate to session screen
+        context.push('/session/${widget.hobbyId}');
+        return;
+      case 'Adjust it':
+        _sendChip('Adjust the plan — make it shorter or simpler');
+        return;
+
+      // Budget card actions
+      case 'Use this version':
+        _sendChip('Great, I\'ll use the cheaper version. What\'s my first step?');
+        return;
+      case 'Show starter kit':
+        context.push('/hobby/${widget.hobbyId}');
+        return;
+
+      // Recovery card actions
+      case 'Restart now':
+        _sendChip('Help me start tonight');
+        return;
+      case 'Maybe switch':
+        _sendChip('Maybe this hobby isn\'t for me');
+        return;
+
+      // Reflection card actions
+      case 'Open reflection':
+        context.push('/session/${widget.hobbyId}');
+        return;
+      case 'Skip for now':
+        _sendChip('What should I do next?');
+        return;
+
+      // Week plan card actions
+      case 'Apply update':
+        _sendChip('Apply the updated plan. What\'s my next session?');
+        return;
+      case 'Keep original':
+        _sendChip('I\'ll keep the original plan. What should I focus on next?');
+        return;
+    }
   }
 
   void _scrollToBottom() {
@@ -361,7 +518,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
               // Messages or empty state
               Expanded(
                 child: messages.isEmpty
-                    ? _buildGuidedActions()
+                    ? _buildEmptyOrLockedState()
                     : _buildMessageList(messages, notifier),
               ),
 
@@ -576,7 +733,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
                         ),
                       ),
                     ],
-                  ),
+                  ).animate(key: ValueKey(_mode)).fadeIn(duration: 200.ms),
                 ),
               ),
             ),
@@ -584,6 +741,83 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
         }).toList(),
       ),
     ).animate().fadeIn(duration: 350.ms, delay: 100.ms);
+  }
+
+  // ── Empty/Locked State Dispatcher ───────────────────
+
+  Widget _buildEmptyOrLockedState() {
+    final remaining = ref.watch(coachRemainingProvider(widget.hobbyId));
+    return remaining.when(
+      data: (value) => value == 0 ? _buildLockedState() : _buildGuidedActions(),
+      loading: () => _buildGuidedActions(),
+      error: (_, __) => _buildGuidedActions(),
+    );
+  }
+
+  // ── Locked State (0 free messages) ──────────────────
+
+  Widget _buildLockedState() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.auto_awesome,
+                size: 24, color: AppColors.accent),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Your coach is waiting',
+            style: AppTypography.title.copyWith(fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'You\'ve used your free messages this month. Upgrade to keep the momentum going.',
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              showProUpgrade(
+                context,
+                'Keep your coach available whenever you need it — to get unstuck, plan your next session, or restart with no pressure.',
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(
+                  'Continue with Pro',
+                  style: AppTypography.body.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
   }
 
   // ── Guided Actions (empty state) ────────────────────
@@ -597,7 +831,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'HOW CAN I HELP?',
+            'WHAT DO YOU NEED?',
             style: AppTypography.caption.copyWith(
               color: AppColors.textMuted,
               letterSpacing: 2,
@@ -605,6 +839,21 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              _mode == CoachMode.rescue
+                  ? 'No judgment. Just the easiest way back in.'
+                  : _mode == CoachMode.momentum
+                      ? 'Guidance tied to your actual progress.'
+                      : 'No experience needed. Just start small.',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 12,
+                height: 1.5,
+              ),
+            ),
+          ).animate().fadeIn(duration: 300.ms, delay: 50.ms),
           ...actions.asMap().entries.map((entry) {
             final action = entry.value;
             return Padding(
@@ -675,7 +924,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
       case CoachMode.start:
         return [
           ('Help me start tonight', Icons.play_circle_outline_rounded,
-              'Get a tiny first session plan'),
+              'A 15-min plan you can start tonight'),
           ('Make this cheaper', Icons.savings_outlined,
               'Find the lowest-cost way to begin'),
           ('What do I need to buy?', Icons.shopping_bag_outlined,
@@ -684,7 +933,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
       case CoachMode.momentum:
         return [
           ('What should I do next?', Icons.arrow_circle_right_outlined,
-              'Your next step based on progress'),
+              'Specific to where you are now'),
           ('Make this easier', Icons.tune_rounded,
               'Simplify your current approach'),
           ('I\'m losing motivation', Icons.battery_2_bar_rounded,
@@ -693,7 +942,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
       case CoachMode.rescue:
         return [
           ('I skipped a few days', Icons.replay_rounded,
-              'Easy restart, no pressure'),
+              'One tiny action to break the gap'),
           ('I\'m losing motivation', Icons.battery_2_bar_rounded,
               'Find what made it fun at first'),
           ('Maybe this hobby isn\'t for me', Icons.swap_horiz_rounded,
@@ -752,7 +1001,10 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
       itemCount: messages.length + (notifier.isSending ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == messages.length) return const _TypingIndicator();
-        return _CoachBubble(message: messages[index]);
+        return _CoachBubble(
+          message: messages[index],
+          onCardAction: _handleCardAction,
+        );
       },
     );
   }
@@ -780,16 +1032,41 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
               width: 0.5,
             ),
           ),
-          child: Text(
-            value == 0
-                ? 'No free messages left this month'
-                : '$value free message${value == 1 ? '' : 's'} remaining',
-            style: AppTypography.caption.copyWith(
-              color: isLow ? AppColors.accent : AppColors.textMuted,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                value == 0
+                    ? 'Upgrade to keep your momentum going'
+                    : '$value free ${value == 1 ? 'message' : 'messages'} left — Pro gives you unlimited support',
+                style: AppTypography.caption.copyWith(
+                  color: isLow ? AppColors.accent : AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (isLow && value <= 1) ...[
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => showProUpgrade(
+                    context,
+                    'Keep your coach support going. Pro gives you unlimited guidance to stay on track.',
+                  ),
+                  child: Text(
+                    'Upgrade to Pro',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.accent,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ],
           ),
         );
       },
@@ -801,25 +1078,18 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
   // ── Composer ────────────────────────────────────────
 
   Widget _buildComposer(double bottomInset, double bottomPad) {
-    return Container(
+    return Padding(
       padding: EdgeInsets.fromLTRB(
-          16, 10, 10, bottomInset > 0 ? 10 : bottomPad + 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: const Border(
-          top: BorderSide(color: AppColors.border, width: 0.5),
+          16, 10, 16, bottomInset > 0 ? 10 : bottomPad + 10),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.glassBackground,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.glassBorder, width: 0.5),
         ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(22),
-                border:
-                    Border.all(color: AppColors.glassBorder, width: 0.5),
-              ),
+        child: Row(
+          children: [
+            Expanded(
               child: TextField(
                 controller: _textController,
                 style: AppTypography.body.copyWith(fontSize: 14),
@@ -830,27 +1100,30 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
                   hintStyle: AppTypography.caption
                       .copyWith(color: AppColors.textMuted),
                   border: InputBorder.none,
+                  filled: false,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                      horizontal: 18, vertical: 12),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _send,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.coral,
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: GestureDetector(
+                onTap: _send,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.coral,
+                  ),
+                  child: const Icon(Icons.arrow_upward_rounded,
+                      size: 16, color: Colors.white),
+                ),
               ),
-              child: const Icon(Icons.arrow_upward_rounded,
-                  size: 20, color: Colors.white),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -862,8 +1135,9 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
 
 class _CoachBubble extends StatelessWidget {
   final ChatMessage message;
+  final void Function(String action)? onCardAction;
 
-  const _CoachBubble({required this.message});
+  const _CoachBubble({required this.message, this.onCardAction});
 
   @override
   Widget build(BuildContext context) {
@@ -893,7 +1167,10 @@ class _CoachBubble extends StatelessWidget {
             ),
           ),
         ),
-      );
+      )
+          .animate()
+          .fadeIn(duration: 300.ms, delay: 30.ms)
+          .slideY(begin: 0.04, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
     }
 
     // Assistant — try structured cards first, fall back to plain bubble
@@ -901,11 +1178,14 @@ class _CoachBubble extends StatelessWidget {
     if (cards != null) {
       return Padding(
         padding: const EdgeInsets.only(top: 6, bottom: 6, right: 16),
-        child: CoachCardList(cards: cards),
-      );
+        child: CoachCardList(cards: cards, onAction: onCardAction),
+      )
+          .animate()
+          .fadeIn(duration: 300.ms, delay: 30.ms)
+          .slideY(begin: 0.04, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
     }
 
-    // Plain text fallback
+    // Plain text fallback — render with markdown support
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -921,16 +1201,16 @@ class _CoachBubble extends StatelessWidget {
           ),
           border: Border.all(color: AppColors.glassBorder, width: 0.5),
         ),
-        child: Text(
-          message.content,
-          style: AppTypography.body.copyWith(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            height: 1.6,
-          ),
+        child: CoachMarkdownText(
+          text: message.content,
+          textColor: AppColors.textSecondary,
+          fontSize: 14,
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 300.ms, delay: 30.ms)
+        .slideY(begin: 0.04, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
   }
 }
 
@@ -1005,6 +1285,6 @@ class _TypingIndicatorState extends State<_TypingIndicator>
           },
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 200.ms);
   }
 }

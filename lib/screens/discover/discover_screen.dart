@@ -646,9 +646,9 @@ class _DiscoverFeedCard extends StatelessWidget {
                   tag: 'hobby_title_${hobby.id}',
                   child: Material(
                     color: Colors.transparent,
-                    child: Text(
-                      hobby.title,
-                      style: AppTypography.display.copyWith(
+                    child: Builder(builder: (_) {
+                      final words = hobby.title.split(' ');
+                      final titleStyle = AppTypography.display.copyWith(
                         color: Colors.white,
                         fontSize: 28,
                         height: 1.15,
@@ -658,8 +658,21 @@ class _DiscoverFeedCard extends StatelessWidget {
                             color: Colors.black.withValues(alpha: 0.5),
                           ),
                         ],
-                      ),
-                    ),
+                      );
+                      if (words.length <= 1) {
+                        return Text(hobby.title, style: titleStyle);
+                      }
+                      return Text.rich(TextSpan(children: [
+                        TextSpan(
+                          text: words.first,
+                          style: titleStyle.copyWith(color: AppColors.coral),
+                        ),
+                        TextSpan(
+                          text: ' ${words.skip(1).join(' ')}',
+                          style: titleStyle,
+                        ),
+                      ]));
+                    }),
                   ),
                 ),
                 const SizedBox(height: 8),

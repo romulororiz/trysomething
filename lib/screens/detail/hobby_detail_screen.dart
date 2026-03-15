@@ -64,7 +64,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     ).animate(
       CurvedAnimation(
         parent: _entryController,
-        curve: Interval(0.15, 0.8, curve: Motion.heroCurve),
+        curve: const Interval(0.15, 0.8, curve: Motion.heroCurve),
       ),
     );
 
@@ -385,7 +385,22 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     },
                     child: Material(
                       color: Colors.transparent,
-                      child: Text(hobby.title, style: AppTypography.hero),
+                      child: Builder(builder: (_) {
+                        final words = hobby.title.split(' ');
+                        if (words.length <= 1) {
+                          return Text(hobby.title, style: AppTypography.hero);
+                        }
+                        return Text.rich(TextSpan(children: [
+                          TextSpan(
+                            text: words.first,
+                            style: AppTypography.hero.copyWith(color: AppColors.coral),
+                          ),
+                          TextSpan(
+                            text: ' ${words.skip(1).join(' ')}',
+                            style: AppTypography.hero,
+                          ),
+                        ]));
+                      }),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -424,7 +439,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.favorite_outline_rounded,
+              const Icon(Icons.favorite_outline_rounded,
                   size: 16, color: AppColors.coral),
               const SizedBox(width: 8),
               Text('Why this fits you',
@@ -506,7 +521,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.bolt_rounded, size: 16, color: AppColors.coral),
+              const Icon(Icons.bolt_rounded, size: 16, color: AppColors.coral),
               const SizedBox(width: 8),
               Text('Start in 20 minutes',
                   style: AppTypography.sansLabel.copyWith(
@@ -585,7 +600,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               ),
               child: Row(
                 children: [
-                  Icon(Icons.play_circle_outline_rounded,
+                  const Icon(Icons.play_circle_outline_rounded,
                       size: 20, color: AppColors.coral),
                   const SizedBox(width: 10),
                   Expanded(
@@ -657,7 +672,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_month_outlined,
+              const Icon(Icons.calendar_month_outlined,
                   size: 16, color: AppColors.coral),
               const SizedBox(width: 8),
               Text('What to expect',
@@ -738,7 +753,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded,
+              const Icon(Icons.info_outline_rounded,
                   size: 16, color: AppColors.textMuted),
               const SizedBox(width: 8),
               Text('Why people stop',
@@ -792,8 +807,15 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
   // ═══════════════════════════════════════════════════════
 
   Widget _buildCoachTeaser() {
+    final hobby = ref.watch(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
+    final hobbyTitle = hobby?.title ?? 'this hobby';
     return GlassCard(
-      onTap: () => context.push('/coach/${widget.hobbyId}'),
+      onTap: () => context.push('/coach/${widget.hobbyId}', extra: {
+        'message':
+            'Help me start $hobbyTitle tonight. What\'s the easiest first step?',
+        'mode': 'start',
+        'autoSend': false,
+      }),
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
@@ -812,13 +834,13 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Want help starting?',
+                Text('Plan your first session',
                     style: AppTypography.sansLabel.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     )),
                 const SizedBox(height: 2),
-                Text('Ask the coach without overthinking it.',
+                Text('Get a tiny first-session plan, no experience needed.',
                     style: AppTypography.sansTiny.copyWith(
                       color: AppColors.textSecondary,
                     )),
