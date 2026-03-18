@@ -73,3 +73,42 @@ Hero section (`components/sections/Hero.tsx`) was already fully implemented by a
 
 ### Tasks Marked Passing
 - Task 4: Hero section ✅
+
+---
+
+## 2026-03-18T15:30 — Problem Section Redesign (Task 5)
+
+**Task:** Build the Problem section — emotional scroll-triggered text reveals (PRD task 5)
+
+### Changes
+- **`components/sections/Problem.tsx`** — Complete redesign from card-based layout to cinematic text reveals:
+  - Removed `ProblemCard` component and grid layout entirely
+  - New `RevealLine` component — scroll-triggered fade-up with blur using `useInView`
+  - Emotional narrative flow: 4 text beats building to a turn
+  - Clamp-based fluid typography `clamp(1.75rem, 4vw, 3.25rem)` for impact lines
+  - Accent-colored keywords ("something", "started.") in serif italic coral
+  - "The turn" — softer secondary text leading to bold insight block
+  - Third line "And nobody shows you how." in `text-text-muted` for contrast fade
+  - Closing bridge "Until now." centered in muted text
+  - Gradient transition from hero (no hard line)
+  - Atmospheric blooms (burgundy + coral) for warmth
+  - Generous padding: `py-40 md:py-56` — section breathes
+  - No cards, no grids — pure typography-driven storytelling
+
+### Screenshots
+- `screenshots/problem-section-desktop.png` — Desktop 1280x800 (top)
+- `screenshots/problem-section-desktop-bottom.png` — Desktop 1280x800 (bottom)
+- `screenshots/problem-section-mobile.png` — Mobile 390x844 (top)
+- `screenshots/problem-section-mobile-bottom.png` — Mobile 390x844 (bottom)
+
+### Visual Notes
+- Typography creates a cinematic reading experience — each line a beat
+- Coral serif italic highlights ("something", "started.") are the distinctive moments
+- Generous whitespace between reveals creates dramatic pacing
+- The "turn" (from emotional hook to insight) lands well visually
+- "Until now." as a quiet bridge to the Solution section
+- Mobile: text scales fluidly, maintains impact at smaller sizes
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 5: Problem section ✅

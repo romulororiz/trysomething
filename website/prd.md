@@ -77,7 +77,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Subtle separator or transition from the hero (gradient fade, not a hard line)",
       "Screenshot and verify: text reveals smoothly on scroll, spacing is generous, feels cinematic"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

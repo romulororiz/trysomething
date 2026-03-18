@@ -2,164 +2,131 @@
 
 import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
-import { problemCards } from "@/lib/data";
-import { StaggeredText } from "@/components/ui/StaggeredText";
 
 /**
- * Premium problem card with layered visual depth:
- * - Gradient accent stripe on left edge
- * - Large number as a watermark behind content
- * - Animated border glow on hover
- * - No serif fonts on card text (serif only in big standalone headings)
+ * Problem section — emotional scroll-triggered text reveals.
+ *
+ * Design: Cinematic pacing, large impactful typography, generous whitespace.
+ * Each line fades in as the user scrolls, creating a narrative flow.
+ * Accent-colored keywords draw attention to emotional beats.
+ * No cards, no grids — just powerful text that breathes.
  */
-function ProblemCard({
-  number,
-  label,
-  question,
-  detail,
-  index,
-}: {
-  number: string;
-  label: string;
-  question: string;
-  detail: string;
-  index: number;
-}) {
-  const { ref, inView } = useInView({ threshold: 0.3 });
 
-  // Per-card accent color for visual differentiation
-  const accents = [
-    {
-      stripe: "from-coral via-coral/60 to-transparent",
-      glow: "group-hover:shadow-[0_0_40px_rgba(255,107,107,0.08)]",
-      numberColor: "text-coral/[0.07]",
-      dotColor: "bg-coral",
-    },
-    {
-      stripe: "from-bloom-teal via-bloom-teal/60 to-transparent",
-      glow: "group-hover:shadow-[0_0_40px_rgba(13,148,136,0.08)]",
-      numberColor: "text-bloom-teal/[0.07]",
-      dotColor: "bg-bloom-teal",
-    },
-    {
-      stripe: "from-bloom-burgundy via-bloom-burgundy/60 to-transparent",
-      glow: "group-hover:shadow-[0_0_40px_rgba(159,18,57,0.08)]",
-      numberColor: "text-bloom-burgundy/[0.07]",
-      dotColor: "bg-bloom-burgundy",
-    },
-  ];
+interface RevealLineProps {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}
 
-  const accent = accents[index % accents.length];
+function RevealLine({ children, delay = 0, className = "" }: RevealLineProps) {
+  const { ref, inView } = useInView({ threshold: 0.4 });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 50, scale: 0.97 }}
-      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      initial={{ opacity: 0, y: 32, filter: "blur(4px)" }}
+      animate={
+        inView
+          ? { opacity: 1, y: 0, filter: "blur(0px)" }
+          : {}
+      }
       transition={{
-        duration: 0.7,
-        delay: index * 0.12,
+        duration: 0.8,
+        delay,
         ease: [0.33, 1, 0.68, 1] as [number, number, number, number],
       }}
-      className="group relative"
+      className={className}
+      style={{ willChange: "transform, opacity, filter" }}
     >
-      <div
-        className={`relative overflow-hidden rounded-2xl border border-glass-border bg-surface-elevated/80 backdrop-blur-sm p-8 md:p-10 h-full flex flex-col transition-all duration-500 ${accent.glow} group-hover:border-glass-hover cursor-default`}
-      >
-        {/* Left accent stripe */}
-        <div
-          className={`absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b ${accent.stripe}`}
-        />
-
-        {/* Watermark number behind content */}
-        <span
-          className={`absolute -right-4 -top-6 text-[140px] font-bold leading-none select-none pointer-events-none ${accent.numberColor}`}
-        >
-          {number}
-        </span>
-
-        {/* Content — no serif fonts here */}
-        <div className="relative z-10 flex flex-col h-full">
-          {/* Label with dot */}
-          <div className="flex items-center gap-2 mb-6">
-            <div className={`w-2 h-2 rounded-full ${accent.dotColor}`} />
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-[0.15em]">
-              {label}
-            </span>
-          </div>
-
-          {/* Question — bold sans, coral accent, NOT serif */}
-          <h3 className="text-xl md:text-2xl font-bold text-coral leading-snug mb-4">
-            {question}
-          </h3>
-
-          {/* Detail */}
-          <p className="text-text-secondary text-sm leading-relaxed mt-auto">
-            {detail}
-          </p>
-        </div>
-
-        {/* Subtle hover gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      </div>
+      {children}
     </motion.div>
   );
 }
 
 export function Problem() {
   const { ref: sectionRef, inView: sectionInView } = useInView({
-    threshold: 0.1,
+    threshold: 0.05,
   });
 
   return (
     <section
       id="problem"
       ref={sectionRef}
-      className="relative py-32 md:py-40"
+      className="relative py-40 md:py-56 overflow-hidden"
     >
-      {/* Atmospheric bloom */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bloom-burgundy opacity-30 translate-x-1/3 -translate-y-1/4 pointer-events-none" />
+      {/* Gradient transition from hero — no hard line */}
+      <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-bg/80 to-transparent pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Section header */}
-        <div className="max-w-2xl mb-20">
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={sectionInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-semibold text-text-muted uppercase tracking-[0.2em] mb-4"
-          >
-            The problem
-          </motion.p>
+      {/* Atmospheric bloom — warm, subtle */}
+      <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bloom-burgundy opacity-20 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bloom-coral opacity-15 -translate-x-1/3 pointer-events-none" />
 
-          <StaggeredText
-            text="Everyone wants a hobby. Almost nobody starts."
-            as="h2"
-            className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight"
-            highlightWords={["nobody"]}
-            stagger={0.06}
-          />
-        </div>
-
-        {/* Problem cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {problemCards.map((card, i) => (
-            <ProblemCard key={card.number} {...card} index={i} />
-          ))}
-        </div>
-
-        {/* Closing statement — no serif on closing text */}
+      <div className="max-w-4xl mx-auto px-6">
+        {/* Eyebrow */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={sectionInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 text-center text-lg text-text-secondary max-w-lg mx-auto"
+          transition={{ duration: 0.6 }}
+          className="text-xs font-semibold text-text-muted uppercase tracking-[0.25em] mb-16 md:mb-24"
         >
-          Starting a hobby should feel exciting, not overwhelming.
-          <span className="block mt-2 text-text-primary font-semibold">
-            We built something to fix that.
-          </span>
+          Sound familiar?
         </motion.p>
+
+        {/* Emotional text reveals — each line a beat */}
+        <div className="space-y-12 md:space-y-16">
+          <RevealLine>
+            <p className="text-[clamp(1.75rem,4vw,3.25rem)] font-bold leading-[1.15] tracking-tight">
+              You&apos;ve been meaning to start
+              <span className="font-serif italic text-coral"> something</span> new.
+            </p>
+          </RevealLine>
+
+          <RevealLine delay={0.1}>
+            <p className="text-[clamp(1.75rem,4vw,3.25rem)] font-bold leading-[1.15] tracking-tight">
+              For months. Maybe years.
+            </p>
+          </RevealLine>
+
+          <RevealLine delay={0.15}>
+            <p className="text-xl md:text-2xl text-text-secondary leading-relaxed max-w-2xl">
+              You&apos;ve saved Pinterest boards. Watched YouTube tutorials at 2am.
+              Bookmarked gear lists you never came back to.
+            </p>
+          </RevealLine>
+
+          <RevealLine delay={0.1}>
+            <p className="text-[clamp(1.75rem,4vw,3.25rem)] font-bold leading-[1.15] tracking-tight">
+              But you never actually
+              <span className="font-serif italic text-coral"> started.</span>
+            </p>
+          </RevealLine>
+        </div>
+
+        {/* The turn — spacer then the quiet insight */}
+        <div className="mt-24 md:mt-32">
+          <RevealLine>
+            <p className="text-lg md:text-xl text-text-secondary leading-relaxed max-w-xl">
+              Not because you&apos;re lazy. Not because you don&apos;t care.
+            </p>
+          </RevealLine>
+
+          <RevealLine delay={0.15}>
+            <p className="mt-8 text-2xl md:text-3xl font-bold text-text-primary leading-snug max-w-2xl">
+              Because choosing is overwhelming.
+              <br />
+              Starting alone is intimidating.
+              <br />
+              <span className="text-text-muted">And nobody shows you how.</span>
+            </p>
+          </RevealLine>
+        </div>
+
+        {/* Closing beat — the bridge to the solution */}
+        <RevealLine delay={0.1}>
+          <p className="mt-24 md:mt-32 text-lg text-text-muted text-center">
+            Until now.
+          </p>
+        </RevealLine>
       </div>
     </section>
   );
