@@ -62,7 +62,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Check mobile layout — text should resize fluidly, CTA should be thumb-friendly",
       "Screenshot desktop and mobile — verify it looks like a luxury product launch, not a SaaS template"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

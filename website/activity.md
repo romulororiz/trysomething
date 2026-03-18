@@ -39,3 +39,37 @@
 - Task 1: Install Three.js ecosystem ✅
 - Task 2: Dark premium theme foundation ✅
 - Task 3: Three.js hero particle scene ✅
+
+---
+
+## 2026-03-18T15:15 — Hero Section Verification (Task 4)
+
+**Task:** Build the Hero section — headline, subtext, CTA overlaying the 3D scene (PRD task 4)
+
+### Findings
+Hero section (`components/sections/Hero.tsx`) was already fully implemented by a previous iteration. Verified all PRD requirements:
+
+- **Three.js canvas** positioned as full-viewport background behind text via `HeroEnvironment`
+- **Headline** uses Instrument Serif italic for "hobby" highlight in coral, clamp-based fluid sizing `clamp(2.5rem,6vw,5rem)`
+- **Subtitle** is 2 lines max, warm secondary text color, max-w-2xl constrained
+- **Single CTA** "Get Early Access" with `MagneticButton` (magnetic pull on hover + breathing coral glow)
+- **Staggered entrance** via `StaggeredText` component (word-by-word fade-up with blur, 0.07s stagger)
+- **Text readability** ensured by radial gradient overlay (dark center → darker edges)
+- **Eyebrow text** "Stop scrolling. Start something." in uppercase tracking
+- **Scroll indicator** animated chevron at bottom
+- **Mobile** text resizes fluidly, CTA is full-width-friendly, layout stacks cleanly
+
+### Screenshots
+- `screenshots/hero-desktop.png` — Desktop 1280x800
+- `screenshots/hero-mobile.png` — Mobile 390x844
+
+### Visual Notes
+- Warm gold particles create atmospheric depth behind text
+- Serif italic "hobby" in coral is the distinctive typographic moment
+- Breathing glow on CTA draws the eye naturally
+- Generous whitespace — section breathes, no crowding
+- Mobile: text scales down elegantly, particles visible but subtle
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 4: Hero section ✅
