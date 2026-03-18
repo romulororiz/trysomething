@@ -165,7 +165,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Screenshot the full page at multiple scroll positions",
       "Verify on mobile: all sections stack properly, 3D degrades gracefully"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "polish",
