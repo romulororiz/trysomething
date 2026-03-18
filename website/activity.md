@@ -556,3 +556,55 @@ Previous iterations implemented and verified all 13 tasks (documented in activit
 
 ### Tasks Marked Passing
 - Task 3: Three.js hero scene ✅ (rebuilt with hobby objects)
+
+---
+
+## 2026-03-18T17:40 — How It Works GSAP ScrollTrigger Rebuild (Task 6 — Correction)
+
+**Task:** Rebuild How It Works section with GSAP ScrollTrigger `pin:true` — section stays fixed in viewport, only active card changes on scroll
+
+### Changes
+- **`components/sections/HowItWorks.tsx`** — Complete rewrite with GSAP ScrollTrigger pinning:
+  - Removed: vanilla scroll-based active step detection (measuring card distance to viewport center)
+  - Added: GSAP ScrollTrigger with `pin: true` — section pins to viewport while scrolling
+  - Scroll distance: `window.innerHeight * (stepCount + 0.5)` for natural pacing through 3 steps
+  - `onUpdate` callback maps scroll progress (0–1) to active step index
+  - `pinSpacing: true` ensures page layout accounts for pinned scroll distance
+  - Cards use `cursor-pointer` with click-to-select preserved
+  - Progress indicator dots below cards show completed/active/upcoming states
+  - Inactive cards at 40% opacity (was 50%), more distinct dimming
+  - Section uses `min-h-screen` with flexbox centering for the pinned state
+  - Compact card padding (`p-6 md:p-8`) to fit all 3 cards + header in viewport
+  - Mobile: same pinning behavior, 3D scene hidden (< lg breakpoint)
+
+- **`components/layout/SmoothScroll.tsx`** — Added GSAP + Lenis integration:
+  - `gsap.registerPlugin(ScrollTrigger)` at module level
+  - `lenis.on("scroll", ScrollTrigger.update)` for frame-perfect sync
+  - `gsap.ticker.add()` drives Lenis from GSAP's ticker
+  - `gsap.ticker.lagSmoothing(0)` for consistent scroll behavior
+  - Replaced manual `requestAnimationFrame` loop with GSAP ticker
+
+### Screenshots
+- `screenshots/howitworks-pinned-desktop-header.png` — Desktop 1280x800 (Step 1 active, teal ring particles)
+- `screenshots/howitworks-pinned-desktop-step2.png` — Desktop (Step 2 active, coral helix particles)
+- `screenshots/howitworks-pinned-desktop-step3.png` — Desktop (Step 3 active, gold sphere particles)
+- `screenshots/howitworks-pinned-mobile.png` — Mobile 390x844 (Step 1 active)
+- `screenshots/howitworks-pinned-mobile-step2.png` — Mobile (Step 2 active)
+
+### Visual Notes
+- Section pins correctly — stays fixed in viewport while scrolling through 3 steps
+- Scroll progress drives step transitions smoothly (not time-based)
+- Step 1 (Match): teal particles form a ring shape — discovery/search
+- Step 2 (Start): coral particles form a helix — upward journey
+- Step 3 (Stay): gold particles form a sphere — momentum/stability
+- Active card has accent border glow + expanded description, inactive cards dimmed
+- Progress dots show current position through the journey
+- Mobile: cards stack cleanly, pinning works, no 3D (hidden on small screens)
+- GSAP + Lenis integration is frame-perfect — no scroll fighting
+- Build passes clean, no errors
+
+### PRD Flag Fix
+- Set `"passes": true` for all 13 tasks (tasks 1–2, 4–13 were previously completed per activity.md but flags weren't persisted)
+
+### Tasks Marked Passing
+- Task 6: How It Works section ✅ (rebuilt with GSAP ScrollTrigger pin:true)

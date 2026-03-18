@@ -18,7 +18,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Verify dev server starts with no errors",
       "Verify build passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -31,7 +31,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Set up Lenis smooth scroll provider wrapping the app",
       "Screenshot and verify: dark background, premium fonts loaded, smooth scrolling works"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -62,7 +62,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Check mobile layout — text should resize fluidly, CTA should be thumb-friendly",
       "Screenshot desktop and mobile — verify it looks like a luxury product launch, not a SaaS template"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -77,7 +77,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Subtle separator or transition from the hero (gradient fade, not a hard line)",
       "Screenshot and verify: text reveals smoothly on scroll, spacing is generous, feels cinematic"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -94,7 +94,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Scroll-driven progression — each step reveals as user scrolls through",
       "Screenshot and verify: clear storytelling, premium feel, 3D adds value not noise"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -109,7 +109,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Keep it minimal — 3 features, not 12. Quality over quantity.",
       "Screenshot and verify: features are scannable, the layout breaks from generic, feels designed"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -124,7 +124,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "This section is short and punchy — not a wall of testimonials",
       "Screenshot and verify: elegant, trustworthy, premium card design"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -139,7 +139,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "This is the climax of the page — it should feel like everything has built to this moment",
       "Screenshot and verify: compelling, warm, inviting, clear call to action"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -151,7 +151,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Muted text colors — the footer fades out, it doesn't compete",
       "Screenshot and verify: clean, minimal, doesn't distract from the CTA above"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "polish",
@@ -165,7 +165,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Screenshot the full page at multiple scroll positions",
       "Verify on mobile: all sections stack properly, 3D degrades gracefully"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "polish",
@@ -179,7 +179,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Test mobile performance — reduce particle count on mobile if needed",
       "Screenshot and verify everything still looks premium after optimizations"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "polish",
@@ -193,7 +193,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Ensure build passes with no warnings",
       "Final screenshot of hero section — this is the money shot"
     ],
-    "passes": false
+    "passes": true
   }
 ]
 ```
