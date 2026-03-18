@@ -277,3 +277,34 @@ Chose Option C (morphing particle system) — particles transform between ring �
 
 ### Tasks Marked Passing
 - Task 9: Final CTA section ✅
+
+---
+
+## 2026-03-18T16:02 — Footer Verification (Task 10)
+
+**Task:** Build the Footer — minimal, elegant, dark (PRD task 10)
+
+### Findings
+Footer (`components/layout/Footer.tsx`) was already fully implemented by a previous iteration. Verified all PRD requirements:
+
+- **Extremely minimal**: logo/name, nav links (4), legal links (3), copyright
+- **Gradient separator**: coral gradient line at top border — subtle, no hard line
+- **Muted text colors**: text-secondary for links, text-whisper for copyright — fades out, doesn't compete
+- **Brand**: TrySomething with coral "Something" + dot
+- **Bottom bar**: copyright left, "Made with care in Switzerland" right
+- **4-column grid** on desktop, stacked on mobile
+
+### Screenshots
+- `screenshots/footer-desktop-wide.png` — Desktop 1280x800 (CTA → footer)
+- `screenshots/footer-desktop.png` — Mobile 390x844 (footer full)
+
+### Visual Notes
+- Footer fades out — text-whisper for copyright is barely visible, exactly right
+- Gradient coral top border provides subtle visual separation from CTA
+- Nav links are interactive (smooth scroll), legal links are standard anchors
+- No competing visual elements — footer is quiet and minimal
+- Mobile stacks cleanly, good spacing
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 10: Footer ✅

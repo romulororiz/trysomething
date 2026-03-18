@@ -151,7 +151,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Muted text colors — the footer fades out, it doesn't compete",
       "Screenshot and verify: clean, minimal, doesn't distract from the CTA above"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "polish",
