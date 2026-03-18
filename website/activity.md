@@ -112,3 +112,53 @@ Hero section (`components/sections/Hero.tsx`) was already fully implemented by a
 
 ### Tasks Marked Passing
 - Task 5: Problem section ✅
+
+---
+
+## 2026-03-18T15:38 — How It Works Section Redesign (Task 6)
+
+**Task:** Build the How It Works section with Three.js journey visualization (PRD task 6)
+
+### Changes
+- **`components/canvas/JourneyScene.tsx`** — Complete redesign of particle system:
+  - 200 shader-based particles (up from 150)
+  - Warm color palettes per step: sage/teal (Match), coral (Start), gold/amber (Stay)
+  - Improved particle shapes: ring (discovery), helix (journey upward), sphere (momentum)
+  - Softer glow with warmer core in fragment shader
+  - More organic drift animation (Y, X, Z oscillation)
+  - Slower, more elegant rotation and transition timing
+  - Warm gold fallback gradient (was teal)
+  - Warm gold glow wash behind particles
+
+- **`components/sections/HowItWorks.tsx`** — Polished step card design:
+  - Step accent colors: sage (#7DBDAB), coral (#FF6B6B), gold (#DAA520)
+  - Active card: gradient background with accent border glow
+  - Inactive cards: 50% opacity with hover to 70% (was hard 40%)
+  - Clickable step cards and indicator dots for direct navigation
+  - Larger step numbers (text-2xl) for better visual hierarchy
+  - "momentum." keyword highlighted in coral italic via StaggeredText
+  - Active step label below the 3D scene on desktop
+  - Mobile step indicator dots (visible on small screens)
+  - Warm atmospheric blooms (gold + coral radial gradients)
+  - More generous padding: py-32 md:py-48
+
+### Approach
+Chose Option C (morphing particle system) — particles transform between ring → helix → sphere as user scrolls through steps. This creates the most premium, achievable result while clearly differentiating each step visually.
+
+### Screenshots
+- `screenshots/howitworks-desktop-final.png` — Desktop 1280x800 (header + start of steps)
+- `screenshots/howitworks-desktop-step1-active.png` — Desktop with Step 2 active (coral helix)
+- `screenshots/howitworks-v2-mobile-header.png` — Mobile 390x844 (header + Step 1)
+- `screenshots/howitworks-v2-mobile-steps.png` — Mobile (Step 3 active, gold accent)
+
+### Visual Notes
+- Warm coral helix for "Start" step is the visual highlight — reads as an upward journey
+- Gold sphere for "Stay" step conveys stability and momentum
+- Step cards have clean active/inactive states with color-coded accents
+- "momentum." in coral serif italic is the distinctive typographic moment in the headline
+- Particles morph smoothly between shapes with eased transitions
+- Mobile: cards stack cleanly, no 3D (too small), step dots provide navigation
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 6: How It Works section ✅
