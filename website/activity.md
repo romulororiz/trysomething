@@ -162,3 +162,43 @@ Chose Option C (morphing particle system) — particles transform between ring �
 
 ### Tasks Marked Passing
 - Task 6: How It Works section ✅
+
+---
+
+## 2026-03-18T15:50 — Features Section Redesign (Task 7)
+
+**Task:** Build the Features section — three key features with subtle 3D accents (PRD task 7)
+
+### Changes
+- **`components/sections/Features.tsx`** — Complete redesign with glass card containers:
+  - Three features: AI Matching, Step-by-Step Roadmaps, Personal AI Coach
+  - Asymmetric stacked layout with alternating left/right orientation
+  - Glass card containers (`bg-glass`, `border-glass-border`) with accent-colored edge glow
+  - Warm accent palette per card: gold (#DAA520) for AI, coral (#FF6B6B) for Roadmap, sage (#7DBDAB) for Coach
+  - Each card has: accent glow blob in corner, icon with glow ring, italic serif number, headline, description, stat chips
+  - Icon boxes with `backdrop-blur-sm` and accent-colored border on `surface-elevated` background
+  - Stat chips with accent-colored dots on `surface-elevated/60` backgrounds
+  - Noise texture overlay on cards for premium depth
+  - Scroll-triggered entrance animations (fade-up with blur) per card
+  - Removed giant 10-12rem number watermarks — replaced with refined 5-6rem italic numbers below icons
+  - Atmospheric blooms (gold + coral radial gradients) behind the section
+  - Container narrowed from `max-w-6xl` to `max-w-5xl` for better text measure
+  - Card spacing reduced from `space-y-24` to `space-y-12` for tighter visual rhythm
+
+### Screenshots
+- `screenshots/features-redesign-header.png` — Desktop 1280x800 (section header + first card)
+- `screenshots/features-redesign-cards.png` — Desktop 1280x800 (cards 02 + 03)
+- `screenshots/features-redesign-mobile-header.png` — Mobile 390x844 (first card)
+- `screenshots/features-redesign-mobile-cards.png` — Mobile 390x844 (cards 02 + 03)
+
+### Visual Notes
+- Glass card containers provide clear visual containment without being heavy
+- Gold accent glow on card 01 reads as warm and premium
+- Alternating layout breaks monotony — icon/number on left (01, 03) vs right (02)
+- Icons are properly visible at 32px with glow rings creating focal points
+- Stat chips feel polished with accent-colored dots
+- Mobile: cards stack cleanly, icons above content, chips wrap naturally
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 7: Features section ✅

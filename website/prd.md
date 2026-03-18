@@ -109,7 +109,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Keep it minimal — 3 features, not 12. Quality over quantity.",
       "Screenshot and verify: features are scannable, the layout breaks from generic, feels designed"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
