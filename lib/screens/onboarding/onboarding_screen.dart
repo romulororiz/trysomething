@@ -328,8 +328,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   Widget _buildBottomCta() {
     final labels = ['Continue  →', 'Continue  →', 'Start Exploring  →'];
+    final bottomPad = MediaQuery.of(context).padding.bottom;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 0, 28, 16),
+      padding: EdgeInsets.fromLTRB(28, 0, 28, 16 + bottomPad),
       child: Column(
         children: [
           // Coral gradient CTA button

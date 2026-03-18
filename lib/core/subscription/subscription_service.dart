@@ -11,22 +11,23 @@ class SubscriptionService {
   // Platform-specific RevenueCat public API keys
   static const _appleKey = 'appl_SkiBGKbnsWiBfFNnLWfPfFqYJXC';
   static const _googleKey = 'goog_REPLACE_WITH_GOOGLE_KEY'; // TODO: add after Google Play setup
-  static const _testKey = 'test_ceXHQvrREruGuOQFaseoFYZANVo';
 
   /// Initialize RevenueCat SDK.
   Future<void> init() async {
     if (_initialized) return;
 
-    final apiKey = const String.fromEnvironment('REVENUECAT_API_KEY').isNotEmpty
-        ? const String.fromEnvironment('REVENUECAT_API_KEY')
-        : defaultTargetPlatform == TargetPlatform.iOS
-            ? _appleKey
-            : defaultTargetPlatform == TargetPlatform.android
-                ? _googleKey
-                : _testKey;
-
-    if (apiKey.isEmpty) {
-      debugPrint('[Subscription] No RevenueCat API key — running in free mode');
+    // Use env var if provided, otherwise pick platform key.
+    final envKey = const String.fromEnvironment('REVENUECAT_API_KEY');
+    final String apiKey;
+    if (envKey.isNotEmpty) {
+      apiKey = envKey;
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      apiKey = _appleKey;
+    } else if (defaultTargetPlatform == TargetPlatform.android && !_googleKey.contains('REPLACE')) {
+      apiKey = _googleKey;
+    } else {
+      // No valid key for this platform — skip RevenueCat, run in free mode
+      debugPrint('[Subscription] No valid API key for ${defaultTargetPlatform.name} — running in free mode');
       _initialized = true;
       return;
     }

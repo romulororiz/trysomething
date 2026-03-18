@@ -6,26 +6,30 @@ interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
+  padding?: "none" | "sm" | "md" | "lg";
 }
 
-/**
- * Glassmorphism card matching Flutter's GlassContainer.
- * backdrop-blur + sand bg at 85% + noise grain texture.
- */
+const paddingMap = {
+  none: "",
+  sm: "p-4",
+  md: "p-6",
+  lg: "p-8",
+};
+
 export function GlassCard({
   children,
   className,
   hover = false,
+  padding = "md",
 }: GlassCardProps) {
   return (
     <div
       className={cn(
-        "glass",
-        hover &&
-          "transition-shadow cursor-pointer hover:border-stone hover:shadow-[0_8px_32px_rgba(0,0,0,0.24),0_2px_8px_rgba(0,0,0,0.14)]",
+        "glass-card noise",
+        paddingMap[padding],
+        hover && "cursor-pointer",
         className
       )}
-      style={hover ? { transitionDuration: "250ms" } : undefined}
     >
       {children}
     </div>

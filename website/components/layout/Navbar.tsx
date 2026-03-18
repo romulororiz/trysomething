@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LetterSwap } from "@/components/ui/LetterSwap";
 
 const navLinks = [
-  { label: "How It Works", href: "#solution" },
-  { label: "Features", href: "#features" },
-  { label: "Progress", href: "#progress" },
-  { label: "Community", href: "#community" },
+  { label: "How It Works", href: "#how-it-works" },
+  { label: "Product", href: "#product" },
+  { label: "Testimonials", href: "#testimonials" },
 ];
 
 export function Navbar() {
@@ -19,93 +19,79 @@ export function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 80);
+      setScrolled(window.scrollY > 60);
       const docHeight =
         document.documentElement.scrollHeight - window.innerHeight;
       setScrollProgress(docHeight > 0 ? window.scrollY / docHeight : 0);
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollTo = (href: string) => {
+  const scrollTo = useCallback((href: string) => {
     setMobileOpen(false);
     const el = document.querySelector(href);
     el?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   return (
     <>
-      {/* Scroll progress bar */}
+      {/* Scroll progress */}
       <div
         className="scroll-progress"
         style={{ transform: `scaleX(${scrollProgress})` }}
       />
 
-      {/* Navbar */}
       <nav
         className={cn(
-          "fixed top-4 left-4 right-4 z-20 flex items-center justify-between px-6 py-3 rounded-2xl transition-all",
+          "fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-6 py-3 rounded-2xl transition-all duration-300",
           scrolled
-            ? "bg-cream/95 backdrop-blur-lg border border-stone/40"
+            ? "bg-surface/90 backdrop-blur-xl border border-glass-border shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
             : "bg-transparent"
         )}
-        style={{ transitionDuration: "250ms" }}
       >
-        {/* Coral accent line at bottom (visible only when scrolled) */}
-        <div
-          className={cn(
-            "absolute bottom-0 left-4 right-4 h-px bg-coral transition-opacity",
-            scrolled ? "opacity-100" : "opacity-0"
-          )}
-          style={{ transitionDuration: "250ms" }}
-        />
-
         {/* Logo */}
-        <a
-          href="#"
-          className="font-serif text-xl font-bold text-near-black hover:text-coral transition-colors cursor-pointer flex items-center"
-          style={{ transitionDuration: "200ms" }}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="flex items-center gap-0.5 cursor-pointer"
         >
-          TrySomething
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral ml-1" />
-        </a>
+          <span className="text-xl font-bold text-text-primary tracking-tight">
+            Try
+          </span>
+          <span className="text-xl font-bold text-coral tracking-tight">
+            Something
+          </span>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral ml-0.5 mb-3" />
+        </button>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-10">
           {navLinks.map((link) => (
             <button
               key={link.href}
               onClick={() => scrollTo(link.href)}
-              className="group relative font-sans text-sm font-medium text-driftwood hover:text-coral transition-colors cursor-pointer"
-              style={{ transitionDuration: "200ms" }}
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200 cursor-pointer"
             >
-              {link.label}
-              <span
-                className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-1 h-0.5 rounded-full bg-coral transition-transform origin-center scale-0 group-hover:scale-100"
-                style={{ transitionDuration: "200ms" }}
-              />
+              <LetterSwap text={link.label} stagger={0.02} />
             </button>
           ))}
         </div>
 
         {/* Desktop CTA */}
         <button
-          onClick={() => scrollTo("#download")}
+          onClick={() => scrollTo("#waitlist")}
           className={cn(
-            "hidden md:block px-5 py-2 rounded-badge font-sans text-sm font-bold text-white cursor-pointer",
-            "bg-coral breathing-glow",
-            "transition-transform hover:scale-[1.02] active:scale-[0.97]"
+            "hidden md:block px-5 py-2.5 rounded-full text-sm font-semibold cursor-pointer",
+            "bg-coral text-white hover:bg-coral-hover transition-colors duration-200",
+            "active:scale-[0.97] transition-transform"
           )}
-          style={{ transitionDuration: "150ms" }}
         >
-          Download
+          Get Early Access
         </button>
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 text-near-black cursor-pointer"
+          className="md:hidden p-2 text-text-primary cursor-pointer"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
         >
@@ -117,32 +103,34 @@ export function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[19] pt-24 px-8 bg-sand/95 backdrop-blur-xl"
+            className="fixed inset-0 z-[39] pt-24 px-8 bg-bg/95 backdrop-blur-2xl"
           >
-            <div className="flex flex-col gap-6">
-              {navLinks.map((link) => (
-                <button
+            <div className="flex flex-col gap-8">
+              {navLinks.map((link, i) => (
+                <motion.button
                   key={link.href}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
                   onClick={() => scrollTo(link.href)}
-                  className="font-serif text-2xl font-bold text-near-black hover:text-coral transition-colors cursor-pointer text-left"
-                  style={{ transitionDuration: "200ms" }}
+                  className="text-3xl font-bold text-text-primary text-left cursor-pointer"
                 >
                   {link.label}
-                </button>
+                </motion.button>
               ))}
-              <button
-                onClick={() => scrollTo("#download")}
-                className={cn(
-                  "mt-4 px-8 py-4 rounded-badge font-sans text-base font-bold text-white cursor-pointer",
-                  "bg-coral breathing-glow w-full"
-                )}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => scrollTo("#waitlist")}
+                className="mt-6 px-8 py-4 rounded-full text-lg font-bold text-white bg-coral w-full cursor-pointer breathing-glow"
               >
-                Download
-              </button>
+                Get Early Access
+              </motion.button>
             </div>
           </motion.div>
         )}

@@ -1,78 +1,59 @@
 @import "tailwindcss";
 
-/* Tell Tailwind v4 where to scan for class names */
+/* Tell Tailwind v4 where to scan */
 @source "../components";
 @source "../hooks";
 @source "../lib";
 
 /* ═══════════════════════════════════════════════════
-   MIDNIGHT NEON — Theme Tokens
-   Ported from Flutter: app_colors.dart, spacing.dart, motion.dart
+   WARM CINEMATIC MINIMALISM — Theme Tokens
    ═══════════════════════════════════════════════════ */
 
 @theme {
-  /* Neutrals (dark → light) */
-  --color-cream: #0A0A0F;
-  --color-warm-white: #141420;
-  --color-sand: #1E1E2E;
-  --color-sand-dark: #2A2A3C;
-  --color-stone: #363650;
-  --color-warm-gray: #6B6B80;
-  --color-driftwood: #A0A0B8;
-  --color-espresso: #C0C0D0;
-  --color-dark-brown: #D8D8E8;
-  --color-near-black: #F8F8FC;
+  /* Core surfaces */
+  --color-bg: #050508;
+  --color-surface: #0C0C12;
+  --color-surface-elevated: #14141A;
+  --color-surface-bright: #1C1C24;
 
-  /* Accent — Hot Coral */
+  /* Text hierarchy */
+  --color-text-primary: #F0EBE3;
+  --color-text-secondary: #A09890;
+  --color-text-muted: #5C5550;
+  --color-text-whisper: #3D3835;
+
+  /* Accent — Coral (CTAs only) */
   --color-coral: #FF6B6B;
-  --color-coral-light: #FF8A8A;
-  --color-coral-pale: #2E1820;
-  --color-coral-deep: #E55555;
+  --color-coral-hover: #FF8585;
+  --color-coral-muted: #FF6B6B26;
 
-  /* Accent — Gold */
-  --color-amber: #FBBF24;
-  --color-amber-light: #FCD34D;
-  --color-amber-pale: #2E2518;
+  /* Atmospheric bloom */
+  --color-bloom-teal: #0D9488;
+  --color-bloom-burgundy: #9F1239;
 
-  /* Accent — Electric Violet */
-  --color-indigo: #7C3AED;
-  --color-indigo-light: #9461F7;
-  --color-indigo-pale: #201540;
+  /* Success */
+  --color-success: #06D6A0;
 
-  /* Supporting */
-  --color-sage: #06D6A0;
-  --color-sage-pale: #0A2A1A;
-  --color-rose: #FB7185;
-  --color-sky: #38BDF8;
-
-  /* Category colors */
-  --color-cat-creative: #D946EF;
-  --color-cat-outdoors: #06D6A0;
-  --color-cat-fitness: #FF4757;
-  --color-cat-maker: #FBBF24;
-  --color-cat-music: #818CF8;
-  --color-cat-food: #FB923C;
-  --color-cat-collecting: #38BDF8;
-  --color-cat-mind: #7C3AED;
-  --color-cat-social: #F472B6;
+  /* Glass */
+  --color-glass: #FFFFFF0F;
+  --color-glass-border: #FFFFFF1A;
+  --color-glass-hover: #FFFFFF1F;
 
   /* Radii */
-  --radius-card: 22px;
-  --radius-tile: 16px;
-  --radius-button: 14px;
-  --radius-input: 12px;
-  --radius-badge: 100px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
 
-  /* Font families — static values only (no var() in @theme) */
-  --font-serif: "Source Serif 4", Georgia, serif;
-  --font-sans: "DM Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+  /* Fonts */
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
 }
 
 /* ═══════════════════════════════════════════════════
    BASE STYLES
-   Put in @layer base so they don't override Tailwind
-   utilities (unlayered CSS beats @layer utilities)
    ═══════════════════════════════════════════════════ */
 
 @layer base {
@@ -81,21 +62,19 @@
   }
 
   body {
-    background-color: var(--color-cream);
-    color: var(--color-near-black);
-    font-family: var(--font-dm-sans, var(--font-sans));
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
 
-  /* Selection */
   ::selection {
-    background-color: #FF6B6B4D;
-    color: var(--color-near-black);
+    background-color: rgba(255, 107, 107, 0.25);
+    color: var(--color-text-primary);
   }
 
-  /* Focus ring — per ui-ux-pro-max */
   :focus-visible {
     outline: 2px solid var(--color-coral);
     outline-offset: 2px;
@@ -103,97 +82,103 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   NOISE GRAIN TEXTURE
-   ═══════════════════════════════════════════════════ */
-
-.noise-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
-/* ═══════════════════════════════════════════════════
-   GLASSMORPHISM
+   GLASS MORPHISM
    ═══════════════════════════════════════════════════ */
 
 .glass {
-  background: rgba(30, 30, 46, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(42, 42, 60, 0.8);
-  border-radius: var(--radius-card);
+  background: var(--color-glass);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--color-glass-border);
   position: relative;
-  overflow: hidden;
 }
 
-.glass::before {
+.glass-card {
+  background: var(--color-glass);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.glass-card:hover {
+  border-color: var(--color-glass-hover);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Premium Card ───────────────────────────────── */
+
+.premium-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-glass-border);
+  background: var(--color-surface-elevated);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  transition: border-color 400ms ease, box-shadow 400ms ease, transform 400ms ease;
+}
+
+.premium-card:hover {
+  border-color: var(--color-glass-hover);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════════
+   NOISE TEXTURE
+   ═══════════════════════════════════════════════════ */
+
+.noise::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
+  z-index: 1;
 }
 
 /* ═══════════════════════════════════════════════════
-   BREATHING GLOW ANIMATION
+   ATMOSPHERIC BLOOMS
    ═══════════════════════════════════════════════════ */
 
-@keyframes breathing-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.3)); }
-  50% { filter: drop-shadow(0 0 18px rgba(255, 107, 107, 0.6)); }
+.bloom-teal {
+  background: radial-gradient(ellipse at center, rgba(13, 148, 136, 0.15), transparent 70%);
+}
+
+.bloom-burgundy {
+  background: radial-gradient(ellipse at center, rgba(159, 18, 57, 0.12), transparent 70%);
+}
+
+.bloom-coral {
+  background: radial-gradient(ellipse at center, rgba(255, 107, 107, 0.08), transparent 70%);
+}
+
+/* ═══════════════════════════════════════════════════
+   BREATHING GLOW
+   ═══════════════════════════════════════════════════ */
+
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.3), 0 0 60px rgba(255, 107, 107, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 107, 107, 0.5), 0 0 80px rgba(255, 107, 107, 0.15);
+  }
 }
 
 .breathing-glow {
-  animation: breathing-glow 1800ms ease-in-out infinite;
-  will-change: filter;
+  animation: breathe 2s ease-in-out infinite;
 }
 
 /* ═══════════════════════════════════════════════════
-   WAVE UNDERLINE
-   ═══════════════════════════════════════════════════ */
-
-.wave-underline {
-  position: relative;
-  display: inline-block;
-}
-
-.wave-underline::after {
-  content: "";
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: #FF6B6B;
-  opacity: 0.63;
-  border-radius: 2px;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 350ms cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-.wave-underline.visible::after {
-  transform: scaleX(1);
-}
-
-/* ═══════════════════════════════════════════════════
-   GRADIENT SHIFT (footer border)
-   ═══════════════════════════════════════════════════ */
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 200% 0%; }
-}
-
-/* ═══════════════════════════════════════════════════
-   SCROLL PROGRESS BAR
+   SCROLL PROGRESS
    ═══════════════════════════════════════════════════ */
 
 .scroll-progress {
@@ -201,9 +186,130 @@
   top: 0;
   left: 0;
   height: 2px;
-  background: #FF6B6B;
+  background: linear-gradient(90deg, var(--color-bloom-teal), var(--color-coral), var(--color-bloom-burgundy));
   z-index: 100;
   transform-origin: left;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   MANIFESTO 3D TEXT
+   ═══════════════════════════════════════════════════ */
+
+.perspective-container {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+
+.text-3d-reveal {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* ═══════════════════════════════════════════════════
+   LETTER SWAP (CTA hover)
+   ═══════════════════════════════════════════════════ */
+
+.letter-swap-char {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.letter-swap-char .front,
+.letter-swap-char .back {
+  backface-visibility: hidden;
+}
+
+.letter-swap-char .back {
+  transform: rotateX(180deg);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   PHONE MOCKUP (legacy CSS class support)
+   ═══════════════════════════════════════════════════ */
+
+.phone-frame {
+  border-radius: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  background: #0C0C12;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 25px 60px rgba(0, 0, 0, 0.5),
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 24px;
+  background: #050508;
+  border-radius: 0 0 16px 16px;
+  z-index: 10;
+}
+
+/* ═══════════════════════════════════════════════════
+   ACCENT STRIPE (left-edge card accents)
+   ═══════════════════════════════════════════════════ */
+
+.accent-stripe-coral::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--color-coral), rgba(255, 107, 107, 0.3), transparent);
+}
+
+.accent-stripe-teal::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--color-bloom-teal), rgba(13, 148, 136, 0.3), transparent);
+}
+
+.accent-stripe-burgundy::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--color-bloom-burgundy), rgba(159, 18, 57, 0.3), transparent);
+}
+
+/* ═══════════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-whisper);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -221,10 +327,6 @@
 
   .breathing-glow {
     animation: none;
-    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
-  }
-
-  html {
-    scroll-behavior: auto;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
   }
 }

@@ -979,7 +979,7 @@ class _StepItem extends ConsumerWidget {
               width: 40,
               child: Column(
                 children: [
-                  SizedBox(height: isFocused ? 22 : 8),
+                  SizedBox(height: isFocused ? 4 : 8),
                   // Node — instant color/size change (150ms)
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 150),

@@ -1,51 +1,46 @@
 import type { Metadata } from "next";
-import { Source_Serif_4, DM_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Manrope, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-const sourceSerif = Source_Serif_4({
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-source-serif",
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
   display: "swap",
 });
 
-const dmSans = DM_Sans({
+const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-ibm-plex-mono",
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "TrySomething — Helps You Actually Start",
+  title: "TrySomething — Find a Hobby You\u2019ll Actually Start",
   description:
-    "Discover 72+ hobbies, get beginner-friendly guidance, and track your journey from 'maybe' to mastery. TrySomething helps you actually start.",
+    "Stop scrolling. Start something. TrySomething matches you with one perfect hobby, gives you everything to begin today, and keeps you going for 30 days.",
   keywords: [
-    "hobby discovery",
-    "try new hobbies",
-    "beginner guide",
-    "hobby tracker",
+    "hobby app",
     "start a hobby",
+    "hobby discovery",
+    "beginner guide",
+    "try new things",
+    "hobby tracker",
   ],
   openGraph: {
-    title: "TrySomething — Helps You Actually Start",
+    title: "TrySomething — Find a Hobby You\u2019ll Actually Start",
     description:
-      "Discover 72+ hobbies with beginner-friendly guides. From pottery to parkour — find what excites you.",
+      "One hobby, matched to your life. Everything to start. A coach to keep you going.",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "TrySomething — Helps You Actually Start",
+    title: "TrySomething — Find a Hobby You\u2019ll Actually Start",
     description:
-      "Discover 72+ hobbies with beginner-friendly guides. Find what excites you.",
+      "One hobby, matched to your life. Everything to start. A coach to keep you going.",
   },
 };
 
@@ -57,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sourceSerif.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}
+      className={`${manrope.variable} ${instrumentSerif.variable}`}
     >
       <body>{children}</body>
     </html>
