@@ -2,146 +2,360 @@
 
 import { Suspense, useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Float, Edges } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── Config ─────────────────────────────────────────────────── */
+/* ─── Hobby Object Components ────────────────────────────────── */
 
-const PARTICLE_COUNT_DESKTOP = 500;
-const PARTICLE_COUNT_MOBILE = 200;
+interface HobbyObjectProps {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
+  color?: string;
+  floatSpeed?: number;
+  rotationIntensity?: number;
+}
 
-/* ─── Shaders ────────────────────────────────────────────────── */
-
-const vertexShader = /* glsl */ `
-  attribute float aSize;
-  attribute vec3 aColor;
-  attribute float aPhase;
-
-  varying vec3 vColor;
-  varying float vAlpha;
-
-  uniform float uTime;
-  uniform float uPixelRatio;
-
-  void main() {
-    vec3 pos = position;
-
-    // Organic drift
-    float t = uTime * 0.25;
-    pos.y += sin(t + aPhase * 6.28) * 0.18;
-    pos.x += cos(t * 0.6 + aPhase * 4.0) * 0.1;
-    pos.z += sin(t * 0.4 + aPhase * 3.0) * 0.06;
-
-    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-
-    // Size: larger when closer, breathing effect
-    float breathe = 1.0 + sin(t * 1.8 + aPhase * 6.28) * 0.25;
-    float size = aSize * breathe * uPixelRatio;
-    gl_PointSize = size * (280.0 / -mvPosition.z);
-
-    gl_Position = projectionMatrix * mvPosition;
-
-    vColor = aColor;
-    // Depth-based fade: closer = more visible
-    float depthFade = smoothstep(-18.0, -2.0, mvPosition.z);
-    float pulse = 0.6 + sin(t * 1.5 + aPhase * 6.28) * 0.15;
-    vAlpha = depthFade * pulse;
-  }
-`;
-
-const fragmentShader = /* glsl */ `
-  varying vec3 vColor;
-  varying float vAlpha;
-
-  void main() {
-    // Distance from center of point sprite
-    vec2 uv = gl_PointCoord - vec2(0.5);
-    float d = length(uv);
-    if (d > 0.5) discard;
-
-    // Soft glow: bright core fading to soft halo
-    float glow = exp(-d * 6.0);
-    float core = smoothstep(0.12, 0.0, d) * 0.5;
-    float alpha = (glow * 0.7 + core) * vAlpha;
-
-    gl_FragColor = vec4(vColor, alpha);
-  }
-`;
-
-/* ─── Shader Particle Field ──────────────────────────────────── */
-
-function GlowParticles({ count }: { count: number }) {
-  const pointsRef = useRef<THREE.Points>(null);
-
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uPixelRatio: { value: 1.5 },
-    }),
-    [],
+/** Guitar — torus body + cylinder neck + small circle headstock */
+function Guitar({
+  position,
+  rotation = [0, 0, 0.3],
+  scale = 1,
+  color = "#DAA520",
+  floatSpeed = 0.6,
+  rotationIntensity = 0.3,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.6}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Body */}
+        <mesh>
+          <torusGeometry args={[0.45, 0.22, 8, 16]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Neck */}
+        <mesh position={[0, 0.85, 0]}>
+          <boxGeometry args={[0.07, 0.9, 0.04]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Headstock */}
+        <mesh position={[0, 1.38, 0]}>
+          <boxGeometry args={[0.14, 0.16, 0.04]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+      </group>
+    </Float>
   );
+}
+
+/** Camera — box body + cylinder lens */
+function Camera({
+  position,
+  rotation = [0.2, 0.3, 0],
+  scale = 1,
+  color = "#E8D5B7",
+  floatSpeed = 0.5,
+  rotationIntensity = 0.25,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.7}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Body */}
+        <mesh>
+          <boxGeometry args={[0.7, 0.5, 0.35]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Lens */}
+        <mesh position={[0, 0, 0.3]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.18, 0.15, 0.25, 12]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Viewfinder */}
+        <mesh position={[0, 0.32, -0.05]}>
+          <boxGeometry args={[0.15, 0.12, 0.15]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+/** Paintbrush — thin cylinder handle + cone tip */
+function Paintbrush({
+  position,
+  rotation = [0, 0, -0.6],
+  scale = 1,
+  color = "#C8956C",
+  floatSpeed = 0.7,
+  rotationIntensity = 0.35,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.5}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Handle */}
+        <mesh position={[0, -0.3, 0]}>
+          <cylinderGeometry args={[0.04, 0.05, 1.0, 8]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Ferrule */}
+        <mesh position={[0, 0.25, 0]}>
+          <cylinderGeometry args={[0.06, 0.04, 0.12, 8]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Bristles */}
+        <mesh position={[0, 0.45, 0]}>
+          <coneGeometry args={[0.07, 0.3, 8]} />
+          <meshStandardMaterial color="#FF6B6B" transparent opacity={0.08} roughness={0.6} />
+          <Edges threshold={15} color="#FF6B6B" />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+/** Chess Pawn — lathe geometry for classic silhouette */
+function ChessPawn({
+  position,
+  rotation = [0, 0, 0],
+  scale = 1,
+  color = "#F0EBE3",
+  floatSpeed = 0.4,
+  rotationIntensity = 0.2,
+}: HobbyObjectProps) {
+  const geometry = useMemo(() => {
+    const points = [
+      new THREE.Vector2(0, 0),
+      new THREE.Vector2(0.25, 0),
+      new THREE.Vector2(0.28, 0.02),
+      new THREE.Vector2(0.28, 0.06),
+      new THREE.Vector2(0.22, 0.08),
+      new THREE.Vector2(0.10, 0.25),
+      new THREE.Vector2(0.08, 0.35),
+      new THREE.Vector2(0.12, 0.38),
+      new THREE.Vector2(0.12, 0.42),
+      new THREE.Vector2(0.08, 0.44),
+      new THREE.Vector2(0.06, 0.50),
+      new THREE.Vector2(0.10, 0.55),
+      new THREE.Vector2(0.14, 0.58),
+      new THREE.Vector2(0.14, 0.62),
+      new THREE.Vector2(0.10, 0.65),
+      new THREE.Vector2(0.0, 0.68),
+    ];
+    return new THREE.LatheGeometry(points, 12);
+  }, []);
+
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.6}>
+      <group position={position} rotation={rotation} scale={scale}>
+        <mesh geometry={geometry}>
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+/** Book — two angled planes suggesting an open book */
+function Book({
+  position,
+  rotation = [0.2, 0.5, 0.1],
+  scale = 1,
+  color = "#D4A574",
+  floatSpeed = 0.55,
+  rotationIntensity = 0.2,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.5}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Left page */}
+        <mesh position={[-0.22, 0, 0]} rotation={[0, 0.2, 0]}>
+          <boxGeometry args={[0.4, 0.55, 0.02]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Right page */}
+        <mesh position={[0.22, 0, 0]} rotation={[0, -0.2, 0]}>
+          <boxGeometry args={[0.4, 0.55, 0.02]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Spine */}
+        <mesh position={[0, 0, -0.035]}>
+          <boxGeometry args={[0.03, 0.55, 0.04]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+/** Plant Pot — tapered cylinder pot + sphere leaf clusters */
+function PlantPot({
+  position,
+  rotation = [0, 0, 0],
+  scale = 1,
+  color = "#7DBDAB",
+  floatSpeed = 0.45,
+  rotationIntensity = 0.15,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.6}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Pot */}
+        <mesh>
+          <cylinderGeometry args={[0.22, 0.16, 0.35, 8]} />
+          <meshStandardMaterial color="#C8956C" transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color="#C8956C" />
+        </mesh>
+        {/* Rim */}
+        <mesh position={[0, 0.18, 0]}>
+          <cylinderGeometry args={[0.24, 0.24, 0.04, 8]} />
+          <meshStandardMaterial color="#C8956C" transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color="#C8956C" />
+        </mesh>
+        {/* Leaves — icosahedron clusters */}
+        <mesh position={[0, 0.42, 0]}>
+          <icosahedronGeometry args={[0.2, 0]} />
+          <meshStandardMaterial color={color} transparent opacity={0.08} roughness={0.6} />
+          <Edges threshold={10} color={color} />
+        </mesh>
+        <mesh position={[0.12, 0.52, 0.05]}>
+          <icosahedronGeometry args={[0.13, 0]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={10} color={color} />
+        </mesh>
+        <mesh position={[-0.1, 0.5, -0.06]}>
+          <icosahedronGeometry args={[0.11, 0]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={10} color={color} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+/** Bicycle Wheel — torus ring + cross spokes */
+function BicycleWheel({
+  position,
+  rotation = [0.4, 0.2, 0],
+  scale = 1,
+  color = "#E8D5B7",
+  floatSpeed = 0.35,
+  rotationIntensity = 0.4,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.5}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Rim */}
+        <mesh>
+          <torusGeometry args={[0.5, 0.03, 8, 24]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Hub */}
+        <mesh>
+          <cylinderGeometry args={[0.05, 0.05, 0.06, 8]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Spokes — 6 thin cylinders */}
+        {[0, 60, 120].map((angle) => (
+          <mesh key={angle} rotation={[0, 0, (angle * Math.PI) / 180]}>
+            <cylinderGeometry args={[0.008, 0.008, 1.0, 4]} />
+            <meshStandardMaterial color={color} transparent opacity={0.15} roughness={0.6} />
+          </mesh>
+        ))}
+      </group>
+    </Float>
+  );
+}
+
+/** Cooking Pot — cylinder body + torus rim + handle arcs */
+function CookingPot({
+  position,
+  rotation = [0.3, -0.2, 0],
+  scale = 1,
+  color = "#D4A574",
+  floatSpeed = 0.5,
+  rotationIntensity = 0.2,
+}: HobbyObjectProps) {
+  return (
+    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.6}>
+      <group position={position} rotation={rotation} scale={scale}>
+        {/* Body */}
+        <mesh>
+          <cylinderGeometry args={[0.32, 0.28, 0.35, 12]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Rim */}
+        <mesh position={[0, 0.18, 0]}>
+          <torusGeometry args={[0.32, 0.02, 8, 16]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Handle left */}
+        <mesh position={[-0.42, 0.08, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <torusGeometry args={[0.08, 0.015, 6, 8, Math.PI]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+        {/* Handle right */}
+        <mesh position={[0.42, 0.08, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <torusGeometry args={[0.08, 0.015, 6, 8, Math.PI]} />
+          <meshStandardMaterial color={color} transparent opacity={0.06} roughness={0.6} />
+          <Edges threshold={15} color={color} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+/* ─── Ambient Dust Particles ─────────────────────────────────── */
+
+function AmbientParticles({ count = 80 }: { count: number }) {
+  const pointsRef = useRef<THREE.Points>(null);
 
   const geometry = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
-    const colors = new Float32Array(count * 3);
-    const phases = new Float32Array(count);
-
-    // Warm palette: golds, ambers, soft creams
-    const palette = [
-      new THREE.Color("#F0EBE3"), // Warm cream
-      new THREE.Color("#F0EBE3"), // Warm cream (weighted)
-      new THREE.Color("#D4A574"), // Warm gold
-      new THREE.Color("#C8956C"), // Amber
-      new THREE.Color("#E8D5B7"), // Light gold
-      new THREE.Color("#F5E6D3"), // Pale amber
-      new THREE.Color("#DAA520"), // Goldenrod accent
-    ];
 
     for (let i = 0; i < count; i++) {
-      // Spherical distribution with denser center
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = Math.pow(Math.random(), 0.5) * 13;
-
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.65;
-      positions[i * 3 + 2] = -2 - r * Math.cos(phi) * 0.4;
-
-      // Varying sizes — some tiny stars, some larger glows
-      const sizeRand = Math.random();
-      sizes[i] = sizeRand < 0.7 ? 1.5 + Math.random() * 3 : 4 + Math.random() * 6;
-
-      phases[i] = Math.random();
-
-      const color = palette[Math.floor(Math.random() * palette.length)];
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
+      positions[i * 3] = (Math.random() - 0.5) * 24;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      positions[i * 3 + 2] = -2 - Math.random() * 12;
+      sizes[i] = Math.random() * 2 + 0.5;
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
-    geo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
     return geo;
   }, [count]);
 
   useFrame((state) => {
     if (!pointsRef.current) return;
-    const material = pointsRef.current.material as THREE.ShaderMaterial;
-    material.uniforms.uTime.value = state.clock.elapsedTime;
+    pointsRef.current.rotation.y = state.clock.elapsedTime * 0.008;
   });
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <shaderMaterial
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
+      <pointsMaterial
+        color="#D4A574"
+        size={0.02}
         transparent
+        opacity={0.3}
+        sizeAttenuation
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
       />
     </points>
   );
@@ -165,11 +379,11 @@ function CameraRig() {
   }, [onMove]);
 
   useFrame(() => {
-    smooth.current.x += (mouse.current.x - smooth.current.x) * 0.025;
-    smooth.current.y += (mouse.current.y - smooth.current.y) * 0.025;
-    camera.position.x = smooth.current.x * 0.5;
-    camera.position.y = -smooth.current.y * 0.35;
-    camera.lookAt(0, 0, -5);
+    smooth.current.x += (mouse.current.x - smooth.current.x) * 0.02;
+    smooth.current.y += (mouse.current.y - smooth.current.y) * 0.02;
+    camera.position.x = smooth.current.x * 0.6;
+    camera.position.y = -smooth.current.y * 0.4;
+    camera.lookAt(0, 0, -4);
   });
 
   return null;
@@ -177,10 +391,45 @@ function CameraRig() {
 
 /* ─── Scene ──────────────────────────────────────────────────── */
 
-function Scene({ particleCount }: { particleCount: number }) {
+function Scene({ isMobile }: { isMobile: boolean }) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    // Very slow global rotation for life
+    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.05) * 0.08;
+  });
+
   return (
     <>
-      <GlowParticles count={particleCount} />
+      {/* Warm amber key light */}
+      <ambientLight intensity={0.15} color="#F0EBE3" />
+      <pointLight position={[6, 5, 4]} intensity={0.8} color="#DAA520" distance={20} />
+      <pointLight position={[-5, -3, 2]} intensity={0.3} color="#C8956C" distance={15} />
+      <pointLight position={[0, 2, 6]} intensity={0.2} color="#F0EBE3" distance={12} />
+
+      <group ref={groupRef}>
+        {/* Hobby objects scattered at the periphery — away from center text */}
+        <Guitar position={[-5.5, 2.5, -3]} rotation={[0.1, 0.3, 0.4]} scale={isMobile ? 0.7 : 0.95} color="#DAA520" />
+        <Camera position={[5.5, 2.0, -4]} rotation={[0.15, -0.4, 0.1]} scale={isMobile ? 0.5 : 0.7} color="#E8D5B7" />
+        <Paintbrush position={[-5.0, -2.5, -2]} rotation={[0, 0, -0.5]} scale={isMobile ? 0.6 : 0.85} color="#C8956C" />
+        <ChessPawn position={[5.8, -1.8, -5]} scale={isMobile ? 0.55 : 0.8} color="#F0EBE3" />
+        <Book position={[-6.5, -0.5, -5]} rotation={[0.3, 0.8, 0.15]} scale={isMobile ? 0.5 : 0.75} color="#D4A574" />
+        <PlantPot position={[6.2, 3.2, -5]} rotation={[0, 0.5, 0]} scale={isMobile ? 0.45 : 0.65} color="#7DBDAB" />
+        <BicycleWheel position={[-7, 0.5, -6]} rotation={[0.3, 0.1, 0.15]} scale={isMobile ? 0.45 : 0.7} color="#E8D5B7" />
+        <CookingPot position={[5.0, -3.5, -4]} rotation={[0.2, -0.3, 0.05]} scale={isMobile ? 0.45 : 0.65} color="#D4A574" />
+
+        {/* Additional objects at far depths for layering */}
+        {!isMobile && (
+          <>
+            <Guitar position={[8, -3, -9]} rotation={[0.5, -0.2, -0.3]} scale={0.45} color="#C8956C" floatSpeed={0.3} />
+            <Book position={[-8, 3.5, -10]} rotation={[-0.2, 1.2, 0.3]} scale={0.4} color="#DAA520" floatSpeed={0.25} />
+            <ChessPawn position={[-3, -4, -8]} scale={0.5} color="#D4A574" floatSpeed={0.35} />
+          </>
+        )}
+      </group>
+
+      <AmbientParticles count={isMobile ? 40 : 80} />
       <CameraRig />
     </>
   );
@@ -191,25 +440,30 @@ function Scene({ particleCount }: { particleCount: number }) {
 function FallbackBackground() {
   return (
     <div className="absolute inset-0">
-      {Array.from({ length: 50 }).map((_, i) => {
-        const size = 1 + Math.random() * 3;
-        return (
-          <div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${size}px`,
-              height: `${size}px`,
-              background: `rgba(212, 165, 116, ${0.15 + Math.random() * 0.3})`,
-              filter: "blur(1px)",
-              animation: `breathe ${3 + Math.random() * 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-            }}
-          />
-        );
-      })}
+      {/* Floating geometric shapes suggesting hobbies */}
+      {[
+        { shape: "◆", x: 15, y: 20, size: 28, delay: 0, color: "rgba(218,165,32,0.2)" },
+        { shape: "○", x: 75, y: 30, size: 36, delay: 1, color: "rgba(232,213,183,0.15)" },
+        { shape: "△", x: 40, y: 65, size: 24, delay: 2, color: "rgba(200,149,108,0.18)" },
+        { shape: "□", x: 85, y: 70, size: 20, delay: 0.5, color: "rgba(240,235,227,0.12)" },
+        { shape: "◇", x: 25, y: 80, size: 22, delay: 1.5, color: "rgba(125,189,171,0.15)" },
+        { shape: "○", x: 60, y: 15, size: 18, delay: 2.5, color: "rgba(212,165,116,0.12)" },
+      ].map((item, i) => (
+        <div
+          key={i}
+          className="absolute select-none pointer-events-none"
+          style={{
+            left: `${item.x}%`,
+            top: `${item.y}%`,
+            fontSize: `${item.size}px`,
+            color: item.color,
+            animation: `breathe ${4 + i * 0.5}s ease-in-out infinite`,
+            animationDelay: `${item.delay}s`,
+          }}
+        >
+          {item.shape}
+        </div>
+      ))}
     </div>
   );
 }
@@ -217,14 +471,10 @@ function FallbackBackground() {
 /* ─── Export ──────────────────────────────────────────────────── */
 
 export function HeroEnvironment() {
-  const [particleCount, setParticleCount] = useState(PARTICLE_COUNT_MOBILE);
+  const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
-    setParticleCount(
-      window.innerWidth < 768
-        ? PARTICLE_COUNT_MOBILE
-        : PARTICLE_COUNT_DESKTOP
-    );
+    setIsMobile(window.innerWidth < 768);
   }, []);
 
   return (
@@ -240,7 +490,7 @@ export function HeroEnvironment() {
           }}
           style={{ background: "transparent" }}
         >
-          <Scene particleCount={particleCount} />
+          <Scene isMobile={isMobile} />
         </Canvas>
       </Suspense>
 
@@ -249,14 +499,14 @@ export function HeroEnvironment() {
         className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(212,165,116,0.06), transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(218,165,32,0.05), transparent 70%)",
         }}
       />
       <div
         className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(200,149,108,0.04), transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(200,149,108,0.035), transparent 70%)",
         }}
       />
 
