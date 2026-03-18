@@ -17,7 +17,7 @@ export function WaitlistCTA() {
     (e: React.FormEvent) => {
       e.preventDefault();
       if (!email) return;
-      // TODO: Wire to actual waitlist API (e.g. Loops, Mailchimp, custom endpoint)
+      // TODO: Wire to actual waitlist API
       setSubmitted(true);
     },
     [email]
@@ -27,55 +27,106 @@ export function WaitlistCTA() {
     <section
       id="waitlist"
       ref={ref}
-      className="relative py-32 md:py-40 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Atmospheric background */}
+      {/* ── Convergence glow layers ── */}
+      {/* Outer warm wash */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bloom-teal opacity-20" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bloom-burgundy opacity-15" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bloom-coral opacity-10" />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] opacity-20"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(255,107,107,0.25), rgba(218,165,32,0.10) 40%, transparent 70%)",
+          }}
+        />
+        {/* Secondary coral bloom — slightly offset */}
+        <div
+          className="absolute top-[40%] left-[45%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-25"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(255,107,107,0.20), transparent 65%)",
+          }}
+        />
+        {/* Gold accent top-left */}
+        <div
+          className="absolute top-1/4 left-1/4 w-[400px] h-[400px] opacity-15"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(218,165,32,0.2), transparent 70%)",
+          }}
+        />
+        {/* Sage accent bottom-right */}
+        <div
+          className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] opacity-12"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(125,189,171,0.15), transparent 70%)",
+          }}
+        />
       </div>
 
-      <div className="relative max-w-3xl mx-auto px-6 text-center">
-        {/* Header */}
+      {/* ── Converging rings (CSS-only particle convergence) ── */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.3 }}
+        animate={inView ? { opacity: 0.06, scale: 1 } : {}}
+        transition={{ duration: 2, ease: [0.33, 1, 0.68, 1] }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+      >
+        <div className="w-[700px] h-[700px] rounded-full border border-coral/10" />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, scale: 1.5 }}
+        animate={inView ? { opacity: 0.04, scale: 1 } : {}}
+        transition={{ duration: 2.5, delay: 0.3, ease: [0.33, 1, 0.68, 1] }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+      >
+        <div className="w-[1000px] h-[1000px] rounded-full border border-[#DAA520]/8" />
+      </motion.div>
+
+      {/* ── Content ── */}
+      <div className="relative max-w-3xl mx-auto px-6 text-center py-32">
+        {/* Overline */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
-          className="mb-4"
+          transition={{ duration: 0.6 }}
+          className="mb-6"
         >
-          <span className="inline-block px-3 py-1 rounded-full bg-coral/10 text-coral text-xs font-semibold">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-coral/8 border border-coral/15 text-coral text-xs font-semibold tracking-wide">
             Launching soon
           </span>
         </motion.div>
 
+        {/* Headline — large, cinematic */}
         <StaggeredText
-          text="Ready to try something?"
+          text="Your next chapter starts now."
           as="h2"
-          className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight"
-          highlightWords={["something"]}
-          stagger={0.08}
+          className="text-[clamp(2rem,5vw,4rem)] font-bold leading-[1.1] tracking-tight"
+          highlightWords={["chapter"]}
+          stagger={0.09}
         />
 
+        {/* Subtext */}
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-6 text-lg text-text-secondary max-w-md mx-auto"
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mt-6 text-lg md:text-xl text-text-secondary max-w-lg mx-auto leading-relaxed"
         >
-          Join the waitlist. Be first to find your hobby when we launch.
+          Join the waitlist. Be first to find the hobby
+          you&rsquo;ll actually stick with.
         </motion.p>
 
-        {/* Form or success state */}
+        {/* Form / success */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-10"
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="mt-12"
         >
           {!submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email input */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email row */}
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
                   type="email"
@@ -87,7 +138,7 @@ export function WaitlistCTA() {
                 />
                 <MagneticButton
                   variant="primary"
-                  size="md"
+                  size="lg"
                   breathing
                   onClick={() => {}}
                 >
@@ -95,9 +146,11 @@ export function WaitlistCTA() {
                 </MagneticButton>
               </div>
 
-              {/* Platform preference (optional) */}
+              {/* Platform toggle */}
               <div className="flex items-center justify-center gap-3 mt-6">
-                <span className="text-xs text-text-muted">I&apos;ll use it on:</span>
+                <span className="text-xs text-text-muted">
+                  I&apos;ll use it on:
+                </span>
                 {(["iphone", "android"] as const).map((p) => (
                   <button
                     key={p}
@@ -146,8 +199,8 @@ export function WaitlistCTA() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.5, delay: 0.9 }}
-          className="flex items-center justify-center gap-6 mt-12"
+          transition={{ duration: 0.6, delay: 1.0 }}
+          className="flex items-center justify-center gap-6 mt-14"
         >
           <div className="flex items-center gap-2 text-text-whisper">
             <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">

@@ -139,7 +139,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "This is the climax of the page — it should feel like everything has built to this moment",
       "Screenshot and verify: compelling, warm, inviting, clear call to action"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

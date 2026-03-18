@@ -243,3 +243,37 @@ Chose Option C (morphing particle system) — particles transform between ring �
 
 ### Tasks Marked Passing
 - Task 8: Social Proof section ✅
+
+---
+
+## 2026-03-18T16:00 — Final CTA Section Redesign (Task 9)
+
+**Task:** Build the final CTA section — the grand convergence moment (PRD task 9)
+
+### Changes
+- **`components/sections/WaitlistCTA.tsx`** — Redesigned from standard CTA to full-viewport convergence moment:
+  - `min-h-screen` with `flex items-center justify-center` — full viewport cinematic feel
+  - Convergence glow system: 4 overlapping radial gradients (coral center, gold top-left, sage bottom-right) creating a warm focal point
+  - CSS-only converging rings: 2 animated circles that scale in from 1.3/1.5 to 1.0 on scroll-reveal, simulating particle convergence
+  - Larger headline: `clamp(2rem,5vw,4rem)` with "chapter" in coral serif italic
+  - "Launching soon" badge with coral border glow
+  - CTA button upgraded to `size="lg"` with breathing glow — more prominent than hero
+  - Platform toggle pills, email input, and "No spam" reassurance all preserved
+  - Platform badges (Apple/Android) at bottom with whisper-level text
+  - Generous padding: `py-32` within the flex-centered container
+
+### Screenshots
+- `screenshots/cta-desktop.png` — Desktop 1280x800 (full section)
+- `screenshots/cta-mobile.png` — Mobile 390x844 (full section)
+
+### Visual Notes
+- Warm convergence glow creates a "focal point" feeling — everything builds to this moment
+- Coral serif italic "chapter" is the distinctive typographic moment
+- CTA button with breathing glow is the clear primary action — prominent but not desperate
+- Converging ring animations are very subtle (4-6% opacity) — felt not seen
+- Mobile: full viewport, warm glow visible, CTA is thumb-friendly, stacks cleanly
+- The section reads as a climax — warm, inviting, confident
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 9: Final CTA section ✅
