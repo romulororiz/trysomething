@@ -608,3 +608,47 @@ Previous iterations implemented and verified all 13 tasks (documented in activit
 
 ### Tasks Marked Passing
 - Task 6: How It Works section ✅ (rebuilt with GSAP ScrollTrigger pin:true)
+
+---
+
+## 2026-03-18T17:50 — Hero 3D Scene: Real .glb Models (Task 4 — Correction)
+
+**Task:** Rebuild hero Three.js scene to use real .glb model files instead of hand-built primitive geometry
+
+### Changes
+- **`components/canvas/HeroEnvironment.tsx`** — Complete rewrite from primitive geometry to real .glb models:
+  - Removed: All hand-built geometry components (Guitar, Camera, Paintbrush, ChessPawn, Book, PlantPot, BicycleWheel, CookingPot using torus/box/cylinder/lathe/cone)
+  - Added: `useGLTF` from `@react-three/drei` loading 8 real .glb models from `public/models/`:
+    - **Guitar** (`low_poly_guitar..glb`) — gold, top-left
+    - **Camera** (`vintage_camera__asahi_pentax_h2.glb`) — warm cream, top-right
+    - **Paintbrush** (`low_poly_paint_brush.glb`) — amber, mid-left
+    - **Chess Knight** (`low_poly_chess_-_knight.glb`) — cream, mid-right
+    - **Book Stack** (`book_stack.glb`) — brown, far-left
+    - **Plant** (`indoor_pot_plant_3.glb`) — sage, upper-right
+    - **Telescope** (`telescope_with_the_tripod.glb`) — cream, far-left
+    - **Skateboard** (`skateboard.glb`) — brown, lower-right
+  - 3 additional desktop-only models at far depths: bicycle, cooking pan, hiking boot
+  - Models auto-normalized: centered and scaled to unit bounding box
+  - Warm material override: MeshStandardMaterial with emissive glow (0.35 intensity)
+  - All models preloaded via `useGLTF.preload()`
+  - Camera parallax, ambient dust particles, CSS fallback preserved
+  - Lighting upgraded: stronger directional gold light, 5-point warm lighting system
+  - Fog softened (8→20 range) for better model visibility
+  - Vignette softened to let models show through at edges
+  - Mobile: 60% scale, fewer objects (no desktop extras)
+
+### Screenshots
+- `screenshots/hero-glb-models-desktop.png` — Desktop 1280x800
+- `screenshots/hero-glb-models-mobile.png` — Mobile 390x844
+
+### Visual Notes
+- Real .glb models are recognizable as hobby items (guitar, camera, chess knight, etc.)
+- Warm gold/amber material override gives consistent premium aesthetic
+- Objects float gently at periphery, framing the headline text
+- Text remains fully readable — objects are background atmosphere
+- Emissive glow gives models warmth against the dark background
+- Mobile: clean layout, models scaled down and subtle
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 4: Hero section ✅ (rebuilt with real .glb models)

@@ -94,7 +94,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Scroll-driven progression — each step reveals as user scrolls through",
       "Screenshot and verify: clear storytelling, premium feel, 3D adds value not noise"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "feature",
