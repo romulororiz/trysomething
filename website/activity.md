@@ -202,3 +202,44 @@ Chose Option C (morphing particle system) — particles transform between ring �
 
 ### Tasks Marked Passing
 - Task 7: Features section ✅
+
+---
+
+## 2026-03-18T15:55 — Social Proof Section Redesign (Task 8)
+
+**Task:** Build the Social Proof section — minimal testimonials or stats (PRD task 8)
+
+### Changes
+- **`components/sections/Testimonials.tsx`** — Complete redesign from scrolling wall to minimal glass card layout:
+  - Removed `TestimonialColumns` auto-scrolling wall (too busy for "short and punchy")
+  - Combined both PRD options: 3 impressive stats + 3 testimonial quotes
+  - Stats row with gradient text (gold → warm white → coral → sage accents per stat)
+  - `TiltCard` component — CSS perspective 3D tilt on mouse movement (12° max rotation)
+  - Glare overlay tracks mouse position for realistic light reflection
+  - Asymmetric card layout: middle card offset downward (`md:translate-y-8`)
+  - Glass card aesthetic: `bg-glass`, `border-glass-border`, noise texture overlay
+  - Typographic quote marks in serif italic as decorative element
+  - Gradient divider line between quote and attribution
+  - Staggered scroll-reveal entrance animations per card (0.12s stagger)
+  - Warm atmospheric blooms (burgundy + gold radial gradients)
+  - Section is short and punchy — 3 cards only, not a wall
+  - Generous padding: `py-32 md:py-48`
+
+### Screenshots
+- `screenshots/socialproof-desktop-header.png` — Desktop 1280x800 (header + stats)
+- `screenshots/socialproof-desktop-cards.png` — Desktop 1280x800 (testimonial cards)
+- `screenshots/socialproof-mobile-header.png` — Mobile 390x844 (header + stats + first card)
+- `screenshots/socialproof-mobile-cards.png` — Mobile 390x844 (all 3 cards stacked)
+
+### Visual Notes
+- Stats have warm gradient text — gold for "2,400+", coral for "87%", sage for "48h"
+- 3D tilt on hover is subtle (12°) — premium feel without being gimmicky
+- Glare overlay adds realistic light reflection on mouse movement
+- Asymmetric middle card offset breaks grid monotony
+- Glass cards with noise texture feel premium and contained
+- Coral "Week N" duration tags are the accent moments in attributions
+- Mobile: stats compact nicely in 3-column grid, cards stack with good spacing
+- Build passes clean, no errors
+
+### Tasks Marked Passing
+- Task 8: Social Proof section ✅

@@ -124,7 +124,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "This section is short and punchy — not a wall of testimonials",
       "Screenshot and verify: elegant, trustworthy, premium card design"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
