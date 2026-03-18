@@ -193,7 +193,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Ensure build passes with no warnings",
       "Final screenshot of hero section — this is the money shot"
     ],
-    "passes": false
+    "passes": true
   }
 ]
 ```
