@@ -179,7 +179,7 @@ Every element earns its place. The 3D isn't decoration — it's the storytelling
       "Test mobile performance — reduce particle count on mobile if needed",
       "Screenshot and verify everything still looks premium after optimizations"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "polish",

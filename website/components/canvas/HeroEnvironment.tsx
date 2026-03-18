@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useRef, useMemo, useEffect, useCallback } from "react";
+import { Suspense, useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 /* ─── Config ─────────────────────────────────────────────────── */
 
-const PARTICLE_COUNT = 500;
+const PARTICLE_COUNT_DESKTOP = 500;
+const PARTICLE_COUNT_MOBILE = 200;
 
 /* ─── Shaders ────────────────────────────────────────────────── */
 
@@ -68,7 +69,7 @@ const fragmentShader = /* glsl */ `
 
 /* ─── Shader Particle Field ──────────────────────────────────── */
 
-function GlowParticles() {
+function GlowParticles({ count }: { count: number }) {
   const pointsRef = useRef<THREE.Points>(null);
 
   const uniforms = useMemo(
@@ -80,10 +81,10 @@ function GlowParticles() {
   );
 
   const geometry = useMemo(() => {
-    const positions = new Float32Array(PARTICLE_COUNT * 3);
-    const sizes = new Float32Array(PARTICLE_COUNT);
-    const colors = new Float32Array(PARTICLE_COUNT * 3);
-    const phases = new Float32Array(PARTICLE_COUNT);
+    const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const colors = new Float32Array(count * 3);
+    const phases = new Float32Array(count);
 
     // Warm palette: golds, ambers, soft creams
     const palette = [
@@ -96,7 +97,7 @@ function GlowParticles() {
       new THREE.Color("#DAA520"), // Goldenrod accent
     ];
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       // Spherical distribution with denser center
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
@@ -124,7 +125,7 @@ function GlowParticles() {
     geo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geo.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
     return geo;
-  }, []);
+  }, [count]);
 
   useFrame((state) => {
     if (!pointsRef.current) return;
@@ -176,10 +177,10 @@ function CameraRig() {
 
 /* ─── Scene ──────────────────────────────────────────────────── */
 
-function Scene() {
+function Scene({ particleCount }: { particleCount: number }) {
   return (
     <>
-      <GlowParticles />
+      <GlowParticles count={particleCount} />
       <CameraRig />
     </>
   );
@@ -216,6 +217,16 @@ function FallbackBackground() {
 /* ─── Export ──────────────────────────────────────────────────── */
 
 export function HeroEnvironment() {
+  const [particleCount, setParticleCount] = useState(PARTICLE_COUNT_MOBILE);
+
+  useEffect(() => {
+    setParticleCount(
+      window.innerWidth < 768
+        ? PARTICLE_COUNT_MOBILE
+        : PARTICLE_COUNT_DESKTOP
+    );
+  }, []);
+
   return (
     <div className="absolute inset-0 -z-10">
       <Suspense fallback={<FallbackBackground />}>
@@ -229,7 +240,7 @@ export function HeroEnvironment() {
           }}
           style={{ background: "transparent" }}
         >
-          <Scene />
+          <Scene particleCount={particleCount} />
         </Canvas>
       </Suspense>
 

@@ -6,7 +6,7 @@ import * as THREE from "three";
 
 /* ─── Config ─────────────────────────────────────────────────── */
 
-const PARTICLE_COUNT = 200;
+const PARTICLE_COUNT_DESKTOP = 200;
 
 /* Step shapes: each step morphs particles into a different form */
 const SHAPES = {
@@ -153,17 +153,17 @@ function JourneyParticles({ activeStep }: JourneyParticlesProps) {
 
   // Build initial geometry for step 0
   const geometry = useMemo(() => {
-    const positions = new Float32Array(PARTICLE_COUNT * 3);
-    const targets = new Float32Array(PARTICLE_COUNT * 3);
-    const sizes = new Float32Array(PARTICLE_COUNT);
-    const colors = new Float32Array(PARTICLE_COUNT * 3);
-    const phases = new Float32Array(PARTICLE_COUNT);
+    const positions = new Float32Array(PARTICLE_COUNT_DESKTOP * 3);
+    const targets = new Float32Array(PARTICLE_COUNT_DESKTOP * 3);
+    const sizes = new Float32Array(PARTICLE_COUNT_DESKTOP);
+    const colors = new Float32Array(PARTICLE_COUNT_DESKTOP * 3);
+    const phases = new Float32Array(PARTICLE_COUNT_DESKTOP);
 
     const shapeFn = SHAPES[SHAPE_KEYS[0]];
     const palette = STEP_PALETTES[0];
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const pos = shapeFn(i, PARTICLE_COUNT);
+    for (let i = 0; i < PARTICLE_COUNT_DESKTOP; i++) {
+      const pos = shapeFn(i, PARTICLE_COUNT_DESKTOP);
 
       // Start scattered
       positions[i * 3] = (Math.random() - 0.5) * 5;
@@ -211,7 +211,7 @@ function JourneyParticles({ activeStep }: JourneyParticlesProps) {
     const shapeFn = SHAPES[SHAPE_KEYS[clampedStep]];
     const palette = STEP_PALETTES[clampedStep];
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < PARTICLE_COUNT_DESKTOP; i++) {
       // Current target becomes new start position
       posAttr.setXYZ(
         i,
@@ -221,7 +221,7 @@ function JourneyParticles({ activeStep }: JourneyParticlesProps) {
       );
 
       // Set new target
-      const target = shapeFn(i, PARTICLE_COUNT);
+      const target = shapeFn(i, PARTICLE_COUNT_DESKTOP);
       targetAttr.setXYZ(i, target.x, target.y, target.z);
 
       // Update colors with smooth palette transition

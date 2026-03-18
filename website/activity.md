@@ -354,3 +354,42 @@ Scrolled through the entire page at desktop (1280x800) and mobile (390x844):
 
 ### Tasks Marked Passing
 - Task 11: Full page composition ✅
+
+---
+
+## 2026-03-18T16:10 — Performance Optimization (Task 12)
+
+**Task:** Performance optimization and WebGL fallback (PRD task 12)
+
+### Changes
+- **`components/sections/Hero.tsx`** — Lazy-load Three.js hero scene:
+  - Replaced direct `import { HeroEnvironment }` with `next/dynamic` + `ssr: false`
+  - Three.js bundle (~500kb) now loads asynchronously, not blocking initial render
+  - Matches the pattern already used by JourneyScene in HowItWorks
+
+- **`components/canvas/HeroEnvironment.tsx`** — Mobile particle reduction:
+  - Desktop: 500 particles (unchanged)
+  - Mobile (<768px): 200 particles (60% reduction)
+  - `useEffect` detects viewport width on mount, sets particle count
+  - `GlowParticles` now accepts `count` prop instead of using module constant
+  - Geometry `useMemo` depends on count for proper recalculation
+
+- **`components/canvas/JourneyScene.tsx`** — Cleanup:
+  - Renamed constant to `PARTICLE_COUNT_DESKTOP` for clarity
+  - JourneyScene is `hidden lg:block` — never renders on mobile, no reduction needed
+
+- **`components/canvas/HeroScene.tsx`** — Disable antialiasing:
+  - Changed `antialias: true` to `antialias: false` + `powerPreference: "high-performance"`
+  - Matches HeroEnvironment and JourneyScene configuration
+
+### Already Implemented (verified)
+- WebGL fallback: `FallbackBackground` CSS fallback in both HeroEnvironment and JourneyScene
+- Font preloading: `next/font` with `display: "swap"` in layout.tsx (Manrope + Instrument Serif)
+- No images to optimize: entire page is CSS + Three.js, no `<img>` tags
+- DPR capped at 1.5x on all canvases
+- Static export mode (`output: "export"`) — fully prerendered
+- `prefers-reduced-motion` respected by Lenis smooth scroll and CSS animations
+- Custom scrollbar styling for consistent look
+
+### Tasks Marked Passing
+- Task 12: Performance optimization ✅
