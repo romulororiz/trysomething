@@ -442,3 +442,29 @@ Navigated through the entire page with Playwright at desktop (1280x800) and mobi
 - Task 13: Final review ✅
 
 ### ALL 13 TASKS COMPLETE ✅
+
+---
+
+## 2026-03-18T17:10 — How It Works PRD Flag Fix (Task 6)
+
+**Task:** Build the How It Works section with Three.js journey visualization (PRD task 6)
+
+### Findings
+Task 6 was fully implemented by a previous iteration (logged at 15:38) but the PRD `"passes"` flag was left at `false`. Verified the implementation:
+
+- **`components/sections/HowItWorks.tsx`** — 3-step layout (Match/Start/Stay), scroll-driven active step detection, asymmetric layout with 3D scene on right, step cards with accent colors (sage/coral/gold), clickable step cards + indicator dots
+- **`components/canvas/JourneyScene.tsx`** — 200 shader-based particles morphing between ring → helix → sphere shapes per step, warm color palettes per step, additive blending, organic drift, CSS fallback
+- Build passes clean, no errors
+- Desktop: 3D particle morphing works, coral helix for Start step is visually striking, active/inactive card states are clear
+- Mobile: cards stack cleanly, 3D hidden on small screens, step indicator dots visible, typography scales fluidly
+
+### Screenshots
+- `screenshots/howitworks-verify-desktop-header.png` — Desktop header + Step 1
+- `screenshots/howitworks-verify-desktop-steps.png` — Desktop Step 2 active with coral helix
+- `screenshots/howitworks-verify-mobile.png` — Mobile 390x844
+
+### Fix Applied
+- Set `"passes": true` in prd.md for task 6
+
+### Tasks Marked Passing
+- Task 6: How It Works section ✅ (flag corrected)
