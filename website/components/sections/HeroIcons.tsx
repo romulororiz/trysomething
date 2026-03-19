@@ -382,7 +382,7 @@ export function HeroIcons() {
     };
   }, [isMobile, handleMouseMove]);
 
-  // Filter visible icons on mobile
+  // Filter visible icons on mobile — much more aggressive
   const visibleIcons = isMobile
     ? icons.filter((icon) => !icon.mobileHide)
     : icons;
@@ -390,20 +390,24 @@ export function HeroIcons() {
   return (
     <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden">
       {visibleIcons.map((icon, i) => {
-        const mobileScale = isMobile ? 0.7 : 1;
+        const mobileScale = isMobile ? 0.6 : 1;
         const px = icon.depth * 15;
         const py = icon.depth * 10;
+        // Clamp X position so icon + size never exceeds viewport
+        const iconPx = icon.size * mobileScale;
+        const maxX = isMobile ? Math.min(icon.x, 88) : icon.x;
 
         return (
           <motion.div
             key={i}
             className="absolute"
             style={{
-              left: `${icon.x}%`,
+              left: `${maxX}%`,
               top: `${icon.y}%`,
-              width: icon.size * mobileScale,
-              height: icon.size * mobileScale,
-              // Parallax offset — smooth because of rAF interpolation
+              width: iconPx,
+              height: iconPx,
+              // Clamp to viewport — prevent overflow
+              maxWidth: `calc(100vw - ${maxX}vw)`,
               transform: isMobile
                 ? undefined
                 : `translate(${mouse.x * px}px, ${mouse.y * py}px)`,

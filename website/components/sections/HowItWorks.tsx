@@ -42,9 +42,9 @@ export function HowItWorks() {
     setIsMobile(window.innerWidth < 768);
   }, []);
 
-  // GSAP ScrollTrigger pin
+  // GSAP ScrollTrigger pin — DESKTOP ONLY
   useEffect(() => {
-    if (!sectionRef.current || !pinRef.current) return;
+    if (!sectionRef.current || !pinRef.current || isMobile) return;
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
@@ -65,18 +65,89 @@ export function HowItWorks() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, [updateStep]);
+  }, [updateStep, isMobile]);
 
+  /* ─── MOBILE: simple scrollable section, no pin, no Lottie ─── */
+  if (isMobile) {
+    return (
+      <section id="how-it-works" className="relative bg-black py-20 px-6">
+        <div ref={headerRef}>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={headerInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+            className="text-xs font-semibold uppercase tracking-[0.25em] mb-3"
+            style={{ color: "#6A6A7A" }}
+          >
+            How it works
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={headerInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
+            className="text-2xl font-bold leading-[1.1] tracking-tight text-[#FAFAFA] mb-10"
+          >
+            Four steps from{" "}
+            <span className="font-serif italic text-coral">maybe</span> to
+            momentum.
+          </motion.h2>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {howItWorksSteps.map((step, i) => {
+            const accent = stepAccents[i];
+            return (
+              <motion.div
+                key={step.step}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
+                className={`border-l-[3px] ${accent.border} rounded-xl px-5 py-4 bg-white/[0.03]`}
+              >
+                <div className="flex items-center gap-3 mb-1">
+                  <span className={`text-base font-bold tabular-nums ${accent.color}`}>
+                    {step.step}
+                  </span>
+                  <div className={`h-px w-6 ${accent.dot}`} />
+                  <span className={`text-[10px] font-semibold uppercase tracking-[0.15em] ${accent.color}`}>
+                    {step.title}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold leading-snug tracking-tight text-[#FAFAFA]">
+                  {step.headline}
+                </h3>
+                <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "#8A8A9A" }}>
+                  {step.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Progress dots */}
+        <div className="flex items-center gap-2 mt-6 ml-5">
+          {howItWorksSteps.map((_, i) => (
+            <div
+              key={i}
+              className={`rounded-full w-1.5 h-1.5 ${stepAccents[i].dot} opacity-40`}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  /* ─── DESKTOP: pinned with Lottie visual ─── */
   return (
     <section id="how-it-works" ref={sectionRef} className="relative">
       <div
         ref={pinRef}
         className="relative h-screen bg-black overflow-hidden flex flex-col"
       >
-        {/* ─── Section header (in flow, not absolute) ─── */}
         <div
           ref={headerRef}
-          className="flex-shrink-0 max-w-7xl w-full mx-auto px-6 md:px-10 pt-16 md:pt-20 pb-6 md:pb-8"
+          className="flex-shrink-0 max-w-7xl w-full mx-auto px-10 pt-20 pb-8"
         >
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -99,10 +170,9 @@ export function HowItWorks() {
           </motion.h2>
         </div>
 
-        {/* ─── Main content: cards left + visual right ─── */}
-        <div className="flex-1 flex flex-col md:flex-row items-stretch max-w-7xl w-full mx-auto px-6 md:px-10 pb-10 md:pb-16 min-h-0">
+        <div className="flex-1 flex flex-row items-stretch max-w-7xl w-full mx-auto px-10 pb-16 min-h-0">
           {/* Left — Step cards */}
-          <div className="w-full md:w-[42%] flex flex-col justify-center gap-2 md:gap-2.5 flex-shrink-0 order-2 md:order-1">
+          <div className="w-[42%] flex flex-col justify-center gap-2.5 flex-shrink-0">
             {howItWorksSteps.map((step, i) => {
               const isActive = i === activeStep;
               const accent = stepAccents[i];
@@ -116,16 +186,15 @@ export function HowItWorks() {
                     scale: isActive ? 1 : 0.98,
                   }}
                   transition={{ duration: 0.5, ease: EASE }}
-                  className={`relative rounded-xl px-5 py-3.5 md:px-6 md:py-4 transition-colors duration-500 cursor-default ${
+                  className={`relative rounded-xl px-6 py-4 transition-colors duration-500 cursor-default ${
                     isActive
                       ? `border-l-[3px] ${accent.border} bg-white/[0.03] backdrop-blur-sm`
                       : "border-l-[3px] border-transparent"
                   }`}
                 >
-                  {/* Step number + label row */}
                   <div className="flex items-center gap-3 mb-0.5">
                     <span
-                      className={`text-base md:text-lg font-bold tabular-nums transition-colors duration-500 ${
+                      className={`text-lg font-bold tabular-nums transition-colors duration-500 ${
                         isActive ? accent.color : "text-[#3D3835]"
                       }`}
                     >
@@ -145,16 +214,14 @@ export function HowItWorks() {
                     </span>
                   </div>
 
-                  {/* Headline */}
                   <h3
-                    className={`text-base md:text-lg font-bold leading-snug tracking-tight transition-colors duration-500 ${
+                    className={`text-lg font-bold leading-snug tracking-tight transition-colors duration-500 ${
                       isActive ? "text-[#FAFAFA]" : "text-[#6B6360]"
                     }`}
                   >
                     {step.headline}
                   </h3>
 
-                  {/* Description — expands only when active */}
                   <motion.div
                     initial={false}
                     animate={{
@@ -176,7 +243,6 @@ export function HowItWorks() {
               );
             })}
 
-            {/* Progress dots */}
             <div className="flex items-center gap-2 mt-2 ml-5">
               {howItWorksSteps.map((_, i) => (
                 <div
@@ -193,9 +259,9 @@ export function HowItWorks() {
             </div>
           </div>
 
-          {/* Right — Lottie formation visual */}
-          <div className="w-full md:w-[58%] h-[30vh] md:h-full relative order-1 md:order-2 mb-4 md:mb-0 md:ml-4">
-            <HowItWorksVisual activeStep={activeStep} isMobile={isMobile} />
+          {/* Right — Lottie formation visual (desktop only) */}
+          <div className="w-[58%] h-full relative ml-4">
+            <HowItWorksVisual activeStep={activeStep} isMobile={false} />
           </div>
         </div>
       </div>

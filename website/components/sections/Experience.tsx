@@ -83,9 +83,14 @@ export function Experience() {
   const pinRef = useRef<HTMLDivElement>(null);
   const [activeScreen, setActiveScreen] = useState(0);
   const activeRef = useRef(0);
+  const [isMobile, setIsMobile] = useState(false);
   const { ref: headerRef, inView: headerInView } = useInView({
     threshold: 0.3,
   });
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   const updateScreen = useCallback((idx: number) => {
     if (activeRef.current !== idx) {
@@ -94,39 +99,77 @@ export function Experience() {
     }
   }, []);
 
-  // GSAP ScrollTrigger pin
+  // GSAP ScrollTrigger pin — DESKTOP ONLY
   useEffect(() => {
-    if (!sectionRef.current || !pinRef.current) return;
+    if (!sectionRef.current || !pinRef.current || isMobile) return;
 
-    const mm = gsap.matchMedia();
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top top",
+        end: () => `+=${window.innerHeight * 3.5}`,
+        pin: pinRef.current!,
+        pinSpacing: true,
+        scrub: 0.5,
+        onUpdate: (self) => {
+          const idx = Math.min(3, Math.floor(self.progress * 4));
+          updateScreen(idx);
+        },
+      });
+    }, sectionRef);
 
-    mm.add(
-      {
-        desktop: "(min-width: 768px)",
-        mobile: "(max-width: 767px)",
-      },
-      (context) => {
-        const { desktop } = context.conditions as { desktop: boolean; mobile: boolean };
+    return () => ctx.revert();
+  }, [updateScreen, isMobile]);
 
-        ScrollTrigger.create({
-          trigger: sectionRef.current,
-          start: "top top",
-          end: () =>
-            `+=${window.innerHeight * (desktop ? 3.5 : 2.5)}`,
-          pin: pinRef.current!,
-          pinSpacing: true,
-          scrub: 0.5,
-          onUpdate: (self) => {
-            const idx = Math.min(3, Math.floor(self.progress * 4));
-            updateScreen(idx);
-          },
-        });
-      }
+  /* ─── MOBILE: No pin, no phone mockup. Simple stacked cards. ─── */
+  if (isMobile) {
+    return (
+      <section id="experience" className="relative bg-black py-20 px-6">
+        <div ref={headerRef} className="text-center mb-10">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={headerInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+            className="text-xs font-semibold uppercase tracking-[0.25em] mb-3"
+            style={{ color: "#6A6A7A" }}
+          >
+            The experience
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={headerInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
+            className="text-2xl font-bold leading-[1.1] tracking-tight text-[#FAFAFA]"
+          >
+            Feel it before you{" "}
+            <span className="font-serif italic text-coral">try</span> it.
+          </motion.h2>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          {screens.map((screen, i) => (
+            <motion.div
+              key={screen.id}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
+              className="border-l-[3px] border-coral/30 rounded-xl px-5 py-5 bg-white/[0.03]"
+            >
+              <p className="text-lg font-bold text-[#FAFAFA] leading-snug mb-2">
+                {screen.leftText}
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: "#8A8A9A" }}>
+                {screen.rightText}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
     );
+  }
 
-    return () => mm.revert();
-  }, [updateScreen]);
-
+  /* ─── DESKTOP: Pinned with phone mockup + flanking text ─── */
   const ScreenComponent = screens[activeScreen].component;
 
   return (
@@ -138,7 +181,7 @@ export function Experience() {
         {/* Section header */}
         <div
           ref={headerRef}
-          className="flex-shrink-0 text-center pt-20 md:pt-24 pb-4 md:pb-6 px-6"
+          className="flex-shrink-0 text-center pt-24 pb-6 px-6"
         >
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -160,10 +203,10 @@ export function Experience() {
           </motion.h2>
         </div>
 
-        {/* Main content — flanking text + phone + flanking text */}
-        <div className="flex-1 flex flex-col md:flex-row items-center justify-center max-w-6xl mx-auto px-6 md:px-10 pb-16 md:pb-20 gap-6 md:gap-0 min-h-0">
-          {/* Left flanking text (desktop) */}
-          <div className="hidden md:flex flex-1 justify-end pr-10 lg:pr-14">
+        {/* Main content */}
+        <div className="flex-1 flex flex-row items-center justify-center max-w-6xl mx-auto px-10 pb-20 gap-0 min-h-0">
+          {/* Left flanking text */}
+          <div className="flex flex-1 justify-end pr-14">
             <div className="max-w-[220px] text-right">
               <FlankText
                 text={screens[activeScreen].leftText}
@@ -175,7 +218,7 @@ export function Experience() {
 
           {/* Phone mockup */}
           <div className="flex-shrink-0 relative">
-            <ExperiencePhone className="w-[240px] h-[500px] md:w-[280px] md:h-[580px]">
+            <ExperiencePhone className="w-[280px] h-[580px]">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeScreen}
@@ -191,8 +234,8 @@ export function Experience() {
             </ExperiencePhone>
           </div>
 
-          {/* Right flanking text (desktop) */}
-          <div className="hidden md:flex flex-1 pl-10 lg:pl-14">
+          {/* Right flanking text */}
+          <div className="flex flex-1 pl-14">
             <div className="max-w-[240px]">
               <FlankText
                 text={screens[activeScreen].rightText}
@@ -202,15 +245,6 @@ export function Experience() {
               />
             </div>
           </div>
-
-          {/* Mobile flanking text (below phone, only left/punchy text) */}
-          <div className="md:hidden text-center px-4">
-            <FlankText
-              text={screens[activeScreen].leftText}
-              screenKey={screens[activeScreen].id + "-m"}
-              className="text-lg font-bold leading-snug text-[#FAFAFA]"
-            />
-          </div>
         </div>
 
         {/* Screen indicator dots */}
@@ -218,14 +252,12 @@ export function Experience() {
           {screens.map((s, i) => (
             <div
               key={s.id}
-              className="rounded-full transition-all duration-400"
+              className="rounded-full transition-all duration-300"
               style={{
                 width: i === activeScreen ? 24 : 8,
                 height: 8,
                 background:
-                  i === activeScreen
-                    ? "#FF6B6B"
-                    : "rgba(255,255,255,0.12)",
+                  i === activeScreen ? "#FF6B6B" : "rgba(255,255,255,0.12)",
               }}
             />
           ))}
