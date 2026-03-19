@@ -193,7 +193,7 @@ export function Features() {
   });
 
   return (
-    <section className="relative py-32 md:py-48 overflow-hidden">
+    <section id="features" className="relative py-32 md:py-48 overflow-hidden">
       {/* Atmospheric blooms */}
       <div
         className="absolute top-1/4 right-0 w-[600px] h-[600px] translate-x-1/3 pointer-events-none opacity-20"

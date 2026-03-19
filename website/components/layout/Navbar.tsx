@@ -5,10 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LetterSwap } from "@/components/ui/LetterSwap";
+import { useSmoothScroll } from "@/components/layout/SmoothScroll";
 
 const navLinks = [
+  { label: "The Problem", href: "#solution" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Product", href: "#product" },
+  { label: "Experience", href: "#experience" },
+  { label: "What You Get", href: "#what-you-get" },
   { label: "Testimonials", href: "#testimonials" },
 ];
 
@@ -16,6 +19,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { scrollTo: lenisScrollTo } = useSmoothScroll();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,11 +32,17 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollTo = useCallback((href: string) => {
-    setMobileOpen(false);
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  const scrollTo = useCallback(
+    (href: string) => {
+      setMobileOpen(false);
+      lenisScrollTo(href);
+    },
+    [lenisScrollTo]
+  );
+
+  const scrollToTop = useCallback(() => {
+    lenisScrollTo(0);
+  }, [lenisScrollTo]);
 
   return (
     <>
@@ -52,7 +62,7 @@ export function Navbar() {
       >
         {/* Logo */}
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={scrollToTop}
           className="flex items-center gap-0.5 cursor-pointer"
         >
           <span className="text-xl font-bold text-text-primary tracking-tight">

@@ -253,7 +253,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             defaultValue: 'com.romulororiz.trysomething.service',
           ),
           redirectUri: Uri.parse(
-            'https://server-psi-seven-49.vercel.app/api/auth/apple-callback',
+            'https://api.trysomething.io/api/auth/apple-callback',
           ),
         ),
       );

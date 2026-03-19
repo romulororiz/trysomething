@@ -2,132 +2,146 @@
 
 import { Suspense, useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── Model paths ─────────────────────────────────────────────── */
+/* ─── Config ─────────────────────────────────────────────────── */
 
-const MODEL_CONFIGS = [
-  { path: "/models/low_poly_guitar..glb", position: [-4.5, 2.0, -2.5] as [number, number, number], scale: 0.9, rotation: [0.1, 0.4, 0.3] as [number, number, number], floatSpeed: 0.5, rotationIntensity: 0.25, color: "#DAA520" },
-  { path: "/models/vintage_camera__asahi_pentax_h2.glb", position: [4.5, 1.5, -3] as [number, number, number], scale: 0.7, rotation: [0.15, -0.3, 0.1] as [number, number, number], floatSpeed: 0.45, rotationIntensity: 0.2, color: "#E8D5B7" },
-  { path: "/models/low_poly_paint_brush.glb", position: [-4.2, -2.0, -2] as [number, number, number], scale: 0.8, rotation: [0, 0, -0.5] as [number, number, number], floatSpeed: 0.6, rotationIntensity: 0.3, color: "#C8956C" },
-  { path: "/models/low_poly_chess_-_knight.glb", position: [5.0, -1.2, -4] as [number, number, number], scale: 0.75, rotation: [0, 0.6, 0] as [number, number, number], floatSpeed: 0.35, rotationIntensity: 0.15, color: "#F0EBE3" },
-  { path: "/models/book_stack.glb", position: [-5.5, -0.2, -3.5] as [number, number, number], scale: 0.7, rotation: [0.2, 0.8, 0.1] as [number, number, number], floatSpeed: 0.5, rotationIntensity: 0.2, color: "#D4A574" },
-  { path: "/models/indoor_pot_plant_3.glb", position: [5.2, 2.8, -4] as [number, number, number], scale: 0.65, rotation: [0, 0.5, 0] as [number, number, number], floatSpeed: 0.4, rotationIntensity: 0.12, color: "#7DBDAB" },
-  { path: "/models/telescope_with_the_tripod.glb", position: [-6.0, 0.5, -5] as [number, number, number], scale: 0.6, rotation: [0.3, 0.2, 0.1] as [number, number, number], floatSpeed: 0.3, rotationIntensity: 0.18, color: "#E8D5B7" },
-  { path: "/models/skateboard.glb", position: [3.8, -2.8, -3] as [number, number, number], scale: 0.7, rotation: [0.4, -0.3, 0.2] as [number, number, number], floatSpeed: 0.55, rotationIntensity: 0.28, color: "#D4A574" },
-];
+const PARTICLE_COUNT_DESKTOP = 500;
+const PARTICLE_COUNT_MOBILE = 200;
 
-const DESKTOP_EXTRA_MODELS = [
-  { path: "/models/low-_poly_bicycle__5.glb", position: [7.5, -2.5, -9] as [number, number, number], scale: 0.25, rotation: [0.2, -0.4, 0] as [number, number, number], floatSpeed: 0.25, rotationIntensity: 0.1, color: "#C8956C" },
-  { path: "/models/cc0_-_pan_3.glb", position: [-7.5, 3.0, -10] as [number, number, number], scale: 0.2, rotation: [-0.1, 1.0, 0.2] as [number, number, number], floatSpeed: 0.2, rotationIntensity: 0.1, color: "#DAA520" },
-  { path: "/models/salomon_outline_gtx_boot.glb", position: [-3.5, -3.8, -8] as [number, number, number], scale: 0.25, rotation: [0.3, 0.5, 0.1] as [number, number, number], floatSpeed: 0.3, rotationIntensity: 0.12, color: "#D4A574" },
-];
+/* ─── Shaders ────────────────────────────────────────────────── */
 
-/* ─── Preload all models ──────────────────────────────────────── */
+const vertexShader = /* glsl */ `
+  attribute float aSize;
+  attribute vec3 aColor;
+  attribute float aPhase;
 
-MODEL_CONFIGS.forEach((m) => useGLTF.preload(m.path));
-DESKTOP_EXTRA_MODELS.forEach((m) => useGLTF.preload(m.path));
+  varying vec3 vColor;
+  varying float vAlpha;
 
-/* ─── Single hobby model component ───────────────────────────── */
+  uniform float uTime;
+  uniform float uPixelRatio;
 
-interface HobbyModelProps {
-  path: string;
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: number;
-  floatSpeed: number;
-  rotationIntensity: number;
-  color: string;
-  isMobile: boolean;
-}
+  void main() {
+    vec3 pos = position;
 
-function HobbyModel({
-  path,
-  position,
-  rotation,
-  scale: baseScale,
-  floatSpeed,
-  rotationIntensity,
-  color,
-  isMobile,
-}: HobbyModelProps) {
-  const { scene } = useGLTF(path);
-  const clonedScene = useMemo(() => {
-    const clone = scene.clone(true);
+    // Organic drift
+    float t = uTime * 0.25;
+    pos.y += sin(t + aPhase * 6.28) * 0.18;
+    pos.x += cos(t * 0.6 + aPhase * 4.0) * 0.1;
+    pos.z += sin(t * 0.4 + aPhase * 3.0) * 0.06;
 
-    // Normalize model: center it and scale to a unit bounding box
-    const box = new THREE.Box3().setFromObject(clone);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const normalizeScale = maxDim > 0 ? 1 / maxDim : 1;
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
 
-    clone.position.sub(center);
-    clone.scale.multiplyScalar(normalizeScale);
+    // Size: larger when closer, breathing effect
+    float breathe = 1.0 + sin(t * 1.8 + aPhase * 6.28) * 0.25;
+    float size = aSize * breathe * uPixelRatio;
+    gl_PointSize = size * (280.0 / -mvPosition.z);
 
-    // Apply warm-toned material override for consistent premium aesthetic
-    clone.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.material = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(color),
-          roughness: 0.4,
-          metalness: 0.25,
-          transparent: true,
-          opacity: 0.85,
-          emissive: new THREE.Color(color),
-          emissiveIntensity: 0.35,
-        });
-      }
-    });
+    gl_Position = projectionMatrix * mvPosition;
 
-    return clone;
-  }, [scene, color]);
+    vColor = aColor;
+    // Depth-based fade: closer = more visible
+    float depthFade = smoothstep(-18.0, -2.0, mvPosition.z);
+    float pulse = 0.6 + sin(t * 1.5 + aPhase * 6.28) * 0.15;
+    vAlpha = depthFade * pulse;
+  }
+`;
 
-  const s = isMobile ? baseScale * 0.6 : baseScale;
+const fragmentShader = /* glsl */ `
+  varying vec3 vColor;
+  varying float vAlpha;
 
-  return (
-    <Float speed={floatSpeed} rotationIntensity={rotationIntensity} floatIntensity={0.5}>
-      <group position={position} rotation={rotation} scale={s}>
-        <primitive object={clonedScene} />
-      </group>
-    </Float>
-  );
-}
+  void main() {
+    // Distance from center of point sprite
+    vec2 uv = gl_PointCoord - vec2(0.5);
+    float d = length(uv);
+    if (d > 0.5) discard;
 
-/* ─── Ambient Dust Particles ─────────────────────────────────── */
+    // Soft glow: bright core fading to soft halo
+    float glow = exp(-d * 6.0);
+    float core = smoothstep(0.12, 0.0, d) * 0.5;
+    float alpha = (glow * 0.7 + core) * vAlpha;
 
-function AmbientParticles({ count = 80 }: { count: number }) {
+    gl_FragColor = vec4(vColor, alpha);
+  }
+`;
+
+/* ─── Shader Particle Field ──────────────────────────────────── */
+
+function GlowParticles({ count }: { count: number }) {
   const pointsRef = useRef<THREE.Points>(null);
+
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uPixelRatio: { value: 1.5 },
+    }),
+    [],
+  );
 
   const geometry = useMemo(() => {
     const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const colors = new Float32Array(count * 3);
+    const phases = new Float32Array(count);
+
+    // Warm palette: golds, ambers, soft creams
+    const palette = [
+      new THREE.Color("#F0EBE3"), // Warm cream
+      new THREE.Color("#F0EBE3"), // Warm cream (weighted)
+      new THREE.Color("#D4A574"), // Warm gold
+      new THREE.Color("#C8956C"), // Amber
+      new THREE.Color("#E8D5B7"), // Light gold
+      new THREE.Color("#F5E6D3"), // Pale amber
+      new THREE.Color("#DAA520"), // Goldenrod accent
+    ];
 
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 24;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 16;
-      positions[i * 3 + 2] = -2 - Math.random() * 12;
+      // Spherical distribution with denser center
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = Math.pow(Math.random(), 0.5) * 13;
+
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.65;
+      positions[i * 3 + 2] = -2 - r * Math.cos(phi) * 0.4;
+
+      // Varying sizes — some tiny stars, some larger glows
+      const sizeRand = Math.random();
+      sizes[i] = sizeRand < 0.7 ? 1.5 + Math.random() * 3 : 4 + Math.random() * 6;
+
+      phases[i] = Math.random();
+
+      const color = palette[Math.floor(Math.random() * palette.length)];
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    geo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
     return geo;
   }, [count]);
 
   useFrame((state) => {
     if (!pointsRef.current) return;
-    pointsRef.current.rotation.y = state.clock.elapsedTime * 0.008;
+    const material = pointsRef.current.material as THREE.ShaderMaterial;
+    material.uniforms.uTime.value = state.clock.elapsedTime;
   });
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
-        color="#D4A574"
-        size={0.02}
+      <shaderMaterial
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={uniforms}
         transparent
-        opacity={0.3}
-        sizeAttenuation
         depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
     </points>
   );
@@ -151,11 +165,11 @@ function CameraRig() {
   }, [onMove]);
 
   useFrame(() => {
-    smooth.current.x += (mouse.current.x - smooth.current.x) * 0.02;
-    smooth.current.y += (mouse.current.y - smooth.current.y) * 0.02;
+    smooth.current.x += (mouse.current.x - smooth.current.x) * 0.025;
+    smooth.current.y += (mouse.current.y - smooth.current.y) * 0.025;
     camera.position.x = smooth.current.x * 0.5;
     camera.position.y = -smooth.current.y * 0.35;
-    camera.lookAt(0, 0, -4);
+    camera.lookAt(0, 0, -5);
   });
 
   return null;
@@ -163,38 +177,10 @@ function CameraRig() {
 
 /* ─── Scene ──────────────────────────────────────────────────── */
 
-function Scene({ isMobile }: { isMobile: boolean }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.05) * 0.06;
-  });
-
+function Scene({ particleCount }: { particleCount: number }) {
   return (
     <>
-      {/* Warm amber/gold lighting system */}
-      <ambientLight intensity={0.3} color="#F0EBE3" />
-      <directionalLight position={[6, 5, 4]} intensity={1.2} color="#DAA520" />
-      <pointLight position={[-5, -3, 2]} intensity={0.6} color="#C8956C" distance={18} />
-      <pointLight position={[0, 2, 6]} intensity={0.4} color="#F0EBE3" distance={14} />
-      <pointLight position={[3, -2, 3]} intensity={0.3} color="#DAA520" distance={12} />
-
-      {/* Depth fog for far objects */}
-      <fog attach="fog" args={["#0A0A0F", 8, 20]} />
-
-      <group ref={groupRef}>
-        {MODEL_CONFIGS.map((config) => (
-          <HobbyModel key={config.path} {...config} isMobile={isMobile} />
-        ))}
-
-        {!isMobile &&
-          DESKTOP_EXTRA_MODELS.map((config) => (
-            <HobbyModel key={config.path} {...config} isMobile={false} />
-          ))}
-      </group>
-
-      <AmbientParticles count={isMobile ? 40 : 80} />
+      <GlowParticles count={particleCount} />
       <CameraRig />
     </>
   );
@@ -205,29 +191,25 @@ function Scene({ isMobile }: { isMobile: boolean }) {
 function FallbackBackground() {
   return (
     <div className="absolute inset-0">
-      {[
-        { shape: "◆", x: 15, y: 20, size: 28, delay: 0, color: "rgba(218,165,32,0.2)" },
-        { shape: "○", x: 75, y: 30, size: 36, delay: 1, color: "rgba(232,213,183,0.15)" },
-        { shape: "△", x: 40, y: 65, size: 24, delay: 2, color: "rgba(200,149,108,0.18)" },
-        { shape: "□", x: 85, y: 70, size: 20, delay: 0.5, color: "rgba(240,235,227,0.12)" },
-        { shape: "◇", x: 25, y: 80, size: 22, delay: 1.5, color: "rgba(125,189,171,0.15)" },
-        { shape: "○", x: 60, y: 15, size: 18, delay: 2.5, color: "rgba(212,165,116,0.12)" },
-      ].map((item, i) => (
-        <div
-          key={i}
-          className="absolute select-none pointer-events-none"
-          style={{
-            left: `${item.x}%`,
-            top: `${item.y}%`,
-            fontSize: `${item.size}px`,
-            color: item.color,
-            animation: `breathe ${4 + i * 0.5}s ease-in-out infinite`,
-            animationDelay: `${item.delay}s`,
-          }}
-        >
-          {item.shape}
-        </div>
-      ))}
+      {Array.from({ length: 50 }).map((_, i) => {
+        const size = 1 + Math.random() * 3;
+        return (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${size}px`,
+              height: `${size}px`,
+              background: `rgba(212, 165, 116, ${0.15 + Math.random() * 0.3})`,
+              filter: "blur(1px)",
+              animation: `breathe ${3 + Math.random() * 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 3}s`,
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -235,10 +217,14 @@ function FallbackBackground() {
 /* ─── Export ──────────────────────────────────────────────────── */
 
 export function HeroEnvironment() {
-  const [isMobile, setIsMobile] = useState(true);
+  const [particleCount, setParticleCount] = useState(PARTICLE_COUNT_MOBILE);
 
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
+    setParticleCount(
+      window.innerWidth < 768
+        ? PARTICLE_COUNT_MOBILE
+        : PARTICLE_COUNT_DESKTOP
+    );
   }, []);
 
   return (
@@ -254,7 +240,7 @@ export function HeroEnvironment() {
           }}
           style={{ background: "transparent" }}
         >
-          <Scene isMobile={isMobile} />
+          <Scene particleCount={particleCount} />
         </Canvas>
       </Suspense>
 
@@ -263,26 +249,26 @@ export function HeroEnvironment() {
         className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(218,165,32,0.05), transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(212,165,116,0.06), transparent 70%)",
         }}
       />
       <div
         className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(200,149,108,0.035), transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(200,149,108,0.04), transparent 70%)",
         }}
       />
 
-      {/* Vignette — subtle, lets models show through */}
+      {/* Vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 40%, var(--color-bg) 100%)",
+            "radial-gradient(ellipse at center, transparent 25%, var(--color-bg) 100%)",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-bg/10 via-transparent to-bg/70 pointer-events-none" />
     </div>
   );
 }

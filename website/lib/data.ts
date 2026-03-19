@@ -132,7 +132,7 @@ export const howItWorksSteps = [
     headline: "Find what fits your life",
     description:
       "Answer a few honest questions about your time, budget, and energy. We match you with one hobby that actually fits\u2014not 500 options to scroll through.",
-    accent: "teal",
+    accent: "burgundy",
   },
   {
     step: "02",
@@ -149,5 +149,13 @@ export const howItWorksSteps = [
     description:
       "A weekly plan that adapts. An AI coach that notices when you stall. Reflection prompts that make progress visible. The quitting point never arrives.",
     accent: "burgundy",
+  },
+  {
+    step: "04",
+    title: "Grow",
+    headline: "Make it part of your life",
+    description:
+      "Advanced roadmaps, community connections, and new challenges. What started as \u201Cmaybe\u201D becomes \u201Cthis is my thing.\u201D",
+    accent: "coral",
   },
 ];

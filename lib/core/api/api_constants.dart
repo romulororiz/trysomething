@@ -2,7 +2,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const baseUrl = 'https://server-psi-seven-49.vercel.app/api';
+  static const baseUrl = 'https://api.trysomething.io';
 
   // Auth
   static const authRegister = '/auth/register';
