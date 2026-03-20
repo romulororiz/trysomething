@@ -9,11 +9,13 @@ import { Manifesto } from "@/components/sections/Manifesto";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { WaitlistCTA } from "@/components/sections/WaitlistCTA";
 import { Footer } from "@/components/layout/Footer";
+import { MobileAmbientIcons } from "@/components/layout/MobileAmbientIcons";
 
 export default function LandingPage() {
   return (
     <SmoothScroll>
       <Navbar />
+      <MobileAmbientIcons />
 
       <main>
         <Hero />

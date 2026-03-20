@@ -95,7 +95,7 @@ export function HeroContent() {
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.8, delay: 1.3, ease: EASE }}
-        className="mt-12 inline-block px-12 py-4 font-semibold text-base rounded-[10px] cursor-pointer transition-all duration-300 hover:scale-[1.03]"
+        className="mt-12 inline-block px-10 py-4 font-semibold text-base rounded-full cursor-pointer transition-all duration-300 hover:scale-[1.03]"
         style={{
           backgroundColor: ACCENT,
           color: "#FFFFFF",
