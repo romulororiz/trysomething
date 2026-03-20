@@ -10,7 +10,6 @@ import { useSmoothScroll } from "@/components/layout/SmoothScroll";
 const navLinks = [
   { label: "The Problem", href: "#solution" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Experience", href: "#experience" },
   { label: "What You Get", href: "#what-you-get" },
   { label: "Testimonials", href: "#testimonials" },
 ];
@@ -89,14 +88,14 @@ export function Navbar() {
 
         {/* Desktop CTA */}
         <button
-          onClick={() => scrollTo("#waitlist")}
+          onClick={() => scrollTo("#download")}
           className={cn(
             "hidden md:block px-5 py-2.5 rounded-full text-sm font-semibold cursor-pointer",
             "bg-coral text-white hover:bg-coral-hover transition-colors duration-200",
             "active:scale-[0.97] transition-transform"
           )}
         >
-          Get Early Access
+          Download
         </button>
 
         {/* Mobile hamburger */}
@@ -119,28 +118,26 @@ export function Navbar() {
             transition={{ duration: 0.25 }}
             className="fixed inset-0 z-[39] pt-24 px-8 bg-bg/95 backdrop-blur-2xl"
           >
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-1">
               {navLinks.map((link, i) => (
                 <motion.button
                   key={link.href}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ duration: 0.3, delay: i * 0.06, ease: [0.33, 1, 0.68, 1] }}
                   onClick={() => scrollTo(link.href)}
-                  className="text-3xl font-bold text-text-primary text-left cursor-pointer"
+                  whileTap={{ scale: 0.97, x: 4 }}
+                  className="text-lg font-semibold text-text-secondary text-left cursor-pointer py-3 px-2 rounded-lg transition-colors duration-200 active:text-text-primary hover:text-text-primary hover:bg-white/[0.03]"
                 >
                   {link.label}
                 </motion.button>
               ))}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                onClick={() => scrollTo("#waitlist")}
-                className="mt-6 px-8 py-4 rounded-full text-lg font-bold text-white bg-coral w-full cursor-pointer breathing-glow"
+              <button
+                onClick={() => scrollTo("#download")}
+                className="mt-4 px-6 py-3.5 rounded-full text-base font-semibold text-white bg-coral w-full cursor-pointer breathing-glow active:scale-[0.97] transition-transform"
               >
-                Get Early Access
-              </motion.button>
+                Download
+              </button>
             </div>
           </motion.div>
         )}

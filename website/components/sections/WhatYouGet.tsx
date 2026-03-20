@@ -239,7 +239,7 @@ export function WhatYouGet() {
           <span className="font-serif italic" style={{ color: CORAL }}>
             One app
           </span>
-          . Launching soon.
+          . Download now.
         </motion.p>
       </div>
     </section>

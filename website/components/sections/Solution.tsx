@@ -128,7 +128,7 @@ export function Solution() {
             <RevealLine>
               <p
                 className="text-[clamp(1.5rem,3.5vw,2.8rem)] font-bold leading-[1.2] tracking-tight"
-                style={{ color: "#7A7A8A" }}
+                style={{ color: "#F0EBE3" }}
               >
                 You&apos;ve been meaning to start{" "}
                 <span className="font-serif italic text-coral">something</span>{" "}
@@ -139,7 +139,7 @@ export function Solution() {
             <RevealLine delay={0.08}>
               <p
                 className="text-[clamp(1.5rem,3.5vw,2.8rem)] font-bold leading-[1.2] tracking-tight"
-                style={{ color: "#7A7A8A" }}
+                style={{ color: "#F0EBE3" }}
               >
                 A hobby. A passion. Anything that isn&apos;t scrolling, working,
                 or waiting for the weekend.
@@ -149,7 +149,7 @@ export function Solution() {
             <RevealLine delay={0.1}>
               <p
                 className="text-xl md:text-2xl leading-relaxed max-w-2xl"
-                style={{ color: "#6A6A7A" }}
+                style={{ color: "#8A8A9A" }}
               >
                 But every time you try to figure out what, you end up lost in a
                 sea of listicles, YouTube rabbit holes, and abandoned shopping
@@ -167,7 +167,7 @@ export function Solution() {
             </RevealLine>
 
             <RevealLine delay={0.15}>
-              <p className="text-[clamp(1.25rem,2.5vw,2rem)] font-bold tracking-tight text-coral">
+              <p className="text-[clamp(1.25rem,2.5vw,2rem)] font-bold font-serif italic tracking-tight text-coral">
                 Again.
               </p>
             </RevealLine>

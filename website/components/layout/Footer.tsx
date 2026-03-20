@@ -30,9 +30,6 @@ export function Footer() {
               The best app for helping overwhelmed adults choose one hobby and
               actually stick with it for 30 days.
             </p>
-            <p className="text-text-muted text-xs mt-6">
-              Coming soon to iPhone and Android.
-            </p>
           </div>
 
           {/* Nav column */}
@@ -43,9 +40,9 @@ export function Footer() {
             <ul className="space-y-3">
               {[
                 { label: "How It Works", href: "#how-it-works" },
-                { label: "Product", href: "#product" },
+                { label: "What You Get", href: "#what-you-get" },
                 { label: "Testimonials", href: "#testimonials" },
-                { label: "Get Early Access", href: "#waitlist" },
+                { label: "Download", href: "#download" },
               ].map((link) => (
                 <li key={link.href}>
                   <button

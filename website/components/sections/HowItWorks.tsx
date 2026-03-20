@@ -11,9 +11,9 @@ import { HowItWorksVisual } from "./HowItWorksVisual";
 gsap.registerPlugin(ScrollTrigger);
 
 const stepAccents = [
-  { border: "border-[#5A9E8F]", color: "text-[#7DBDAB]", dot: "bg-[#7DBDAB]" },
   { border: "border-coral", color: "text-coral", dot: "bg-coral" },
-  { border: "border-[#9F1239]", color: "text-[#C45A72]", dot: "bg-[#C45A72]" },
+  { border: "border-coral", color: "text-coral", dot: "bg-coral" },
+  { border: "border-coral", color: "text-coral", dot: "bg-coral" },
   { border: "border-coral", color: "text-coral", dot: "bg-coral" },
 ];
 

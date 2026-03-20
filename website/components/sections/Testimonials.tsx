@@ -194,44 +194,43 @@ export function Testimonials() {
           ))}
         </div>
 
-        {/* Testimonial cards — asymmetric layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+        {/* Testimonial cards — asymmetric on desktop, compact on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
           {testimonials.map((t, i) => (
             <TiltCard
               key={t.name}
               index={i}
               className={i === 1 ? "md:translate-y-8" : ""}
             >
-              <div className="p-7 md:p-8">
+              <div className="p-5 md:p-8">
                 {/* Quote mark */}
-                <span className="block font-serif italic text-3xl text-text-whisper leading-none mb-4 select-none">
+                <span className="block font-serif italic text-xl md:text-3xl text-text-whisper leading-none mb-2 md:mb-4 select-none">
                   &ldquo;
                 </span>
 
                 {/* Quote text */}
-                <p className="text-text-secondary text-sm md:text-base leading-relaxed">
+                <p className="text-text-secondary text-[13px] md:text-base leading-relaxed">
                   {t.quote}
                 </p>
 
                 {/* Divider */}
-                <div className="mt-6 mb-5 h-px w-12 bg-gradient-to-r from-glass-border to-transparent" />
+                <div className="mt-4 mb-3 md:mt-6 md:mb-5 h-px w-10 bg-gradient-to-r from-glass-border to-transparent" />
 
                 {/* Attribution */}
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-coral/20 via-surface-elevated to-surface-bright flex items-center justify-center ring-1 ring-glass-border flex-shrink-0">
-                    <span className="text-xs font-bold text-text-primary">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-coral/20 via-surface-elevated to-surface-bright flex items-center justify-center ring-1 ring-glass-border flex-shrink-0">
+                    <span className="text-[10px] md:text-xs font-bold text-text-primary">
                       {t.name[0]}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-text-primary leading-tight">
+                    <p className="text-[13px] md:text-sm font-semibold text-text-primary leading-tight">
                       {t.name}
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-xs text-text-muted">{t.hobby}</span>
+                      <span className="text-[11px] md:text-xs text-text-muted">{t.hobby}</span>
                       <span className="w-0.5 h-0.5 rounded-full bg-text-whisper" />
-                      <span className="text-xs text-coral font-medium">
+                      <span className="text-[11px] md:text-xs text-coral font-medium">
                         {t.duration}
                       </span>
                     </div>
