@@ -7,6 +7,8 @@
     }
   ],
   "routes": [
+    { "src": "/api/cron/purge-deleted-users", "dest": "/api/cron/purge-deleted-users.ts" },
+    { "src": "/api/users/me/export", "dest": "/api/users/[path].ts?path=export" },
     { "src": "/api/health", "dest": "/api/health.ts" },
     { "src": "/api/auth/(register|login|refresh|google)", "dest": "/api/auth/[action].ts?action=$1" },
     { "src": "/api/users/hobbies-sync", "dest": "/api/users/[path].ts?path=hobbies-sync" },
@@ -41,5 +43,11 @@
     { "src": "/api/hobbies/([^/]+)/(faq|cost|budget)", "dest": "/api/hobbies/[id]/[feature].ts?id=$1&feature=$2" },
     { "src": "/api/hobbies/([^/]+)", "dest": "/api/hobbies/[id]/index.ts?id=$1" },
     { "src": "/api/hobbies", "dest": "/api/hobbies/index.ts" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/purge-deleted-users",
+      "schedule": "0 3 * * *"
+    }
   ]
 }
