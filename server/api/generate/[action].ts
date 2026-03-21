@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 // ═══════════════════════════════════════════════════
 
 async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const { query } = req.body ?? {};
@@ -222,7 +222,7 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
 // ═══════════════════════════════════════════════════
 
 async function handleGenerateFaq(req: VercelRequest, res: VercelResponse) {
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const { hobbyId } = req.body ?? {};
@@ -267,7 +267,7 @@ async function handleGenerateFaq(req: VercelRequest, res: VercelResponse) {
 // ═══════════════════════════════════════════════════
 
 async function handleGenerateCost(req: VercelRequest, res: VercelResponse) {
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const { hobbyId } = req.body ?? {};
@@ -314,7 +314,7 @@ async function handleGenerateCost(req: VercelRequest, res: VercelResponse) {
 // ═══════════════════════════════════════════════════
 
 async function handleGenerateBudget(req: VercelRequest, res: VercelResponse) {
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const { hobbyId } = req.body ?? {};
@@ -376,7 +376,7 @@ interface CoachChatMessage {
 }
 
 async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const { hobbyId, message, conversationHistory, modeOverride } = req.body ?? {};

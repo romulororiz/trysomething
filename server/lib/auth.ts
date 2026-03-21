@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { errorResponse } from "./middleware";
+import { prisma } from "./db";
 
 const SALT_ROUNDS = 12;
 
@@ -44,12 +45,13 @@ export function verifyRefreshToken(token: string): { sub: string } {
 
 /**
  * Extracts and verifies the JWT from the Authorization header.
+ * Checks that the user has not been soft-deleted.
  * Returns the userId on success, or null after sending a 401 response.
  */
-export function requireAuth(
+export async function requireAuth(
   req: VercelRequest,
   res: VercelResponse
-): string | null {
+): Promise<string | null> {
   const header = req.headers.authorization;
   if (!header || !header.startsWith("Bearer ")) {
     errorResponse(res, 401, "Missing or invalid authorization header");
@@ -57,6 +59,17 @@ export function requireAuth(
   }
   try {
     const { sub } = verifyAccessToken(header.slice(7));
+
+    // Check if user is soft-deleted
+    const user = await prisma.user.findUnique({
+      where: { id: sub },
+      select: { deletedAt: true },
+    });
+    if (!user || user.deletedAt) {
+      errorResponse(res, 401, "Invalid or expired token");
+      return null;
+    }
+
     return sub;
   } catch {
     errorResponse(res, 401, "Invalid or expired token");

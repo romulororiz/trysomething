@@ -93,7 +93,7 @@ async function handleMe(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "PUT"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -136,7 +136,7 @@ async function handlePreferences(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["PUT"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -174,7 +174,7 @@ async function handleHobbies(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -220,7 +220,7 @@ async function handleHobbiesSync(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -283,7 +283,7 @@ async function handleHobbyDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["PUT", "DELETE", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const hobbyId = req.query.hobbyId as string;
@@ -400,7 +400,7 @@ async function handleActivity(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -427,7 +427,7 @@ async function handleJournal(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -464,7 +464,7 @@ async function handleJournalDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const entryId = req.query.entryId as string;
@@ -492,7 +492,7 @@ async function handleNotes(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "PUT", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const hobbyId = req.query.hobbyId as string;
@@ -547,7 +547,7 @@ async function handleSchedule(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -587,7 +587,7 @@ async function handleScheduleDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const eventId = req.query.eventId as string;
@@ -615,7 +615,7 @@ async function handleShopping(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "PUT"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const hobbyId = req.query.hobbyId as string;
@@ -660,7 +660,7 @@ async function handleStories(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -704,7 +704,7 @@ async function handleStoriesDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const storyId = req.query.storyId as string;
@@ -732,7 +732,7 @@ async function handleStoriesReact(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["POST", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const storyId = req.query.storyId as string;
@@ -770,7 +770,7 @@ async function handleBuddies(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -845,7 +845,7 @@ async function handleBuddyRequests(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -915,7 +915,7 @@ async function handleBuddyRequestsDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["PUT", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const requestId = req.query.requestId as string;
@@ -977,7 +977,7 @@ async function handleSimilarUsers(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -1055,7 +1055,7 @@ async function handleChallengesRoute(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -1075,7 +1075,7 @@ async function handleAchievementsRoute(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
