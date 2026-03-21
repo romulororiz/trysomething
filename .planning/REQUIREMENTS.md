@@ -75,35 +75,35 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | — | Pending |
-| COMP-02 | — | Pending |
-| COMP-03 | — | Pending |
-| COMP-04 | — | Pending |
-| COMP-05 | — | Pending |
-| COMP-06 | — | Pending |
-| COMP-07 | — | Pending |
-| COMP-08 | — | Pending |
-| COMP-09 | — | Pending |
-| COMP-10 | — | Pending |
-| COMP-11 | — | Pending |
-| COMP-12 | — | Pending |
-| COMP-13 | — | Pending |
-| COMP-14 | — | Pending |
-| SEC-01 | — | Pending |
-| SEC-02 | — | Pending |
-| SEC-03 | — | Pending |
-| AI-01 | — | Pending |
-| AI-02 | — | Pending |
-| AI-03 | — | Pending |
-| SUB-01 | — | Pending |
-| CLEAN-01 | — | Pending |
-| DX-01 | — | Pending |
+| COMP-01 | Phase 4 | Pending |
+| COMP-02 | Phase 4 | Pending |
+| COMP-03 | Phase 4 | Pending |
+| COMP-04 | Phase 5 | Pending |
+| COMP-05 | Phase 5 | Pending |
+| COMP-06 | Phase 4 | Pending |
+| COMP-07 | Phase 4 | Pending |
+| COMP-08 | Phase 4 | Pending |
+| COMP-09 | Phase 3 | Pending |
+| COMP-10 | Phase 3 | Pending |
+| COMP-11 | Phase 3 | Pending |
+| COMP-12 | Phase 9 | Pending |
+| COMP-13 | Phase 9 | Pending |
+| COMP-14 | Phase 9 | Pending |
+| SEC-01 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Pending |
+| SEC-03 | Phase 2 | Pending |
+| AI-01 | Phase 8 | Pending |
+| AI-02 | Phase 8 | Pending |
+| AI-03 | Phase 8 | Pending |
+| SUB-01 | Phase 6 | Pending |
+| CLEAN-01 | Phase 7 | Pending |
+| DX-01 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 ⚠️
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after initial definition*
+*Last updated: 2026-03-21 — Traceability populated after roadmap creation*
