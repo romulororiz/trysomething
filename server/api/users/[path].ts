@@ -6,7 +6,7 @@ import {
   errorResponse,
 } from "../../lib/middleware";
 import { prisma } from "../../lib/db";
-import { requireAuth } from "../../lib/auth";
+import { requireAuth, comparePassword } from "../../lib/auth";
 import {
   mapUserWithPreferences,
   mapUserPreference,
@@ -81,6 +81,8 @@ export default async function handler(
       return handleAchievementsRoute(req, res);
     case "revenuecat-webhook":
       return handleRevenueCatWebhook(req, res);
+    case "export":
+      return handleExport(req, res);
     default:
       errorResponse(res, 404, `Unknown user path '${path}'`);
   }
@@ -92,13 +94,52 @@ async function handleMe(
   req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {
-  if (methodNotAllowed(req, res, ["GET", "PUT"])) return;
+  if (methodNotAllowed(req, res, ["GET", "PUT", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
-    if (req.method === "GET") {
+    if (req.method === "DELETE") {
+      const { password } = req.body ?? {};
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { passwordHash: true },
+      });
+
+      if (!user) {
+        errorResponse(res, 404, "User not found");
+        return;
+      }
+
+      // Verify password for email/password users; skip for OAuth-only users (empty passwordHash)
+      if (user.passwordHash) {
+        if (!password) {
+          errorResponse(res, 400, "Password is required");
+          return;
+        }
+        const valid = await comparePassword(password, user.passwordHash);
+        if (!valid) {
+          errorResponse(res, 403, "Invalid password");
+          return;
+        }
+      }
+
+      // Soft-delete: set deletedAt timestamp
+      const now = new Date();
+      const purgeAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { deletedAt: now },
+      });
+
+      res.status(200).json({
+        status: "deleted",
+        deletedAt: now.toISOString(),
+        purgeAt: purgeAt.toISOString(),
+      });
+    } else if (req.method === "GET") {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         include: { preferences: true },
@@ -137,7 +178,7 @@ async function handlePreferences(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["PUT"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -175,7 +216,7 @@ async function handleHobbies(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -221,7 +262,7 @@ async function handleHobbiesSync(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -284,7 +325,7 @@ async function handleHobbyDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["PUT", "DELETE", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const hobbyId = req.query.hobbyId as string;
@@ -401,7 +442,7 @@ async function handleActivity(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -428,7 +469,7 @@ async function handleJournal(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -465,7 +506,7 @@ async function handleJournalDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const entryId = req.query.entryId as string;
@@ -493,7 +534,7 @@ async function handleNotes(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "PUT", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const hobbyId = req.query.hobbyId as string;
@@ -548,7 +589,7 @@ async function handleSchedule(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -588,7 +629,7 @@ async function handleScheduleDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const eventId = req.query.eventId as string;
@@ -616,7 +657,7 @@ async function handleShopping(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "PUT"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const hobbyId = req.query.hobbyId as string;
@@ -661,7 +702,7 @@ async function handleStories(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -705,7 +746,7 @@ async function handleStoriesDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const storyId = req.query.storyId as string;
@@ -733,7 +774,7 @@ async function handleStoriesReact(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["POST", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const storyId = req.query.storyId as string;
@@ -771,7 +812,7 @@ async function handleBuddies(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -846,7 +887,7 @@ async function handleBuddyRequests(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET", "POST"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -916,7 +957,7 @@ async function handleBuddyRequestsDetail(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["PUT", "DELETE"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   const requestId = req.query.requestId as string;
@@ -978,7 +1019,7 @@ async function handleSimilarUsers(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -1056,7 +1097,7 @@ async function handleChallengesRoute(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -1076,7 +1117,7 @@ async function handleAchievementsRoute(
 ): Promise<void> {
   if (methodNotAllowed(req, res, ["GET"])) return;
 
-  const userId = requireAuth(req, res);
+  const userId = await requireAuth(req, res);
   if (!userId) return;
 
   try {
@@ -1205,5 +1246,159 @@ async function handleRevenueCatWebhook(
   } catch (error) {
     console.error("[RC Webhook] Error:", error);
     res.status(200).json({ status: "error", message: "Internal error logged" });
+  }
+}
+
+// ── /users/export ────────────────────────────────
+
+async function handleExport(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["GET"])) return;
+
+  const userId = await requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        preferences: true,
+        hobbies: { include: { completedSteps: true } },
+        activityLogs: { orderBy: { createdAt: "desc" } },
+        journalEntries: { orderBy: { createdAt: "desc" } },
+        personalNotes: true,
+        scheduleEvents: true,
+        shoppingChecks: true,
+        communityStories: { include: { reactions: true } },
+        storyReactions: true,
+        buddyRequestsSent: true,
+        buddyRequestsRcvd: true,
+        challenges: true,
+        achievements: true,
+      },
+    });
+
+    if (!user) {
+      errorResponse(res, 404, "User not found");
+      return;
+    }
+
+    const exportData = {
+      account: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        subscriptionTier: user.subscriptionTier,
+        proSince: user.proSince?.toISOString() ?? null,
+        proExpiresAt: user.proExpiresAt?.toISOString() ?? null,
+        isLifetime: user.isLifetime,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+      },
+      preferences: user.preferences
+        ? {
+            hoursPerWeek: user.preferences.hoursPerWeek,
+            budgetLevel: user.preferences.budgetLevel,
+            preferSocial: user.preferences.preferSocial,
+            vibes: user.preferences.vibes,
+          }
+        : null,
+      hobbies: user.hobbies.map((h) => ({
+        hobbyId: h.hobbyId,
+        status: h.status,
+        startedAt: h.startedAt?.toISOString() ?? null,
+        completedAt: h.completedAt?.toISOString() ?? null,
+        lastActivityAt: h.lastActivityAt?.toISOString() ?? null,
+        streakDays: h.streakDays,
+        createdAt: h.createdAt.toISOString(),
+        completedSteps: h.completedSteps.map((s) => ({
+          stepId: s.stepId,
+          completedAt: s.completedAt.toISOString(),
+        })),
+      })),
+      activityLogs: user.activityLogs.map((a) => ({
+        hobbyId: a.hobbyId,
+        action: a.action,
+        createdAt: a.createdAt.toISOString(),
+      })),
+      journalEntries: user.journalEntries.map((j) => ({
+        hobbyId: j.hobbyId,
+        text: j.text,
+        photoUrl: j.photoUrl,
+        createdAt: j.createdAt.toISOString(),
+      })),
+      personalNotes: user.personalNotes.map((n) => ({
+        hobbyId: n.hobbyId,
+        stepId: n.stepId,
+        text: n.text,
+      })),
+      scheduleEvents: user.scheduleEvents.map((e) => ({
+        hobbyId: e.hobbyId,
+        dayOfWeek: e.dayOfWeek,
+        startTime: e.startTime,
+        durationMinutes: e.durationMinutes,
+      })),
+      shoppingChecks: user.shoppingChecks.map((s) => ({
+        hobbyId: s.hobbyId,
+        itemName: s.itemName,
+        checked: s.checked,
+      })),
+      communityStories: user.communityStories.map((cs) => ({
+        quote: cs.quote,
+        hobbyId: cs.hobbyId,
+        createdAt: cs.createdAt.toISOString(),
+        reactions: cs.reactions.map((r) => ({
+          type: r.type,
+          userId: r.userId,
+        })),
+      })),
+      storyReactions: user.storyReactions.map((r) => ({
+        storyId: r.storyId,
+        type: r.type,
+      })),
+      buddyConnections: [
+        ...user.buddyRequestsSent.map((b) => ({
+          partnerId: b.accepterId,
+          hobbyId: b.hobbyId,
+          status: b.status,
+          role: "requester" as const,
+          createdAt: b.createdAt.toISOString(),
+        })),
+        ...user.buddyRequestsRcvd.map((b) => ({
+          partnerId: b.requesterId,
+          hobbyId: b.hobbyId,
+          status: b.status,
+          role: "accepter" as const,
+          createdAt: b.createdAt.toISOString(),
+        })),
+      ],
+      challenges: user.challenges.map((c) => ({
+        challengeType: c.challengeType,
+        currentCount: c.currentCount,
+        targetCount: c.targetCount,
+        isCompleted: c.isCompleted,
+        weekStart: c.weekStart.toISOString(),
+        completedAt: c.completedAt?.toISOString() ?? null,
+      })),
+      achievements: user.achievements.map((a) => ({
+        achievementId: a.achievementId,
+        unlockedAt: a.unlockedAt.toISOString(),
+      })),
+      exportedAt: new Date().toISOString(),
+    };
+
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=trysomething-export.json"
+    );
+    res.status(200).json(exportData);
+  } catch (err) {
+    console.error("GET /api/users/me/export error:", err);
+    errorResponse(res, 500, "Failed to export user data");
   }
 }

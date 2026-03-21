@@ -165,6 +165,7 @@ model User {
   avatarUrl    String?
   googleId     String?         @unique
   appleId      String?         @unique
+  deletedAt    DateTime?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
