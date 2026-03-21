@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../components/shared_widgets.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/feature_providers.dart';
@@ -360,7 +361,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   style: AppTypography.sansTiny
                                       .copyWith(color: AppColors.coral),
                                   recognizer: TapGestureRecognizer()
-                                    ..onTap = () => context.push('/terms-of-service'),
+                                    ..onTap = () async {
+                                      final uri = Uri.parse('https://trysomething.app/terms');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      }
+                                    },
                                 ),
                                 const TextSpan(text: ' and '),
                                 TextSpan(
@@ -368,7 +374,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   style: AppTypography.sansTiny
                                       .copyWith(color: AppColors.coral),
                                   recognizer: TapGestureRecognizer()
-                                    ..onTap = () => context.push('/privacy-policy'),
+                                    ..onTap = () async {
+                                      final uri = Uri.parse('https://trysomething.app/privacy');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      }
+                                    },
                                 ),
                                 const TextSpan(text: '.'),
                               ],
