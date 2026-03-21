@@ -26,7 +26,7 @@ Requirements for App Store and Play Store submission readiness.
 
 ### Security
 
-- [ ] **SEC-01**: RevenueCat webhook verifies Authorization header and fails closed (rejects when env var unset)
+- [x] **SEC-01**: RevenueCat webhook verifies Authorization header and fails closed (rejects when env var unset)
 - [ ] **SEC-02**: Coach rate limiting enforced server-side via GenerationLog count query (replaces client-side Hive check)
 - [ ] **SEC-03**: Apple OAuth routing fixed in `vercel.json` (add `|apple` to auth action regex)
 
@@ -89,7 +89,7 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 | COMP-12 | Phase 9 | Pending |
 | COMP-13 | Phase 9 | Pending |
 | COMP-14 | Phase 9 | Pending |
-| SEC-01 | Phase 1 | Pending |
+| SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Pending |
 | SEC-03 | Phase 2 | Pending |
 | AI-01 | Phase 8 | Pending |

@@ -10,7 +10,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Server Security Hardening** — Close the live webhook vulnerability and replace the bypassable client-side rate limit with server-side enforcement
+- [x] **Phase 1: Server Security Hardening** — Close the live webhook vulnerability and replace the bypassable client-side rate limit with server-side enforcement (completed 2026-03-21)
 - [ ] **Phase 2: Apple OAuth Routing Fix** — One-line vercel.json fix that unblocks Apple Sign-In testing on iOS
 - [ ] **Phase 3: Legal Documents — Host and Link** — Publish Terms and Privacy Policy to the Next.js site and wire up Settings links
 - [ ] **Phase 4: Account Deletion + Data Export — Backend** — Build DELETE and export endpoints with atomic cascade and FADP-compliant field allowlist
@@ -34,11 +34,11 @@
   2. A request to the webhook endpoint with a wrong Authorization header value returns 401, not 200
   3. A free user who sends more than 3 coach messages in a month is rejected by the server with a 429 response, regardless of what the client reports
   4. A modified Hive cache cannot bypass the server-side rate limit check — the count comes from `GenerationLog` rows in Postgres
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md — Webhook fail-closed + timingSafeEqual (SEC-01)
-- [ ] 01-02-PLAN.md — Server-side coach rate limiting via GenerationLog (SEC-02)
+- [x] 01-01-PLAN.md — Webhook fail-closed + timingSafeEqual (SEC-01)
+- [x] 01-02-PLAN.md — Server-side coach rate limiting via GenerationLog (SEC-02)
 
 ### Phase 2: Apple OAuth Routing Fix
 **Goal:** Apple Sign-In works in production so the iOS auth flow can be tested end-to-end
@@ -148,7 +148,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Server Security Hardening | 0/2 | Planning complete | — |
+| 1. Server Security Hardening | 2/2 | Complete   | 2026-03-21 |
 | 2. Apple OAuth Routing Fix | 0/? | Not started | — |
 | 3. Legal Documents — Host and Link | 0/? | Not started | — |
 | 4. Account Deletion + Data Export — Backend | 0/? | Not started | — |

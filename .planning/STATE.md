@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-03-21T19:12:11.580Z"
+progress:
+  total_phases: 10
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+---
+
 # STATE.md — TrySomething v1.0 Launch Readiness
 
 *Project memory. Updated at every phase transition and plan completion.*
@@ -15,22 +28,8 @@
 
 ## Current Position
 
-**Current Phase:** 1 — Server Security Hardening
-**Current Plan:** None started
-**Status:** Not started
-
-**Progress:**
-```
-Phase:  [ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ][ 7 ][ 8 ][ 9 ][10 ]
-        [   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]
-         0%                                              100%
-```
-
-**Plans complete this phase:** 0/?
-**Phases complete:** 0/10
-**Requirements delivered:** 0/23
-
----
+Phase: 01 (server-security-hardening) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -43,6 +42,8 @@ Phase:  [ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ][ 7 ][ 8 ][ 9 ][10 ]
 | Blockers active | 0 |
 
 ---
+| Phase 01 P01 | 2min | 1 tasks | 2 files |
+| Phase 01 P02 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -57,6 +58,8 @@ Phase:  [ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ][ 7 ][ 8 ][ 9 ][10 ]
 | New endpoints as switch cases in users/[path].ts | Phase 4 | Project at Vercel free-tier 12-function limit; no new files |
 | Dead code cleanup after Phase 6 | Phase 7 | Ensures all active screens are in final state before any deletions |
 | Screenshots after Phase 8 (Sonnet upgrade) | Phase 9 | Screenshots should reflect final AI-powered experience |
+| Used query='coach' in GenerationLog to distinguish coach from hobby generation | Phase 1 | Reuses existing query field; no schema change needed |
+| Log coach messages AFTER AI response (not before) | Phase 1 | Failed/timed-out API calls should not count against user's rate limit |
 
 ### Architecture Notes
 
@@ -80,12 +83,14 @@ Phase:  [ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ][ 7 ][ 8 ][ 9 ][10 ]
 ## Session Continuity
 
 **To resume after a break:**
+
 1. Read this STATE.md for current position and context
 2. Read `.planning/ROADMAP.md` for full phase structure
 3. Run `/gsd:plan-phase [N]` to plan the current phase if no plan exists
 4. Run `/gsd:work` to continue execution on the active plan
 
 **Phase transition checklist:**
+
 - [ ] All plans in current phase complete
 - [ ] All phase success criteria verified (observable, not assumed)
 - [ ] REQUIREMENTS.md traceability updated (phase status → Complete)
