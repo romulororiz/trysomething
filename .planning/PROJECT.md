@@ -53,8 +53,8 @@ A user can discover a hobby that fits them, start it with clear first steps, and
 - [ ] Terms of Service & Privacy Policy hosting + in-app linking
 - [ ] Coach stale detection fix (use lastActivityAt)
 - [ ] Sonnet AI model upgrade (deploy prepared files)
-- [ ] Server-side rate limiting for coach (move from Hive to GenerationLog)
-- [ ] RevenueCat webhook signature verification
+- [x] Server-side rate limiting for coach (move from Hive to GenerationLog) — Phase 1
+- [x] RevenueCat webhook signature verification — Phase 1
 - [ ] Pre-commit hooks (Husky: TypeScript lint + Flutter analyze)
 - [ ] Dead code cleanup (7 hidden feature screens, ~7,000 lines)
 
@@ -118,4 +118,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-21 after initialization*
+*Last updated: 2026-03-21 after Phase 1 completion — webhook auth hardened, coach rate limiting deployed*
