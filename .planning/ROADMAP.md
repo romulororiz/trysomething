@@ -34,7 +34,11 @@
   2. A request to the webhook endpoint with a wrong Authorization header value returns 401, not 200
   3. A free user who sends more than 3 coach messages in a month is rejected by the server with a 429 response, regardless of what the client reports
   4. A modified Hive cache cannot bypass the server-side rate limit check — the count comes from `GenerationLog` rows in Postgres
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Webhook fail-closed + timingSafeEqual (SEC-01)
+- [ ] 01-02-PLAN.md — Server-side coach rate limiting via GenerationLog (SEC-02)
 
 ### Phase 2: Apple OAuth Routing Fix
 **Goal:** Apple Sign-In works in production so the iOS auth flow can be tested end-to-end
@@ -120,7 +124,7 @@
 **Depends on:** Phase 3 (Privacy Policy URL required for label forms), Phase 8 (final app state for screenshots)
 **Requirements:** COMP-12, COMP-13, COMP-14
 **Success Criteria** (what must be TRUE):
-  1. iOS screenshots exist at 1290×2796px (iPhone 16 Pro Max Simulator, release build) covering all 3 main tabs and the session screen
+  1. iOS screenshots exist at 1290x2796px (iPhone 16 Pro Max Simulator, release build) covering all 3 main tabs and the session screen
   2. App Privacy Labels in App Store Connect are completed and reference the live Privacy Policy URL from Phase 3
   3. Data Safety Form in Google Play Console is completed and references the live Privacy Policy URL from Phase 3
   4. `PrivacyInfo.xcprivacy` files are present (or verified present via SDK versions) for Firebase FCM, RevenueCat, and PostHog — `flutter build ipa` completes without `ITMS-91061` errors
@@ -144,7 +148,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Server Security Hardening | 0/? | Not started | — |
+| 1. Server Security Hardening | 0/2 | Planning complete | — |
 | 2. Apple OAuth Routing Fix | 0/? | Not started | — |
 | 3. Legal Documents — Host and Link | 0/? | Not started | — |
 | 4. Account Deletion + Data Export — Backend | 0/? | Not started | — |
@@ -194,16 +198,16 @@
 ```
 Phase 1 (Security) ─────────────────────────────────┐
 Phase 2 (Apple OAuth) ──────────────────────────────┤
-Phase 3 (Legal Docs) ───────────────────────────────┤──▶ Phase 9 (App Store Assets)
+Phase 3 (Legal Docs) ───────────────────────────────┤──> Phase 9 (App Store Assets)
 Phase 4 (Deletion Backend) ─────────────────────────┤
-  └──▶ Phase 5 (Deletion Flutter UX) ───────────────┤
+  └──> Phase 5 (Deletion Flutter UX) ───────────────┤
 Phase 6 (Restore Purchases) ────────────────────────┤
-  └──▶ Phase 7 (Dead Code Cleanup) ────────────────┤
-Phase 8 (Sonnet AI Upgrade) ────────────────────────┘──▶ Phase 9 (App Store Assets)
+  └──> Phase 7 (Dead Code Cleanup) ────────────────┤
+Phase 8 (Sonnet AI Upgrade) ────────────────────────┘──> Phase 9 (App Store Assets)
 Phase 10 (Pre-Commit Hooks) ── independent, parallel with all
 ```
 
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-21 after initial creation*
+*Last updated: 2026-03-21 after Phase 1 planning*
