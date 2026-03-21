@@ -22,6 +22,7 @@ import '../../components/updated_matches_sheet.dart';
 import '../../core/analytics/analytics_provider.dart';
 import '../../models/hobby.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -45,6 +46,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _vibrationEnabled = prefs.getBool('session_vibration') ?? true;
     _soundEnabled = prefs.getBool('session_sound') ?? false;
     _initialPrefs = ref.read(userPreferencesProvider);
+  }
+
+  Future<void> _openLegalPage(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _showAboutSheet(BuildContext context) {
@@ -113,7 +121,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/privacy-policy');
+                    _openLegalPage('https://trysomething.io/privacy');
                   },
                   child: Text('Privacy Policy',
                       style: AppTypography.caption.copyWith(color: AppColors.accent)),
@@ -126,7 +134,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/terms-of-service');
+                    _openLegalPage('https://trysomething.io/terms');
                   },
                   child: Text('Terms of Service',
                       style: AppTypography.caption.copyWith(color: AppColors.accent)),
