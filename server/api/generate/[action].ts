@@ -28,6 +28,7 @@ import {
   mapCostBreakdown,
   mapBudgetAlternative,
 } from "../../lib/mappers";
+import { checkCoachRateLimit } from "../../lib/rate_limit";
 
 const prisma = new PrismaClient();
 
@@ -379,6 +380,21 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
   const userId = requireAuth(req, res);
   if (!userId) return;
 
+  // Server-side rate limit check (SEC-02, per D-04/D-05/D-06)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { subscriptionTier: true },
+  });
+  if (!user) {
+    return errorResponse(res, 401, 'User not found');
+  }
+
+  const rateCheck = await checkCoachRateLimit(userId, user.subscriptionTier);
+  if (!rateCheck.allowed) {
+    // D-06: Simple error message only, client handles UX
+    return errorResponse(res, 429, 'Rate limit exceeded');
+  }
+
   const { hobbyId, message, conversationHistory, modeOverride } = req.body ?? {};
 
   if (!hobbyId || typeof hobbyId !== "string") {
@@ -497,6 +513,9 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
 
     const text =
       response.content[0]?.type === "text" ? response.content[0].text : "";
+
+    // Log successful coach message to GenerationLog (AFTER AI response, per Pitfall 2)
+    await logGeneration(userId, 'coach', 'success', null).catch(() => {});
 
     return res.status(200).json({ response: text.trim() });
   } catch (err: unknown) {
