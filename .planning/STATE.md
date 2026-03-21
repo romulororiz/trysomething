@@ -74,6 +74,12 @@ Plan: Not started
 
 *(Populated as plans execute)*
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260321-s8z | Apple OAuth Routing Fix | 2026-03-21 | 01890b6 | [260321-s8z-apple-oauth-routing-fix](./quick/260321-s8z-apple-oauth-routing-fix/) |
+
 ### Active Blockers
 
 *(None at milestone start)*
