@@ -121,7 +121,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
-                    _openLegalPage('https://trysomething.app/privacy');
+                    _openLegalPage('https://trysomething.io/privacy');
                   },
                   child: Text('Privacy Policy',
                       style: AppTypography.caption.copyWith(color: AppColors.accent)),
@@ -134,7 +134,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
-                    _openLegalPage('https://trysomething.app/terms');
+                    _openLegalPage('https://trysomething.io/terms');
                   },
                   child: Text('Terms of Service',
                       style: AppTypography.caption.copyWith(color: AppColors.accent)),

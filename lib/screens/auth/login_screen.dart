@@ -322,7 +322,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       .copyWith(color: AppColors.coral),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
-                                      final uri = Uri.parse('https://trysomething.app/terms');
+                                      final uri = Uri.parse('https://trysomething.io/terms');
                                       if (await canLaunchUrl(uri)) {
                                         await launchUrl(uri, mode: LaunchMode.externalApplication);
                                       }
@@ -335,7 +335,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       .copyWith(color: AppColors.coral),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
-                                      final uri = Uri.parse('https://trysomething.app/privacy');
+                                      final uri = Uri.parse('https://trysomething.io/privacy');
                                       if (await canLaunchUrl(uri)) {
                                         await launchUrl(uri, mode: LaunchMode.externalApplication);
                                       }
