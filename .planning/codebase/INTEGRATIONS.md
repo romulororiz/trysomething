@@ -1,192 +1,198 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-02
+**Analysis Date:** 2026-03-21
 
 ## APIs & External Services
 
-**Google OAuth 2.0:**
-- Used for: User authentication and sign-in
-- SDK/Client: `google_sign_in` 6.2.2 (Flutter), native Google Sign-In libraries (Android/iOS)
-- Auth: 3 OAuth client IDs from Google Cloud Console
-  - Web client ID: `973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com` (used as serverClientId on Android)
-  - Android client ID: Bound to app signing key SHA-1 hash + package name `com.example.trysomething`
-  - iOS client ID: GoogleService-Info.plist in `ios/Runner/`
-- Flow:
-  - **Primary (iOS/Android):** Client requests idToken via serverClientId parameter → server verifies token signature at `https://oauth2.googleapis.com/tokeninfo?id_token={idToken}`
-  - **Fallback (Windows/Web):** Client uses accessToken → server verifies via `https://www.googleapis.com/oauth2/v3/userinfo` endpoint
-- Implementation: `lib/providers/auth_provider.dart` (two GoogleSignIn instances), `server/api/auth/[action].ts` handleGoogle function
+**AI & Content Generation:**
+- Claude API (Anthropic) - Hobby generation, FAQ, cost projections, budget alternatives, coach chat
+  - SDK: `@anthropic-ai/sdk` 0.78.0
+  - Model: `claude-sonnet-4-6` (production deployment ready)
+  - Key: `process.env.ANTHROPIC_API_KEY`
+  - Implementation: `server/lib/ai_generator.ts`, `server/api/generate/[action].ts`
+  - Endpoints:
+    - `POST /api/generate/hobby` - Full hobby profile from search query
+    - `POST /api/generate/faq` - 5 beginner FAQ items (lazy-loaded)
+    - `POST /api/generate/cost` - Cost projections: starter/3mo/1yr
+    - `POST /api/generate/budget` - DIY/budget/premium alternatives per kit item
+    - `POST /api/generate/coach` - Conversational hobby coach (dynamic system prompt)
 
-**Google Userinfo API:**
-- Used for: Fallback OAuth token validation on Windows/Web
-- Endpoint: `https://www.googleapis.com/oauth2/v3/userinfo`
-- Auth: Bearer token (Google accessToken from oauth2 token endpoint)
-- Invoked by: `server/api/auth/[action].ts` when idToken is unavailable
+**Image Services:**
+- Unsplash API - Hobby image search with category fallbacks
+  - API: `https://api.unsplash.com/search/photos`
+  - Key: `process.env.UNSPLASH_ACCESS_KEY` (optional)
+  - Implementation: `server/lib/unsplash.ts`
+  - Query format: `{query} hobby` with portrait orientation
+  - Fallbacks per category hardcoded (all Unsplash URLs)
+  - If key missing, returns category fallback immediately
 
 ## Data Storage
 
 **Databases:**
 
-**Neon Postgres (Production):**
-- Type: Serverless PostgreSQL
-- Connection: Via `DATABASE_URL` env var (serverless connection pooling)
-- Client: `@prisma/client` 6.4.1 (Prisma ORM)
-- Models: 12 Prisma models (10 content + User + UserPreference)
-  - Content: Hobby, Category, KitItem, RoadmapStep, FaqItem, CostBreakdown, BudgetAlternative, HobbyCombo, SeasonalPick, MoodTag
-  - Auth: User, UserPreference
-  - User Progress: UserHobby, UserCompletedStep, UserActivityLog
-  - Personal Tools: JournalEntry, PersonalNote, ScheduleEvent, ShoppingCheck
-- SSL: Required (`sslmode=require` in connection string)
+- PostgreSQL (Neon) - Primary relational database
+  - Connection: `process.env.DATABASE_URL`
+  - Client: Prisma 6.4.1 (`@prisma/client`)
+  - Schema: `server/prisma/schema.prisma` (25 models)
+  - Models: Category, Hobby, KitItem, RoadmapStep, FaqItem, CostBreakdown, BudgetAlternative, HobbyCombo, SeasonalPick, MoodTag, User, UserPreference, UserHobby, UserCompletedStep, UserActivityLog, JournalEntry, PersonalNote, ScheduleEvent, ShoppingCheck, CommunityStory, StoryReaction, BuddyPair, UserChallenge, UserAchievement, GenerationLog
 
-**Hive Local Cache (Flutter Client):**
-- Type: Embedded key-value store (JSON strings stored locally)
-- Purpose: Cache hobby content with TTL (default 1 hour)
-- Boxes:
-  - `hobbies` — Cached hobby JSON strings
-  - `categories` — Cached category JSON strings
-  - `cache_meta` — Timestamps for TTL tracking
-- Implementation: `lib/core/storage/cache_manager.dart` (managed via `CacheManager.get()`, `CacheManager.put()`)
-- Fallback behavior: `CacheManager.getStale()` returns expired cache on API errors (offline-first)
+**Local Storage:**
 
-**SharedPreferences (Flutter Client):**
-- Type: Platform-specific key-value store (Keychain on iOS, SharedPreferences on Android)
-- Purpose: User state persistence across app launches
-- Keys stored:
-  - `onboarding_complete` — Boolean flag
-  - `user_preferences` — JSON UserPreferences object (hoursPerWeek, budgetLevel, preferSocial, vibes[])
-  - `user_hobbies` — JSON array of UserHobby objects with status (saved/trying/active/done) and step completion tracking
-- Implementation: `lib/providers/user_provider.dart` (StateNotifierProvider pattern with auto-save)
+- Hive (encrypted key-value) - Offline cache and sensitive data
+  - Package: `hive_flutter` 1.1.0, `hive` 2.2.3
+  - Usage: User hobbies, preferences, journal entries, cache
+  - Implementation: `lib/core/storage/cache_manager.dart`, `local_storage.dart`
+
+- SharedPreferences - Simple persistent settings
+  - Package: `shared_preferences` 2.3.4
+  - Usage: App preferences, onboarding state, theme selection
 
 **File Storage:**
-- Type: Local filesystem only
-- Images: Cached by `cached_network_image` package to device storage
-- No cloud file storage integration
 
-## Caching
+- Local filesystem only (no cloud bucket)
+  - Image uploads via `path_provider` for temporary paths
+  - Photos saved to device documents directory (encrypted)
+  - Implementation: `lib/core/media/image_upload.dart`
 
-**Strategy:**
-- **API responses:** Hive JSON cache with 1-hour TTL for hobby content
-- **Images:** In-memory + disk cache via `cached_network_image`
-- **User state:** SharedPreferences (persistent across launches)
-- **Feature data:** In-memory only (no server sync yet, Batch 5+ will add)
+**Caching:**
+
+- HTTP response cache via `dio` interceptor
+- Image cache via `cached_network_image` (platform native)
+- No explicit server-side caching (stateless Vercel functions)
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Type: Custom JWT + Google OAuth 2.0
-- Implementation: Email/password or Google sign-in
-- Token storage: `flutter_secure_storage` (encrypted with device secure enclave)
-- Tokens:
-  - Access token: JWT, 15-minute expiry, signed with `JWT_SECRET`
-  - Refresh token: JWT, 30-day expiry, signed with `JWT_REFRESH_SECRET` (separate key for rotation)
-- Flow:
-  1. User logs in or signs in with Google
-  2. Server returns {accessToken, refreshToken}
-  3. Client stores both in `flutter_secure_storage`
-  4. AuthInterceptor attaches access token on every request
-  5. On 401: Automatically refresh using refresh token
-  6. On refresh failure: Clear tokens and redirect to login
+- Custom JWT implementation
+  - Access tokens: 15 minutes
+  - Refresh tokens: 30 days (stored securely in `flutter_secure_storage`)
+  - Implementation: `lib/core/auth/auth_interceptor.dart`, `token_storage.dart`, `server/lib/auth.ts`
+  - Password hashing: bcryptjs (12 rounds)
 
-**Key Files:**
-- `lib/core/auth/token_storage.dart` — flutter_secure_storage wrapper
-- `lib/core/auth/auth_interceptor.dart` — Dio interceptor with JWT attachment + auto-refresh
-- `lib/providers/auth_provider.dart` — AuthNotifier (login/register/google/logout/restore)
-- `server/lib/auth.ts` — JWT generation/verification, password hashing (bcryptjs with 12 salt rounds)
-- `server/api/auth/[action].ts` — Auth endpoints (register, login, refresh, google)
+**OAuth Providers:**
+
+- Google Sign-In
+  - SDK: `google_sign_in` 6.2.2
+  - Server Client ID: `const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')`
+  - Endpoint: `POST /api/auth/google` → exchanges ID token for JWT
+  - Implementation: `lib/providers/auth_provider.dart`, `server/api/auth/[action].ts`
+
+- Apple Sign-In
+  - SDK: `sign_in_with_apple` 6.1.4
+  - Service ID: `const String.fromEnvironment('APPLE_SERVICE_ID')`
+  - Endpoint: `POST /api/auth/apple` → exchanges identity token for JWT
+  - Implementation: `lib/providers/auth_provider.dart`, `server/api/auth/[action].ts`
+  - Note: vercel.json route regex missing `|apple` (current: `(register|login|refresh|google)`)
+
+**Local Auth:**
+- Email/password registration and login
+  - Endpoint: `POST /api/auth/register`, `POST /api/auth/login`
+  - Implementation: `server/api/auth/[action].ts`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- Type: None currently configured
-- Logging: `debugPrint()` for client-side debug output (Google sign-in errors), `console.error()` on server
+- Sentry (error reporting and crash analytics)
+  - SDK: `sentry_flutter` 9.14.0
+  - Plugin: `sentry_dart_plugin` 3.2.1
+  - Project: `try-something` / Org: `trysomething-lz`
+  - Features: Automatic exception capture, source map upload, debug symbol upload
+  - Implementation: `lib/core/error/error_reporter.dart`, `lib/main.dart` initialization
+  - Configuration: `pubspec.yaml` sentry section
+
+**Analytics:**
+- PostHog (event tracking, session analytics, feature flags)
+  - SDK: `posthog_flutter` 4.0.0
+  - API Key: `phx_YBR1OSrdQgfVPK55QJVNqh1CzOSy9r6qFCh5uhgZoy7R2PL` (public)
+  - Host: `https://us.i.posthog.com`
+  - Features: Screen tracking, custom events, session recording (optional), user identification
+  - Implementation: `lib/core/analytics/analytics_service.dart`, `analytics_provider.dart`
+  - Configuration: Environment variables in `analytics_service.dart`
 
 **Logs:**
-- Client: Standard Flutter logging via `debugPrint()` (disabled in release builds)
-- Server: Console output from Vercel serverless functions (visible in Vercel dashboard)
-- No structured logging aggregation
+- Console logging in debug mode (dart `debugPrint`)
+- Error ring buffer (50 errors) in `ErrorReporter` class
+- No persistent server-side logging (Vercel provides request logs via dashboard)
 
 ## CI/CD & Deployment
 
 **Hosting:**
 
-**Backend API:**
-- Platform: Vercel serverless functions (Node.js 20.x runtime)
-- URL: `https://server-psi-seven-49.vercel.app/api`
-- Routing: 4 handler files with 15 route rules (vercel.json)
-  - `api/auth/[action].ts` — 4 auth endpoints
-  - `api/users/[path].ts` — User endpoints (me, preferences, hobbies, progress, activity, journal, notes, schedule, shopping)
-  - `api/hobbies/` — Content endpoints (list, detail, search, combos, seasonal, mood, per-hobby features)
-  - `api/categories/index.ts` — Category listing
-- Function limit: Vercel Hobby plan allows max 12 functions, currently using 11 (1 slot remaining)
+- Frontend: Deployed to Apple App Store + Google Play Store
+  - Manual release via Xcode (iOS) and Android Studio (Android)
+  - Test builds via TestFlight (iOS) and internal testing (Google Play)
 
-**Web Landing:**
-- Platform: Vercel (Next.js 16, serverless functions)
-- URL: Deployed from `web/` directory
-
-**Mobile:**
-- Deployment: Apple App Store (iOS), Google Play Store (Android)
-- Build system: Flutter (generates APK/IPA)
+- Backend: Vercel Serverless Functions
+  - Platform: @vercel/node
+  - Automatic deployment on git push to main
+  - Prisma migrations: manual via `npm run db:migrate` (should be automated)
+  - Configuration: `server/vercel.json`
 
 **CI Pipeline:**
-- None configured yet (manual deployment with `cd server && npx vercel --prod`)
+- Not detected - no GitHub Actions or CI config in repo
+- Manual testing recommended before release
 
 ## Environment Configuration
 
-**Required Env Vars:**
+**Required Environment Variables:**
 
-**Server (.env file):**
+Backend (Vercel production + `.env.local` for local dev):
 ```
-DATABASE_URL=postgresql://user:password@host.neon.tech/trysomething?sslmode=require
-JWT_SECRET=<32-char random base64>
-JWT_REFRESH_SECRET=<32-char random base64>
-GOOGLE_CLIENT_IDS=web_client_id,android_client_id,ios_client_id
-NODE_ENV=production
+DATABASE_URL=postgresql://user:pass@neon.host/db
+ANTHROPIC_API_KEY=sk-ant-...
+JWT_SECRET=<random-secret-for-token-signing>
+UNSPLASH_ACCESS_KEY=<unsplash-api-key>  # Optional
 ```
 
-**Flutter Client (optional, compile-time):**
-```bash
-flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=973949791990-m09mp4019a2i5dplg5og1h6mvlvmmvsa.apps.googleusercontent.com
+Frontend (build flags or `.env`):
+```
+POSTHOG_API_KEY=phx_YBR1OSrdQgfVPK55QJVNqh1CzOSy9r6qFCh5uhgZoy7R2PL
+POSTHOG_HOST=https://us.i.posthog.com
+GOOGLE_SERVER_CLIENT_ID=<server-client-id-from-google-console>
+APPLE_SERVICE_ID=<service-id-from-apple-developer>
+REVENUECAT_API_KEY=<platform-specific-key>
 ```
 
 **Secrets Location:**
-- Server: Vercel project environment variables (encrypted at rest)
-- Client: No secrets in code (OAuth client IDs are public, tokens stored in `flutter_secure_storage`)
+
+- Environment variables stored in:
+  - Vercel project settings (production backend)
+  - `firebase.json` (contains projectId, no secrets)
+  - Token storage: `flutter_secure_storage` (platform native keychain/keystore)
+  - OAuth keys: embedded as `const String.fromEnvironment()` (dev only)
 
 ## Webhooks & Callbacks
 
-**Incoming Webhooks:**
-- None configured
+**Incoming:**
 
-**Outgoing Webhooks:**
-- None configured
+- RevenueCat webhooks (subscription events)
+  - Endpoint: `POST /api/webhooks/revenuecat`
+  - Triggered by: subscription purchase, renewal, cancellation, expiration
+  - Implementation: `server/api/users/[path].ts?path=revenuecat-webhook`
+  - No signature verification detected (should be added)
 
-## Network Configuration
+- Firebase Cloud Messaging (push notification receipt)
+  - Handled client-side only (no server webhook)
+  - Implementation: `lib/core/notifications/notification_service.dart`
 
-**CORS:**
-- Enabled on server via `cors` middleware in Express handlers
-- Allows requests from web clients and Flutter web builds
+**Outgoing:**
 
-**SSL/TLS:**
-- All connections required HTTPS
-- API: Self-signed or Vercel-managed certificate
-- Database: `sslmode=require` in Postgres connection string
+- None detected - app is read-only for external services
 
-## API Rate Limiting
+## Third-Party SDKs Summary
 
-- None currently enforced
-- Vercel Hobby plan has execution time limit per function (10 seconds) and memory limit (512 MB)
-
-## Data Sync
-
-**User Progress Sync (Batch 4 — in progress):**
-- Client: Stores hobby saves/tries/complete + step completion in SharedPreferences
-- Server: `/users/hobbies` endpoint will synchronize with database
-- Strategy: Optimistic updates with rollback on error
-- Offline: Shared preferences serve as local cache until sync succeeds
-
-**Feature Data Sync (Batch 5+ — planned):**
-- Journal entries, notes, schedule, shopping lists will sync to server
-- Endpoints consolidated in `server/api/users/[path].ts` (no new serverless functions)
+| Service | Version | Purpose | Key Location |
+|---------|---------|---------|---|
+| Claude API | 0.78.0 | Hobby generation + coach | `ANTHROPIC_API_KEY` |
+| Firebase | 3.12.1 (core), 15.2.4 (messaging) | Push notifications | `firebase.json` |
+| RevenueCat | 9.14.0 | Subscriptions (iOS) | `appl_SkiBGKbnsWiBfFNnLWfPfFqYJXC` |
+| PostHog | 4.0.0 | Analytics | `phx_YBR1OSrdQgfVPK55QJVNqh1CzOSy9r6qFCh5uhgZoy7R2PL` |
+| Sentry | 9.14.0 | Error tracking | `try-something` project |
+| Unsplash | — | Image search | `UNSPLASH_ACCESS_KEY` |
+| Google OAuth | — | Sign-in | `GOOGLE_SERVER_CLIENT_ID` |
+| Apple Sign-In | — | Sign-in | `APPLE_SERVICE_ID` |
+| Neon PostgreSQL | — | Database | `DATABASE_URL` |
 
 ---
 
-*Integration audit: 2026-03-02*
+*Integration audit: 2026-03-21*

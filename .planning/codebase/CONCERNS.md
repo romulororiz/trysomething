@@ -1,725 +1,421 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-03-02
-
-## Vercel Deployment Limit — Critical Constraint
-
-**Issue:** Vercel Hobby plan allows maximum 12 serverless functions. Current deployment uses 11 of 12.
-
-**Files:** `server/vercel.json` (routing configuration)
-
-**Impact:**
-- Cannot add new standalone endpoints
-- All future endpoints (Batches 4-8) must be consolidated into existing handler files
-- One more endpoint causes deployment failure
-
-**Current handlers consuming slots:**
-- `api/auth/[action].ts` — 4 actions consolidated (register, login, refresh, google)
-- `api/users/[path].ts` — Multiple paths consolidated (me, preferences, hobbies*, journal*, notes*, schedule*, shopping*)
-- `api/hobbies/index.ts` — List hobbies
-- `api/hobbies/[id]/index.ts` — Get single hobby
-- `api/hobbies/[id]/[feature].ts` — FAQ, cost, budget features (3 paths)
-- `api/hobbies/search.ts` — Search endpoint
-- `api/hobbies/combos.ts` — Hobby combos
-- `api/hobbies/seasonal.ts` — Seasonal picks
-- `api/hobbies/mood.ts` — Mood tags
-- `api/categories/index.ts` — List categories
-- `api/health.ts` — Health check
-
-**Fix approach:**
-- Future endpoints must use route pattern consolidation (e.g., `/api/users/[path].ts` with query parameter handling)
-- Refer to `vercel.json` route rules for consolidation pattern
-- All Batches 4-8 endpoints (activity, personal tools, social) already mapped to existing `[path].ts` handlers in vercel.json
+**Analysis Date:** 2026-03-21
 
 ---
 
-## Data Synchronization — Offline-First Gap
+## Missing Critical Compliance Endpoints
 
-**Issue:** User progress (hobbies, steps, notes, journal, schedule) uses SharedPreferences + fire-and-forget API calls with rollback, but if app crashes during sync, changes may not persist to server.
+**Account Deletion (GDPR/App Store Requirement):**
+- Issue: No `DELETE /api/users/me` endpoint exists. App store submission requires account deletion capability.
+- Files: `./server/api/users/[path].ts` (only supports GET, PUT on line 94)
+- Impact: Cannot submit to app stores; users cannot comply with data deletion requests; legal exposure
+- Fix approach: Implement `DELETE /api/users/me` with cascading deletes across all user-related tables (UserHobby, JournalEntry, PersonalNote, ScheduleEvent, ShoppingCheck, CommunityStory, StoryReaction, BuddyPair, UserChallenge, UserAchievement, UserActivityLog, UserPreference), then delete User record. Store deletion timestamp for audit.
 
-**Files:**
-- `lib/providers/user_provider.dart` (UserHobbiesNotifier._apiCall)
-- `lib/providers/feature_providers.dart` (JournalNotifier._apiCall, ScheduleNotifier._apiCall)
-
-**Current pattern (optimistic update):**
-```dart
-void _apiCall(
-  Map<String, UserHobby> snapshot,
-  Future<void> Function() call,
-) {
-  call().catchError((e) {
-    debugPrint('[UserHobbies] API call failed, rolling back: $e');
-    state = snapshot;
-    _save();
-  });
-}
-```
-
-**Problems:**
-1. API failures roll back local state but don't retry
-2. If network drops before sync returns, changes are lost after app restart
-3. No queue of pending changes — single Dio error means data loss
-4. Server may receive request after client rollback (orphaned record)
-
-**Impact:**
-- Users lose hobby progress (save/try/complete status, completed steps, notes)
-- No audit trail of what was attempted vs. what succeeded
-- Confusing UX: user sees progress rollback unexpectedly
-
-**Fix approach:**
-- Implement pending changes queue: serialize failed mutations to SharedPreferences
-- On next API success, flush queued changes
-- Add retry logic with exponential backoff
-- Validate timestamps server-side (only accept if newer than existing)
-- Log sync events to activity log for debugging
+**Data Export (FADP Article 28 Data Portability):**
+- Issue: No `GET /api/users/me/export` endpoint for user data portability
+- Files: `./server/api/users/[path].ts`
+- Impact: Cannot comply with data portability regulations; users cannot export their data in portable format
+- Fix approach: Implement `GET /api/users/me/export` returning JSON with all user data: profile, preferences, hobbies (saved/active/done), journal entries, personal notes, schedule events, shopping checks, challenges, achievements, activity log. Return as JSON lines or ZIP with structured folders.
 
 ---
 
-## Auth Token Refresh — Potential Edge Case with Simultaneous Requests
+## API Routing Configuration Incomplete
 
-**Issue:** If multiple requests receive 401 simultaneously, each may independently attempt token refresh, causing race conditions.
-
-**Files:** `lib/core/auth/auth_interceptor.dart` (onError handler)
-
-**Current implementation:**
-```dart
-try {
-  final refreshDio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl, ...));
-  final response = await refreshDio.post(ApiConstants.authRefresh, ...);
-  // Updates tokens
-  await TokenStorage.saveTokens(...);
-  // Retries original request
-  final retryResponse = await ApiClient.instance.fetch(err.requestOptions);
-  handler.resolve(retryResponse);
-} catch (_) {
-  await TokenStorage.clearTokens();
-  handler.next(err);
-}
-```
-
-**Problems:**
-1. No mutex lock — multiple requests in parallel = multiple refresh attempts
-2. Each creates separate Dio instance (good for avoiding interceptor loop, but bypasses auth on refresh itself)
-3. If refresh succeeds on request A but fails on request B, both get different outcomes
-4. Race: Request A refreshes tokens → Request B reads old tokens from storage → Request B's refresh also fires
-
-**Impact:**
-- Occasional 401 errors after token expiry despite valid refresh token
-- Unusual auth state inconsistencies
-- Users may see "session expired" dismissible errors even when session is valid
-
-**Fix approach:**
-- Implement token refresh lock (AtomicReference or Semaphore pattern)
-- First 401 triggers refresh; others wait for result
-- If refresh succeeds, other requests retry with new token
-- If refresh fails, all requests propagate error
-- Add timeout to prevent deadlock
+**Apple Sign-In Route Missing from Vercel Regex:**
+- Issue: `server/vercel.json` line 11 has regex `(register|login|refresh|google)` — `apple` action exists in `./server/api/auth/[action].ts` line 36 but is not routed
+- Files: `./server/vercel.json` line 11
+- Impact: Apple OAuth sign-in route returns 404 error; Apple authentication flows fail
+- Fix approach: Update regex to `(register|login|refresh|google|apple)` — single character change, critical for Apple Sign-In users
 
 ---
 
-## Error Handling — Swallowed Exceptions
+## AI System Incomplete Upgrade
 
-**Issue:** Several catch handlers silently ignore errors without logging meaningful context.
+**Haiku → Sonnet Migration Status Unclear:**
+- Issue: `./server/lib/ai_generator.ts` line 20 shows `const MODEL = "claude-sonnet-4-6"` but CLAUDE.md indicates upgrade "not yet deployed"
+- Files: `./server/lib/ai_generator.ts` (model constant), `./server/api/generate/[action].ts` (generation handler)
+- Impact: Unclear if production uses Sonnet or Haiku; AI quality inconsistent; cannot validate if upgrade successful
+- Fix approach: Verify actual model running in production via API logs; if still Haiku, deploy `outputs/ai_generator.ts` and `outputs/action.ts` files with Sonnet prompts, structured output, temperature 0.2-0.3
 
-**Files:**
-- `lib/providers/user_provider.dart` (line 145-150: `_apiCall` catches all)
-- `lib/providers/feature_providers.dart` (lines 59-67, 131-139: JournalNotifier, ScheduleNotifier similar pattern)
-- `lib/providers/auth_provider.dart` (line 222: `updateProfile` catches and ignores)
-
-**Examples:**
-```dart
-// user_provider.dart
-call().catchError((e) {
-  debugPrint('[UserHobbies] API call failed, rolling back: $e');
-  state = snapshot;
-  _save();
-});
-
-// auth_provider.dart
-Future<void> updateProfile({...}) async {
-  try { ... } catch (_) {}  // Swallows error silently
-}
-```
-
-**Problems:**
-1. `debugPrint` only visible in debug mode, not in production
-2. No error metrics collected (Sentry/Crashlytics)
-3. Users see state rollback with no explanation
-4. Hard to debug production issues
-5. `updateProfile` silently fails — user may think profile updated when it didn't
-
-**Impact:**
-- Silent data loss in production
-- No alerting on persistent API failures
-- Difficult to identify server-side issues
-
-**Fix approach:**
-- Replace `debugPrint` with structured logging (Firebase Analytics, Sentry, or similar)
-- Create `logError()` helper that includes:
-  - Error type and message
-  - API endpoint
-  - User ID (if available)
-  - Timestamp
-- Return error state from notifiers so UI can show toasts
-- Set up production error monitoring in Batches 7-8
+**Coach Stale Detection Uses Wrong Field:**
+- Issue: Coach system prompt builder uses `startedAt` to calculate days inactive; should use `lastActivityAt` from `UserHobby` model
+- Files: `./server/api/generate/[action].ts` (coach handler, system prompt construction), `./server/lib/ai_generator.ts` (coach prompt builder)
+- Impact: Coach rescue/momentum mode activates at wrong times; stale detection inaccurate for users with gaps between sessions
+- Fix approach: Update coach prompt builder to query `UserHobby.lastActivityAt` instead of `startedAt`; recalculate days-since-activity correctly; fixed in Sonnet upgrade files
 
 ---
 
-## Google Sign-In Platform Differences — Fragile Fallback Chain
+## Large Monolithic Screen Components
 
-**Issue:** Platform-specific differences in Google token availability create a fragile fallback mechanism.
+**Screen Complexity — Difficult to Test and Maintain:**
+- `./lib/screens/profile/profile_screen.dart` — 2,021 lines
+- `./lib/screens/home/home_screen.dart` — 1,977 lines
+- `./lib/screens/feed/discover_feed_screen.dart` — 1,813 lines
+- `./lib/screens/settings/settings_screen.dart` — 1,564 lines
+- `./lib/screens/you/you_screen.dart` — 1,346 lines
 
-**Files:** `lib/providers/auth_provider.dart` (loginWithGoogle, lines 136-200)
-
-**Current flow:**
-1. Try idToken-based flow with serverClientId (Android/iOS ideal path)
-2. Catch ApiException 10 (SHA-1 mismatch or propagation delay)
-3. Fall back to accessToken-only flow without serverClientId
-4. Server verifies token via Google userinfo endpoint
-5. On Windows: skip to step 3 (no idToken available)
-
-**Problems:**
-1. Exception type detection by message string: `'API exception 10'` — fragile if error message changes
-2. No timeout on signOut() — code runs fire-and-forget, ignores 400+ second hangs on Windows/Linux
-3. If serverClientId env var not provided, both flows use same path (confusing)
-4. Fallback verification via userinfo is one extra HTTP call; if that fails silently, server creates user with incomplete data
-5. No retry after fallback fails — user sees generic "check your account configuration" error
-
-**Impact:**
-- Debug keystore SHA-1 mismatch causes confusing "sign-in failed" instead of "keystore issue"
-- Windows users experience hangs (though non-blocking)
-- App startup can lag if Google libraries stall
-- Silent incomplete account creation on userinfo endpoint failure
-
-**Fix approach:**
-- Create GoogleAuthException type instead of string matching
-- Document all exception codes (10 = DEVELOPER_ERROR with specific causes)
-- Replace signOut() fire-and-forget with explicit timeout (2s max)
-- If userinfo call fails, return error to user instead of creating account
-- Add telemetry: log which flow succeeded (idToken vs. accessToken)
-- For Batch 8: Implement retry queue for failed sign-ins
+Files: Multiple in `./lib/screens/`
+- Impact: High cognitive load; difficult to test components in isolation; regression risk when modifying; slow to evolve
+- Fix approach: Extract logical sections into sub-components per Sprint M checklist (M.1-M.5 in CLAUDE_TASKS_v5.md):
+  - Discover: extract top chrome, feed wrapper, card renderer, list renderer, filter logic, empty states
+  - You: extract header, Active section, Saved section, Tried section, utility rows
+  - Search: extract chrome, suggestions, result groups, cards
+  - Detail: extract hero, quick-start, why-fits, roadmap, coach teaser, CTA area
+  - Home: extract active hobby hero, next-step block, week plan, coach module, restart prompt
 
 ---
 
-## Optimistic Updates Without Proper Rollback Cleanup
+## Coach Message Rate Limiting in Hive Cache
 
-**Issue:** Failed API calls trigger rollback of local state, but don't clean up temporary data that may have been persisted.
-
-**Files:**
-- `lib/providers/user_provider.dart` (UserHobbiesNotifier)
-- `lib/providers/feature_providers.dart` (JournalNotifier.addEntry, ScheduleNotifier.addEvent)
-
-**Example (journal):**
-```dart
-void addEntry(JournalEntry entry) {
-  final snapshot = List<JournalEntry>.from(state);
-  state = [entry, ...state];  // Optimistic add with temp ID
-  _apiCall(snapshot, () async {
-    final created = await _repo.createJournalEntry(...);
-    // Replace temp entry with server response
-    state = [created, ...state.where((e) => e.id != entry.id).toList()];
-  });
-}
-```
-
-**Problems:**
-1. Temp entry added to UI immediately with local UUID
-2. If API fails and rollback happens, any image URLs or attachments in `photoUrl` field aren't cleaned up
-3. Temp ID persists in SharedPreferences cache if rollback happens
-4. User deletes temp entry before API responds; API response creates new entry with same data
-5. No "pending" flag — UI doesn't indicate which entries haven't synced
-
-**Impact:**
-- Orphaned temp IDs in SharedPreferences after failed sync
-- Duplicate journal entries if user retries after failed add
-- Image URLs pointing to non-existent files (if photo upload happened before entry save)
-- Confusing behavior: entry appears briefly, disappears, reappears as different ID
-
-**Fix approach:**
-- Add pending/synced flag to all local models (JournalEntry, ScheduleEvent, UserHobby)
-- Persist pending changes with "attempts" counter
-- On rollback, mark as "pending_sync_failed" not deleted
-- Retry failed entries on next app session
-- UI shows visual indicator (dimmed, "syncing" spinner) for pending items
-- Implement idempotency keys (send same UUID on retry, server deduplicates)
+**Per-Hobby Monthly Limits Not Persistent:**
+- Issue: Coach message rate limiting stored only in Hive cache (`coach_limits` box), not in database
+- Files: `./lib/screens/coach/hobby_coach_screen.dart` lines 72-79 (`_CoachLimitTracker` class)
+- Impact: Limits reset if app uninstalled; Hive cache can corrupt; multi-device users bypass limits; no audit trail; no server-side enforcement
+- Fix approach: Move rate limiting to database `GenerationLog` model; track per user per hobby per month server-side; validate before allowing coach message; add server-side limit check in `POST /api/generate/coach` handler; maintain Hive cache as client-side optimization only
 
 ---
 
-## Activity Log — Missing Server Implementation
+## Hidden Feature Code Dead Weight
 
-**Issue:** Activity log endpoint exists in Prisma schema and router, but may not have full CRUD implementation.
-
-**Files:**
-- `server/prisma/schema.prisma` (UserActivityLog model defined)
-- `server/vercel.json` (route `/api/users/activity` maps to `users/[path].ts`)
-
-**Current state:**
-- Flutter client fetches activity log for heatmap: `lib/providers/feature_providers.dart` (activityLogProvider)
-- Server routing expects path handler to support activity queries
-- Server-side `users/[path].ts` file likely incomplete for activity CRUD
-
-**Impact:**
-- Activity heatmap on profile may show no data
-- Activity streaks calculated from empty log
-- Batch 4 plan depends on this working
-
-**Fix approach:**
-- Verify `server/api/users/[path].ts` implements activity path cases:
-  - GET `/api/users/activity?days=N` — fetch recent activity
-  - POST activity logs when hobby status changes (automatic in UserHobbiesNotifier)
-- Add indexes for performance: `@@index([userId, createdAt])`
-- Test heatmap end-to-end in Batch 4
+**Dead Code Still in Repository:**
+- Issue: Seven secondary features hidden (routes removed from router.dart) but implementation code remains in codebase
+- Files:
+  - `./lib/screens/buddy_mode_screen.dart`
+  - `./lib/screens/community_stories_screen.dart`
+  - `./lib/screens/local_discovery_screen.dart`
+  - `./lib/screens/year_in_review_screen.dart`
+  - `./lib/screens/weekly_challenge_screen.dart`
+  - `./lib/screens/mood_match_screen.dart`
+  - `./lib/screens/seasonal_picks_screen.dart`
+- Impact: Increases maintenance burden; confuses developer context; unused models/providers still referenced; makes codebase harder to understand; test coverage diluted
+- Fix approach: Either delete entirely or move to `archived_features/` subdirectory; remove from `router.dart` (confirm routes not in active codebase); clean unused providers from `providers/` and models from `models/`; run `dart analyze` to find orphaned references
 
 ---
 
-## Feature Providers — Hard-Coded Seed Data for Non-API Features
+## Terms & Privacy Policy Not Deployed
 
-**Issue:** Several feature providers still return hardcoded seed data instead of server-backed data.
-
-**Files:** `lib/providers/feature_providers.dart`
-
-**Current issues:**
-- `profileProvider` (line 47-49): In-memory only, no persistence
-- `challengeProvider` (line 110-112): Returns hardcoded FeatureSeedData.challenges, not server data
-- `buddyProfilesProvider` (line 211-213): Hardcoded seed
-- `buddyActivitiesProvider` (line 215-217): Hardcoded seed
-- `storiesProvider` (line 223-225): Hardcoded seed
-- `nearbyUsersProvider` (line 231-233): Hardcoded seed
-
-**Problems:**
-1. These features don't scale: data is same for all users
-2. No personalization (challenges should be per-user progress)
-3. No backend support — can't add/edit challenges, stories, etc.
-4. Geo features (nearbyUsers) can't work with seed data
-5. Resets on app restart
-
-**Impact:**
-- Batch 7 (gamification) can't implement weekly challenges properly
-- Batch 6 (social) can't show user-specific activity
-- Product teams can't manage content without code changes
-
-**Fix approach:**
-- Batch 5: Create PersonalToolsRepository methods for these endpoints
-- Batch 6: Add server endpoints for social data (buddies, stories, activity)
-- Batch 7: Implement weekly challenge generation and assignment
-- Convert providers to FutureProvider with repository calls
-- Add caching layer (Hive) for content that doesn't change frequently
+**Legal Compliance Documentation Missing:**
+- Issue: Terms of Service and Privacy Policy generated as .docx files but not hosted or linked in app
+- Files: Not in codebase (generated externally, .docx format)
+- Impact: App store submission will be rejected; GDPR/legal compliance gaps; users cannot review policies
+- Fix approach: Convert .docx to HTML or markdown; host on company website or CDN; add deep links in `./lib/screens/settings/settings_screen.dart` (terms, privacy); ensure links appear in App Store and Google Play listings with correct localization
 
 ---
 
-## Notes Provider — No Server Persistence
+## Type Checking Not Part of Commit Process
 
-**Issue:** Personal notes (per hobby step) are stored in-memory only, not persisted to server.
-
-**Files:**
-- `lib/providers/feature_providers.dart` (NotesNotifier, line 185-199)
-- `server/vercel.json` (notes route exists: `/api/users/notes/`)
-
-**Current state:**
-- `NotesNotifier` is StateNotifierProvider with in-memory Map<stepId, String>
-- Has routes in vercel.json for notes endpoints
-- No actual server implementation for notes CRUD
-
-**Problems:**
-1. Notes lost on app restart
-2. User's progress tracking notes not saved
-3. Server endpoint defined in router but not implemented
-4. No sync between devices
-
-**Impact:**
-- Users can't reliably keep step-by-step notes
-- No backup of personal progress notes
-- Batch 5 (personal tools) depends on this
-
-**Fix approach:**
-- Implement NotesRepository (interface + API impl)
-- Create server endpoint handler for notes in `users/[path].ts`
-- Add database persistence (PersonalNote model already defined in schema)
-- Convert NotesNotifier to API-backed with SharedPreferences cache
-- Load notes on app start via `loadFromServer()` pattern
+**Missing Pre-commit Hooks for Code Quality:**
+- Issue: `npm run lint` exists in `./server/package.json` line 9 but no Git hook enforces it; `flutter analyze` requires manual run
+- Files: `./server/package.json` (server linting), `analysis_options.yaml` (Flutter linting)
+- Impact: TypeScript type errors slip to production; Vercel deploys may fail; Flutter deprecated APIs used undetected
+- Fix approach: Add Husky pre-commit hook to run `npm run lint` in `server/` directory; add hook for `flutter analyze` on changed `.dart` files; fail commit on lint errors
 
 ---
 
-## Shared Preferences — No Schema Validation
+## Inconsistent Server Error Response Formats
 
-**Issue:** Local persistent state (onboarding, preferences, hobbies, notes) relies on manual JSON serialization with no validation.
-
-**Files:**
-- `lib/providers/user_provider.dart` (UserPreferencesNotifier._load, UserHobbiesNotifier._load, lines 56-68, 122-134)
-- `lib/providers/feature_providers.dart` (NotesNotifier has no persistence)
-
-**Current pattern:**
-```dart
-static UserPreferences _load(SharedPreferences prefs) {
-  final json = prefs.getString(_key);
-  if (json == null) return const UserPreferences();
-  try {
-    return UserPreferences.fromJson(
-      jsonDecode(json) as Map<String, dynamic>,
-    );
-  } catch (_) {
-    return const UserPreferences();  // Silent fallback
-  }
-}
-```
-
-**Problems:**
-1. Corrupt SharedPreferences JSON silently discarded, losing user data
-2. No migration path if UserPreferences schema changes
-3. Unknown whether data loss happens in production
-4. Frozen user preferences revert to defaults if deserialization fails
-
-**Impact:**
-- Silent data loss if JSON format changes
-- Difficult to debug user sync issues ("why did my preferences reset?")
-- Can't add new fields without migration logic
-
-**Fix approach:**
-- Add schema versioning: `{ "version": 1, "data": {...} }`
-- Implement migration functions for version bumps
-- Log deserialize failures with timestamp and attempted data
-- Add sentry-integration for production error reporting
-- Implement data backup to server (sync state on every change)
+**Error Handling Fragmentation:**
+- Issue: API endpoints mix error response formats; some use `errorResponse()` helper, others may throw uncaught exceptions
+- Files: `./server/api/auth/[action].ts` (mostly consistent), `./server/api/users/[path].ts` (multiple handlers with varied error responses)
+- Impact: Client error handling complex; error payloads inconsistent in logs; difficult to add global error tracking
+- Fix approach: Standardize all endpoints to use error response shape `{ error: string, message: string, statusCode: number }`; wrap all handlers with try-catch; route all errors through single `errorResponse()` middleware
 
 ---
 
-## Testing — No Test Coverage
+## Offline-First Synchronization Fragile
 
-**Issue:** Codebase has no automated tests despite complex state management and sync logic.
-
-**Files:**
-- No `*.test.dart` or `*.spec.dart` files in lib/
-- Server has `vitest` setup but no test files
-
-**Critical untested areas:**
-- `lib/providers/user_provider.dart` (UserHobbiesNotifier): Optimistic updates, rollback, sync from server
-- `lib/core/auth/auth_interceptor.dart` (token refresh, concurrent 401s)
-- `lib/providers/auth_provider.dart` (loginWithGoogle fallback chain)
-- Server auth endpoints (token generation, validation, Google verification)
-
-**Impact:**
-- Regressions undetected
-- Refactoring risky
-- Batch 4 changes to sync logic have no safety net
-- Edge cases (concurrent requests, network failures) not validated
-
-**Fix approach:**
-- Batch 8 (production polish) must include testing
-- Start with critical paths:
-  1. UserHobbiesNotifier optimistic updates + rollback
-  2. Token refresh with concurrent 401 requests
-  3. Google sign-in fallback chain
-  4. Auth endpoint input validation
-- Use `test/` directory for Dart, `server/test/` for Node
-- Aim for 80% coverage of user-facing features
+**Fire-and-Forget API Calls with Rollback:**
+- Issue: User progress updates use optimistic updates in SharedPreferences + fire-and-forget API calls with rollback on error, but app crash during sync can orphan local changes
+- Files: `./lib/providers/user_provider.dart` (UserHobbiesNotifier), `./lib/providers/feature_providers.dart` (JournalNotifier, ScheduleNotifier)
+- Impact: User loses progress if app crashes during sync; journal entries, schedule updates may not reach server
+- Fix approach: Implement sync queue pattern — store pending changes in Hive with sync status (pending/synced); background sync worker retries pending changes; user sees "syncing" indicator; confirm sync success before allowing navigation
 
 ---
 
-## CORS — Permissive Configuration
+## Test Coverage Gaps
 
-**Issue:** CORS allows requests from any origin with wildcard "*".
+**Session State Machine Partially Tested:**
+- Issue: Session provider (`./lib/providers/session_provider.dart`) has complex timer logic with pause/resume, but test coverage unclear
+- Files: `./lib/providers/session_provider.dart` (lines 72-120 timer logic, pause/resume state machine)
+- Impact: Timer bugs (pause drift, haptic timing misfire, wakelock not release) only caught in manual E2E testing
+- Fix approach: Add unit tests for:
+  - `SessionNotifier._tick()` timing accuracy
+  - Pause/resume state transitions
+  - Haptic feedback firing at correct times (halfway, 1-min remaining)
+  - Timer completion triggers reflection phase
+  - Wakelock enable/disable on timer start/stop
 
-**Files:** `server/lib/middleware.ts` (setCorsHeaders, line 4-8)
+**Coach Message Limiting Not Tested:**
+- Issue: Coach limit tracker (`_CoachLimitTracker` in `hobby_coach_screen.dart` lines 72-79) uses Hive cache with month-key rotation; no unit tests for boundary conditions
+- Files: `./lib/screens/coach/hobby_coach_screen.dart` lines 72-79
+- Impact: Month boundary bugs, year rollovers untested
+- Fix approach: Extract `_CoachLimitTracker` to separate file `lib/core/coach_limit_tracker.dart`; add unit tests for:
+  - Month-key generation (year_month format)
+  - Increment logic
+  - Month boundary reset (Dec→Jan)
+  - Year rollover
 
-```typescript
-export function setCorsHeaders(res: VercelResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-}
-```
+**Free → Pro Coach Upgrade Flow Not Tested:**
+- What's not tested: User hits free message limit, sees upgrade prompt, upgrades, resumes coach interaction
+- Files: `./lib/screens/coach/hobby_coach_screen.dart` (limit checking), `./lib/components/pro_upgrade_sheet.dart` (upgrade flow), `./lib/providers/subscription_provider.dart` (Pro status)
+- Risk: Pro upgrade conversion broken unnoticed; revenue impact; user abandonment
+- Priority: High — critical monetization path
 
-**Problems:**
-1. Allows authenticated requests from any domain
-2. Cross-site request forgery risk if session storage vulnerable
-3. No origin validation
-4. Acceptable for MVP but not production
-
-**Impact:**
-- In theory, malicious site can make authenticated requests on behalf of user
-- Mitigated somewhat by JWT tokens in Authorization header (not cookies)
-- Still exposes to credential leakage if tokens captured
-
-**Fix approach:**
-- Whitelist specific origins (Flutter web, iOS app, Android app)
-- Remove wildcard in production
-- Keep wildcard for dev/localhost
-- Set `credentials: false` for non-authenticated endpoints
-- Document CORS policy in security guidelines (Batch 8)
-
----
-
-## Environment Variable Validation — Missing Checks
-
-**Issue:** Server doesn't validate required environment variables at startup.
-
-**Files:** `server/lib/auth.ts`, `server/api/auth/[action].ts`
-
-**Missing validations:**
-- `JWT_SECRET` — used in line 24, no check if undefined
-- `JWT_REFRESH_SECRET` — line 29, no check
-- `DATABASE_URL` — Prisma uses this, but no early validation
-- `GOOGLE_CLIENT_IDS` — optional but should warn if missing
-
-**Current code:**
-```typescript
-export function generateTokenPair(userId: string) {
-  const accessToken = jwt.sign({ sub: userId }, process.env.JWT_SECRET!, {
-    expiresIn: "15m",
-  });
-  // Non-null assertion (!) hides missing env vars
-}
-```
-
-**Problems:**
-1. Using `!` non-null assertion hides undefined values
-2. Errors occur at first request, not startup
-3. Vercel deployment may succeed but crash immediately
-4. No helpful error message if env vars misconfigured
-
-**Impact:**
-- Deployment appears successful but endpoints fail
-- Hard to debug in Vercel logs
-- Production incident if env vars accidentally omitted
-
-**Fix approach:**
-- Create `validateEnv()` function at server startup
-- Check required vars: JWT_SECRET, JWT_REFRESH_SECRET, DATABASE_URL
-- Warn if optional vars missing (GOOGLE_CLIENT_IDS)
-- Exit with helpful error message if validation fails
-- Call validateEnv() before Prisma initialization
+**Session Timer Under Memory Pressure Not Tested:**
+- What's not tested: App backgrounding during session; wakelock + timer survival; memory warnings
+- Files: `./lib/providers/session_provider.dart` (wakelock management), `./lib/screens/session/session_timer_phase.dart`
+- Risk: Session lost mid-activity; poor UX for core feature; user frustration
+- Priority: High — core user flow
 
 ---
 
-## Password Validation — Weak Client-Side Only
+## Security Considerations
 
-**Issue:** Password validation is client-side only, with minimal server-side checks.
+**Password Validation Insufficient:**
+- Risk: `./server/api/auth/[action].ts` line 55 only checks password length >= 8; no complexity requirements
+- Current mitigation: bcryptjs with 12 rounds provides strong salting; tokens have expiration (15 min access, 30 day refresh)
+- Recommendations:
+  - Add complexity checks (at least one uppercase, one number, one symbol)
+  - Implement rate limiting on login attempts (max 5 attempts per 15 minutes)
+  - Log failed auth attempts for audit trail
+  - Consider passwordless authentication (magic links) for better UX
 
-**Files:**
-- `lib/screens/auth/register_screen.dart` (client validation)
-- `server/api/auth/[action].ts` (server validation at line 52)
+**API Key Exposure Risk:**
+- Risk: Anthropic API key in environment variables; no key rotation mechanism documented
+- Files: `./server/lib/ai_generator.ts` line 15 reads `process.env.ANTHROPIC_API_KEY`
+- Current mitigation: Vercel environment secrets encrypted at rest; API key not exposed in code or logs
+- Recommendations:
+  - Document API key rotation policy
+  - Monitor API key usage for anomalies
+  - Consider dedicated service account with scoped permissions
+  - Add API key versioning if supported by Anthropic
 
-**Server validation:**
-```typescript
-if (typeof password !== "string" || password.length < 8) {
-  errorResponse(res, 400, "Password must be at least 8 characters");
-  return;
-}
-```
-
-**Problems:**
-1. Only checks length >= 8, no complexity requirements
-2. No check for common patterns (password, 12345678, etc.)
-3. No breached password check (haveibeenpwned API)
-4. Easy to guess: user123456, password123
-5. Dart client doesn't sync validation rules with server
-
-**Impact:**
-- Weak passwords accepted
-- Account compromise risk
-- No defense against bot account creation (with weak passwords)
-
-**Fix approach:**
-- Add server-side password strength requirements:
-  - Min 10 characters
-  - Require mix of uppercase, lowercase, numbers
-  - Reject common patterns (password, qwerty, sequential numbers)
-  - Optional: check against haveibeenpwned API
-- Sync validation rules to client (API endpoint or constants)
-- Show password strength meter on registration
-- Implement rate limiting on registration endpoint (prevent bot attacks)
+**Content Blocklist Static:**
+- Risk: `./server/lib/content_guard.ts` uses hardcoded blocklist; evolves only with code deployment
+- Current mitigation: 4-layer defense (input validation, prompt constraints, output validation, rate limiting); AI model trained for safety
+- Recommendations:
+  - Add ML-based content moderation if AI-generated hobby content scales
+  - Implement dynamic blocklist that can be updated without code deploy
+  - Audit blocklist quarterly; add common abuse patterns
 
 ---
 
-## Missing Indexes on Frequently Queried Fields
+## Performance Bottlenecks
 
-**Issue:** Some Prisma models lack indexes despite frequent queries.
+**Hardcoded Seed Data Limits Scalability:**
+- Issue: 150+ hobbies in `./lib/models/seed_data.dart` embedded as Dart constants; new hobbies require code change and app release
+- Files: `./lib/models/seed_data.dart`, `./server/prisma/seed-data/*.ts`
+- Current capacity: 150+ hobbies
+- Limit: Adding hobbies at >1 per release unsustainable
+- Scaling path: Move hobby catalog to database; implement admin CMS for hobby management; client caches hobby list in Hive; server pushes updates via notification
 
-**Files:** `server/prisma/schema.prisma`
+**Unsplash API Rate Limiting:**
+- Issue: Image search called synchronously during hobby generation; no response caching or request deduplication
+- Files: `./server/lib/unsplash.ts`, `./server/api/generate/[action].ts`
+- Current capacity: Unsplash free tier ~50 requests/hour
+- Limit: Signup surge (many users generating hobbies simultaneously) hits rate limit
+- Scaling path:
+  - Pre-generate and cache images during hobby seed
+  - Use CDN for image delivery (Cloudflare Images)
+  - Implement exponential backoff for API retries
+  - Migrate to paid Unsplash tier or self-hosted image service
 
-**Missing indexes:**
-- `UserActivityLog`: Has `@@index([userId, createdAt])` ✓ (good)
-- `JournalEntry`: Has `@@index([userId, createdAt])` ✓ (good)
-- `User.email`: No index — login query scans full table
-- `UserHobby`: No index on `userId` — fetching user's hobbies scans full table
-- `PersonalNote`: No index — fetching notes by hobby scans full table
+**Coach Response Latency:**
+- Issue: Coach endpoint calls Anthropic API synchronously; model inference 2-5 seconds typical; no response caching
+- Files: `./server/api/generate/[action].ts` (coach handler)
+- Impact: User perceives slow coach (2-5s wait); multiple taps cause duplicate requests
+- Scaling path:
+  - Add Redis caching for repeated coach queries (same hobby + mode + stage)
+  - Implement request deduplication on server
+  - Add loading state and retry UI on client
+  - Consider async queuing for lower-priority coach requests
 
-**Queries affected:**
-- Login: `findUnique(where: { email })` — slow if table grows
-- Fetch user hobbies: `findMany(where: { userId })` — O(n) scan
-- Fetch hobby notes: `findMany(where: { userId, hobbyId })` — O(n) scan
-
-**Impact:**
-- Slow login as user base grows
-- Slow sync from server for user progress
-- Database CPU spikes with lots of concurrent users
-
-**Fix approach:**
-- Add indexes:
-  ```prisma
-  model User {
-    @@index([email])
-  }
-  model UserHobby {
-    @@index([userId])
-  }
-  model PersonalNote {
-    @@index([userId, hobbyId])
-  }
-  ```
-- Run `prisma migrate dev` to create indexes in database
-- Monitor query performance in production (Vercel Analytics + Neon dashboard)
-
----
-
-## Streak Calculation — Server-Side Only, Not Real-Time
-
-**Issue:** User streaks are computed server-side from activity log, but client has no real-time visibility.
-
-**Files:**
-- `server/prisma/schema.prisma` (UserHobby.streakDays field)
-- `lib/models/hobby.dart` (UserHobby model)
-- `lib/screens/profile/profile_screen.dart` (may display streak)
-
-**Current state:**
-- UserHobby.streakDays stored in database
-- Server computes on hobby status changes
-- Client fetches but doesn't compute locally
-
-**Problems:**
-1. Streak becomes stale after last API sync
-2. Offline mode shows yesterday's streak
-3. User can complete step at 11:59 PM, but streak won't update until next sync
-4. No visual feedback that streak was earned
-
-**Impact:**
-- UX confusion: streaks look wrong if user offline for hours
-- Gamification feedback delayed
-- Batch 7 features (achievements, streaks) depend on real-time calculation
-
-**Fix approach:**
-- Server: Compute streak as activity count in last N consecutive days (not stored value)
-- Client: Cache streak value but recalculate when activity log syncs
-- UI: Show "pending" indicator if local activity not yet synced
-- Batch 7: Add push notification when streak reaches milestones (7 days, 30 days, etc.)
+**Database Connection Pool Exhaustion:**
+- Issue: Vercel serverless uses Prisma connection pooling; Neon free tier provides 100 connections
+- Files: `./server/lib/db.ts` (Prisma singleton)
+- Current capacity: 100 concurrent connections (Neon free tier)
+- Limit: Concurrent users * connections per request may exhaust pool
+- Scaling path:
+  - Use Prisma PgBouncer for connection pooling
+  - Implement connection pooling proxy (pgBouncer or similar)
+  - Monitor connection pool usage; alert on >80% saturation
+  - Migrate to Neon Pro tier (higher connection limits)
 
 ---
 
-## Router — No Deep Linking Support
+## Database Concerns
 
-**Issue:** GoRouter uses simple path-based routing without deep link handling for app-to-app navigation or notifications.
+**Cascading Deletes Risk:**
+- Issue: Multiple foreign keys with `onDelete: Cascade` in schema; no soft-delete pattern
+- Files: `./server/prisma/schema.prisma` (KitItem, RoadmapStep, FaqItem, CostBreakdown, BudgetAlternative, etc. all cascade on Hobby delete)
+- Impact: User account deletion will trigger cascading deletes across all related data; no audit trail; potential orphaned data if relationships inconsistent; data loss if bug in delete logic
+- Safe modification: Before implementing DELETE /api/users/me, test cascade order in transaction; add audit table to track deletions with timestamp and reason
 
-**Files:** `lib/router.dart`
-
-**Current routes:** All hardcoded paths (e.g., `/hobby/{id}`, `/journal`)
-
-**Missing:**
-- Deep link URI scheme (e.g., `app.trysomething.com/hobby/coding`)
-- Web subdomain support (e.g., web.trysomething.com)
-- Notification payload routing (e.g., `{route: '/hobby', hobbyId: 'xyz'}`)
-- Android intent filters
-
-**Impact:**
-- Can't share hobby links
-- Notifications can't deep link to specific hobby
-- Social features (Batch 6) can't share hobby combos
-- Web version (if built) can't share URLs
-
-**Fix approach:**
-- Batch 8: Add deep link support
-- Configure Android intent filters + iOS URL schemes
-- Add query parameter support for deep links (e.g., `/hobby?id=xyz`)
-- Implement notification click handler to route to specific screen
-- Generate shareable links on profile + hobby detail screens
+**Schema Evolution Without Migrations:**
+- Issue: Prisma migrations stored in Neon, not committed to Git; no migration history in repo
+- Files: Migrations in Neon database, not in `server/prisma/migrations/`
+- Impact: Difficult to reproduce database state; rollback unclear; schema drift between environments
+- Recommendations:
+  - Commit migration history to Git: `prisma migrate resolve --rolled-back <migration_name>`
+  - Document schema versioning strategy (version bumps with major releases)
+  - Use Prisma Studio for safe exploration and debugging
+  - Test migrations in staging before production deploy
 
 ---
 
-## SharedPreferences Keys — No Namespacing
+## Deployment & Infrastructure Concerns
 
-**Issue:** SharedPreferences keys are not namespaced, risking collisions if multiple features use same key names.
+**Vercel Serverless Cold Starts:**
+- Issue: First request to Vercel function after deploy may take 2-5 seconds
+- Impact: User experiences slow coach response, slow hobby search on cold start after deploy
+- Mitigation: Add keep-alive pings from client; pre-warm serverless functions after deploy; monitor cold start times in Sentry
 
-**Files:** `lib/providers/user_provider.dart`
-
-**Keys used:**
-- `'onboarding_complete'` (line 28)
-- `'user_preferences'` (line 54)
-- `'user_hobbies'` (line 118)
-
-**Problems:**
-1. Generic names: another notifier or feature might use `'user_preferences'`
-2. No clear ownership
-3. If two features accidentally use same key, data corruption
-4. Hard to clear feature-specific data for debugging
-
-**Impact:**
-- Risk of collision as more providers added
-- Data corruption bug hard to trace
-
-**Fix approach:**
-- Use prefixed keys: `'user_provider.onboarding_complete'`, `'user_provider.preferences'`
-- Or create constants file: `SharedPreferencesKeys` enum
-- Document all keys in one place
-- Add migration helper if key names change
+**Prisma Query Performance Unmonitored:**
+- Issue: No query optimization documentation or index analysis
+- Files: `./server/prisma/schema.prisma` (schema), `./server/api/` (all query files)
+- Impact: Complex queries (user hobbies + progress + coach context) may be slow as data grows
+- Recommendations:
+  - Add database indexes on frequently queried fields (userId, hobbyId, createdAt)
+  - Monitor slow query logs in Neon
+  - Use Prisma Studio to analyze query plans
+  - Add query performance tests to catch regressions
 
 ---
 
-## Hive Cache — No Eviction Policy
+## Fragile Areas — Safe Modification Guide
 
-**Issue:** Hive cache for hobby content has no size limits or eviction policy.
+**Session Timer Particle Animation:**
+- Files: `./lib/components/particle_timer_painter.dart` (643 lines), `./lib/screens/session/session_timer_phase.dart` (487 lines)
+- Why fragile: CustomPainter with 250 particles, PathMetric convergence, timing-dependent animations, platform-specific rendering
+- Safe modification:
+  - Add unit tests for particle position calculations before editing
+  - Test on physical device (Nothing Phone 3a) with performance profiler
+  - Avoid changing tick frequency or particle spawn rate
+  - Profile memory usage with DevTools
+- Test coverage: Particle spawn logic, convergence math, category shape matching not unit tested
 
-**Files:** `lib/core/storage/cache_manager.dart`, `lib/data/repositories/hobby_repository_api.dart`
+**Coach Message Mode Routing:**
+- Files: `./lib/screens/coach/hobby_coach_screen.dart` (1,290 lines), `./server/api/generate/[action].ts`, `./server/lib/ai_generator.ts`
+- Why fragile: Message limit tracking in Hive cache, mode-dependent response logic (Start/Momentum/Rescue), free/Pro gating, context injection from hobby/user state
+- Safe modification:
+  - Add database-backed rate limiting before scaling
+  - Write tests for coach mode switching and context injection
+  - Verify Pro entitlement check before launch
+  - Test with various hobby states (new/active/stalled)
+- Test coverage: Mode switching, free/Pro boundary, monthly reset logic not unit tested
 
-**Current usage:**
-- Caches full hobby list + details
-- No TTL
-- No size limit
-- No eviction on low disk space
-
-**Problems:**
-1. Cache grows unbounded on repeated updates
-2. No cache invalidation strategy
-3. Stale data can be served indefinitely
-4. On low-disk devices, cache grows until storage full
-
-**Impact:**
-- Device storage bloat
-- App becomes sluggish as cache size grows
-- Users may need to clear app data to fix performance
-
-**Fix approach:**
-- Add TTL: invalidate hobby cache after 24 hours
-- Add size limit: keep max 50MB of cached hobby data
-- Implement LRU (least recently used) eviction
-- Add `clearCache()` method for manual cache clear
-- Monitor cache size in profile/settings screen
-- Add cache stats for debugging
-
----
-
-Summary of Priority Fixes:
-
-**Critical (blocks deployment/production):**
-1. Vercel 12-function limit — already at max, document consolidation strategy
-2. Data sync without persistence — add pending queue
-3. Auth token refresh race condition — add mutex
-
-**High (impacts user data/experience):**
-4. Error handling swallowed — add logging
-5. Optimistic updates without proper cleanup — add pending flags
-6. Google sign-in fallback fragility — add exception types
-
-**Medium (affects Batch 4+ implementation):**
-7. Activity log server implementation — complete CRUD
-8. Notes provider server persistence — implement API
-9. Feature providers still using seed data — plan server migration
-
-**Low (technical debt, polish):**
-10. Testing missing — add in Batch 8
-11. CORS permissive — whitelist origins for prod
-12. Password validation weak — add complexity checks
-13. Missing database indexes — add for performance
-14. Router deep linking — add in Batch 8
+**Onboarding Match Algorithm:**
+- Files: `./lib/core/hobby_match.dart`, `./lib/screens/onboarding/match_results_screen.dart` (747 lines)
+- Why fragile: Scoring logic depends on user answers; multiple factors (vibes, budget, hours, social preference); no A/B testing framework
+- Safe modification:
+  - Document scoring formula in comments
+  - Add logging for match scores and factors
+  - Test with multiple user personas (budget-conscious, social, time-constrained)
+  - Avoid changing weights without data analysis
+  - Implement feature flags for score tweaks
+- Test coverage: Match algorithm not unit tested with real user scenarios; no edge case coverage (all vibes selected, no vibes, extreme budget)
 
 ---
 
-*Concerns audit: 2026-03-02*
+## Known Bugs
+
+**Coach Stale Detection Timing:**
+- Symptoms: Coach rescue mode may not activate when user has skipped days
+- Files: `./server/api/generate/[action].ts` (coach system prompt construction)
+- Trigger: User starts hobby, does session, stops for 3+ days, opens coach — expects Rescue mode suggestion
+- Workaround: User can manually select "Rescue" mode from dropdown
+- Root cause: Coach system prompt uses `UserHobby.startedAt` instead of `lastActivityAt`; both fields fixed in Sonnet upgrade files (outputs/action.ts)
+
+**Apple OAuth Route 404:**
+- Symptoms: User taps "Sign in with Apple" → error "Route not found"
+- Files: `./server/vercel.json` line 11
+- Trigger: Any attempt to use Apple Sign-In on iOS
+- Workaround: Force user to email/password or Google Sign-In
+- Root cause: Vercel regex pattern `(register|login|refresh|google)` missing `apple` action
+
+---
+
+## Scaling Limits
+
+**Hobby Catalog Limited to Seed Data:**
+- Current capacity: 150+ hardcoded hobbies in code
+- Limit: Adding hobbies requires code commit, review, merge, deploy, app update
+- Scaling path:
+  - Move to database; implement admin CMS for hobby CRUD
+  - Client caches hobby list in Hive; sync on app launch
+  - Server pushes updates via FCM notifications
+  - Version hobby catalog for A/B testing variants
+
+**API Rate Limiting Not Enforced:**
+- Current capacity: No documented rate limits per user or IP
+- Limit: Malicious users could spam generation endpoints (hobby, FAQ, cost, budget, coach)
+- Scaling path:
+  - Implement Redis-backed rate limiting: 20 generations per user per 24h (documented in CLAUDE.md)
+  - Add rate limiting middleware to all `/api/generate/` and `/api/hobbies/search` endpoints
+  - Return HTTP 429 (Too Many Requests) with retry-after header
+  - Track abuse patterns; block suspicious IPs
+
+**Unsplash API Quota:**
+- Current capacity: Unsplash free tier ~50 requests/hour
+- Limit: Hits limit during signup surge or batch hobby generation
+- Scaling path:
+  - Pre-cache images during hobby seed (store imageUrl in database)
+  - Use image CDN (Cloudflare, Imgix) for delivery
+  - Implement fallback category-based placeholder images
+  - Migrate to Unsplash paid tier or self-hosted image service
+
+---
+
+## Dependencies at Risk
+
+**Freezed Code Generation Drift:**
+- Risk: Freezed generates `.freezed.dart` files; if not regenerated after model edits, type safety breaks
+- Files: Generated files like `./lib/models/hobby.freezed.dart` (1,797 lines auto-generated)
+- Impact: Type mismatches cause runtime errors; stale code generation common issue
+- Migration plan:
+  - Ensure `flutter pub get` and `dart run build_runner build` run before every build
+  - Add code generation to pre-commit hook
+  - Document in CONTRIBUTING.md
+
+**Riverpod Circular Dependencies:**
+- Risk: Providers can form circular dependency graphs if not carefully structured
+- Files: `./lib/providers/*` (auth, hobby, user, session, subscription, feature providers form complex DAG)
+- Impact: Runtime errors if provider invalidation triggers cycles; difficult to debug
+- Migration plan:
+  - Document provider dependency graph (create visual diagram)
+  - Add unit tests for provider relationships
+  - Use `ref.watch()` patterns carefully; avoid watching providers from their own dependents
+  - Add CI check to detect circular dependencies
+
+---
+
+## Summary — Prioritized Action Items
+
+**CRITICAL (Blocks Launch):**
+1. Add `DELETE /api/users/me` endpoint with cascading deletes
+2. Add `GET /api/users/me/export` endpoint
+3. Fix Apple OAuth routing: update vercel.json regex
+4. Host Terms & Privacy Policy; link in app settings
+
+**HIGH (Before Beta):**
+1. Verify Sonnet AI deployment or upgrade from Haiku
+2. Fix coach stale detection (use `lastActivityAt`)
+3. Move coach rate limiting from Hive to database
+4. Add pre-commit linting hooks (server TypeScript, Flutter analysis)
+
+**MEDIUM (V1.1 or V2):**
+1. Refactor large screen components (home, discover, you, settings, profile)
+2. Clean up hidden feature code (buddy mode, community stories, etc.)
+3. Add unit tests for session timer, coach limits, onboarding match
+4. Implement sync queue for offline-first progress
+
+**LOW (Post-Launch):**
+1. Move hobby seed data to CMS
+2. Implement Redis caching for coach responses
+3. Optimize database indexes
+4. Add comprehensive API monitoring and alerting
+
+---
+
+*Concerns audit: 2026-03-21*
