@@ -8,7 +8,7 @@
   ],
   "routes": [
     { "src": "/api/health", "dest": "/api/health.ts" },
-    { "src": "/api/auth/(register|login|refresh|google)", "dest": "/api/auth/[action].ts?action=$1" },
+    { "src": "/api/auth/(register|login|refresh|google|apple)", "dest": "/api/auth/[action].ts?action=$1" },
     { "src": "/api/users/hobbies-sync", "dest": "/api/users/[path].ts?path=hobbies-sync" },
     { "src": "/api/users/hobbies/([^/]+)/steps/([^/]+)", "dest": "/api/users/[path].ts?path=hobbies-detail&hobbyId=$1&stepId=$2" },
     { "src": "/api/users/hobbies/([^/]+)", "dest": "/api/users/[path].ts?path=hobbies-detail&hobbyId=$1" },
