@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "crypto";
 import {
   handleCors,
   methodNotAllowed,
@@ -1098,12 +1099,31 @@ async function handleRevenueCatWebhook(
     return;
   }
 
-  const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
-  if (secret) {
+  // D-03: Skip verification in development for local testing
+  if (process.env.NODE_ENV !== "development") {
+    const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
+
+    // D-01: Fail closed — 503 signals misconfiguration, RevenueCat will retry
+    if (!secret) {
+      console.warn("[RC Webhook] REVENUECAT_WEBHOOK_SECRET not configured");
+      return errorResponse(res, 503, "Webhook not configured");
+    }
+
+    // D-02: Reject silently when Authorization header is wrong/missing
     const auth = req.headers.authorization;
-    if (!auth || auth !== `Bearer ${secret}`) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
+    if (!auth) {
+      return errorResponse(res, 401, "Unauthorized");
+    }
+
+    // Timing-safe comparison to prevent timing attacks
+    const expected = `Bearer ${secret}`;
+    const incomingBuf = Buffer.from(auth);
+    const expectedBuf = Buffer.from(expected);
+    if (
+      incomingBuf.length !== expectedBuf.length ||
+      !crypto.timingSafeEqual(incomingBuf, expectedBuf)
+    ) {
+      return errorResponse(res, 401, "Unauthorized");
     }
   }
 
