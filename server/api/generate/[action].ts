@@ -47,6 +47,9 @@ function getAnthropicClient(): Anthropic {
 // Rate limit: 20 generations per user per 24 hours
 const RATE_LIMIT = 20;
 
+// Vercel function config — AI generation needs more time than default 10s
+export const config = { maxDuration: 60 };
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
   if (methodNotAllowed(req, res, ["POST"])) return;
