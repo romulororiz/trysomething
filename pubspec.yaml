@@ -112,6 +112,7 @@ flutter:
     - assets/images/
     - assets/icon/
     - assets/fonts/
+    - assets/textures/
 
 sentry:
   upload_debug_symbols: true
