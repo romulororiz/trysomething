@@ -21,7 +21,6 @@ import '../../components/app_overlays.dart';
 import '../../components/updated_matches_sheet.dart';
 import '../../core/analytics/analytics_provider.dart';
 import '../../models/hobby.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Settings screen — edit preferences, notifications, theme, about, reset.
@@ -226,16 +225,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         avatarUrl: avatarUrl,
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // ── TrySomething Pro ──
-                    _ProSettingsRow(
-                      ref: ref,
-                      onTap: () => context.push('/pro'),
-                      onManage: () => _openCustomerCenter(context),
-                    ),
                     if (!ref.watch(proStatusProvider).isPro) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 12),
                       _SettingsTile(
                         icon: Icons.restore_outlined,
                         title: 'Restore Purchases',
@@ -750,18 +741,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _openCustomerCenter(BuildContext context) async {
-    try {
-      await RevenueCatUI.presentCustomerCenter();
-    } catch (e) {
-      if (context.mounted) {
-        showAppSnackbar(context,
-            message: 'Unable to open subscription manager.',
-            type: AppSnackbarType.error);
-      }
-    }
   }
 
   Future<void> _handleRestore() async {
@@ -1956,87 +1935,3 @@ class _DebugProToggle extends ConsumerWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-//  PRO SETTINGS ROW
-// ═══════════════════════════════════════════════════════
-
-class _ProSettingsRow extends StatelessWidget {
-  final WidgetRef ref;
-  final VoidCallback onTap;
-  final VoidCallback? onManage;
-
-  const _ProSettingsRow(
-      {required this.ref, required this.onTap, this.onManage});
-
-  String _statusLabel(ProStatus status) {
-    if (status.isLifetime) return 'Lifetime';
-    if (status.isTrialing)
-      return 'Trial (${status.trialDaysRemaining} days left)';
-    if (status.isPro) return 'Pro';
-    return 'Free Plan';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final status = ref.watch(proStatusProvider);
-
-    return GestureDetector(
-      onTap: status.isPro ? onManage : onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.coral.withValues(alpha: 0.08),
-              AppColors.textMuted.withValues(alpha: 0.06),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.coral.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.coral.withValues(alpha: 0.2),
-                    AppColors.textMuted.withValues(alpha: 0.2),
-                  ],
-                ),
-              ),
-              child: const Icon(Icons.auto_awesome,
-                  size: 20, color: AppColors.coral),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TrySomething Pro',
-                    style: AppTypography.sansLabel.copyWith(
-                      color: AppColors.coral,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _statusLabel(status),
-                    style: AppTypography.sansTiny
-                        .copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: AppColors.coral),
-          ],
-        ),
-      ),
-    );
-  }
-}

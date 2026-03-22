@@ -635,16 +635,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   color: AppColors.textMuted,
                 ),
               ),
-              if (genState.error != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  genState.error!,
-                  style: AppTypography.monoTiny.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
               const SizedBox(height: 10),
               _generateButton(),
             ],

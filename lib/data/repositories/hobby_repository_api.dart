@@ -143,7 +143,7 @@ class HobbyRepositoryApi implements HobbyRepository {
         ApiConstants.generateHobby,
         data: {'query': query},
         options: Options(
-          receiveTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 60),
           validateStatus: (status) => status != null && status < 500 && status != 401,
         ),
       );

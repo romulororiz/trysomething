@@ -51,8 +51,6 @@ class _YouScreenState extends ConsumerState<YouScreen> {
     final allHobbiesAsync = ref.watch(hobbyListProvider);
     final authUser = ref.watch(authProvider).user;
     final profile = ref.watch(profileProvider);
-    final proStatus = ref.watch(proStatusProvider);
-
     final displayName = authUser?.displayName ?? profile.username;
     final avatarUrl = authUser?.avatarUrl ?? profile.avatarUrl;
 
@@ -200,9 +198,9 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 24),
                     child: _HairlineDivider(),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _ProNavRow(proStatus: proStatus),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: _ProNavRow(),
                   ),
                 ],
               ),
@@ -453,7 +451,7 @@ class _TabPills extends StatelessWidget {
 }
 
 // ── Active tab content ──
-class _ActiveTabContent extends StatelessWidget {
+class _ActiveTabContent extends ConsumerWidget {
   final List<_HobbyWithMeta> entries;
   final _HobbyWithMeta? visibleMeta;
   final PageController hobbyPageController;
@@ -470,13 +468,15 @@ class _ActiveTabContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (entries.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: _EmptyActivePrompt(),
       );
     }
+
+    final isPro = ref.watch(isProProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -491,12 +491,20 @@ class _ActiveTabContent extends StatelessWidget {
             height: 130,
             child: PageView.builder(
               controller: hobbyPageController,
-              itemCount: entries.length,
+              // Free users: show active card + 1 locked card only
+              itemCount: isPro ? entries.length : entries.length.clamp(0, 2),
               onPageChanged: onPageChanged,
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: _CollectorCard(meta: entries[i]),
-              ),
+              itemBuilder: (context, i) {
+                final card = Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: _CollectorCard(meta: entries[i]),
+                );
+                if (isPro || i == 0) return card;
+                return _LockedCardOverlay(
+                  lockedCount: entries.length - 1,
+                  child: card,
+                );
+              },
             ),
           ),
           const SizedBox(height: 8),
@@ -511,6 +519,68 @@ class _ActiveTabContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: _StatsChipRow(meta: visibleMeta!),
           ),
+      ],
+    );
+  }
+}
+
+// ── Locked card overlay (sits on top of a hobby card for free users) ──
+class _LockedCardOverlay extends StatelessWidget {
+  final int lockedCount;
+  final Widget child;
+  const _LockedCardOverlay({required this.lockedCount, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                color: AppColors.background.withValues(alpha: 0.85),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock_rounded,
+                          color: AppColors.coral.withValues(alpha: 0.8),
+                          size: 22),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Track $lockedCount more ${lockedCount == 1 ? 'hobby' : 'hobbies'} with Pro',
+                        style: AppTypography.sansLabel.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () => context.push('/pro'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.coral,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text('Unlock Pro',
+                              style: AppTypography.sansCaption.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              )),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -784,14 +854,12 @@ class _CollectorCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Expanded(
-                          child: Text(
-                            hobby.title,
+                          child: _CoralFirstWordTitle(
+                            title: hobby.title,
                             style: AppTypography.title.copyWith(
                               fontSize: 18,
                               color: AppColors.textPrimary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Column(
@@ -805,7 +873,7 @@ class _CollectorCard extends StatelessWidget {
                                     style: GoogleFonts.ibmPlexMono(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.accent,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   TextSpan(
@@ -813,7 +881,7 @@ class _CollectorCard extends StatelessWidget {
                                     style: GoogleFonts.ibmPlexMono(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.accent,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ],
@@ -841,7 +909,7 @@ class _CollectorCard extends StatelessWidget {
                         backgroundColor:
                             Colors.white.withValues(alpha: 0.08),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.accent),
+                            Colors.white),
                       ),
                     ),
                   ],
@@ -981,11 +1049,11 @@ class _NavRow extends StatelessWidget {
   }
 }
 
-class _ProNavRow extends StatelessWidget {
-  final ProStatus proStatus;
-  const _ProNavRow({required this.proStatus});
+class _ProNavRow extends ConsumerWidget {
+  const _ProNavRow();
 
   String _label(ProStatus s) {
+    if (s.isLifetime) return 'Lifetime';
     if (s.isPro && s.isTrialing) {
       return 'Trial (${s.trialDaysRemaining} days left)';
     }
@@ -994,56 +1062,63 @@ class _ProNavRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(proStatusProvider);
+
     return GestureDetector(
       onTap: () => context.push('/pro'),
-      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.accent.withValues(alpha: 0.03),
-          border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.1),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.coral.withValues(alpha: 0.08),
+              AppColors.textMuted.withValues(alpha: 0.06),
+            ],
           ),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.coral.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
             Container(
-              width: 30,
-              height: 30,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: AppColors.accentMuted,
-                border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.coral.withValues(alpha: 0.2),
+                    AppColors.textMuted.withValues(alpha: 0.2),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(MdiIcons.starFourPointsOutline,
-                  size: 15, color: AppColors.accent),
+              child: const Icon(Icons.auto_awesome,
+                  size: 20, color: AppColors.coral),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'TrySomething Pro',
-                    style: AppTypography.sansLabel,
+                    style: AppTypography.sansLabel.copyWith(
+                      color: AppColors.coral,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _label(proStatus),
-                    style: AppTypography.monoTiny.copyWith(
-                      color: AppColors.accent.withValues(alpha: 0.5),
-                    ),
+                    _label(status),
+                    style: AppTypography.sansTiny
+                        .copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
-            Icon(MdiIcons.chevronRight,
-                size: 18,
-                color: AppColors.accent.withValues(alpha: 0.4)),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: AppColors.coral),
           ],
         ),
       ),
@@ -1155,7 +1230,7 @@ class _EmptyTabPrompt extends StatelessWidget {
                 child: Center(
                   child: Text(actionLabel!,
                       style: AppTypography.button
-                          .copyWith(color: AppColors.background)),
+                          .copyWith(color: Colors.white)),
                 ),
               ),
             ),
@@ -1259,14 +1334,12 @@ class _SavedHobbySwipeCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Expanded(
-                          child: Text(
-                            hobby.title,
+                          child: _CoralFirstWordTitle(
+                            title: hobby.title,
                             style: AppTypography.title.copyWith(
                               fontSize: 18,
                               color: AppColors.textPrimary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
@@ -1342,5 +1415,39 @@ class _TriedHobbyCard extends StatelessWidget {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return names[month - 1];
+  }
+}
+
+// ── Coral first word title ──
+class _CoralFirstWordTitle extends StatelessWidget {
+  final String title;
+  final TextStyle style;
+  const _CoralFirstWordTitle({required this.title, required this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final spaceIdx = title.indexOf(' ');
+    if (spaceIdx <= 0) {
+      return Text(
+        title,
+        style: style.copyWith(color: AppColors.coral),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return Text.rich(
+      TextSpan(children: [
+        TextSpan(
+          text: '${title.substring(0, spaceIdx)} ',
+          style: style.copyWith(color: AppColors.coral),
+        ),
+        TextSpan(
+          text: title.substring(spaceIdx + 1),
+          style: style,
+        ),
+      ]),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 }
