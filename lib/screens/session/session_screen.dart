@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../components/breathing_ring.dart';
+import '../../components/film_grain_overlay.dart';
 import '../../models/session.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/user_provider.dart';
@@ -13,7 +15,14 @@ import 'session_timer_phase.dart';
 ///
 /// Takes over the entire screen — no app bar, no bottom nav.
 /// Manages four phases internally via [SessionNotifier]:
-///   prepare → timer → completing → reflect → complete
+///   prepare -> timer -> completing -> reflect -> complete
+///
+/// Renders a 5-layer cinematic Stack:
+///   1. Breathing background (subtle pulse synced with ring)
+///   2. Ambient gradient spotlight (radial coral at 4%)
+///   3. Film grain overlay (cinematic warmth)
+///   4. Breathing ring (the visual constant across all phases)
+///   5. Phase content (AnimatedSwitcher)
 ///
 /// Entry/exit transitions are handled by the route's [PageRouteBuilder].
 /// For now, use [SessionScreen.route] to get the custom route.
@@ -94,6 +103,12 @@ class SessionScreen extends ConsumerStatefulWidget {
 }
 
 class _SessionScreenState extends ConsumerState<SessionScreen> {
+  /// Key to access BreathingRing's triggerMilestonePulse() method (D-23).
+  final _ringKey = GlobalKey<BreathingRingState>();
+
+  /// Tracks whether the halfway milestone pulse has been fired (D-23).
+  bool _halfwayPulseFired = false;
+
   @override
   void initState() {
     super.initState();
@@ -139,6 +154,29 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     if (mounted) Navigator.of(context).maybePop();
   }
 
+  // ═══════════════════════════════════════════════════════
+  //  BREATHING RING HELPERS
+  // ═══════════════════════════════════════════════════════
+
+  /// Breathing cycle duration adapts to session state (D-10, D-11, D-12).
+  Duration _breathCycleDuration(SessionState session) {
+    if (session.isPaused) return const Duration(milliseconds: 8000); // D-11
+    final remaining = session.selectedMinutes * 60 - session.elapsedSeconds;
+    if (session.phase == SessionPhase.timer && remaining > 0 && remaining < 60) {
+      return const Duration(milliseconds: 3000); // D-12
+    }
+    return const Duration(milliseconds: 4000); // D-10
+  }
+
+  /// Glow intensity increases during last minute (D-24).
+  double _glowIntensity(SessionState session) {
+    final remaining = session.selectedMinutes * 60 - session.elapsedSeconds;
+    if (session.phase == SessionPhase.timer && remaining > 0 && remaining < 60) {
+      return 0.25; // D-24: intensified glow in last minute
+    }
+    return 0.15; // Default
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
@@ -150,6 +188,19 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
 
     final isTimerActive =
         session.phase == SessionPhase.timer && !session.isPaused;
+
+    // Milestone pulse: trigger at 50% progress (D-23)
+    final progress = _computeProgress(session);
+    if (progress >= 0.5 && !_halfwayPulseFired && session.phase == SessionPhase.timer) {
+      _halfwayPulseFired = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ringKey.currentState?.triggerMilestonePulse();
+      });
+    }
+    // Reset flag when returning to prepare
+    if (session.phase == SessionPhase.prepare) _halfwayPulseFired = false;
+
+    final breathDuration = _breathCycleDuration(session);
 
     return PopScope(
       canPop: !isTimerActive,
@@ -163,31 +214,79 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         backgroundColor: AppColors.background,
         body: Stack(
           children: [
-            // Layer 1: Background (placeholder — replaced by breathing ring in Plan 02)
+            // Layer 1: Breathing background (D-09)
+            // Subtle pulse between #0A0A0F and #0F0F14 synced with ring
             Positioned.fill(
-              child: Container(color: AppColors.background),
+              child: _BreathingBackground(
+                cycleDuration: breathDuration,
+                active: session.phase != SessionPhase.prepare,
+              ),
             ),
 
-            // Layer 2: Phase content
+            // Layer 2: Ambient gradient spotlight (D-07)
+            // Soft radial gradient centered on ring, coral at 4% opacity
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.16), // ~42% from top
+                      radius: 0.5,
+                      colors: [
+                        AppColors.accent.withValues(alpha: 0.04),
+                        AppColors.accent.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Layer 3: Film grain overlay (D-08)
+            const FilmGrainOverlay(),
+
+            // Layer 4: Breathing ring (D-01 through D-05) — THE visual constant
+            // Positioned at ~42% from top (D-03), centered horizontally
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.42 - 135,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: AnimatedOpacity(
+                  opacity: session.isPaused ? 0.4 : 1.0, // D-21: dim when paused
+                  duration: const Duration(milliseconds: 300),
+                  child: BreathingRing(
+                    key: _ringKey,
+                    progress: progress,
+                    breathCycleDuration: breathDuration,
+                    glowIntensity: _glowIntensity(session),
+                    ringOpacity: 1.0, // AnimatedOpacity handles dimming
+                    ringSize: 270, // D-03: ~260-280dp
+                  ),
+                ),
+              ),
+            ),
+
+            // Layer 5: Phase content (same AnimatedSwitcher as before)
             Positioned.fill(
               child: SafeArea(
                 child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 0.03),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildPhase(session),
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, 0.03),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildPhase(session),
+                ),
               ),
-            ),
             ),
           ],
         ),
@@ -242,5 +341,55 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
           onExit: _exitSession,
         );
     }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  BREATHING BACKGROUND — subtle pulse synced with ring (D-09)
+// ═══════════════════════════════════════════════════════
+
+/// Continuously oscillates between #0A0A0F and #0F0F14 using
+/// [TweenAnimationBuilder] with onEnd to toggle direction.
+class _BreathingBackground extends StatefulWidget {
+  final Duration cycleDuration;
+  final bool active;
+
+  const _BreathingBackground({
+    required this.cycleDuration,
+    required this.active,
+  });
+
+  @override
+  State<_BreathingBackground> createState() => _BreathingBackgroundState();
+}
+
+class _BreathingBackgroundState extends State<_BreathingBackground> {
+  bool _brightPhase = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final target = widget.active
+        ? (_brightPhase ? 1.0 : 0.0)
+        : 0.0;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: target),
+      duration: widget.cycleDuration,
+      curve: Curves.easeInOut,
+      onEnd: () {
+        if (widget.active) {
+          setState(() => _brightPhase = !_brightPhase);
+        }
+      },
+      builder: (context, value, _) {
+        return Container(
+          color: Color.lerp(
+            const Color(0xFF0A0A0F),
+            const Color(0xFF0F0F14),
+            value,
+          ),
+        );
+      },
+    );
   }
 }
