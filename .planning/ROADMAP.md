@@ -142,7 +142,11 @@ Plans:
   3. Data Safety Form in Google Play Console is completed and references the live Privacy Policy URL from Phase 3
   4. `PrivacyInfo.xcprivacy` files are present (or verified present via SDK versions) for Firebase FCM, RevenueCat, and PostHog — `flutter build ipa` completes without `ITMS-91061` errors
   5. Content Rating questionnaire is submitted on both stores (expected result: 4+ / Everyone)
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Privacy manifest + iPhone-only device targeting (COMP-12)
+- [ ] 09-02-PLAN.md — Store submission checklists, screenshots, metadata, demo account (COMP-13, COMP-14)
 
 ### Phase 10: Pre-Commit Hooks
 **Goal:** Every commit to the repository automatically runs Flutter analyze and TypeScript lint — formatting issues are caught before they land
@@ -172,7 +176,7 @@ Plans:
 | 6. Restore Purchases | 0/1 | Not started | — |
 | 7. Dead Code Cleanup | 0/1 | Not started | — |
 | 8. Sonnet AI Upgrade | 0/1 | Not started | — |
-| 9. App Store Assets and Admin | 0/? | Not started | — |
+| 9. App Store Assets and Admin | 0/2 | Not started | — |
 | 10. Pre-Commit Hooks | 0/1 | Not started | — |
 
 ---
