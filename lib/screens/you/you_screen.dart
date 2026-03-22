@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../components/app_background.dart';
+import '../../components/glass_card.dart';
 import '../../components/page_dots.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
@@ -191,24 +192,53 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // ── Nav rows ──
+                  // ── Journal card (matches Settings tile style) ──
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _NavRow(
-                      icon: MdiIcons.bookOpenPageVariantOutline,
-                      iconBg: AppColors.surface,
-                      iconBorder: AppColors.border,
-                      iconColor: AppColors.textSecondary,
-                      title: 'Journal',
-                      titleStyle: AppTypography.sansLabel,
-                      chevronColor: AppColors.textMuted,
+                    child: GlassCard(
                       onTap: () => context.push('/journal'),
+                      padding: const EdgeInsets.all(14),
+                      borderRadius: 14,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceElevated,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                MdiIcons.bookOpenPageVariantOutline,
+                                size: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Journal',
+                                    style: AppTypography.sansLabel.copyWith(
+                                        color: AppColors.textSecondary)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Your session reflections',
+                                  style: AppTypography.sansTiny.copyWith(
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: _HairlineDivider(),
-                  ),
+                  const SizedBox(height: 12),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24),
                     child: _ProNavRow(),
