@@ -123,7 +123,7 @@ Plans:
 **Depends on:** Nothing (independent of other phases; screenshots in Phase 9 should reflect final AI quality)
 **Requirements:** AI-01, AI-02, AI-03
 **Success Criteria** (what must be TRUE):
-  1. `server/lib/ai_generator.ts` uses `claude-sonnet-4-20250514` as the model ID for all generation endpoints
+  1. `server/lib/ai_generator.ts` uses `claude-sonnet-4-6` (Sonnet 4.6 alias) as the model ID for all generation endpoints
   2. The coach system prompt uses `lastActivityAt` (not `startedAt`) to compute days-since-last-activity for stale detection
   3. All AI response parsing passes through `extractJson()` which strips markdown code fences before `JSON.parse` — malformed Sonnet output does not crash the endpoint
   4. A hobby generation request returns a valid, schema-conforming hobby profile and does not error on Sonnet's output format
