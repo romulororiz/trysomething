@@ -153,7 +153,10 @@ Plans:
   2. Running `git commit` on a Flutter file with a Dart analysis error aborts the commit and prints the analyzer output
   3. Running `git commit` on a TypeScript file with a type error aborts the commit and prints the tsc output
   4. A clean commit (no errors) passes all hooks and completes normally within 30 seconds
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 10-01-PLAN.md — Install Lefthook + configure pre-commit hooks for Flutter analyze and TypeScript lint (DX-01)
 
 ---
 
@@ -170,7 +173,7 @@ Plans:
 | 7. Dead Code Cleanup | 0/1 | Not started | — |
 | 8. Sonnet AI Upgrade | 0/1 | Not started | — |
 | 9. App Store Assets and Admin | 0/? | Not started | — |
-| 10. Pre-Commit Hooks | 0/? | Not started | — |
+| 10. Pre-Commit Hooks | 0/1 | Not started | — |
 
 ---
 
@@ -236,4 +239,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-22 after Phase 8 planning*
+*Last updated: 2026-03-22 after Phase 10 planning*
