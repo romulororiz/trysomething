@@ -12,12 +12,16 @@ class MockSubscriptionService implements SubscriptionService {
   bool mockIsTrialing = false;
   int mockTrialDays = 0;
   bool refreshCalled = false;
+  bool mockRestoreResult = false;
 
   @override
   bool get isPro => mockIsPro;
 
   @override
   bool get isTrialing => mockIsTrialing;
+
+  @override
+  bool get isLifetime => false;
 
   @override
   int get trialDaysRemaining => mockTrialDays;
@@ -37,7 +41,12 @@ class MockSubscriptionService implements SubscriptionService {
   Future<bool> purchase(Package package) async => false;
 
   @override
-  Future<bool> restore() async => false;
+  Future<bool> restore() async {
+    if (mockRestoreResult) {
+      mockIsPro = true; // simulate RC updating internal state
+    }
+    return mockRestoreResult;
+  }
 
   @override
   Future<void> setUserId(String userId) async {}
@@ -175,6 +184,30 @@ void main() {
       expect(mockService.refreshCalled, isFalse);
       // State remains as forced by debug tier
       expect(notifier.state.isPro, isTrue);
+    });
+  });
+
+  group('restore flow', () {
+    test('restore returns true and sync updates state to isPro', () async {
+      mockService.mockRestoreResult = true;
+
+      final result = await mockService.restore();
+      expect(result, isTrue);
+      expect(mockService.isPro, isTrue);
+
+      notifier.sync();
+      expect(notifier.state.isPro, isTrue);
+    });
+
+    test('restore returns false and state remains not Pro', () async {
+      mockService.mockRestoreResult = false;
+
+      final result = await mockService.restore();
+      expect(result, isFalse);
+      expect(mockService.isPro, isFalse);
+
+      notifier.sync();
+      expect(notifier.state.isPro, isFalse);
     });
   });
 
