@@ -485,7 +485,7 @@ class _VibesPage extends StatelessWidget {
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.4,
-                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 120),
                     children: _vibeItems.map((item) {
                       final isSelected = vibes.contains(item.key);
                       return _VibeCard(
