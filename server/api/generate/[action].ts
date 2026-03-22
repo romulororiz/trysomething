@@ -209,6 +209,19 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
 
     await logGeneration(userId, trimmed, "success", null, hobbyId);
 
+    // Generate FAQs inline (fire-and-forget — don't block the response)
+    generateFaqContent(content.title as string, content.categoryId as string)
+      .then((faqData) =>
+        Promise.all(
+          faqData.map((item) =>
+            prisma.faqItem.create({
+              data: { hobbyId, question: item.question, answer: item.answer },
+            })
+          )
+        )
+      )
+      .catch((err) => console.error(`[FAQ] Background generation failed for ${hobbyId}:`, err));
+
     return res.status(201).json({  hobby: mapHobby(hobby), existed: false });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
