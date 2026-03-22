@@ -39,6 +39,8 @@ void _startSession(
   int recommendedMinutes = 30,
   CompletionMode completionMode = CompletionMode.timer,
   String? nextStepTitle,
+  String? completionMessage,
+  String? coachTip,
 }) {
   notifier.startSession(
     hobbyId: 'h1',
@@ -52,6 +54,8 @@ void _startSession(
     recommendedMinutes: recommendedMinutes,
     completionMode: completionMode,
     nextStepTitle: nextStepTitle,
+    completionMessage: completionMessage,
+    coachTip: coachTip,
   );
 }
 

@@ -235,6 +235,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               completionMode: extra['completionMode'] as CompletionMode,
               nextStepTitle: extra['nextStepTitle'] as String?,
               completionMessage: extra['completionMessage'] as String?,
+              coachTip: extra['coachTip'] as String?,
             ),
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(opacity: animation, child: child);

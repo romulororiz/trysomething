@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../components/particle_timer_painter.dart';
 import '../../models/session.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/user_provider.dart';
@@ -31,6 +30,7 @@ class SessionScreen extends ConsumerStatefulWidget {
   final CompletionMode completionMode;
   final String? nextStepTitle;
   final String? completionMessage;
+  final String? coachTip;
 
   const SessionScreen({
     super.key,
@@ -46,6 +46,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     required this.completionMode,
     this.nextStepTitle,
     this.completionMessage,
+    this.coachTip,
   });
 
   /// Custom page route with cinematic fade transition.
@@ -62,6 +63,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     required CompletionMode completionMode,
     String? nextStepTitle,
     String? completionMessage,
+    String? coachTip,
   }) {
     return PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 500),
@@ -79,6 +81,7 @@ class SessionScreen extends ConsumerStatefulWidget {
         completionMode: completionMode,
         nextStepTitle: nextStepTitle,
         completionMessage: completionMessage,
+        coachTip: coachTip,
       ),
       transitionsBuilder: (_, animation, __, child) {
         return FadeTransition(opacity: animation, child: child);
@@ -109,6 +112,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             completionMode: widget.completionMode,
             nextStepTitle: widget.nextStepTitle,
             completionMessage: widget.completionMessage,
+            coachTip: widget.coachTip,
           );
     });
   }
@@ -159,15 +163,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         backgroundColor: AppColors.background,
         body: Stack(
           children: [
-            // Layer 1: Full-screen 3D particle field
+            // Layer 1: Background (placeholder — replaced by breathing ring in Plan 02)
             Positioned.fill(
-              child: SessionParticleField(
-                category: session.hobbyCategory,
-                progress: _computeProgress(session),
-                isActive: session.phase == SessionPhase.timer ||
-                    session.phase == SessionPhase.completing,
-                isCompleting: session.phase == SessionPhase.completing,
-              ),
+              child: Container(color: AppColors.background),
             ),
 
             // Layer 2: Phase content

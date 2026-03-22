@@ -45,6 +45,8 @@ class _NullSessionNotifier extends SessionNotifier {
     required int recommendedMinutes,
     required CompletionMode completionMode,
     String? nextStepTitle,
+    String? completionMessage,
+    String? coachTip,
   }) {
     // Intentionally does nothing — keeps state == null.
   }

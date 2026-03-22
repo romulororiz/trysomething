@@ -1270,6 +1270,7 @@ class _StepItem extends ConsumerWidget {
                                 'completionMode': step.effectiveMode,
                                 'nextStepTitle': followingTitle,
                                 'completionMessage': completionMessage,
+                                'coachTip': step.coachTip,
                               },
                             );
                           },
@@ -1638,6 +1639,7 @@ class _StepItem extends ConsumerWidget {
                             'completionMode': step.effectiveMode,
                             'nextStepTitle': followingTitle,
                             'completionMessage': completionMessage,
+                            'coachTip': step.coachTip,
                           },
                         );
                       },
@@ -1871,6 +1873,7 @@ class _StepItem extends ConsumerWidget {
                   'completionMode': step.effectiveMode,
                   'nextStepTitle': followingTitle,
                   'completionMessage': completionMessage,
+                  'coachTip': step.coachTip,
                 },
               );
             },
