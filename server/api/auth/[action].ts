@@ -34,6 +34,8 @@ export default async function handler(
       return handleGoogle(req, res);
     case "apple":
       return handleApple(req, res);
+    case "apple-callback":
+      return handleAppleCallback(req, res);
     default:
       errorResponse(res, 404, `Unknown auth action '${action}'`);
   }
@@ -451,5 +453,76 @@ async function handleApple(
   } catch (err) {
     console.error("POST /api/auth/apple error:", err);
     errorResponse(res, 500, "Apple sign-in failed");
+  }
+}
+
+// ── Apple Sign-In Callback (Android/Web) ─────────
+
+/**
+ * Callback endpoint for web-based Apple Sign-In on Android.
+ *
+ * Apple POSTs form-urlencoded data (code, id_token, state, user) to this URL
+ * after the user authenticates. This endpoint relays the data back to the
+ * Flutter app via an Android intent:// deep link, which the
+ * sign_in_with_apple package's SignInWithAppleCallback Activity intercepts.
+ *
+ * The actual token exchange and user creation happens later when the Flutter
+ * client sends the authorization code to the existing /api/auth/apple endpoint.
+ */
+async function handleAppleCallback(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  try {
+    // Apple sends form-urlencoded POST data; Vercel auto-parses it into req.body
+    const { code, id_token, state, user, error } = req.body ?? {};
+
+    // Build query parameters to relay back to the app
+    const params = new URLSearchParams();
+    if (code) params.set("code", code);
+    if (id_token) params.set("id_token", id_token);
+    if (state) params.set("state", state);
+    if (user) params.set("user", typeof user === "string" ? user : JSON.stringify(user));
+    if (error) params.set("error", error);
+
+    // Construct the Android intent URI that the sign_in_with_apple package expects.
+    // The SignInWithAppleCallback Activity is registered with scheme "signinwithapple"
+    // and path "callback" in the app's AndroidManifest.xml.
+    const intentUri =
+      `intent://callback?${params.toString()}` +
+      `#Intent;package=${process.env.ANDROID_PACKAGE_NAME || "com.romulororiz.trysomething"};scheme=signinwithapple;end`;
+
+    // Return an HTML page with JavaScript that redirects to the intent URI.
+    // This closes the Chrome Custom Tab and passes data back to the Flutter app.
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Redirecting...</title></head>
+<body>
+<p>Signing in...</p>
+<script>window.location.href = ${JSON.stringify(intentUri)};</script>
+</body>
+</html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(html);
+  } catch (err) {
+    console.error("POST /api/auth/apple-callback error:", err);
+    // On error, still try to redirect back to the app with an error indicator
+    // so the Chrome Custom Tab doesn't get stuck on a JSON error page.
+    const errorIntent =
+      `intent://callback?error=server_error` +
+      `#Intent;package=${process.env.ANDROID_PACKAGE_NAME || "com.romulororiz.trysomething"};scheme=signinwithapple;end`;
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Error</title></head>
+<body>
+<p>Something went wrong. Returning to app...</p>
+<script>window.location.href = ${JSON.stringify(errorIntent)};</script>
+</body>
+</html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(html);
   }
 }
