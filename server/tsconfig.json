@@ -15,6 +15,7 @@
 		"sourceMap": true,
 		"moduleResolution": "node",
 		"baseUrl": ".",
+		"ignoreDeprecations": "6.0",
 		"paths": {
 			"@lib/*": ["lib/*"]
 		}

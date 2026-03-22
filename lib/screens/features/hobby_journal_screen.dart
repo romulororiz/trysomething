@@ -98,13 +98,16 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                           entry: entry,
                           onDismissed: () {
                             ref.read(journalProvider.notifier).removeEntry(entry.id);
-                            ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.clearSnackBars();
+                            final controller = messenger.showSnackBar(
                               SnackBar(
-                                content: const Text('Entry deleted'),
+                                content: const Text('Entry deleted',
+                                    style: TextStyle(color: Colors.white)),
                                 backgroundColor: AppColors.surfaceElevated,
                                 behavior: SnackBarBehavior.floating,
-                                duration: const Duration(seconds: 4),
+                                dismissDirection: DismissDirection.down,
+                                duration: const Duration(days: 365), // managed manually
                                 action: SnackBarAction(
                                   label: 'Undo',
                                   textColor: AppColors.coral,
@@ -114,6 +117,10 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                                 ),
                               ),
                             );
+                            // Force dismiss after 2 seconds
+                            Future.delayed(const Duration(seconds: 2), () {
+                              controller.close();
+                            });
                           },
                         );
                       },
@@ -529,20 +536,32 @@ class _DismissibleJournalCardState
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     _dragExtent += details.delta.dx;
-    _dragExtent = _dragExtent.clamp(-_deleteWidth, 0.0);
+    // Allow dragging beyond the delete width for the "pull to trigger" feel
+    _dragExtent = _dragExtent.clamp(-_deleteWidth * 1.5, 0.0);
     _controller.value = (-_dragExtent / _deleteWidth).clamp(0.0, 1.0);
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
-    if (_controller.value > 0.4 || (details.primaryVelocity ?? 0) < -500) {
-      _controller.animateTo(1.0, curve: Curves.easeOut);
-      _isOpen = true;
-      _dragExtent = -_deleteWidth;
+    final velocity = details.primaryVelocity ?? 0;
+
+    // If dragged far enough or fast enough → trigger delete dialog + spring back
+    if (_controller.value >= 0.9 || velocity < -800) {
+      // Spring back immediately
+      _springBack();
+      // Show delete dialog
+      _onDelete();
     } else {
-      _controller.animateTo(0.0, curve: Curves.easeOut);
-      _isOpen = false;
-      _dragExtent = 0;
+      // Not enough drag — spring back
+      _springBack();
     }
+  }
+
+  void _springBack() {
+    _controller.animateTo(0.0,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic);
+    _isOpen = false;
+    _dragExtent = 0;
   }
 
   void _close() {
