@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../components/breathing_ring.dart';
-import '../../components/film_grain_overlay.dart';
 import '../../models/session.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/user_provider.dart';
@@ -102,16 +102,33 @@ class SessionScreen extends ConsumerStatefulWidget {
   ConsumerState<SessionScreen> createState() => _SessionScreenState();
 }
 
-class _SessionScreenState extends ConsumerState<SessionScreen> {
+class _SessionScreenState extends ConsumerState<SessionScreen>
+    with SingleTickerProviderStateMixin {
   /// Key to access BreathingRing's triggerMilestonePulse() method (D-23).
   final _ringKey = GlobalKey<BreathingRingState>();
 
   /// Tracks whether the halfway milestone pulse has been fired (D-23).
   bool _halfwayPulseFired = false;
 
+  /// Ticker for smooth 60fps progress interpolation (Issue 4).
+  late final Ticker _progressTicker;
+
+  /// Smoothly interpolated progress value updated every frame.
+  double _smoothProgress = 0.0;
+
+  /// Timestamp of the last provider elapsedSeconds snapshot.
+  int _lastElapsedSeconds = 0;
+
+  /// DateTime when we last received a new elapsedSeconds value.
+  DateTime _lastTickTime = DateTime.now();
+
   @override
   void initState() {
     super.initState();
+
+    _progressTicker = createTicker(_onProgressTick);
+    _progressTicker.start();
+
     // Initialise the session in the provider.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(sessionProvider.notifier).startSession(
@@ -132,13 +149,57 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _progressTicker.dispose();
+    super.dispose();
+  }
+
+  /// Called every frame by the Ticker for smooth progress interpolation.
+  void _onProgressTick(Duration elapsed) {
+    final session = ref.read(sessionProvider);
+    if (session == null) return;
+
+    if (session.phase == SessionPhase.timer && !session.isPaused) {
+      final total = session.selectedMinutes * 60;
+      if (total <= 0) return;
+
+      // Track when provider seconds change for interpolation base
+      if (session.elapsedSeconds != _lastElapsedSeconds) {
+        _lastElapsedSeconds = session.elapsedSeconds;
+        _lastTickTime = DateTime.now();
+      }
+
+      // Interpolate sub-second fraction from the last integer tick
+      final sinceLastTick =
+          DateTime.now().difference(_lastTickTime).inMicroseconds /
+              Duration.microsecondsPerSecond;
+      final fractionalElapsed = session.elapsedSeconds + sinceLastTick;
+      final newProgress = (fractionalElapsed / total).clamp(0.0, 1.0);
+
+      if ((newProgress - _smoothProgress).abs() > 0.0001) {
+        setState(() => _smoothProgress = newProgress);
+      }
+    }
+  }
+
   double _computeProgress(SessionState session) {
-    if (session.phase == SessionPhase.prepare) return 0.0;
+    if (session.phase == SessionPhase.prepare) {
+      return 0.0;
+    }
     if (session.phase == SessionPhase.completing ||
         session.phase == SessionPhase.reflect ||
-        session.phase == SessionPhase.complete) return 1.0;
+        session.phase == SessionPhase.complete) {
+      return 1.0;
+    }
+    // During timer phase, return the smooth 60fps-interpolated value
+    if (session.phase == SessionPhase.timer) {
+      return _smoothProgress;
+    }
     final total = session.selectedMinutes * 60;
-    if (total <= 0) return 0.0;
+    if (total <= 0) {
+      return 0.0;
+    }
     return (session.elapsedSeconds / total).clamp(0.0, 1.0);
   }
 
@@ -166,6 +227,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       return const Duration(milliseconds: 3000); // D-12
     }
     return const Duration(milliseconds: 4000); // D-10
+  }
+
+  /// Whether the breathing ring should be visible (Issue 5).
+  /// Visible during prepare, timer, and completing — hidden for reflect/complete.
+  bool _ringVisible(SessionState session) {
+    return session.phase == SessionPhase.prepare ||
+        session.phase == SessionPhase.timer ||
+        session.phase == SessionPhase.completing;
   }
 
   /// Glow intensity increases during last minute (D-24).
@@ -242,26 +311,28 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
               ),
             ),
 
-            // Layer 3: Film grain overlay (D-08)
-            const FilmGrainOverlay(),
+            // Layer 3: Film grain overlay REMOVED (Issue 2)
 
-            // Layer 4: Breathing ring (D-01 through D-05) — THE visual constant
+            // Layer 4: Breathing ring (D-01 through D-05)
+            // Only visible during prepare, timer, and completing phases (Issue 5)
             // Positioned at ~42% from top (D-03), centered horizontally
             Positioned(
               top: MediaQuery.of(context).size.height * 0.42 - 135,
               left: 0,
               right: 0,
               child: Center(
-                child: AnimatedOpacity(
-                  opacity: session.isPaused ? 0.4 : 1.0, // D-21: dim when paused
-                  duration: const Duration(milliseconds: 300),
-                  child: BreathingRing(
-                    key: _ringKey,
-                    progress: progress,
-                    breathCycleDuration: breathDuration,
-                    glowIntensity: _glowIntensity(session),
-                    ringOpacity: 1.0, // AnimatedOpacity handles dimming
-                    ringSize: 270, // D-03: ~260-280dp
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    opacity: _ringVisible(session) ? (session.isPaused ? 0.4 : 1.0) : 0.0,
+                    duration: const Duration(milliseconds: 400),
+                    child: BreathingRing(
+                      key: _ringKey,
+                      progress: progress,
+                      breathCycleDuration: breathDuration,
+                      glowIntensity: _glowIntensity(session),
+                      ringOpacity: 1.0, // AnimatedOpacity handles dimming
+                      ringSize: 270, // D-03: ~260-280dp
+                    ),
                   ),
                 ),
               ),

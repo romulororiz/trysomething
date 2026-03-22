@@ -51,7 +51,8 @@ class BreathingRingPainter extends CustomPainter {
         ..strokeWidth = 4.5,
     );
 
-    // Layer 2: Glow halo (D-01) — blurred arc behind progress
+    // Layer 2: Glow halo (D-01) — blurred arc behind progress (Issue 3)
+    // Thicker stroke (12px) at 25% coral opacity with soft blur for luminous aura
     if (progress > 0) {
       canvas.drawArc(
         rect,
@@ -59,9 +60,9 @@ class BreathingRingPainter extends CustomPainter {
         sweepAngle,
         false,
         Paint()
-          ..color = AppColors.accent.withValues(alpha: glowIntensity * ringOpacity)
+          ..color = AppColors.accent.withValues(alpha: 0.25 * ringOpacity)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 8.0
+          ..strokeWidth = 12.0
           ..strokeCap = StrokeCap.round
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0),
       );

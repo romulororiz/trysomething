@@ -42,6 +42,17 @@ class SessionTimerPhase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final safeTop = MediaQuery.of(context).padding.top;
+    // Ring center is at screenHeight * 0.42 (matching session_screen.dart).
+    // This phase is inside SafeArea, so subtract safeTop.
+    // Timer row is ~80dp tall; offset by half to vertically center it.
+    const timerHeight = 80.0;
+    final ringCenterInSafeArea = screenHeight * 0.42 - safeTop;
+    // Top spacer fills from top of safe area to the timer center,
+    // minus half the timer to visually center the digits in the ring.
+    final topSpacer = (ringCenterInSafeArea - timerHeight / 2).clamp(48.0, screenHeight * 0.4);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
@@ -57,9 +68,10 @@ class SessionTimerPhase extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
 
-          // Spacer pushes timer into the ring's vertical center area
-          // Ring is at ~42% from top in session_screen.dart
-          const Spacer(flex: 3),
+          // Precise spacer to center timer inside the ring (Issue 1).
+          // Use Expanded with a constrained flex to push the timer to the
+          // exact ring center. The SizedBox accounts for safe area offset.
+          SizedBox(height: (topSpacer - 44).clamp(0.0, double.infinity)),
 
           // Rolling timer or completion celebration inside ring area
           if (_isCompleting) ...[
@@ -122,7 +134,7 @@ class SessionTimerPhase extends StatelessWidget {
             _CoachTipButton(coachTip: session.coachTip!),
           ],
 
-          const Spacer(flex: 2),
+          const Spacer(),
 
           // Pause/play button (D-20) — hidden during completing
           if (!_isCompleting) ...[
