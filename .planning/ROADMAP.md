@@ -116,7 +116,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 07-01-PLAN.md — Delete 7 dead screens + remove orphaned providers and repository methods (CLEAN-01)
+- [x] 07-01-PLAN.md — Delete 7 dead screens + remove orphaned providers and repository methods (CLEAN-01)
 
 ### Phase 8: Sonnet AI Upgrade
 **Goal:** All AI generation runs on Claude Sonnet with hardened prompts, correct stale detection, and safe JSON parsing

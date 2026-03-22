@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-22T10:19:01.872Z"
+last_updated: "2026-03-22T11:20:09.974Z"
 progress:
   total_phases: 11
-  completed_phases: 4
-  total_plans: 9
-  completed_plans: 8
+  completed_phases: 5
+  total_plans: 10
+  completed_plans: 9
 ---
 
 # STATE.md — TrySomething v1.0 Launch Readiness
@@ -28,8 +28,8 @@ progress:
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
+Phase: 07 (dead-code-cleanup) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Plan: Not started
 | Phase 05 P01 | 4min | 2 tasks | 8 files |
 | Phase 05 P01 | 4min | 2 tasks | 8 files |
 | Phase 06 P01 | 3min | 2 tasks | 2 files |
+| Phase 07 P01 | 5min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,7 @@ Plan: Not started
 | Default hasPassword to true for backwards compat | Phase 5 | Shows password field if server hasn't deployed yet (safer default) |
 | Use box.clear() not deleteBoxFromDisk() for Hive | Phase 5 | Keeps boxes open, prevents "Box already closed" crashes |
 | deleteAccount() returns bool, leaves SharedPrefs/onboarding to caller | Phase 5 | AuthNotifier has no WidgetRef; Settings screen handles those |
+| Left NearbyUser model in social.dart despite removing getSimilarUsers | Phase 7 | Still referenced by feature_seed_data.dart per D-02 (do not touch seed data) |
 
 ### Architecture Notes
 

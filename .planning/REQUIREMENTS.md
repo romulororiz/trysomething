@@ -42,7 +42,7 @@ Requirements for App Store and Play Store submission readiness.
 
 ### Cleanup
 
-- [ ] **CLEAN-01**: Remove 7 hidden feature screens (~7,000 lines) with GitNexus impact analysis per file before deletion
+- [x] **CLEAN-01**: Remove 7 hidden feature screens (~7,000 lines) with GitNexus impact analysis per file before deletion
 
 ### Developer Experience
 
@@ -96,7 +96,7 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 | AI-02 | Phase 8 | Pending |
 | AI-03 | Phase 8 | Pending |
 | SUB-01 | Phase 6 | Complete |
-| CLEAN-01 | Phase 7 | Pending |
+| CLEAN-01 | Phase 7 | Complete |
 | DX-01 | Phase 10 | Pending |
 
 **Coverage:**
