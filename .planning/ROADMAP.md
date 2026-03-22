@@ -127,7 +127,10 @@ Plans:
   2. The coach system prompt uses `lastActivityAt` (not `startedAt`) to compute days-since-last-activity for stale detection
   3. All AI response parsing passes through `extractJson()` which strips markdown code fences before `JSON.parse` — malformed Sonnet output does not crash the endpoint
   4. A hobby generation request returns a valid, schema-conforming hobby profile and does not error on Sonnet's output format
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 08-01-PLAN.md — Verify Sonnet model + stale detection, extract extractJson() utility (AI-01, AI-02, AI-03)
 
 ### Phase 9: App Store Assets and Admin
 **Goal:** Both stores have complete submission packages — screenshots, manifests, metadata, privacy declarations, and content ratings
@@ -165,7 +168,7 @@ Plans:
 | 5. Account Deletion — Flutter UX | 1/2 | In Progress | — |
 | 6. Restore Purchases | 0/1 | Not started | — |
 | 7. Dead Code Cleanup | 0/1 | Not started | — |
-| 8. Sonnet AI Upgrade | 0/? | Not started | — |
+| 8. Sonnet AI Upgrade | 0/1 | Not started | — |
 | 9. App Store Assets and Admin | 0/? | Not started | — |
 | 10. Pre-Commit Hooks | 0/? | Not started | — |
 
@@ -233,4 +236,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-22 after Phase 7 planning*
+*Last updated: 2026-03-22 after Phase 8 planning*
