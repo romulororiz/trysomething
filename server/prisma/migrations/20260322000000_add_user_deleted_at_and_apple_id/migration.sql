@@ -1,0 +1,11 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "appleId" TEXT;
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "User_appleId_key" ON "User"("appleId");
+
+-- AlterTable
+ALTER TABLE "KitItem" ADD COLUMN IF NOT EXISTS "affiliateSource" TEXT;
+ALTER TABLE "KitItem" ADD COLUMN IF NOT EXISTS "affiliateUrl" TEXT;
+ALTER TABLE "KitItem" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT;
