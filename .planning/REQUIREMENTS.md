@@ -32,9 +32,9 @@ Requirements for App Store and Play Store submission readiness.
 
 ### AI
 
-- [ ] **AI-01**: AI generation upgraded from Haiku to Sonnet (deploy `outputs/ai_generator.ts` and `outputs/action.ts`)
-- [ ] **AI-02**: Coach stale detection uses `lastActivityAt` instead of `startedAt` for days-inactive calculation
-- [ ] **AI-03**: AI response parsing includes `extractJson()` guard for Sonnet output format safety
+- [x] **AI-01**: AI generation upgraded from Haiku to Sonnet (deploy `outputs/ai_generator.ts` and `outputs/action.ts`)
+- [x] **AI-02**: Coach stale detection uses `lastActivityAt` instead of `startedAt` for days-inactive calculation
+- [x] **AI-03**: AI response parsing includes `extractJson()` guard for Sonnet output format safety
 
 ### Subscription
 
@@ -92,9 +92,9 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 | SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 2 | Complete |
-| AI-01 | Phase 8 | Pending |
-| AI-02 | Phase 8 | Pending |
-| AI-03 | Phase 8 | Pending |
+| AI-01 | Phase 8 | Complete |
+| AI-02 | Phase 8 | Complete |
+| AI-03 | Phase 8 | Complete |
 | SUB-01 | Phase 6 | Complete |
 | CLEAN-01 | Phase 7 | Complete |
 | DX-01 | Phase 10 | Pending |

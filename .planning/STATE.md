@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-22T11:23:01.863Z"
+last_updated: "2026-03-22T11:38:03.207Z"
 progress:
   total_phases: 11
-  completed_phases: 5
-  total_plans: 10
-  completed_plans: 9
+  completed_phases: 6
+  total_plans: 11
+  completed_plans: 10
 ---
 
 # STATE.md — TrySomething v1.0 Launch Readiness
@@ -28,8 +28,8 @@ progress:
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (sonnet-ai-upgrade) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: Not started
 | Phase 05 P01 | 4min | 2 tasks | 8 files |
 | Phase 06 P01 | 3min | 2 tasks | 2 files |
 | Phase 07 P01 | 5min | 2 tasks | 10 files |
+| Phase 08 P01 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Plan: Not started
 | Use box.clear() not deleteBoxFromDisk() for Hive | Phase 5 | Keeps boxes open, prevents "Box already closed" crashes |
 | deleteAccount() returns bool, leaves SharedPrefs/onboarding to caller | Phase 5 | AuthNotifier has no WidgetRef; Settings screen handles those |
 | Left NearbyUser model in social.dart despite removing getSimilarUsers | Phase 7 | Still referenced by feature_seed_data.dart per D-02 (do not touch seed data) |
+| No model changes needed: AI-01 and AI-02 already deployed | Phase 8 | Sonnet model and stale detection were already in production code |
+| extractJson uses regex capture group for first code fence | Phase 8 | More robust than dual-replace; handles edge cases with multiple fence blocks |
 
 ### Architecture Notes
 

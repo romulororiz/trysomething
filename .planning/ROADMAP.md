@@ -130,7 +130,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 08-01-PLAN.md — Verify Sonnet model + stale detection, extract extractJson() utility (AI-01, AI-02, AI-03)
+- [x] 08-01-PLAN.md — Verify Sonnet model + stale detection, extract extractJson() utility (AI-01, AI-02, AI-03)
 
 ### Phase 9: App Store Assets and Admin
 **Goal:** Both stores have complete submission packages — screenshots, manifests, metadata, privacy declarations, and content ratings
