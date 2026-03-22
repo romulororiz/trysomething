@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../models/session.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -8,8 +9,13 @@ import '../../components/app_overlays.dart';
 
 /// Phase 2: Timer — the sacred core of the session.
 ///
-/// Full-screen focus with a premium rolling-digit countdown,
-/// step instructions, and a minimal pause button.
+/// Ring-centric layout: the BreathingRing is rendered by session_screen.dart
+/// (Layer 4 of the 5-layer Stack). This widget positions content AROUND
+/// the ring's known location (~42% from top, 270dp ring).
+///
+/// Shows: overline (hobby + step), rolling timer inside ring area,
+/// step instructions below ring, coach tip icon, glass pause/play button,
+/// and an elegant completion celebration.
 ///
 /// Also renders the "completing" moment when
 /// [session.phase] is [SessionPhase.completing].
@@ -42,35 +48,49 @@ class SessionTimerPhase extends StatelessWidget {
         children: [
           const SizedBox(height: 24),
 
-          // Overline: "POTTERY · STEP 1"
+          // Overline: "POTTERY . Wedging your first clay ball" (D-17)
           Text(
-            '${session.hobbyTitle.toUpperCase()} · ${session.stepTitle.toUpperCase()}',
+            '${session.hobbyTitle.toUpperCase()} \u00b7 ${session.stepTitle}',
             style: AppTypography.overline,
             textAlign: TextAlign.center,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
 
-          const Spacer(),
+          // Spacer pushes timer into the ring's vertical center area
+          // Ring is at ~42% from top in session_screen.dart
+          const Spacer(flex: 3),
 
-          // Premium rolling-digit timer or completion message
+          // Rolling timer or completion celebration inside ring area
           if (_isCompleting) ...[
-            Text(
-              '${session.selectedMinutes} minutes',
-              style: AppTypography.display,
+            // D-13: Completion celebration
+            const Icon(
+              PhosphorIconsBold.checkCircle,
+              size: 48,
+              color: AppColors.success,
             ).animate().fadeIn(duration: 300.ms),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               'Session complete',
               style: AppTypography.display,
             ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+            if (session.completionMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                session.completionMessage!,
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ).animate().fadeIn(duration: 500.ms, delay: 400.ms),
+            ],
           ] else
             _RollingTimer(
               remaining: _remaining,
-              isWarm: _remaining < 60,
+              isWarm: _remaining < 60, // D-24: warm-shift in last minute
             ),
 
-          // Paused label — always reserves space to avoid layout shift
+          // Paused label (D-21)
           const SizedBox(height: 8),
           AnimatedOpacity(
             opacity: session.isPaused && !_isCompleting ? 1.0 : 0.0,
@@ -83,7 +103,7 @@ class SessionTimerPhase extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Step instructions (hidden during completing)
+          // Step instructions below ring area (D-18)
           if (!_isCompleting)
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 72),
@@ -96,16 +116,22 @@ class SessionTimerPhase extends StatelessWidget {
               ),
             ),
 
-          const Spacer(),
+          // Coach tip icon (D-19)
+          if (!_isCompleting && session.coachTip != null) ...[
+            const SizedBox(height: 12),
+            _CoachTipButton(coachTip: session.coachTip!),
+          ],
 
-          // Pause/play button (hidden during completing)
+          const Spacer(flex: 2),
+
+          // Pause/play button (D-20) — hidden during completing
           if (!_isCompleting) ...[
-            _PausePlayButton(
+            _GlassPausePlayButton(
               isPaused: session.isPaused,
               onToggle: session.isPaused ? onResume : onPause,
             ),
 
-            // "End session early" — always reserves space, fades in when paused
+            // "End session early" (D-21) — fades in when paused
             const SizedBox(height: 16),
             AnimatedOpacity(
               opacity: session.isPaused ? 1.0 : 0.0,
@@ -241,8 +267,9 @@ class _RollingDigitState extends State<_RollingDigit>
     super.dispose();
   }
 
+  // D-22: IBM Plex Mono 72pt inside the ring
   TextStyle get _style => GoogleFonts.ibmPlexMono(
-        fontSize: 64,
+        fontSize: 72,
         fontWeight: FontWeight.w200,
         color: widget.color,
         height: 1.0,
@@ -250,9 +277,9 @@ class _RollingDigitState extends State<_RollingDigit>
 
   @override
   Widget build(BuildContext context) {
-    // Measure digit height for clipping
-    const digitWidth = 40.0;
-    const digitHeight = 72.0;
+    // D-22: Updated dimensions for 72pt font
+    const digitWidth = 44.0;
+    const digitHeight = 80.0;
 
     return SizedBox(
       width: digitWidth,
@@ -352,14 +379,14 @@ class _SeparatorState extends State<_Separator>
   Widget build(BuildContext context) {
     return SizedBox(
       width: 20,
-      height: 72,
+      height: 80, // Match updated digitHeight
       child: AnimatedBuilder(
         animation: _opacity,
         builder: (context, _) => Center(
           child: Text(
             ':',
             style: GoogleFonts.ibmPlexMono(
-              fontSize: 52,
+              fontSize: 56,
               fontWeight: FontWeight.w200,
               color: widget.color.withValues(alpha: _opacity.value),
               height: 1.0,
@@ -372,30 +399,60 @@ class _SeparatorState extends State<_Separator>
   }
 }
 
-// ─────────────────────────────────────────────────
-//  Pause / Play button (custom-drawn, not Material)
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  GLASS PAUSE/PLAY BUTTON — Phosphor icons in glass circle (D-20)
+// ═══════════════════════════════════════════════════════
 
-class _PausePlayButton extends StatelessWidget {
+class _GlassPausePlayButton extends StatefulWidget {
   final bool isPaused;
   final VoidCallback onToggle;
 
-  const _PausePlayButton({required this.isPaused, required this.onToggle});
+  const _GlassPausePlayButton({
+    required this.isPaused,
+    required this.onToggle,
+  });
+
+  @override
+  State<_GlassPausePlayButton> createState() => _GlassPausePlayButtonState();
+}
+
+class _GlassPausePlayButtonState extends State<_GlassPausePlayButton> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onToggle,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onToggle,
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: CustomPaint(
-            key: ValueKey(isPaused),
-            size: const Size(20, 20),
-            painter: isPaused ? _PlayIconPainter() : _PauseIconPainter(),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.glassBackground,
+            border: Border.all(
+              color: AppColors.glassBorder,
+              width: 0.5,
+            ),
+          ),
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                widget.isPaused
+                    ? PhosphorIconsBold.play
+                    : PhosphorIconsBold.pause,
+                key: ValueKey(widget.isPaused),
+                color: AppColors.textPrimary,
+                size: 22,
+              ),
+            ),
           ),
         ),
       ),
@@ -403,52 +460,60 @@ class _PausePlayButton extends StatelessWidget {
   }
 }
 
-/// Two vertical rounded rectangles.
-class _PauseIconPainter extends CustomPainter {
+// ═══════════════════════════════════════════════════════
+//  COACH TIP BUTTON — subtle lightbulb icon (D-19)
+// ═══════════════════════════════════════════════════════
+
+class _CoachTipButton extends StatelessWidget {
+  final String coachTip;
+
+  const _CoachTipButton({required this.coachTip});
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.textMuted
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round;
-
-    final x1 = size.width * 0.35;
-    final x2 = size.width * 0.65;
-    final top = size.height * 0.2;
-    final bottom = size.height * 0.8;
-
-    canvas.drawLine(Offset(x1, top), Offset(x1, bottom), paint);
-    canvas.drawLine(Offset(x2, top), Offset(x2, bottom), paint);
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showCoachTip(context),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.glassBackground,
+          border: Border.all(
+            color: AppColors.glassBorder,
+            width: 0.5,
+          ),
+        ),
+        child: const Center(
+          child: Icon(
+            PhosphorIconsLight.lightbulb,
+            color: AppColors.textMuted,
+            size: 18,
+          ),
+        ),
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-/// Single triangle pointing right.
-class _PlayIconPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.textMuted
-      ..style = PaintingStyle.fill;
-
-    final path = Path()
-      ..moveTo(size.width * 0.3, size.height * 0.15)
-      ..lineTo(size.width * 0.8, size.height * 0.5)
-      ..lineTo(size.width * 0.3, size.height * 0.85)
-      ..close();
-
-    canvas.drawPath(path, paint);
+  void _showCoachTip(BuildContext context) {
+    showAppSheet(
+      context: context,
+      title: 'Coach Tip',
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+        child: Text(
+          coachTip,
+          style: AppTypography.body,
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
 }
 
-// ─────────────────────────────────────────────────
-//  End early link + confirmation dialog
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  END EARLY LINK + CONFIRMATION DIALOG
+// ═══════════════════════════════════════════════════════
 
 class _EndEarlyLink extends StatelessWidget {
   final VoidCallback onEndEarly;
