@@ -14,6 +14,7 @@ _$AuthUserImpl _$$AuthUserImplFromJson(Map<String, dynamic> json) =>
       bio: json['bio'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
       createdAt: json['createdAt'] as String?,
+      hasPassword: json['hasPassword'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$$AuthUserImplToJson(_$AuthUserImpl instance) =>
@@ -24,6 +25,7 @@ Map<String, dynamic> _$$AuthUserImplToJson(_$AuthUserImpl instance) =>
       'bio': instance.bio,
       'avatarUrl': instance.avatarUrl,
       'createdAt': instance.createdAt,
+      'hasPassword': instance.hasPassword,
     };
 
 _$AuthResponseImpl _$$AuthResponseImplFromJson(Map<String, dynamic> json) =>
