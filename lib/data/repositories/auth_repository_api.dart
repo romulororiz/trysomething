@@ -108,4 +108,12 @@ class AuthRepositoryApi implements AuthRepository {
     });
     return UserPreferences.fromJson(response.data as Map<String, dynamic>);
   }
+
+  @override
+  Future<void> deleteAccount({String? password}) async {
+    await _dio.delete(
+      ApiConstants.usersMe,
+      data: password != null ? {'password': password} : null,
+    );
+  }
 }

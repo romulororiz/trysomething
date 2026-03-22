@@ -61,4 +61,12 @@ class CacheManager {
     if (!_initialized) return;
     await _metaBox.delete(key);
   }
+
+  /// Clear all cached data and metadata. Used during account deletion.
+  /// Uses [Box.clear] (not deleteBoxFromDisk) to keep boxes open.
+  static Future<void> clearAll() async {
+    if (!_initialized) return;
+    await _dataBox.clear();
+    await _metaBox.clear();
+  }
 }

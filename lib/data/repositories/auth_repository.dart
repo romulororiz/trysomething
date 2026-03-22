@@ -34,4 +34,7 @@ abstract class AuthRepository {
     bool? preferSocial,
     Set<String>? vibes,
   });
+
+  /// Delete the user's account. Sends optional [password] for email users.
+  Future<void> deleteAccount({String? password});
 }

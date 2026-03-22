@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../core/auth/token_storage.dart';
+import '../core/storage/cache_manager.dart';
 import '../core/analytics/analytics_provider.dart';
 import '../core/analytics/analytics_service.dart';
 import '../data/repositories/auth_repository.dart';
@@ -318,6 +319,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // Fire-and-forget — signOut hangs on unsupported platforms (Windows/Linux).
     _googleSignIn.signOut().catchError((_) => null);
     state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
+  /// Delete the user's account. Returns true on success.
+  /// Caller (Settings screen) must also clear SharedPreferences and
+  /// reset onboarding state, since those require WidgetRef.
+  Future<bool> deleteAccount({String? password}) async {
+    try {
+      await _repo.deleteAccount(password: password);
+      // Cleanup AFTER successful API call only
+      _analytics?.trackEvent('account_deleted');
+      _analytics?.setUserId(null);
+      _subscriptions?.clearUser();
+      await TokenStorage.clearTokens();
+      await CacheManager.clearAll();
+      _googleSignIn.signOut().catchError((_) => null);
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      return true;
+    } catch (e) {
+      debugPrint('[DeleteAccount] Failed: $e');
+      return false;
+    }
   }
 
   void clearError() {
