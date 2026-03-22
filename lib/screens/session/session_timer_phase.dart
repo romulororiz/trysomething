@@ -44,123 +44,130 @@ class SessionTimerPhase extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final safeTop = MediaQuery.of(context).padding.top;
-    // Ring center is at screenHeight * 0.42 (matching session_screen.dart).
-    // This phase is inside SafeArea, so subtract safeTop.
-    // Timer row is ~80dp tall; offset by half to vertically center it.
-    const timerHeight = 80.0;
-    final ringCenterInSafeArea = screenHeight * 0.42 - safeTop;
-    // Top spacer fills from top of safe area to the timer center,
-    // minus half the timer to visually center the digits in the ring.
-    final topSpacer = (ringCenterInSafeArea - timerHeight / 2).clamp(48.0, screenHeight * 0.4);
+    // Ring center is at screenHeight * 0.42 (absolute).
+    // SafeArea shifts content down by safeTop, so subtract it.
+    final ringCenterY = screenHeight * 0.42 - safeTop;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        children: [
-          const SizedBox(height: 24),
-
-          // Overline: "POTTERY . Wedging your first clay ball" (D-17)
-          Text(
+    return Stack(
+      children: [
+        // Overline at top
+        Positioned(
+          top: 24,
+          left: 32,
+          right: 32,
+          child: Text(
             '${session.hobbyTitle.toUpperCase()} \u00b7 ${session.stepTitle}',
             style: AppTypography.overline,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+        ),
 
-          // Precise spacer to center timer inside the ring (Issue 1).
-          // Use Expanded with a constrained flex to push the timer to the
-          // exact ring center. The SizedBox accounts for safe area offset.
-          SizedBox(height: (topSpacer - 44).clamp(0.0, double.infinity)),
-
-          // Rolling timer or completion celebration inside ring area
-          if (_isCompleting) ...[
-            // D-13: Completion celebration
-            const Icon(
-              PhosphorIconsBold.checkCircle,
-              size: 48,
-              color: AppColors.success,
-            ).animate().fadeIn(duration: 300.ms),
-            const SizedBox(height: 16),
-            Text(
-              'Session complete',
-              style: AppTypography.display,
-            ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
-            if (session.completionMessage != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                session.completionMessage!,
-                style: AppTypography.body.copyWith(
-                  color: AppColors.textSecondary,
+        // Timer/completion centered EXACTLY at ring center
+        Positioned(
+          top: _isCompleting ? ringCenterY - 60 : ringCenterY - 40,
+          left: 32,
+          right: 32,
+          child: _isCompleting
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      PhosphorIconsBold.checkCircle,
+                      size: 48,
+                      color: AppColors.success,
+                    ).animate().fadeIn(duration: 300.ms),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Session complete',
+                      style: AppTypography.display,
+                    ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+                    if (session.completionMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        session.completionMessage!,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ).animate().fadeIn(duration: 500.ms, delay: 400.ms),
+                    ],
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _RollingTimer(
+                      remaining: _remaining,
+                      isWarm: _remaining < 60,
+                    ),
+                    const SizedBox(height: 8),
+                    AnimatedOpacity(
+                      opacity: session.isPaused ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Text('Paused', style: AppTypography.caption),
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
-              ).animate().fadeIn(duration: 500.ms, delay: 400.ms),
-            ],
-          ] else
-            _RollingTimer(
-              remaining: _remaining,
-              isWarm: _remaining < 60, // D-24: warm-shift in last minute
-            ),
+        ),
 
-          // Paused label (D-21)
-          const SizedBox(height: 8),
-          AnimatedOpacity(
-            opacity: session.isPaused && !_isCompleting ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: Text(
-              'Paused',
-              style: AppTypography.caption,
+        // Step instructions + coach tip below ring
+        if (!_isCompleting)
+          Positioned(
+            top: ringCenterY + 160, // below the ring (ring radius ~135)
+            left: 32,
+            right: 32,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 72),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      session.stepInstructions,
+                      style: AppTypography.body,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                if (session.coachTip != null) ...[
+                  const SizedBox(height: 12),
+                  _CoachTipButton(coachTip: session.coachTip!),
+                ],
+              ],
             ),
           ),
 
-          const SizedBox(height: 24),
-
-          // Step instructions below ring area (D-18)
-          if (!_isCompleting)
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 72),
-              child: SingleChildScrollView(
-                child: Text(
-                  session.stepInstructions,
-                  style: AppTypography.body,
-                  textAlign: TextAlign.center,
+        // Pause/play button at bottom
+        if (!_isCompleting)
+          Positioned(
+            bottom: 48,
+            left: 0,
+            right: 0,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _GlassPausePlayButton(
+                  isPaused: session.isPaused,
+                  onToggle: session.isPaused ? onResume : onPause,
                 ),
-              ),
-            ),
-
-          // Coach tip icon (D-19)
-          if (!_isCompleting && session.coachTip != null) ...[
-            const SizedBox(height: 12),
-            _CoachTipButton(coachTip: session.coachTip!),
-          ],
-
-          const Spacer(),
-
-          // Pause/play button (D-20) — hidden during completing
-          if (!_isCompleting) ...[
-            _GlassPausePlayButton(
-              isPaused: session.isPaused,
-              onToggle: session.isPaused ? onResume : onPause,
-            ),
-
-            // "End session early" (D-21) — fades in when paused
-            const SizedBox(height: 16),
-            AnimatedOpacity(
-              opacity: session.isPaused ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: IgnorePointer(
-                ignoring: !session.isPaused,
-                child: _EndEarlyLink(
-                  onEndEarly: onEndEarly,
-                  onEndEarlyExit: onEndEarlyExit,
+                const SizedBox(height: 16),
+                AnimatedOpacity(
+                  opacity: session.isPaused ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !session.isPaused,
+                    child: _EndEarlyLink(
+                      onEndEarly: onEndEarly,
+                      onEndEarlyExit: onEndEarlyExit,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-
-          const SizedBox(height: 48),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
