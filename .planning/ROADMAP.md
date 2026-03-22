@@ -150,13 +150,24 @@ Plans:
 
 ### Phase 09.1: Session Screen Redesign — The Breathing Ring (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Replace the amateur 103-particle field with a premium Apple Watch-style breathing ring that carries across all 4 session phases, achieving a cinematic Headspace-meets-Apple-Watch feel
+**Requirements:** N/A (inserted visual redesign phase, not mapped to v1.0 compliance requirements)
 **Depends on:** Phase 9
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. The session screen renders a 5-layer Stack: breathing background, ambient gradient, film grain, breathing ring, phase content
+  2. The breathing ring is drawn via BreathingRingPainter with 4 layers: track circle (6% white), glow halo (MaskFilter.blur), progress arc (coral), leading dot (6dp)
+  3. The ring persists across all 4 phase transitions without flickering or recreation
+  4. Timer phase shows hobby+step overline above ring, rolling digits inside ring, step instructions below, glass pause/play button, and on-demand coach tip via bottom sheet
+  5. Pause state dims ring to 40%, shows "Paused" label and "End session" link
+  6. Breathing animation cycles: 4s active, 8s paused, 3s last minute
+  7. Four dead component files deleted (~1015 lines): particle_timer_painter, category_shape_painter, brushstroke_timer_painter, session_glow_widget
+  8. All session widget tests pass including new BreathingRing and coach tip assertions
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 09.1 to break down)
+- [ ] 09.1-01-PLAN.md — Foundation: BreathingRing + FilmGrainOverlay components, coachTip data plumbing, dead file deletion
+- [ ] 09.1-02-PLAN.md — Core rewrite: session_screen.dart 5-layer Stack + session_timer_phase.dart ring-centric layout
+- [ ] 09.1-03-PLAN.md — Phase polish: prepare/complete/reflect updates + test suite updates
 
 ### Phase 10: Pre-Commit Hooks
 **Goal:** Every commit to the repository automatically runs Flutter analyze and TypeScript lint — formatting issues are caught before they land
@@ -187,6 +198,7 @@ Plans:
 | 7. Dead Code Cleanup | 0/1 | Not started | — |
 | 8. Sonnet AI Upgrade | 0/1 | Not started | — |
 | 9. App Store Assets and Admin | 0/2 | Not started | — |
+| 9.1. Session Screen Redesign | 0/3 | Not started | — |
 | 10. Pre-Commit Hooks | 1/1 | Complete    | 2026-03-22 |
 
 ---
@@ -234,6 +246,7 @@ Phase 4 (Deletion Backend) ─────────────────�
 Phase 6 (Restore Purchases) ────────────────────────┤
   └──> Phase 7 (Dead Code Cleanup) ────────────────┤
 Phase 8 (Sonnet AI Upgrade) ────────────────────────┘──> Phase 9 (App Store Assets)
+  Phase 9 ──> Phase 9.1 (Session Redesign)
 Phase 10 (Pre-Commit Hooks) ── independent, parallel with all
 ```
 
@@ -253,4 +266,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-22 after Phase 10 planning*
+*Last updated: 2026-03-22 after Phase 09.1 planning*
