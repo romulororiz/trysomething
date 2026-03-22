@@ -19,7 +19,7 @@
 - [ ] **Phase 7: Dead Code Cleanup** — Remove 7 hidden feature screens (~7,000 lines) safely via GitNexus impact analysis
 - [ ] **Phase 8: Sonnet AI Upgrade** — Deploy prepared Sonnet files; fix stale detection and add JSON extraction guard
 - [ ] **Phase 9: App Store Assets and Admin** — Screenshots, privacy manifests, privacy labels, data safety form, metadata
-- [ ] **Phase 10: Pre-Commit Hooks** — Install Lefthook for Flutter analyze + TypeScript lint on every commit
+- [x] **Phase 10: Pre-Commit Hooks** — Install Lefthook for Flutter analyze + TypeScript lint on every commit (completed 2026-03-22)
 
 ---
 
@@ -157,10 +157,10 @@ Plans:
   2. Running `git commit` on a Flutter file with a Dart analysis error aborts the commit and prints the analyzer output
   3. Running `git commit` on a TypeScript file with a type error aborts the commit and prints the tsc output
   4. A clean commit (no errors) passes all hooks and completes normally within 30 seconds
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 10-01-PLAN.md — Install Lefthook + configure pre-commit hooks for Flutter analyze and TypeScript lint (DX-01)
+- [x] 10-01-PLAN.md — Install Lefthook + configure pre-commit hooks for Flutter analyze and TypeScript lint (DX-01)
 
 ---
 
@@ -177,7 +177,7 @@ Plans:
 | 7. Dead Code Cleanup | 0/1 | Not started | — |
 | 8. Sonnet AI Upgrade | 0/1 | Not started | — |
 | 9. App Store Assets and Admin | 0/2 | Not started | — |
-| 10. Pre-Commit Hooks | 0/1 | Not started | — |
+| 10. Pre-Commit Hooks | 1/1 | Complete   | 2026-03-22 |
 
 ---
 

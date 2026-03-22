@@ -46,7 +46,7 @@ Requirements for App Store and Play Store submission readiness.
 
 ### Developer Experience
 
-- [ ] **DX-01**: Pre-commit hooks via Lefthook enforcing TypeScript lint (`server/`) + Flutter analyze (`lib/`)
+- [x] **DX-01**: Pre-commit hooks via Lefthook enforcing TypeScript lint (`server/`) + Flutter analyze (`lib/`)
 
 ## v2 Requirements
 
@@ -97,7 +97,7 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 | AI-03 | Phase 8 | Complete |
 | SUB-01 | Phase 6 | Complete |
 | CLEAN-01 | Phase 7 | Complete |
-| DX-01 | Phase 10 | Pending |
+| DX-01 | Phase 10 | Complete |
 
 **Coverage:**
 - v1.0 requirements: 23 total
