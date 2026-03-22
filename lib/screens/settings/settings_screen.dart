@@ -230,6 +230,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onTap: () => context.push('/pro'),
                       onManage: () => _openCustomerCenter(context),
                     ),
+                    if (!ref.watch(proStatusProvider).isPro) ...[
+                      const SizedBox(height: 4),
+                      _SettingsTile(
+                        icon: Icons.restore_outlined,
+                        title: 'Restore Purchases',
+                        subtitle: 'Recover a previous subscription',
+                        onTap: _handleRestore,
+                      ),
+                    ],
                     const SizedBox(height: 20),
 
                     // ── Preferences section ──
@@ -748,6 +757,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             message: 'Unable to open subscription manager.',
             type: AppSnackbarType.error);
       }
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    final service = ref.read(subscriptionProvider);
+    final success = await service.restore();
+    if (!mounted) return;
+    if (success) {
+      ref.read(proStatusProvider.notifier).sync();
+      showAppSnackbar(context,
+          message: 'Pro subscription restored!',
+          type: AppSnackbarType.success);
+    } else {
+      showAppSnackbar(context,
+          message: 'No previous purchase found.',
+          type: AppSnackbarType.info);
     }
   }
 
