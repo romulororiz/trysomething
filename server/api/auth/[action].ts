@@ -117,6 +117,11 @@ async function handleLogin(
       return;
     }
 
+    if (user.deletedAt) {
+      errorResponse(res, 401, "This account has been scheduled for deletion");
+      return;
+    }
+
     if (!user.passwordHash) {
       errorResponse(
         res,
@@ -167,7 +172,7 @@ async function handleRefresh(
     }
 
     const user = await prisma.user.findUnique({ where: { id: sub } });
-    if (!user) {
+    if (!user || user.deletedAt) {
       errorResponse(res, 401, "User not found");
       return;
     }
@@ -268,6 +273,10 @@ async function handleGoogle(
     });
 
     if (user) {
+      if (user.deletedAt) {
+        errorResponse(res, 401, "This account has been scheduled for deletion");
+        return;
+      }
       if (!user.googleId) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -409,6 +418,10 @@ async function handleApple(
     });
 
     if (user) {
+      if (user.deletedAt) {
+        errorResponse(res, 401, "This account has been scheduled for deletion");
+        return;
+      }
       if (!user.appleId) {
         user = await prisma.user.update({
           where: { id: user.id },
