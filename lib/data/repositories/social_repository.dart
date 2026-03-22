@@ -1,6 +1,6 @@
 import '../../models/social.dart';
 
-/// Repository interface for social features: stories, buddies, similar users.
+/// Repository interface for social features: stories, buddies.
 abstract class SocialRepository {
   // Stories
   Future<List<CommunityStory>> getStories();
@@ -15,7 +15,4 @@ abstract class SocialRepository {
   Future<BuddyRequest> sendBuddyRequest({required String targetUserId, String? hobbyId});
   Future<void> respondToRequest({required String requestId, required String status});
   Future<void> cancelRequest(String requestId);
-
-  // Similar users
-  Future<List<NearbyUser>> getSimilarUsers({String? hobbyId});
 }

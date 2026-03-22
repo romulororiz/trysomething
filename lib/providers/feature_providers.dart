@@ -29,14 +29,6 @@ final budgetAlternativesProvider = FutureProvider.family<List<BudgetAlternative>
   return ref.watch(featureRepositoryProvider).getBudgetAlternatives(hobbyId);
 });
 
-final seasonalHobbiesProvider = FutureProvider<Map<String, List<String>>>((ref) {
-  return ref.watch(featureRepositoryProvider).getSeasonalHobbies();
-});
-
-final moodTagsProvider = FutureProvider<Map<String, List<String>>>((ref) {
-  return ref.watch(featureRepositoryProvider).getMoodTags();
-});
-
 // ═══════════════════════════════════════════════════════
 //  USER PROFILE
 // ═══════════════════════════════════════════════════════
@@ -541,28 +533,6 @@ class StoriesNotifier extends StateNotifier<List<CommunityStory>> {
 final storiesProvider =
     StateNotifierProvider<StoriesNotifier, List<CommunityStory>>(
   (ref) => StoriesNotifier(ref.watch(socialRepositoryProvider)),
-);
-
-// ═══════════════════════════════════════════════════════
-//  SIMILAR USERS (formerly "Nearby Users")
-// ═══════════════════════════════════════════════════════
-
-class SimilarUsersNotifier extends StateNotifier<List<NearbyUser>> {
-  final SocialRepository _repo;
-  SimilarUsersNotifier(this._repo) : super([]);
-
-  Future<void> loadFromServer({String? hobbyId}) async {
-    try {
-      state = await _repo.getSimilarUsers(hobbyId: hobbyId);
-    } catch (e) {
-      debugPrint('[SimilarUsers] Failed to load from server: $e');
-    }
-  }
-}
-
-final similarUsersProvider =
-    StateNotifierProvider<SimilarUsersNotifier, List<NearbyUser>>(
-  (ref) => SimilarUsersNotifier(ref.watch(socialRepositoryProvider)),
 );
 
 // ═══════════════════════════════════════════════════════

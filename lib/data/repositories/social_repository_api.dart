@@ -99,20 +99,4 @@ class SocialRepositoryApi implements SocialRepository {
   Future<void> cancelRequest(String requestId) async {
     await _dio.delete(ApiConstants.usersBuddyRequest(requestId));
   }
-
-  // ── Similar users ─────────────────────────────
-
-  @override
-  Future<List<NearbyUser>> getSimilarUsers({String? hobbyId}) async {
-    final response = await _dio.get(
-      ApiConstants.usersSimilarUsers,
-      queryParameters: {
-        if (hobbyId != null) 'hobbyId': hobbyId,
-      },
-    );
-    final list = response.data as List<dynamic>;
-    return list
-        .map((e) => NearbyUser.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
 }
