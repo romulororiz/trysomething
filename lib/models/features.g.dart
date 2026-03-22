@@ -82,16 +82,20 @@ Map<String, dynamic> _$$HobbyComboImplToJson(_$HobbyComboImpl instance) =>
 
 _$FaqItemImpl _$$FaqItemImplFromJson(Map<String, dynamic> json) =>
     _$FaqItemImpl(
+      id: json['id'] as String? ?? '',
       question: json['question'] as String,
       answer: json['answer'] as String,
       upvotes: (json['upvotes'] as num?)?.toInt() ?? 0,
+      helpfulCount: (json['helpfulCount'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$FaqItemImplToJson(_$FaqItemImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'question': instance.question,
       'answer': instance.answer,
       'upvotes': instance.upvotes,
+      'helpfulCount': instance.helpfulCount,
     };
 
 _$CostBreakdownImpl _$$CostBreakdownImplFromJson(Map<String, dynamic> json) =>

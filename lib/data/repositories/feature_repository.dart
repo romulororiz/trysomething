@@ -3,6 +3,7 @@ import '../../models/features.dart';
 /// Abstract feature data source for FAQ, cost, budget, seasonal, mood data.
 abstract class FeatureRepository {
   Future<List<FaqItem>> getFaqForHobby(String hobbyId);
+  Future<FaqItem> voteFaq(String hobbyId, String faqId, String vote);
   Future<CostBreakdown?> getCostBreakdown(String hobbyId);
   Future<List<BudgetAlternative>> getBudgetAlternatives(String hobbyId);
   Future<Map<String, List<String>>> getSeasonalHobbies();

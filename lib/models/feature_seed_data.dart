@@ -191,29 +191,29 @@ class FeatureSeedData {
 
   static final Map<String, List<FaqItem>> faqByHobby = {
     'pottery': [
-      FaqItem(question: 'Do I need a kiln to start?', answer: 'No! Air-dry clay needs no kiln at all. Many studios also offer kiln access for firing.', upvotes: 47),
-      FaqItem(question: 'Can I use pottery without firing it?', answer: 'Air-dry clay pieces are functional for dry goods and decoration. For food-safe use, you\'ll need to glaze and fire.', upvotes: 32),
-      FaqItem(question: 'How long does it take to get good?', answer: 'You can make satisfying pieces in your first session. "Good" is subjective — enjoy the process!', upvotes: 28),
+      FaqItem(question: 'Do I need a kiln to start?', answer: 'No! Air-dry clay needs no kiln at all. Many studios also offer kiln access for firing.'),
+      FaqItem(question: 'Can I use pottery without firing it?', answer: 'Air-dry clay pieces are functional for dry goods and decoration. For food-safe use, you\'ll need to glaze and fire.'),
+      FaqItem(question: 'How long does it take to get good?', answer: 'You can make satisfying pieces in your first session. "Good" is subjective — enjoy the process!'),
     ],
     'bouldering': [
-      FaqItem(question: 'Do I need to be strong to start?', answer: 'Not at all! Technique matters far more than strength. Most V0-V1 problems require balance, not power.', upvotes: 63),
-      FaqItem(question: 'Will my fingers hurt?', answer: 'Yes, initially. Your skin toughens within 2-3 weeks. Avoid over-gripping and take rest days.', upvotes: 41),
-      FaqItem(question: 'Should I buy shoes right away?', answer: 'Rent for your first 3-4 sessions. If you keep going, invest in beginner shoes (La Sportiva Tarantula is great).', upvotes: 35),
+      FaqItem(question: 'Do I need to be strong to start?', answer: 'Not at all! Technique matters far more than strength. Most V0-V1 problems require balance, not power.'),
+      FaqItem(question: 'Will my fingers hurt?', answer: 'Yes, initially. Your skin toughens within 2-3 weeks. Avoid over-gripping and take rest days.'),
+      FaqItem(question: 'Should I buy shoes right away?', answer: 'Rent for your first 3-4 sessions. If you keep going, invest in beginner shoes (La Sportiva Tarantula is great).'),
     ],
     'sourdough': [
-      FaqItem(question: 'Can I use regular flour for sourdough?', answer: 'Yes, but bread flour gives better results due to higher protein. Whole wheat works great for starters.', upvotes: 52),
-      FaqItem(question: 'My starter won\'t rise. Is it dead?', answer: 'Probably not! It can take 10-14 days in cold environments. Feed consistently and keep it warm (24-26°C ideal).', upvotes: 44),
-      FaqItem(question: 'Why is my bread flat?', answer: 'Common causes: under-proofed, weak starter, not enough steam in oven, or cutting too soon after baking.', upvotes: 38),
+      FaqItem(question: 'Can I use regular flour for sourdough?', answer: 'Yes, but bread flour gives better results due to higher protein. Whole wheat works great for starters.'),
+      FaqItem(question: 'My starter won\'t rise. Is it dead?', answer: 'Probably not! It can take 10-14 days in cold environments. Feed consistently and keep it warm (24-26°C ideal).'),
+      FaqItem(question: 'Why is my bread flat?', answer: 'Common causes: under-proofed, weak starter, not enough steam in oven, or cutting too soon after baking.'),
     ],
     'chess': [
-      FaqItem(question: 'Which app should I use?', answer: 'Chess.com and Lichess are both excellent. Lichess is 100% free. Chess.com has better lessons for beginners.', upvotes: 55),
-      FaqItem(question: 'How do I stop losing every game?', answer: 'Focus on not hanging pieces (free captures for your opponent). Check every move for safety before you play it.', upvotes: 42),
-      FaqItem(question: 'Should I learn openings?', answer: 'Not yet! Learn tactics first (forks, pins, skewers). Opening knowledge is useless without tactical vision.', upvotes: 39),
+      FaqItem(question: 'Which app should I use?', answer: 'Chess.com and Lichess are both excellent. Lichess is 100% free. Chess.com has better lessons for beginners.'),
+      FaqItem(question: 'How do I stop losing every game?', answer: 'Focus on not hanging pieces (free captures for your opponent). Check every move for safety before you play it.'),
+      FaqItem(question: 'Should I learn openings?', answer: 'Not yet! Learn tactics first (forks, pins, skewers). Opening knowledge is useless without tactical vision.'),
     ],
     'guitar': [
-      FaqItem(question: 'Acoustic or electric for beginners?', answer: 'Acoustic is cheaper and more portable. Electric is easier on fingers. Choose based on the music you love.', upvotes: 58),
-      FaqItem(question: 'How long until I can play a song?', answer: 'With 15 min/day practice, you can play a simple 2-chord song in about 1-2 weeks.', upvotes: 45),
-      FaqItem(question: 'My fingers hurt. Is this normal?', answer: 'Completely normal! Calluses form in 2-3 weeks. Take short breaks but practice daily for best adaptation.', upvotes: 40),
+      FaqItem(question: 'Acoustic or electric for beginners?', answer: 'Acoustic is cheaper and more portable. Electric is easier on fingers. Choose based on the music you love.'),
+      FaqItem(question: 'How long until I can play a song?', answer: 'With 15 min/day practice, you can play a simple 2-chord song in about 1-2 weeks.'),
+      FaqItem(question: 'My fingers hurt. Is this normal?', answer: 'Completely normal! Calluses form in 2-3 weeks. Take short breaks but practice daily for best adaptation.'),
     ],
   };
 

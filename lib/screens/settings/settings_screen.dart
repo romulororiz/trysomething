@@ -70,7 +70,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             // Drag handle
             Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
                 color: AppColors.textMuted.withValues(alpha: 0.4),
@@ -82,8 +83,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               text: TextSpan(
                 style: AppTypography.display,
                 children: [
-                  TextSpan(text: 'Try', style: TextStyle(color: AppColors.accent)),
-                  TextSpan(text: 'Something', style: TextStyle(color: AppColors.textPrimary)),
+                  TextSpan(
+                      text: 'Try', style: TextStyle(color: AppColors.accent)),
+                  TextSpan(
+                      text: 'Something',
+                      style: TextStyle(color: AppColors.textPrimary)),
                 ],
               ),
             ),
@@ -124,7 +128,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _openLegalPage('https://trysomething.io/privacy');
                   },
                   child: Text('Privacy Policy',
-                      style: AppTypography.caption.copyWith(color: AppColors.accent)),
+                      style: AppTypography.caption
+                          .copyWith(color: AppColors.accent)),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -137,7 +142,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _openLegalPage('https://trysomething.io/terms');
                   },
                   child: Text('Terms of Service',
-                      style: AppTypography.caption.copyWith(color: AppColors.accent)),
+                      style: AppTypography.caption
+                          .copyWith(color: AppColors.accent)),
                 ),
               ],
             ),
@@ -166,519 +172,569 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: Colors.transparent,
       body: AppBackground(
         child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.glassBackground,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.glassBackground,
+                        ),
+                        child: const Icon(Icons.arrow_back,
+                            size: 20, color: AppColors.textSecondary),
                       ),
-                      child: const Icon(Icons.arrow_back,
-                          size: 20, color: AppColors.textSecondary),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text('Settings', style: AppTypography.display.copyWith(fontSize: 24)),
-                ],
+                    const SizedBox(width: 16),
+                    Text('Settings',
+                        style: AppTypography.display.copyWith(fontSize: 24)),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // ── Content ──
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  // ── Profile section — tap to edit ──
-                  GestureDetector(
-                    onTap: () => _showEditProfileSheet(
-                      context, ref,
-                      displayName: displayName,
-                      email: email,
-                      avatarUrl: avatarUrl,
+              // ── Content ──
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  children: [
+                    // ── Profile section — tap to edit ──
+                    GestureDetector(
+                      onTap: () => _showEditProfileSheet(
+                        context,
+                        ref,
+                        displayName: displayName,
+                        email: email,
+                        avatarUrl: avatarUrl,
+                      ),
+                      child: _ProfileSection(
+                        displayName: displayName,
+                        email: email,
+                        avatarUrl: avatarUrl,
+                      ),
                     ),
-                    child: _ProfileSection(
-                      displayName: displayName,
-                      email: email,
-                      avatarUrl: avatarUrl,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // ── TrySomething Pro ──
-                  _ProSettingsRow(
-                    ref: ref,
-                    onTap: () => context.push('/pro'),
-                    onManage: () => _openCustomerCenter(context),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // ── Preferences section ──
-                  const _SectionLabel(text: 'PREFERENCES'),
-                  const SizedBox(height: 12),
-
-                  // Hours per week
-                  _SettingsTile(
-                    icon: AppIcons.badgeTime,
-                    title: 'Weekly time',
-                    subtitle: '${prefs.hoursPerWeek}h per week',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _StepperButton(
-                          icon: Icons.remove,
-                          onTap: prefs.hoursPerWeek > 1
-                              ? () => ref.read(userPreferencesProvider.notifier)
-                                  .setHoursPerWeek(prefs.hoursPerWeek - 1)
-                              : null,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            '${prefs.hoursPerWeek}',
-                            style: AppTypography.monoMedium.copyWith(color: AppColors.textSecondary),
-                          ),
-                        ),
-                        _StepperButton(
-                          icon: Icons.add,
-                          onTap: prefs.hoursPerWeek < 40
-                              ? () => ref.read(userPreferencesProvider.notifier)
-                                  .setHoursPerWeek(prefs.hoursPerWeek + 1)
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Budget level
-                  _SettingsTile(
-                    icon: AppIcons.badgeCost,
-                    title: 'Budget level',
-                    subtitle: _budgetLabel(prefs.budgetLevel),
-                    trailing: _BudgetSelector(
-                      current: prefs.budgetLevel,
-                      onChanged: (level) =>
-                          ref.read(userPreferencesProvider.notifier).setBudgetLevel(level),
-                    ),
-                  ),
-
-                  // Social preference
-                  _SettingsTile(
-                    icon: Icons.people_outline_rounded,
-                    title: 'Style',
-                    subtitle: prefs.preferSocial ? 'Prefer social activities' : 'Prefer solo activities',
-                    trailing: _ToggleChip(
-                      isOn: prefs.preferSocial,
-                      onLabel: 'Social',
-                      offLabel: 'Solo',
-                      onTap: () => ref
-                          .read(userPreferencesProvider.notifier)
-                          .setPreferSocial(!prefs.preferSocial),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Vibes
-                  _SectionLabel(text: 'YOUR VIBES'),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      'creative',
-                      'physical',
-                      'relaxing',
-                      'technical',
-                      'outdoors',
-                      'competitive',
-                    ].map((vibe) {
-                      final isActive = prefs.vibes.contains(vibe);
-                      return GestureDetector(
-                        onTap: () =>
-                            ref.read(userPreferencesProvider.notifier).toggleVibe(vibe),
-                        child: AnimatedContainer(
-                          duration: Motion.fast,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isActive ? AppColors.coral : AppColors.surfaceElevated,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Text(
-                            vibe[0].toUpperCase() + vibe.substring(1),
-                            style: AppTypography.sansLabel.copyWith(
-                              color: isActive ? Colors.white : AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-
-                  // ── See updated matches button ──
-                  if (prefs != _initialPrefs) ...[
                     const SizedBox(height: 20),
-                    AnimatedOpacity(
-                      opacity: prefs != _initialPrefs ? 1.0 : 0.0,
-                      duration: Motion.normal,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: Spacing.buttonPrimaryHeight,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // 1. Sync to server
-                            ref.read(authRepositoryProvider).updatePreferences(
-                              hoursPerWeek: prefs.hoursPerWeek,
-                              budgetLevel: prefs.budgetLevel,
-                              preferSocial: prefs.preferSocial,
-                              vibes: prefs.vibes,
-                            );
-                            // 2. Analytics
-                            ref.read(analyticsProvider).trackEvent('preferences_changed');
-                            // 3. Show updated matches
-                            showUpdatedMatchesSheet(context, ref);
-                            // 4. Reset change tracking
-                            setState(() => _initialPrefs = prefs);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(Spacing.radiusCta),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text('See updated matches', style: AppTypography.button.copyWith(color: Colors.white)),
-                        ),
-                      ),
-                    ),
-                  ],
 
-                  const SizedBox(height: 28),
-
-                  // ── App section ──
-                  _SectionLabel(text: 'APP'),
-                  const SizedBox(height: 12),
-
-                  _SettingsTile(
-                    icon: Icons.notifications_none_rounded,
-                    title: 'Notifications',
-                    subtitle: _notificationsEnabled ? 'Reminders on' : 'Reminders off',
-                    trailing: Switch.adaptive(
-                      value: _notificationsEnabled,
-                      onChanged: (v) {
-                        setState(() => _notificationsEnabled = v);
-                        ref.read(sharedPreferencesProvider).setBool('notifications_enabled', v);
-                      },
-                      activeColor: AppColors.coral,
-                    ),
-                  ),
-
-                  _SettingsTile(
-                    icon: Icons.info_outline_rounded,
-                    title: 'About',
-                    subtitle: 'TrySomething v1.0.0',
-                    onTap: () => _showAboutSheet(context),
-                  ),
-
-                  // ── Session ──
-                  const SizedBox(height: 20),
-                  const _SectionLabel(text: 'SESSION'),
-                  const SizedBox(height: 12),
-
-                  _SettingsTile(
-                    icon: Icons.vibration,
-                    title: 'Vibration on complete',
-                    subtitle: 'Haptic feedback when session ends',
-                    trailing: Switch.adaptive(
-                      value: _vibrationEnabled,
-                      onChanged: (v) {
-                        setState(() => _vibrationEnabled = v);
-                        ref.read(sharedPreferencesProvider).setBool('session_vibration', v);
-                      },
-                      activeColor: AppColors.coral,
-                    ),
-                  ),
-
-                  _SettingsTile(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Sound on complete',
-                    subtitle: 'Play a gentle chime',
-                    trailing: Switch.adaptive(
-                      value: _soundEnabled,
-                      onChanged: (v) {
-                        setState(() => _soundEnabled = v);
-                        ref.read(sharedPreferencesProvider).setBool('session_sound', v);
-                      },
-                      activeColor: AppColors.coral,
-                    ),
-                  ),
-
-                  // ── Debug Pro Toggle (debug builds only) ──
-                  if (kDebugMode) ...[
-                    const SizedBox(height: 8),
-                    _SectionLabel(text: 'DEBUG'),
-                    const SizedBox(height: 12),
-                    _DebugProToggle(),
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () => _showResetHobbiesDialog(context, ref),
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(14),
-                        borderRadius: 14,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.restart_alt_rounded, size: 16, color: AppColors.textMuted),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Reset hobby data',
-                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
-                                  const SizedBox(height: 2),
-                                  Text('Clear saved/active hobbies (keeps onboarding)',
-                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () async {
-                        await ref.read(userHobbiesProvider.notifier).syncFromServer();
-                        if (context.mounted) {
-                          showAppSnackbar(context,
-                              message: 'Synced from server',
-                              type: AppSnackbarType.success);
-                        }
-                      },
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(14),
-                        borderRadius: 14,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.cloud_download_outlined, size: 16, color: AppColors.textMuted),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Sync from server',
-                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
-                                  const SizedBox(height: 2),
-                                  Text('Replace local state with server data',
-                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () => context.push('/trial-offer?debug'),
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(14),
-                        borderRadius: 14,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.card_giftcard_outlined, size: 16, color: AppColors.textMuted),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Show trial screen',
-                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
-                                  const SizedBox(height: 2),
-                                  Text('Open the trial offer screen',
-                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    GestureDetector(
+                    // ── TrySomething Pro ──
+                    _ProSettingsRow(
+                      ref: ref,
                       onTap: () => context.push('/pro'),
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(14),
-                        borderRadius: 14,
+                      onManage: () => _openCustomerCenter(context),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ── Preferences section ──
+                    const _SectionLabel(text: 'PREFERENCES'),
+                    const SizedBox(height: 12),
+
+                    // Hours per week
+                    _SettingsTile(
+                      icon: AppIcons.badgeTime,
+                      title: 'Weekly time',
+                      subtitle: '${prefs.hoursPerWeek}h per week',
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _StepperButton(
+                            icon: Icons.remove,
+                            onTap: prefs.hoursPerWeek > 1
+                                ? () => ref
+                                    .read(userPreferencesProvider.notifier)
+                                    .setHoursPerWeek(prefs.hoursPerWeek - 1)
+                                : null,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              '${prefs.hoursPerWeek}',
+                              style: AppTypography.monoMedium
+                                  .copyWith(color: AppColors.textSecondary),
+                            ),
+                          ),
+                          _StepperButton(
+                            icon: Icons.add,
+                            onTap: prefs.hoursPerWeek < 40
+                                ? () => ref
+                                    .read(userPreferencesProvider.notifier)
+                                    .setHoursPerWeek(prefs.hoursPerWeek + 1)
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Budget level
+                    _SettingsTile(
+                      icon: AppIcons.badgeCost,
+                      title: 'Budget level',
+                      subtitle: _budgetLabel(prefs.budgetLevel),
+                      trailing: _BudgetSelector(
+                        current: prefs.budgetLevel,
+                        onChanged: (level) => ref
+                            .read(userPreferencesProvider.notifier)
+                            .setBudgetLevel(level),
+                      ),
+                    ),
+
+                    // Social preference
+                    _SettingsTile(
+                      icon: Icons.people_outline_rounded,
+                      title: 'Style',
+                      subtitle: prefs.preferSocial
+                          ? 'Prefer social activities'
+                          : 'Prefer solo activities',
+                      trailing: _ToggleChip(
+                        isOn: prefs.preferSocial,
+                        onLabel: 'Social',
+                        offLabel: 'Solo',
+                        onTap: () => ref
+                            .read(userPreferencesProvider.notifier)
+                            .setPreferSocial(!prefs.preferSocial),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Vibes
+                    _SectionLabel(text: 'YOUR VIBES'),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        'creative',
+                        'physical',
+                        'relaxing',
+                        'technical',
+                        'outdoors',
+                        'competitive',
+                      ].map((vibe) {
+                        final isActive = prefs.vibes.contains(vibe);
+                        return GestureDetector(
+                          onTap: () => ref
+                              .read(userPreferencesProvider.notifier)
+                              .toggleVibe(vibe),
+                          child: AnimatedContainer(
+                            duration: Motion.fast,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? AppColors.coral
+                                  : AppColors.surfaceElevated,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              vibe[0].toUpperCase() + vibe.substring(1),
+                              style: AppTypography.sansLabel.copyWith(
+                                color: isActive
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    // ── See updated matches button ──
+                    if (prefs != _initialPrefs) ...[
+                      const SizedBox(height: 20),
+                      AnimatedOpacity(
+                        opacity: prefs != _initialPrefs ? 1.0 : 0.0,
+                        duration: Motion.normal,
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: Spacing.buttonPrimaryHeight,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // 1. Sync to server
+                              ref
+                                  .read(authRepositoryProvider)
+                                  .updatePreferences(
+                                    hoursPerWeek: prefs.hoursPerWeek,
+                                    budgetLevel: prefs.budgetLevel,
+                                    preferSocial: prefs.preferSocial,
+                                    vibes: prefs.vibes,
+                                  );
+                              // 2. Analytics
+                              ref
+                                  .read(analyticsProvider)
+                                  .trackEvent('preferences_changed');
+                              // 3. Show updated matches
+                              showUpdatedMatchesSheet(context, ref);
+                              // 4. Reset change tracking
+                              setState(() => _initialPrefs = prefs);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(Spacing.radiusCta),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text('See updated matches',
+                                style: AppTypography.button
+                                    .copyWith(color: Colors.white)),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 28),
+
+                    // ── App section ──
+                    _SectionLabel(text: 'APP'),
+                    const SizedBox(height: 12),
+
+                    _SettingsTile(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'Notifications',
+                      subtitle: _notificationsEnabled
+                          ? 'Reminders on'
+                          : 'Reminders off',
+                      trailing: Switch.adaptive(
+                        value: _notificationsEnabled,
+                        onChanged: (v) {
+                          setState(() => _notificationsEnabled = v);
+                          ref
+                              .read(sharedPreferencesProvider)
+                              .setBool('notifications_enabled', v);
+                        },
+                        activeColor: AppColors.coral,
+                      ),
+                    ),
+
+                    _SettingsTile(
+                      icon: Icons.info_outline_rounded,
+                      title: 'About',
+                      subtitle: 'TrySomething v1.0.0',
+                      onTap: () => _showAboutSheet(context),
+                    ),
+
+                    // ── Session ──
+                    const SizedBox(height: 20),
+                    const _SectionLabel(text: 'SESSION'),
+                    const SizedBox(height: 12),
+
+                    _SettingsTile(
+                      icon: Icons.vibration,
+                      title: 'Vibration on complete',
+                      subtitle: 'Haptic feedback when session ends',
+                      trailing: Switch.adaptive(
+                        value: _vibrationEnabled,
+                        onChanged: (v) {
+                          setState(() => _vibrationEnabled = v);
+                          ref
+                              .read(sharedPreferencesProvider)
+                              .setBool('session_vibration', v);
+                        },
+                        activeColor: AppColors.coral,
+                      ),
+                    ),
+
+                    _SettingsTile(
+                      icon: Icons.notifications_active_outlined,
+                      title: 'Sound on complete',
+                      subtitle: 'Play a gentle chime',
+                      trailing: Switch.adaptive(
+                        value: _soundEnabled,
+                        onChanged: (v) {
+                          setState(() => _soundEnabled = v);
+                          ref
+                              .read(sharedPreferencesProvider)
+                              .setBool('session_sound', v);
+                        },
+                        activeColor: AppColors.coral,
+                      ),
+                    ),
+
+                    // ── Debug Pro Toggle (debug builds only) ──
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 8),
+                      _SectionLabel(text: 'DEBUG'),
+                      const SizedBox(height: 12),
+                      _DebugProToggle(),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => _showResetHobbiesDialog(context, ref),
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(14),
+                          borderRadius: 14,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.restart_alt_rounded,
+                                  size: 16, color: AppColors.textMuted),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Reset hobby data',
+                                        style: AppTypography.sansLabel.copyWith(
+                                            color: AppColors.textMuted)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                        'Clear saved/active hobbies (keeps onboarding)',
+                                        style: AppTypography.sansTiny.copyWith(
+                                            color: AppColors.textWhisper)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () async {
+                          await ref
+                              .read(userHobbiesProvider.notifier)
+                              .syncFromServer();
+                          if (context.mounted) {
+                            showAppSnackbar(context,
+                                message: 'Synced from server',
+                                type: AppSnackbarType.success);
+                          }
+                        },
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(14),
+                          borderRadius: 14,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.cloud_download_outlined,
+                                  size: 16, color: AppColors.textMuted),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Sync from server',
+                                        style: AppTypography.sansLabel.copyWith(
+                                            color: AppColors.textMuted)),
+                                    const SizedBox(height: 2),
+                                    Text('Replace local state with server data',
+                                        style: AppTypography.sansTiny.copyWith(
+                                            color: AppColors.textWhisper)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => context.push('/trial-offer?debug'),
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(14),
+                          borderRadius: 14,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.card_giftcard_outlined,
+                                  size: 16, color: AppColors.textMuted),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Show trial screen',
+                                        style: AppTypography.sansLabel.copyWith(
+                                            color: AppColors.textMuted)),
+                                    const SizedBox(height: 2),
+                                    Text('Open the trial offer screen',
+                                        style: AppTypography.sansTiny.copyWith(
+                                            color: AppColors.textWhisper)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => context.push('/pro'),
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(14),
+                          borderRadius: 14,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.workspace_premium_outlined,
+                                  size: 16, color: AppColors.textMuted),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Show Pro screen',
+                                        style: AppTypography.sansLabel.copyWith(
+                                            color: AppColors.textMuted)),
+                                    const SizedBox(height: 2),
+                                    Text('Open the Pro upgrade screen',
+                                        style: AppTypography.sansTiny.copyWith(
+                                            color: AppColors.textWhisper)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 28),
+
+                    // ── Logout ──
+                    const SizedBox(height: 8),
+
+                    GestureDetector(
+                      onTap: () => _showLogoutDialog(context, ref),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.glassBackground,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         child: Row(
                           children: [
-                            const Icon(Icons.workspace_premium_outlined, size: 16, color: AppColors.textMuted),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Show Pro screen',
-                                      style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted)),
-                                  const SizedBox(height: 2),
-                                  Text('Open the Pro upgrade screen',
-                                      style: AppTypography.sansTiny.copyWith(color: AppColors.textWhisper)),
-                                ],
-                              ),
+                            Icon(Icons.logout_rounded,
+                                size: 20, color: AppColors.rose),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Log out',
+                                  style: AppTypography.sansLabel
+                                      .copyWith(color: AppColors.rose),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Sign out of your account',
+                                  style: AppTypography.sansTiny
+                                      .copyWith(color: AppColors.textMuted),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ],
 
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 10),
 
-                  // ── Logout ──
-                  const SizedBox(height: 8),
-
-                  GestureDetector(
-                    onTap: () => _showLogoutDialog(context, ref),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.glassBackground,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout_rounded, size: 20, color: AppColors.rose),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Log out',
-                                style: AppTypography.sansLabel.copyWith(color: AppColors.rose),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Sign out of your account',
-                                style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // ── Clear data ──
-                  GestureDetector(
-                    onTap: () => _showClearDataDialog(context, ref),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.textMuted),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Clear local data',
-                                style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Reset onboarding, preferences & cached hobbies',
-                                style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // ── Delete account ──
-                  GestureDetector(
-                    onTap: () => _handleDeleteAccount(context, ref),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete_forever_outlined,
-                              size: 20, color: AppColors.textMuted),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Delete account',
+                    // ── Clear data ──
+                    GestureDetector(
+                      onTap: () => _showClearDataDialog(context, ref),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_outline_rounded,
+                                size: 20, color: AppColors.textMuted),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Clear local data',
                                   style: AppTypography.sansLabel
-                                      .copyWith(color: AppColors.textSecondary)),
-                              const SizedBox(height: 2),
-                              Text('Permanently delete your data',
+                                      .copyWith(color: AppColors.textSecondary),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Reset onboarding, preferences & cached hobbies',
                                   style: AppTypography.sansTiny
-                                      .copyWith(color: AppColors.textMuted)),
-                            ],
+                                      .copyWith(color: AppColors.textMuted),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // ── Delete account ──
+                    GestureDetector(
+                      onTap: () => _handleDeleteAccount(context, ref),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_forever_outlined,
+                                size: 20, color: AppColors.textMuted),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Delete account',
+                                    style: AppTypography.sansLabel.copyWith(
+                                        color: AppColors.textSecondary)),
+                                const SizedBox(height: 2),
+                                Text('Permanently delete your data',
+                                    style: AppTypography.sansTiny
+                                        .copyWith(color: AppColors.textMuted)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // ── App footer ──
+                    Center(
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            'assets/images/app_logo.png',
+                            width: 32,
+                            height: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'TrySomething v1.0.0 (Build 1)',
+                            style: AppTypography.sansTiny.copyWith(
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 32),
-
-                  // ── App footer ──
-                  Center(
-                    child: Column(
-                      children: [
-                        Image.asset(
-                          'assets/images/app_logo.png',
-                          width: 32,
-                          height: 32,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'TrySomething v1.0.0 (Build 1)',
-                          style: AppTypography.sansTiny.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 80),
-                ],
+                    const SizedBox(height: 80),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -713,7 +769,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showAppConfirmDialog(
       context: context,
       title: 'Clear local data?',
-      message: 'This will reset onboarding, preferences, and cached hobbies. You\'ll go through onboarding again.',
+      message:
+          'This will reset onboarding, preferences, and cached hobbies. You\'ll go through onboarding again.',
       confirmLabel: 'Clear data',
       isDestructive: true,
       onConfirm: () async {
@@ -744,7 +801,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       title: 'Delete account',
       builder: (ctx) => _DeleteAccountSheetContent(
-        onDelete: (password) => _executeDeleteAccount(context, ref, password: password),
+        onDelete: (password) =>
+            _executeDeleteAccount(context, ref, password: password),
       ),
     );
   }
@@ -759,8 +817,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _executeDeleteAccount(BuildContext context, WidgetRef ref, {String? password}) async {
-    final success = await ref.read(authProvider.notifier).deleteAccount(password: password);
+  Future<void> _executeDeleteAccount(BuildContext context, WidgetRef ref,
+      {String? password}) async {
+    final success =
+        await ref.read(authProvider.notifier).deleteAccount(password: password);
 
     if (!context.mounted) return;
 
@@ -775,13 +835,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!context.mounted) return;
 
       // Show snackbar before navigating (avoids context issues)
-      showAppSnackbar(context, message: 'Account scheduled for deletion', type: AppSnackbarType.info);
+      showAppSnackbar(context,
+          message: 'Account scheduled for deletion',
+          type: AppSnackbarType.info);
 
       // Navigate to login
       if (context.mounted) context.go('/login');
     } else {
       // Show error, stay on Settings
-      showAppSnackbar(context, message: 'Failed to delete account. Please try again.', type: AppSnackbarType.error);
+      showAppSnackbar(context,
+          message: 'Failed to delete account. Please try again.',
+          type: AppSnackbarType.error);
     }
   }
 
@@ -789,7 +853,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showAppConfirmDialog(
       context: context,
       title: 'Reset hobby data?',
-      message: 'This clears all saved/active hobbies locally. Onboarding stays intact.',
+      message:
+          'This clears all saved/active hobbies locally. Onboarding stays intact.',
       confirmLabel: 'Reset',
       isDestructive: true,
       onConfirm: () async {
@@ -798,8 +863,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ref.invalidate(userHobbiesProvider);
         if (context.mounted) {
           showAppSnackbar(context,
-              message: 'Hobby data cleared',
-              type: AppSnackbarType.success);
+              message: 'Hobby data cleared', type: AppSnackbarType.success);
         }
       },
     );
@@ -829,10 +893,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   static String _budgetLabel(int level) {
     switch (level) {
-      case 0: return 'Low';
-      case 1: return 'Medium';
-      case 2: return 'High';
-      default: return 'Any';
+      case 0:
+        return 'Low';
+      case 1:
+        return 'Medium';
+      case 2:
+        return 'High';
+      default:
+        return 'Any';
     }
   }
 }
@@ -869,7 +937,6 @@ Widget _buildDeletionWarning() {
           style: AppTypography.body.copyWith(
             color: AppColors.accent,
             fontWeight: FontWeight.w600,
-            decoration: TextDecoration.underline,
           ),
         ),
       ),
@@ -955,8 +1022,7 @@ class _DeleteAccountSheetContentState
                   : () async {
                       final password = _passwordController.text.trim();
                       if (password.isEmpty) {
-                        setState(
-                            () => _errorText = 'Password is required');
+                        setState(() => _errorText = 'Password is required');
                         return;
                       }
                       setState(() => _isDeleting = true);
@@ -980,8 +1046,8 @@ class _DeleteAccountSheetContentState
                       )
                     : Text(
                         'Delete Account',
-                        style: AppTypography.button
-                            .copyWith(color: Colors.white),
+                        style:
+                            AppTypography.button.copyWith(color: Colors.white),
                       ),
               ),
             ),
@@ -1160,7 +1226,8 @@ class _ProfileSection extends StatelessWidget {
             ),
           ),
           // Tap hint
-          Icon(Icons.edit_outlined, size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
+          Icon(Icons.edit_outlined,
+              size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
         ],
       ),
     );
@@ -1228,8 +1295,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
         setState(() => _pendingAvatarUrl = url);
       } else {
         showAppSnackbar(context,
-            message: 'Failed to upload photo',
-            type: AppSnackbarType.error);
+            message: 'Failed to upload photo', type: AppSnackbarType.error);
       }
     } finally {
       _picking = false;
@@ -1241,10 +1307,10 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     final name = _nameCtrl.text.trim();
     final bio = _bioCtrl.text.trim();
     await widget.ref.read(authProvider.notifier).updateProfile(
-      displayName: name.isNotEmpty ? name : null,
-      bio: bio.isNotEmpty ? bio : null,
-      avatarUrl: _pendingAvatarUrl,
-    );
+          displayName: name.isNotEmpty ? name : null,
+          bio: bio.isNotEmpty ? bio : null,
+          avatarUrl: _pendingAvatarUrl,
+        );
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -1261,7 +1327,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           colors: [Color(0xFF1C1C24), Color(0xFF131318)],
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.5),
       ),
       padding: EdgeInsets.fromLTRB(24, 14, 24, 28 + bottom),
       child: SingleChildScrollView(
@@ -1293,7 +1360,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                       const SizedBox(height: 3),
                       Text(
                         'How you appear in TrySomething',
-                        style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
+                        style: AppTypography.sansTiny
+                            .copyWith(color: AppColors.textMuted),
                       ),
                     ],
                   ),
@@ -1306,9 +1374,11 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withValues(alpha: 0.07),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1)),
                     ),
-                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
+                    child: const Icon(Icons.close_rounded,
+                        size: 16, color: AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -1346,16 +1416,20 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                             ],
                           ),
                           child: ClipOval(
-                            child: effectiveAvatar != null && effectiveAvatar.isNotEmpty
+                            child: effectiveAvatar != null &&
+                                    effectiveAvatar.isNotEmpty
                                 ? (effectiveAvatar.startsWith('http')
                                     ? CachedNetworkImage(
                                         imageUrl: effectiveAvatar,
                                         fit: BoxFit.cover,
-                                        placeholder: (_, __) => const SizedBox.shrink(),
+                                        placeholder: (_, __) =>
+                                            const SizedBox.shrink(),
                                         errorWidget: (_, __, ___) =>
-                                            _ProfileInitials(name: _nameCtrl.text),
+                                            _ProfileInitials(
+                                                name: _nameCtrl.text),
                                       )
-                                    : Image.network(effectiveAvatar, fit: BoxFit.cover))
+                                    : Image.network(effectiveAvatar,
+                                        fit: BoxFit.cover))
                                 : _ProfileInitials(name: _nameCtrl.text),
                           ),
                         ),
@@ -1368,15 +1442,18 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                             decoration: BoxDecoration(
                               color: AppColors.accent,
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFF1C1C24), width: 2),
+                              border: Border.all(
+                                  color: const Color(0xFF1C1C24), width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accent.withValues(alpha: 0.4),
+                                  color:
+                                      AppColors.accent.withValues(alpha: 0.4),
                                   blurRadius: 8,
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.camera_alt_rounded, size: 13, color: Colors.white),
+                            child: const Icon(Icons.camera_alt_rounded,
+                                size: 13, color: Colors.white),
                           ),
                         ),
                       ],
@@ -1408,20 +1485,24 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.06)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.lock_outline_rounded, size: 14, color: AppColors.textMuted),
+                    Icon(Icons.lock_outline_rounded,
+                        size: 14, color: AppColors.textMuted),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         widget.email,
-                        style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
+                        style: AppTypography.sansLabel
+                            .copyWith(color: AppColors.textMuted),
                       ),
                     ),
                   ],
@@ -1461,7 +1542,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                  color: _saving ? AppColors.accent.withValues(alpha: 0.4) : null,
+                  color:
+                      _saving ? AppColors.accent.withValues(alpha: 0.4) : null,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: _saving
                       ? null
@@ -1539,7 +1621,8 @@ class _SheetTextField extends StatelessWidget {
         hintStyle: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppColors.border),
@@ -1550,7 +1633,8 @@ class _SheetTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.accent.withValues(alpha: 0.6)),
+          borderSide:
+              BorderSide(color: AppColors.accent.withValues(alpha: 0.6)),
         ),
       ),
     );
@@ -1640,9 +1724,13 @@ class _SettingsTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTypography.sansLabel.copyWith(color: AppColors.textSecondary)),
+                  Text(title,
+                      style: AppTypography.sansLabel
+                          .copyWith(color: AppColors.textSecondary)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppTypography.sansTiny.copyWith(color: AppColors.textMuted)),
+                  Text(subtitle,
+                      style: AppTypography.sansTiny
+                          .copyWith(color: AppColors.textMuted)),
                 ],
               ),
             ),
@@ -1673,13 +1761,16 @@ class _StepperButton extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: onTap != null ? AppColors.surfaceElevated : AppColors.surfaceElevated.withAlpha(120),
+          color: onTap != null
+              ? AppColors.surfaceElevated
+              : AppColors.surfaceElevated.withAlpha(120),
         ),
         child: Center(
           child: Icon(
             icon,
             size: 14,
-            color: onTap != null ? AppColors.textSecondary : AppColors.textMuted,
+            color:
+                onTap != null ? AppColors.textSecondary : AppColors.textMuted,
           ),
         ),
       ),
@@ -1784,11 +1875,13 @@ class _DebugProToggle extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.bug_report_rounded, size: 16, color: AppColors.textMuted),
+              const Icon(Icons.bug_report_rounded,
+                  size: 16, color: AppColors.textMuted),
               const SizedBox(width: 8),
               Text(
                 'Subscription Override',
-                style: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
+                style: AppTypography.sansLabel
+                    .copyWith(color: AppColors.textMuted),
               ),
             ],
           ),
@@ -1798,21 +1891,31 @@ class _DebugProToggle extends ConsumerWidget {
               for (final tier in DebugTier.values)
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => ref.read(proStatusProvider.notifier).setDebugTier(tier),
+                    onTap: () =>
+                        ref.read(proStatusProvider.notifier).setDebugTier(tier),
                     child: AnimatedContainer(
                       duration: Motion.fast,
                       margin: EdgeInsets.only(left: tier.index > 0 ? 6 : 0),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: current == tier ? AppColors.coral : AppColors.surfaceElevated,
+                        color: current == tier
+                            ? AppColors.coral
+                            : AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        tier == DebugTier.none ? 'Auto' : tier.name[0].toUpperCase() + tier.name.substring(1),
+                        tier == DebugTier.none
+                            ? 'Auto'
+                            : tier.name[0].toUpperCase() +
+                                tier.name.substring(1),
                         style: AppTypography.sansCaption.copyWith(
-                          color: current == tier ? Colors.white : AppColors.textSecondary,
-                          fontWeight: current == tier ? FontWeight.w600 : FontWeight.normal,
+                          color: current == tier
+                              ? Colors.white
+                              : AppColors.textSecondary,
+                          fontWeight: current == tier
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -1835,11 +1938,13 @@ class _ProSettingsRow extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onManage;
 
-  const _ProSettingsRow({required this.ref, required this.onTap, this.onManage});
+  const _ProSettingsRow(
+      {required this.ref, required this.onTap, this.onManage});
 
   String _statusLabel(ProStatus status) {
     if (status.isLifetime) return 'Lifetime';
-    if (status.isTrialing) return 'Trial (${status.trialDaysRemaining} days left)';
+    if (status.isTrialing)
+      return 'Trial (${status.trialDaysRemaining} days left)';
     if (status.isPro) return 'Pro';
     return 'Free Plan';
   }
@@ -1876,7 +1981,8 @@ class _ProSettingsRow extends StatelessWidget {
                   ],
                 ),
               ),
-              child: const Icon(Icons.auto_awesome, size: 20, color: AppColors.coral),
+              child: const Icon(Icons.auto_awesome,
+                  size: 20, color: AppColors.coral),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -1893,12 +1999,14 @@ class _ProSettingsRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _statusLabel(status),
-                    style: AppTypography.sansTiny.copyWith(color: AppColors.textSecondary),
+                    style: AppTypography.sansTiny
+                        .copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.coral),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: AppColors.coral),
           ],
         ),
       ),

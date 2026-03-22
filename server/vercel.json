@@ -40,6 +40,7 @@
     { "src": "/api/hobbies/combos", "dest": "/api/hobbies/combos.ts" },
     { "src": "/api/hobbies/seasonal", "dest": "/api/hobbies/seasonal.ts" },
     { "src": "/api/hobbies/mood", "dest": "/api/hobbies/mood.ts" },
+    { "src": "/api/hobbies/([^/]+)/faq/([^/]+)/vote", "dest": "/api/hobbies/[id]/[feature].ts?id=$1&feature=faq&faqId=$2" },
     { "src": "/api/hobbies/([^/]+)/(faq|cost|budget)", "dest": "/api/hobbies/[id]/[feature].ts?id=$1&feature=$2" },
     { "src": "/api/hobbies/([^/]+)", "dest": "/api/hobbies/[id]/index.ts?id=$1" },
     { "src": "/api/hobbies", "dest": "/api/hobbies/index.ts" }

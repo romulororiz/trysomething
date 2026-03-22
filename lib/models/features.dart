@@ -70,9 +70,11 @@ class HobbyCombo with _$HobbyCombo {
 @freezed
 class FaqItem with _$FaqItem {
   const factory FaqItem({
+    @Default('') String id,
     required String question,
     required String answer,
     @Default(0) int upvotes,
+    @Default(0) int helpfulCount,
   }) = _FaqItem;
 
   factory FaqItem.fromJson(Map<String, dynamic> json) =>

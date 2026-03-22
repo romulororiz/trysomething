@@ -128,17 +128,19 @@ describe("mapCategory", () => {
 });
 
 describe("mapFaqItem", () => {
-  it("strips id and hobbyId", () => {
+  it("includes id, strips hobbyId, includes helpfulCount", () => {
     const result = mapFaqItem({
       id: "faq1",
       hobbyId: "pottery",
       question: "How?",
       answer: "Like this.",
       upvotes: 42,
+      helpfulCount: 7,
     }) as any;
+    expect(result.id).toBe("faq1");
     expect(result.question).toBe("How?");
     expect(result.upvotes).toBe(42);
-    expect(result.id).toBeUndefined();
+    expect(result.helpfulCount).toBe(7);
     expect(result.hobbyId).toBeUndefined();
   });
 });

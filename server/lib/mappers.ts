@@ -60,6 +60,7 @@ type PrismaFaqItem = {
   question: string;
   answer: string;
   upvotes: number;
+  helpfulCount: number;
 };
 
 type PrismaCostBreakdown = {
@@ -156,9 +157,11 @@ export function mapCategory(c: PrismaCategory) {
 
 export function mapFaqItem(f: PrismaFaqItem) {
   return {
+    id: f.id,
     question: f.question,
     answer: f.answer,
     upvotes: f.upvotes,
+    helpfulCount: f.helpfulCount,
   };
 }
 

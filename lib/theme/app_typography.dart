@@ -149,7 +149,7 @@ class AppTypography {
         height: 1.5,
         color: AppColors.textSecondary,
         fontStyle: FontStyle.italic,
-      );    
+      );
 
   static TextStyle get sansLabel => GoogleFonts.manrope(
         fontSize: 13,

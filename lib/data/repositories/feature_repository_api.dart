@@ -45,6 +45,15 @@ class FeatureRepositoryApi implements FeatureRepository {
   }
 
   @override
+  Future<FaqItem> voteFaq(String hobbyId, String faqId, String vote) async {
+    final response = await _dio.patch(
+      '${ApiConstants.faq(hobbyId)}/$faqId/vote',
+      data: {'vote': vote},
+    );
+    return FaqItem.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
   Future<CostBreakdown?> getCostBreakdown(String hobbyId) async {
     final key = 'cost_$hobbyId';
     try {

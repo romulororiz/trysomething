@@ -973,9 +973,11 @@ FaqItem _$FaqItemFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$FaqItem {
+  String get id => throw _privateConstructorUsedError;
   String get question => throw _privateConstructorUsedError;
   String get answer => throw _privateConstructorUsedError;
   int get upvotes => throw _privateConstructorUsedError;
+  int get helpfulCount => throw _privateConstructorUsedError;
 
   /// Serializes this FaqItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -991,7 +993,12 @@ abstract class $FaqItemCopyWith<$Res> {
   factory $FaqItemCopyWith(FaqItem value, $Res Function(FaqItem) then) =
       _$FaqItemCopyWithImpl<$Res, FaqItem>;
   @useResult
-  $Res call({String question, String answer, int upvotes});
+  $Res call(
+      {String id,
+      String question,
+      String answer,
+      int upvotes,
+      int helpfulCount});
 }
 
 /// @nodoc
@@ -1009,11 +1016,17 @@ class _$FaqItemCopyWithImpl<$Res, $Val extends FaqItem>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
     Object? question = null,
     Object? answer = null,
     Object? upvotes = null,
+    Object? helpfulCount = null,
   }) {
     return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
       question: null == question
           ? _value.question
           : question // ignore: cast_nullable_to_non_nullable
@@ -1026,6 +1039,10 @@ class _$FaqItemCopyWithImpl<$Res, $Val extends FaqItem>
           ? _value.upvotes
           : upvotes // ignore: cast_nullable_to_non_nullable
               as int,
+      helpfulCount: null == helpfulCount
+          ? _value.helpfulCount
+          : helpfulCount // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -1037,7 +1054,12 @@ abstract class _$$FaqItemImplCopyWith<$Res> implements $FaqItemCopyWith<$Res> {
       __$$FaqItemImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String question, String answer, int upvotes});
+  $Res call(
+      {String id,
+      String question,
+      String answer,
+      int upvotes,
+      int helpfulCount});
 }
 
 /// @nodoc
@@ -1053,11 +1075,17 @@ class __$$FaqItemImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
     Object? question = null,
     Object? answer = null,
     Object? upvotes = null,
+    Object? helpfulCount = null,
   }) {
     return _then(_$FaqItemImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
       question: null == question
           ? _value.question
           : question // ignore: cast_nullable_to_non_nullable
@@ -1070,6 +1098,10 @@ class __$$FaqItemImplCopyWithImpl<$Res>
           ? _value.upvotes
           : upvotes // ignore: cast_nullable_to_non_nullable
               as int,
+      helpfulCount: null == helpfulCount
+          ? _value.helpfulCount
+          : helpfulCount // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -1078,11 +1110,18 @@ class __$$FaqItemImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$FaqItemImpl implements _FaqItem {
   const _$FaqItemImpl(
-      {required this.question, required this.answer, this.upvotes = 0});
+      {this.id = '',
+      required this.question,
+      required this.answer,
+      this.upvotes = 0,
+      this.helpfulCount = 0});
 
   factory _$FaqItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$FaqItemImplFromJson(json);
 
+  @override
+  @JsonKey()
+  final String id;
   @override
   final String question;
   @override
@@ -1090,10 +1129,13 @@ class _$FaqItemImpl implements _FaqItem {
   @override
   @JsonKey()
   final int upvotes;
+  @override
+  @JsonKey()
+  final int helpfulCount;
 
   @override
   String toString() {
-    return 'FaqItem(question: $question, answer: $answer, upvotes: $upvotes)';
+    return 'FaqItem(id: $id, question: $question, answer: $answer, upvotes: $upvotes, helpfulCount: $helpfulCount)';
   }
 
   @override
@@ -1101,15 +1143,19 @@ class _$FaqItemImpl implements _FaqItem {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$FaqItemImpl &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.question, question) ||
                 other.question == question) &&
             (identical(other.answer, answer) || other.answer == answer) &&
-            (identical(other.upvotes, upvotes) || other.upvotes == upvotes));
+            (identical(other.upvotes, upvotes) || other.upvotes == upvotes) &&
+            (identical(other.helpfulCount, helpfulCount) ||
+                other.helpfulCount == helpfulCount));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, question, answer, upvotes);
+  int get hashCode =>
+      Object.hash(runtimeType, id, question, answer, upvotes, helpfulCount);
 
   /// Create a copy of FaqItem
   /// with the given fields replaced by the non-null parameter values.
@@ -1129,18 +1175,24 @@ class _$FaqItemImpl implements _FaqItem {
 
 abstract class _FaqItem implements FaqItem {
   const factory _FaqItem(
-      {required final String question,
+      {final String id,
+      required final String question,
       required final String answer,
-      final int upvotes}) = _$FaqItemImpl;
+      final int upvotes,
+      final int helpfulCount}) = _$FaqItemImpl;
 
   factory _FaqItem.fromJson(Map<String, dynamic> json) = _$FaqItemImpl.fromJson;
 
+  @override
+  String get id;
   @override
   String get question;
   @override
   String get answer;
   @override
   int get upvotes;
+  @override
+  int get helpfulCount;
 
   /// Create a copy of FaqItem
   /// with the given fields replaced by the non-null parameter values.

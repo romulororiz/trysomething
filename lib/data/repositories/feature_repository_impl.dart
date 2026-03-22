@@ -11,6 +11,12 @@ class FeatureRepositoryImpl implements FeatureRepository {
   }
 
   @override
+  Future<FaqItem> voteFaq(String hobbyId, String faqId, String vote) async {
+    // Seed fallback — no server, return a dummy item
+    throw UnimplementedError('voteFaq not available in seed fallback');
+  }
+
+  @override
   Future<CostBreakdown?> getCostBreakdown(String hobbyId) async {
     return FeatureSeedData.costByHobby[hobbyId];
   }
