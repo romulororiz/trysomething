@@ -92,6 +92,10 @@ Plan: 2 of 2
 - Apple Sign-In requires token revocation call (Apple REST API) on account deletion per TN3194
 - Sonnet output may wrap JSON in markdown code fences — `extractJson()` guard must strip before `JSON.parse`
 
+### Roadmap Evolution
+
+- Phase 09.1 inserted after Phase 9: Session Screen Redesign — The Breathing Ring (URGENT)
+
 ### Active Todos
 
 *(Populated as plans execute)*

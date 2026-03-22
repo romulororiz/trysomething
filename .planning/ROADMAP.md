@@ -148,6 +148,16 @@ Plans:
 - [x] 09-01-PLAN.md — Privacy manifest + iPhone-only device targeting (COMP-12)
 - [ ] 09-02-PLAN.md — Store submission checklists, screenshots, metadata, demo account (COMP-13, COMP-14)
 
+### Phase 09.1: Session Screen Redesign — The Breathing Ring (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 09.1 to break down)
+
 ### Phase 10: Pre-Commit Hooks
 **Goal:** Every commit to the repository automatically runs Flutter analyze and TypeScript lint — formatting issues are caught before they land
 **Depends on:** Nothing (independent; can run in parallel with any phase)
