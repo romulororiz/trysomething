@@ -17,7 +17,15 @@ class FeatureRepositoryApi implements FeatureRepository {
     final key = 'faq_$hobbyId';
     try {
       final cached = CacheManager.get(key);
-      if (cached != null) return _parseFaqList(cached);
+      if (cached != null) {
+        final parsed = _parseFaqList(cached);
+        // Cache-bust: if cached data lacks 'id' field, refetch from API
+        if (parsed.isNotEmpty && parsed.first.id.isEmpty) {
+          await CacheManager.invalidate(key);
+        } else {
+          return parsed;
+        }
+      }
 
       final response = await _dio.get(ApiConstants.faq(hobbyId));
       final jsonString = json.encode(response.data);

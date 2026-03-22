@@ -8,7 +8,7 @@ class CacheManager {
 
   /// Bump this when the API response shape changes (e.g. new fields added).
   /// All cached entries from a previous version are treated as expired.
-  static const int _cacheVersion = 2; // v2: added coachTip + completionMessage
+  static const int _cacheVersion = 3; // v3: FAQ responses now include id + helpfulCount
 
   static late Box<String> _dataBox;
   static late Box<int> _metaBox;
