@@ -99,7 +99,10 @@ Plans:
   2. A "Restore Purchases" option is present in Settings (or the Pro/subscription screen)
   3. Tapping "Restore" calls `RevenueCat.restorePurchases()` and updates the Pro entitlement status in the app without requiring a fresh login
   4. If no purchases are found to restore, the user sees a clear "No purchases found" message rather than a silent failure
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Restore tile in Settings + unit tests for restore flow (SUB-01)
 
 ### Phase 7: Dead Code Cleanup
 **Goal:** The 7 hidden feature screens and their associated code are fully removed with no breakage to active screens
@@ -157,7 +160,7 @@ Plans:
 | 3. Legal Documents — Host and Link | 0/? | Not started | — |
 | 4. Account Deletion + Data Export — Backend | 0/? | Not started | — |
 | 5. Account Deletion — Flutter UX | 1/2 | In Progress | — |
-| 6. Restore Purchases | 0/? | Not started | — |
+| 6. Restore Purchases | 0/1 | Not started | — |
 | 7. Dead Code Cleanup | 0/? | Not started | — |
 | 8. Sonnet AI Upgrade | 0/? | Not started | — |
 | 9. App Store Assets and Admin | 0/? | Not started | — |
@@ -227,4 +230,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-22 after backlog item 999.1 added*
+*Last updated: 2026-03-22 after Phase 6 planning*
