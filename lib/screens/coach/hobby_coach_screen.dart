@@ -12,7 +12,6 @@ import '../../core/api/api_constants.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/subscription_provider.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
 import '../../models/hobby.dart';
@@ -341,12 +340,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     ref.read(coachProvider(widget.hobbyId).notifier).send(text).then((_) {
       final notifier = ref.read(coachProvider(widget.hobbyId).notifier);
       if (notifier.limitHit && mounted) {
-        final hobby = ref.read(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
-        final title = hobby?.title ?? 'this hobby';
-        showProUpgrade(
-          context,
-          'You\'re making real progress with $title. Pro keeps your coach available whenever you need it — to get unstuck, simplify, or plan your next session.',
-        );
+        context.push('/pro');
       } else if (mounted) {
         HapticFeedback.mediumImpact();
       }
@@ -791,10 +785,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
-              showProUpgrade(
-                context,
-                'Keep your coach available whenever you need it — to get unstuck, plan your next session, or restart with no pressure.',
-              );
+              context.push('/pro');
             },
             child: Container(
               width: double.infinity,
@@ -1049,10 +1040,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
               if (isLow && value <= 1) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: () => showProUpgrade(
-                    context,
-                    'Keep your coach support going. Pro gives you unlimited guidance to stay on track.',
-                  ),
+                  onTap: () => context.push('/pro'),
                   child: Text(
                     'Upgrade to Pro',
                     style: AppTypography.caption.copyWith(

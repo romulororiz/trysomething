@@ -11,7 +11,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/glass_card.dart';
 
 /// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
@@ -392,7 +391,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     onTap: () {
                       final isPro = ref.read(isProProvider);
                       if (!isPro) {
-                        showProUpgrade(context, 'Add photos to your journal entries with Pro.');
+                        context.push('/pro');
                       }
                       // TODO: implement photo picker for Pro users
                     },

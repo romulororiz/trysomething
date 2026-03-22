@@ -11,7 +11,6 @@ import '../../components/glass_card.dart';
 import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
 import '../../components/page_dots.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/starter_kit_card.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
@@ -113,6 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               PageView.builder(
                 controller: _pageController,
+                physics: const ClampingScrollPhysics(),
                 itemCount: isPro
                     ? activeEntries.length
                     : activeEntries.length.clamp(0, 2),
@@ -161,20 +161,15 @@ class _ProLockedOverlay extends StatelessWidget {
       children: [
         child,
         Positioned.fill(
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                  color: AppColors.background.withValues(alpha: 0.55)),
-            ),
+          child: Container(
+            color: AppColors.background.withValues(alpha: 0.85),
           ),
         ),
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: GlassCard(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -196,8 +191,8 @@ class _ProLockedOverlay extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     'Free accounts support one active hobby.\nUpgrade to Pro to track multiple hobbies at once.',
-                    style: AppTypography.sansBodySmall.copyWith(
-                        color: AppColors.textSecondary, height: 1.5),
+                    style: AppTypography.sansBodySmall
+                        .copyWith(color: AppColors.textSecondary, height: 1.5),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -205,9 +200,7 @@ class _ProLockedOverlay extends StatelessWidget {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () => showProUpgrade(
-                          context,
-                          'Track multiple hobbies at once with Pro.'),
+                      onPressed: () => context.push('/pro'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.coral,
                         foregroundColor: Colors.white,
@@ -215,8 +208,7 @@ class _ProLockedOverlay extends StatelessWidget {
                             borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
                       ),
-                      child:
-                          Text('Unlock Pro', style: AppTypography.button),
+                      child: Text('Unlock Pro', style: AppTypography.button),
                     ),
                   ),
                 ],
@@ -269,8 +261,7 @@ class _HobbyPageContent extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_HobbyPageContent> createState() =>
-      _HobbyPageContentState();
+  ConsumerState<_HobbyPageContent> createState() => _HobbyPageContentState();
 }
 
 class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
@@ -404,8 +395,8 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   TextSpan(children: [
                     TextSpan(
                       text: words.first,
-                      style: AppTypography.hero
-                          .copyWith(color: AppColors.coral),
+                      style:
+                          AppTypography.hero.copyWith(color: AppColors.coral),
                     ),
                     TextSpan(
                       text: ' ${words.skip(1).join(' ')}',
@@ -464,7 +455,13 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                       const SizedBox(height: 10),
                       ...hobbySchedule.map((event) {
                         final dayNames = [
-                          'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+                          'Mon',
+                          'Tue',
+                          'Wed',
+                          'Thu',
+                          'Fri',
+                          'Sat',
+                          'Sun'
                         ];
                         final dayName =
                             event.dayOfWeek >= 1 && event.dayOfWeek <= 7
@@ -482,8 +479,8 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                               ),
                               Text(
                                 '${event.startTime} · ${event.durationMinutes} min',
-                                style: AppTypography.body.copyWith(
-                                    color: AppColors.textSecondary),
+                                style: AppTypography.body
+                                    .copyWith(color: AppColors.textSecondary),
                               ),
                             ],
                           ),
@@ -520,16 +517,14 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   coachMode = 'start';
                 } else {
                   coachTitle = 'What should I do next?';
-                  coachSubtitle =
-                      '$stepsCompleted of $totalSteps steps done';
+                  coachSubtitle = '$stepsCompleted of $totalSteps steps done';
                   coachMessage =
                       'What should I do next? I\'ve completed $stepsCompleted of $totalSteps steps.';
                   coachMode = 'momentum';
                 }
 
                 return GlassCard(
-                  onTap: () =>
-                      context.push('/coach/${hobby.id}', extra: {
+                  onTap: () => context.push('/coach/${hobby.id}', extra: {
                     'message': coachMessage,
                     'mode': coachMode,
                     'autoSend': true,
@@ -544,12 +539,12 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(coachTitle,
-                                style: AppTypography.title
-                                    .copyWith(fontSize: 16)),
+                                style:
+                                    AppTypography.title.copyWith(fontSize: 16)),
                             const SizedBox(height: 2),
                             Text(coachSubtitle,
-                                style: AppTypography.body.copyWith(
-                                    color: AppColors.textSecondary)),
+                                style: AppTypography.body
+                                    .copyWith(color: AppColors.textSecondary)),
                           ],
                         ),
                       ),
@@ -591,8 +586,8 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                             size: 28, color: AppColors.textMuted),
                         const SizedBox(height: 10),
                         Text('No journal entries yet',
-                            style: AppTypography.body.copyWith(
-                                color: AppColors.textSecondary)),
+                            style: AppTypography.body
+                                .copyWith(color: AppColors.textSecondary)),
                         const SizedBox(height: 4),
                         Text(
                           'After your first session, write down how it went.',
@@ -637,14 +632,12 @@ class _RestartCard extends StatelessWidget {
         children: [
           Text(
             'It\'s been $daysSince days since your last session.',
-            style:
-                AppTypography.body.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 6),
           Text(
             'No pressure. Pick up where you left off, or try something different.',
-            style:
-                AppTypography.caption.copyWith(color: AppColors.textMuted),
+            style: AppTypography.caption.copyWith(color: AppColors.textMuted),
           ),
           const SizedBox(height: 16),
           Row(
@@ -674,13 +667,13 @@ class _RestartCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.glassBorder, width: 0.5),
+                      border:
+                          Border.all(color: AppColors.glassBorder, width: 0.5),
                     ),
                     child: Center(
                       child: Text('Maybe later',
-                          style: AppTypography.body.copyWith(
-                              color: AppColors.textSecondary)),
+                          style: AppTypography.body
+                              .copyWith(color: AppColors.textSecondary)),
                     ),
                   ),
                 ),
@@ -735,8 +728,7 @@ class _JournalPreviewCard extends StatelessWidget {
             entry.text as String,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.body
-                .copyWith(color: AppColors.textSecondary),
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -764,8 +756,7 @@ class _EmptyHomeState extends StatelessWidget {
                     size: 48, color: AppColors.textMuted),
                 const SizedBox(height: 24),
                 Text('Ready to find\nyour thing?',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.hero),
+                    textAlign: TextAlign.center, style: AppTypography.hero),
                 const SizedBox(height: 12),
                 Text(
                   'Pick a hobby that fits your life.\nWe\'ll help you actually start it.',
@@ -798,7 +789,6 @@ class _EmptyHomeState extends StatelessWidget {
     );
   }
 }
-
 
 // ═══════════════════════════════════════════════════════
 //  ROADMAP JOURNEY
@@ -845,7 +835,10 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
         !old.completedStepIds.contains(_focusedStepId!)) {
       for (final step in widget.hobby.roadmapSteps) {
         if (!widget.completedStepIds.contains(step.id)) {
-          setState(() { _focusedStepId = step.id; _expandedTipStepId = null; });
+          setState(() {
+            _focusedStepId = step.id;
+            _expandedTipStepId = null;
+          });
           return;
         }
       }
@@ -856,7 +849,10 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
   void _setFocusedStep(String stepId) {
     if (_focusedStepId == stepId) return;
     HapticFeedback.selectionClick();
-    setState(() { _focusedStepId = stepId; _expandedTipStepId = null; });
+    setState(() {
+      _focusedStepId = stepId;
+      _expandedTipStepId = null;
+    });
   }
 
   @override
@@ -872,10 +868,12 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
         Row(
           children: [
             Text('YOUR JOURNEY',
-                style: AppTypography.overline.copyWith(color: AppColors.textMuted)),
+                style: AppTypography.overline
+                    .copyWith(color: AppColors.textMuted)),
             const Spacer(),
             Text('$doneCount / $total',
-                style: AppTypography.monoBadge.copyWith(color: AppColors.textMuted)),
+                style: AppTypography.monoBadge
+                    .copyWith(color: AppColors.textMuted)),
           ],
         ),
         const SizedBox(height: 10),
@@ -900,16 +898,23 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
           }
           return _StepItem(
             key: ValueKey('step_${step.id}'),
-            step: step, stepNumber: i + 1,
-            isCompleted: isCompleted, isFocused: isFocused,
-            isLast: isLast, lineColor: lineColor, hobby: widget.hobby,
+            step: step,
+            stepNumber: i + 1,
+            isCompleted: isCompleted,
+            isFocused: isFocused,
+            isLast: isLast,
+            lineColor: lineColor,
+            hobby: widget.hobby,
             tipExpanded: _expandedTipStepId == step.id,
             onToggleTip: () => setState(() {
-              _expandedTipStepId = _expandedTipStepId == step.id ? null : step.id;
+              _expandedTipStepId =
+                  _expandedTipStepId == step.id ? null : step.id;
             }),
             onTap: () {
               if (isCompleted) {
-                ref.read(userHobbiesProvider.notifier).toggleStep(widget.hobby.id, step.id);
+                ref
+                    .read(userHobbiesProvider.notifier)
+                    .toggleStep(widget.hobby.id, step.id);
               } else if (!isFocused) {
                 _setFocusedStep(step.id);
               }
@@ -953,11 +958,16 @@ class _StepItem extends ConsumerWidget {
 
   const _StepItem({
     super.key,
-    required this.step, required this.stepNumber,
-    required this.isCompleted, required this.isFocused,
-    required this.isLast, required this.lineColor,
-    required this.hobby, required this.tipExpanded,
-    required this.onToggleTip, required this.onTap,
+    required this.step,
+    required this.stepNumber,
+    required this.isCompleted,
+    required this.isFocused,
+    required this.isLast,
+    required this.lineColor,
+    required this.hobby,
+    required this.tipExpanded,
+    required this.onToggleTip,
+    required this.onTap,
     required this.staggerIndex,
   });
 
@@ -970,9 +980,18 @@ class _StepItem extends ConsumerWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(clipBehavior: Clip.none, children: [
+        if (!isLast)
+          Positioned(
+            left: 19,
+            top: (isFocused ? 4.0 : 8.0) +
+                (isFocused ? 36.0 : (isCompleted ? 26.0 : 22.0)),
+            bottom: 2,
+            width: 2,
+            child: Container(color: lineColor),
+          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ═══ LEFT RAIL ═══
             SizedBox(
@@ -997,27 +1016,37 @@ class _StepItem extends ConsumerWidget {
                           : null,
                       shape: BoxShape.circle,
                       boxShadow: isFocused
-                          ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.4), blurRadius: 12)]
+                          ? [
+                              BoxShadow(
+                                  color:
+                                      AppColors.accent.withValues(alpha: 0.4),
+                                  blurRadius: 12)
+                            ]
                           : isCompleted
-                              ? [BoxShadow(color: AppColors.success.withValues(alpha: 0.2), blurRadius: 6)]
+                              ? [
+                                  BoxShadow(
+                                      color: AppColors.success
+                                          .withValues(alpha: 0.2),
+                                      blurRadius: 6)
+                                ]
                               : null,
                     ),
                     child: Center(
                       child: isCompleted
-                          ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                          ? const Icon(Icons.check_rounded,
+                              size: 14, color: Colors.white)
                           : Text(
                               '$stepNumber',
                               style: TextStyle(
                                 fontSize: isFocused ? 14 : 10,
                                 fontWeight: FontWeight.w800,
-                                color: isFocused ? Colors.white : AppColors.textMuted,
+                                color: isFocused
+                                    ? Colors.white
+                                    : AppColors.textMuted,
                               ),
                             ),
                     ),
                   ),
-                  if (!isLast)
-                    Expanded(child: Center(child: Container(width: 2, color: lineColor))),
-                  if (!isLast) const SizedBox(height: 2),
                 ],
               ),
             ),
@@ -1064,8 +1093,8 @@ class _StepItem extends ConsumerWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accent
-                                      .withValues(alpha: 0.12),
+                                  color:
+                                      AppColors.accent.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 child: Text(
@@ -1100,7 +1129,9 @@ class _StepItem extends ConsumerWidget {
                                           fontWeight: FontWeight.w500),
                             ),
                           ),
-                          if (!isFocused && !isCompleted && step.milestone != null)
+                          if (!isFocused &&
+                              !isCompleted &&
+                              step.milestone != null)
                             const Padding(
                               padding: EdgeInsets.only(left: 4),
                               child: Text('\u{1F3C6}',
@@ -1109,8 +1140,9 @@ class _StepItem extends ConsumerWidget {
                           if (!isFocused && isFuture && coachTip != null)
                             GestureDetector(
                               onTap: onToggleTip,
+                              behavior: HitTestBehavior.opaque,
                               child: Padding(
-                                padding: const EdgeInsets.only(left: 6),
+                                padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
                                 child: Text('\u2726',
                                     style: TextStyle(
                                       fontSize: 13,
@@ -1196,7 +1228,7 @@ class _StepItem extends ConsumerWidget {
                                               Expanded(
                                                 child: Text(coachTip,
                                                     style: AppTypography
-                                                        .sansBodySmall
+                                                        .sansBodySmallThinItalic
                                                         .copyWith(
                                                             color: AppColors
                                                                 .textSecondary)),
@@ -1249,8 +1281,8 @@ class _StepItem extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(13),
                               boxShadow: [
                                 BoxShadow(
-                                    color: AppColors.accent
-                                        .withValues(alpha: 0.3),
+                                    color:
+                                        AppColors.accent.withValues(alpha: 0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 3)),
                               ],
@@ -1263,10 +1295,9 @@ class _StepItem extends ConsumerWidget {
                                       size: 18, color: Colors.white),
                                   const SizedBox(width: 6),
                                   Text('Start session',
-                                      style: AppTypography.sansLabel
-                                          .copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700)),
+                                      style: AppTypography.sansLabel.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             ),
@@ -1322,12 +1353,14 @@ class _StepItem extends ConsumerWidget {
                                   ),
                                 ),
                               )
-                            : const SizedBox(
-                                width: double.infinity, height: 0),
+                            : const SizedBox(width: double.infinity, height: 0),
                       ),
 
                       // Inline tip (compact future only)
-                      if (isFuture && !isFocused && tipExpanded && coachTip != null) ...[
+                      if (isFuture &&
+                          !isFocused &&
+                          tipExpanded &&
+                          coachTip != null) ...[
                         const SizedBox(height: 6),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1343,7 +1376,8 @@ class _StepItem extends ConsumerWidget {
                             Expanded(
                               child: Text(coachTip,
                                   style: AppTypography.sansTiny.copyWith(
-                                      color: AppColors.textSecondary)),
+                                      color: AppColors.textSecondary,
+                                      fontStyle: FontStyle.italic)),
                             ),
                           ],
                         ),
@@ -1355,7 +1389,7 @@ class _StepItem extends ConsumerWidget {
             ),
           ],
         ),
-      ),
+      ]),
     ).animate().fadeIn(
           duration: 500.ms,
           curve: Curves.easeOutCubic,
@@ -1364,8 +1398,8 @@ class _StepItem extends ConsumerWidget {
   }
 
   // ── Single widget with accordion reveal ──
-  Widget _buildStepContent(BuildContext context, bool isFocused,
-      bool isFuture, String? coachTip, String? completionMessage) {
+  Widget _buildStepContent(BuildContext context, bool isFocused, bool isFuture,
+      String? coachTip, String? completionMessage) {
     const dur = Duration(milliseconds: 350);
     const curve = Curves.easeOutCubic;
 
@@ -1411,8 +1445,7 @@ class _StepItem extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color:
-                                  AppColors.accent.withValues(alpha: 0.12),
+                              color: AppColors.accent.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(100),
                             ),
                             child: Text(
@@ -1504,9 +1537,8 @@ class _StepItem extends ConsumerWidget {
                           color: tipExpanded ? _tealBgActive : _tealBg,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: tipExpanded
-                                  ? _tealBorderActive
-                                  : _tealBorder,
+                              color:
+                                  tipExpanded ? _tealBorderActive : _tealBorder,
                               width: 1),
                         ),
                         child: Column(
@@ -1539,8 +1571,7 @@ class _StepItem extends ConsumerWidget {
                               clipBehavior: Clip.hardEdge,
                               child: tipExpanded && coachTip != null
                                   ? Padding(
-                                      padding:
-                                          const EdgeInsets.only(top: 8),
+                                      padding: const EdgeInsets.only(top: 8),
                                       child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -1553,8 +1584,7 @@ class _StepItem extends ConsumerWidget {
                                             decoration: BoxDecoration(
                                                 color: _tealBar,
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                        2)),
+                                                    BorderRadius.circular(2)),
                                           ),
                                           Expanded(
                                             child: Text(coachTip,
@@ -1592,10 +1622,9 @@ class _StepItem extends ConsumerWidget {
                         HapticFeedback.lightImpact();
                         final i = hobby.roadmapSteps
                             .indexWhere((s) => s.id == step.id);
-                        final followingTitle =
-                            i + 1 < hobby.roadmapSteps.length
-                                ? hobby.roadmapSteps[i + 1].title
-                                : null;
+                        final followingTitle = i + 1 < hobby.roadmapSteps.length
+                            ? hobby.roadmapSteps[i + 1].title
+                            : null;
                         context.push(
                           '/session/${hobby.id}/${step.id}',
                           extra: <String, dynamic>{
@@ -1620,8 +1649,7 @@ class _StepItem extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(13),
                           boxShadow: [
                             BoxShadow(
-                                color: AppColors.accent
-                                    .withValues(alpha: 0.3),
+                                color: AppColors.accent.withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 3)),
                           ],
@@ -1700,8 +1728,8 @@ class _StepItem extends ConsumerWidget {
                         ),
                         Expanded(
                           child: Text(coachTip,
-                              style: AppTypography.sansTiny.copyWith(
-                                  color: AppColors.textSecondary)),
+                              style: AppTypography.sansTiny
+                                  .copyWith(color: AppColors.textSecondary)),
                         ),
                       ],
                     ),
@@ -1826,8 +1854,7 @@ class _StepItem extends ConsumerWidget {
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
-              final i =
-                  hobby.roadmapSteps.indexWhere((s) => s.id == step.id);
+              final i = hobby.roadmapSteps.indexWhere((s) => s.id == step.id);
               final followingTitle = i + 1 < hobby.roadmapSteps.length
                   ? hobby.roadmapSteps[i + 1].title
                   : null;
@@ -1869,8 +1896,7 @@ class _StepItem extends ConsumerWidget {
                     const SizedBox(width: 6),
                     Text('Start session',
                         style: AppTypography.sansLabel.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700)),
+                            color: Colors.white, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),
@@ -1884,8 +1910,7 @@ class _StepItem extends ConsumerWidget {
                 onTap: () => context.push(
                   '/coach/${hobby.id}',
                   extra: {
-                    'message':
-                        'Tell me more about "${step.title}" — any tips?',
+                    'message': 'Tell me more about "${step.title}" — any tips?',
                     'mode': 'momentum',
                     'autoSend': true,
                   },

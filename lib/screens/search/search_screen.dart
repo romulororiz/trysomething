@@ -14,7 +14,6 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/app_background.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -539,8 +538,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         // Free users: blurred "unlock AI search" card when few results
         if (!isPro && fewResults)
           _AiSearchLockedTile(
-            onTap: () => showProUpgrade(context,
-                'AI Search finds custom hobbies when results are limited.'),
+            onTap: () => context.push('/pro'),
           ),
 
         // Pro: AI generation error with retry
@@ -666,8 +664,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ? null
           : () {
               if (!isPro) {
-                showProUpgrade(
-                    context, 'AI hobby generation is a Pro feature.');
+                context.push('/pro');
                 return;
               }
               ref.read(generationProvider.notifier).generate(_query);

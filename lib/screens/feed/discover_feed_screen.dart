@@ -9,7 +9,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/subscription_provider.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../core/hobby_match.dart';
 import '../../models/hobby.dart';
 import '../../theme/app_colors.dart';
@@ -700,7 +699,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           sliver: SliverToBoxAdapter(
             child: _AiSearchLockedTile(
-              onTap: () => showProUpgrade(context, 'AI Search finds custom hobbies when results are limited.'),
+              onTap: () => context.push('/pro'),
             ),
           ),
         ),
@@ -736,7 +735,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     return GestureDetector(
       onTap: isGenerating ? null : () {
         if (!isPro) {
-          showProUpgrade(context, 'AI hobby generation is a Pro feature.');
+          context.push('/pro');
           return;
         }
         ref.read(generationProvider.notifier).generate(_searchQuery);

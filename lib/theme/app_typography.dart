@@ -71,7 +71,7 @@ class AppTypography {
   static TextStyle get button => GoogleFonts.manrope(
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        color: AppColors.background,
+        color: Colors.white,
         height: 1.0,
         letterSpacing: 0.5,
       );
@@ -135,6 +135,22 @@ class AppTypography {
         color: AppColors.textSecondary,
       );
 
+  static TextStyle get sansBodySmallThinItalic => GoogleFonts.manrope(
+        fontSize: 13,
+        fontWeight: FontWeight.w300,
+        height: 1.5,
+        color: AppColors.textSecondary,
+        fontStyle: FontStyle.italic,
+      );
+
+  static TextStyle get sansBodySmallItalic => GoogleFonts.manrope(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        color: AppColors.textSecondary,
+        fontStyle: FontStyle.italic,
+      );    
+
   static TextStyle get sansLabel => GoogleFonts.manrope(
         fontSize: 13,
         fontWeight: FontWeight.w600,
@@ -145,7 +161,7 @@ class AppTypography {
 
   static TextStyle get sansTiny => GoogleFonts.manrope(
         fontSize: 11,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w400,
         color: AppColors.textMuted,
       );
 

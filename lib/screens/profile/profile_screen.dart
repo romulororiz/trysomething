@@ -17,7 +17,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../providers/subscription_provider.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/app_overlays.dart';
 import '../../utils/app_dialog.dart';
 
@@ -640,7 +639,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           const Spacer(),
                           if (!ref.watch(isProProvider))
                             GestureDetector(
-                              onTap: () => showProUpgrade(context, 'Collect hobby passport stamps with Pro.'),
+                              onTap: () => context.push('/pro'),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -800,7 +799,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         locked: !ref.watch(isProProvider),
                         onTap: () {
                           if (!ref.read(isProProvider)) {
-                            showProUpgrade(context, 'Find hobby buddies with Pro.');
+                            context.push('/pro');
                           } else {
                             context.push('/buddy');
                           }
@@ -821,7 +820,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         locked: !ref.watch(isProProvider),
                         onTap: () {
                           if (!ref.read(isProProvider)) {
-                            showProUpgrade(context, 'Your 2026 in Hobbies — unlock with Pro.');
+                            context.push('/pro');
                           } else {
                             context.push('/year-review');
                           }
@@ -891,7 +890,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             GestureDetector(
               onTap: () {
                 if (!ref.read(isProProvider)) {
-                  showProUpgrade(context, 'Unlock advanced achievements with Pro.');
+                  context.push('/pro');
                 } else {
                   context.push('/achievements');
                 }
@@ -1200,7 +1199,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onTap: () {
                 final isPro = ref.read(isProProvider);
                 if (!isPro) {
-                  showProUpgrade(context, 'Unlock detailed skill breakdowns with Pro.');
+                  context.push('/pro');
                 }
               },
               child: Row(
