@@ -20,6 +20,38 @@ function getClient(): Anthropic {
 const MODEL = "claude-sonnet-4-6";
 
 // ═══════════════════════════════════════════════════
+//  extractJson — strips code fences + safe parse
+// ═══════════════════════════════════════════════════
+
+/**
+ * Strips markdown code fences and parses JSON from AI response text.
+ * Handles: empty string, text with no JSON, multiple code fence blocks (takes the first).
+ * Throws a descriptive error on parse failure (not a raw SyntaxError).
+ */
+export function extractJson<T = unknown>(text: string): T {
+  if (!text || !text.trim()) {
+    throw new Error("extractJson: received empty response from AI model");
+  }
+
+  // Strip markdown code fences if present (model sometimes wraps JSON despite instructions)
+  let cleaned = text.trim();
+
+  // Match content inside first code fence block, or use the full text
+  const fenceMatch = cleaned.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/m);
+  if (fenceMatch) {
+    cleaned = fenceMatch[1].trim();
+  }
+
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch (_err) {
+    // Log raw text for debugging, throw descriptive error
+    const preview = cleaned.length > 200 ? cleaned.slice(0, 200) + "..." : cleaned;
+    throw new Error(`extractJson: failed to parse AI response as JSON. Preview: ${preview}`);
+  }
+}
+
+// ═══════════════════════════════════════════════════
 //  VALID CATEGORIES — single source of truth
 // ═══════════════════════════════════════════════════
 
@@ -146,13 +178,7 @@ export async function generateHobbyContent(
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
 
-  // Strip markdown code fences if model adds them despite instructions
-  const cleaned = text
-    .replace(/^```(?:json)?\s*/m, "")
-    .replace(/\s*```\s*$/m, "")
-    .trim();
-
-  const parsed = JSON.parse(cleaned);
+  const parsed = extractJson<Record<string, unknown>>(text);
 
   // Check for explicit error response
   if (parsed.error === "invalid") {
@@ -311,12 +337,8 @@ export async function generateFaqContent(
 
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
-  const cleaned = text
-    .replace(/^```(?:json)?\s*/m, "")
-    .replace(/\s*```\s*$/m, "")
-    .trim();
 
-  return JSON.parse(cleaned);
+  return extractJson<{ question: string; answer: string }[]>(text);
 }
 
 // ═══════════════════════════════════════════════════
@@ -372,12 +394,8 @@ export async function generateCostContent(
 
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
-  const cleaned = text
-    .replace(/^```(?:json)?\s*/m, "")
-    .replace(/\s*```\s*$/m, "")
-    .trim();
 
-  return JSON.parse(cleaned);
+  return extractJson<{ starter: number; threeMonth: number; oneYear: number; tips: string[] }>(text);
 }
 
 // ═══════════════════════════════════════════════════
@@ -443,10 +461,6 @@ export async function generateBudgetContent(
 
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
-  const cleaned = text
-    .replace(/^```(?:json)?\s*/m, "")
-    .replace(/\s*```\s*$/m, "")
-    .trim();
 
-  return JSON.parse(cleaned);
+  return extractJson<{ itemName: string; diyOption: string; diyCost: number; budgetOption: string; budgetCost: number; premiumOption: string; premiumCost: number }[]>(text);
 }
