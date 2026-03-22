@@ -162,30 +162,6 @@ class SessionTimerPhase extends StatelessWidget {
             ),
           ),
 
-        // DEV ONLY: Button to trigger real completion flow
-        if (onDevComplete != null && !_isCompleting)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              onTap: onDevComplete,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.glassBackground,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.glassBorder),
-                ),
-                child: Text(
-                  'DEV: ✓',
-                  style: AppTypography.monoBadge.copyWith(
-                    color: AppColors.textMuted,
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

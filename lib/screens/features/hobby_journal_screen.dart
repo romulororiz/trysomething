@@ -847,7 +847,7 @@ class _JournalEntryCard extends ConsumerWidget {
               context.push('/coach/${entry.hobbyId}', extra: {
                 'message': 'Let\'s discuss this journal entry.',
                 'mode': 'momentum',
-                'autoSend': false,
+                'autoSend': true,
                 'focusEntryId': entry.id,
               });
             },
