@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trysomething/models/session.dart';
 import 'package:trysomething/providers/session_provider.dart';
 import 'package:trysomething/providers/user_provider.dart';
+import 'package:trysomething/components/breathing_ring.dart';
 import 'package:trysomething/screens/session/session_screen.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -79,6 +80,7 @@ Override _sessionOverride({_NullSessionNotifier? nullNotifier}) {
 Future<void> _pumpScreen(
   WidgetTester tester, {
   String? nextStepTitle,
+  String? coachTip,
   Override? sessionOv,
 }) async {
   final prefsOv = await _prefsOverride();
@@ -102,6 +104,7 @@ Future<void> _pumpScreen(
           recommendedMinutes: _kRecommendedMinutes,
           completionMode: CompletionMode.timer,
           nextStepTitle: nextStepTitle,
+          coachTip: coachTip,
         ),
       ),
     ),
@@ -241,6 +244,60 @@ void main() {
       // Note: AnimatedSwitcher crossfade (400 ms) may overlap prepare/timer
       // widgets visually, so we rely on state rather than widget presence.
       expect(find.text('STEP COMPLETE'), findsNothing);
+
+      notifier.endTimerEarly();
+      await tester.pump();
+    });
+
+    testWidgets('renders BreathingRing widget instead of particle field',
+        (tester) async {
+      final notifier = await enterTimerPhase(tester);
+
+      expect(find.byType(BreathingRing), findsOneWidget);
+
+      notifier.endTimerEarly();
+      await tester.pump();
+    });
+
+    testWidgets('shows coach tip button when coachTip is provided',
+        (tester) async {
+      await _pumpScreen(tester,
+          coachTip: 'Keep your hands wet when working clay');
+
+      final notifier = _notifier(tester);
+      notifier.beginTimer();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Coach tip is a 36dp circle with a lightbulb icon inside — look for it
+      // by finding a Container with BoxShape.circle inside the timer phase.
+      // The bottom sheet title "Coach Tip" appears only when tapped, not yet.
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).shape == BoxShape.circle &&
+              w.constraints?.maxWidth == 36,
+        ),
+        findsWidgets,
+      );
+
+      notifier.endTimerEarly();
+      await tester.pump();
+    });
+
+    testWidgets('hides coach tip button when coachTip is null',
+        (tester) async {
+      await _pumpScreen(tester); // No coachTip parameter
+
+      final notifier = _notifier(tester);
+      notifier.beginTimer();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // "Coach Tip" bottom sheet title should not be in tree
+      expect(find.text('Coach Tip'), findsNothing);
 
       notifier.endTimerEarly();
       await tester.pump();
