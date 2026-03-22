@@ -113,7 +113,10 @@ Plans:
   2. `flutter analyze` passes with zero errors after each file deletion
   3. No active screen (Home, Discover, You, Detail, Session, Coach, Settings) has broken imports or missing references after cleanup
   4. The final line count reduction is approximately 7,000 lines — confirmed by git diff stat
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Delete 7 dead screens + remove orphaned providers and repository methods (CLEAN-01)
 
 ### Phase 8: Sonnet AI Upgrade
 **Goal:** All AI generation runs on Claude Sonnet with hardened prompts, correct stale detection, and safe JSON parsing
@@ -161,7 +164,7 @@ Plans:
 | 4. Account Deletion + Data Export — Backend | 0/? | Not started | — |
 | 5. Account Deletion — Flutter UX | 1/2 | In Progress | — |
 | 6. Restore Purchases | 0/1 | Not started | — |
-| 7. Dead Code Cleanup | 0/? | Not started | — |
+| 7. Dead Code Cleanup | 0/1 | Not started | — |
 | 8. Sonnet AI Upgrade | 0/? | Not started | — |
 | 9. App Store Assets and Admin | 0/? | Not started | — |
 | 10. Pre-Commit Hooks | 0/? | Not started | — |
@@ -230,4 +233,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-22 after Phase 6 planning*
+*Last updated: 2026-03-22 after Phase 7 planning*
