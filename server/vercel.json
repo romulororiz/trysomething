@@ -7,7 +7,7 @@
     }
   ],
   "routes": [
-    { "src": "/api/cron/purge-deleted-users", "dest": "/api/cron/purge-deleted-users.ts" },
+    { "src": "/api/cron/purge-deleted-users", "dest": "/api/users/[path].ts?path=purge-deleted-users" },
     { "src": "/api/users/me/export", "dest": "/api/users/[path].ts?path=export" },
     { "src": "/api/health", "dest": "/api/health.ts" },
     { "src": "/api/auth/(register|login|refresh|google|apple)", "dest": "/api/auth/[action].ts?action=$1" },
