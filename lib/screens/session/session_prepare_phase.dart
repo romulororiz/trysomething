@@ -29,7 +29,7 @@ class SessionPreparePhase extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Spacer(flex: 2),
+          const Spacer(flex: 1),
 
           // Category overline
           Text(
@@ -75,7 +75,7 @@ class SessionPreparePhase extends StatelessWidget {
               .animate()
               .fadeIn(duration: 400.ms, delay: 300.ms),
 
-          const SizedBox(height: 48),
+          const Spacer(flex: 3),
 
           // Duration selector
           _DurationSelector(
@@ -86,7 +86,7 @@ class SessionPreparePhase extends StatelessWidget {
               .animate()
               .fadeIn(duration: 400.ms, delay: 400.ms),
 
-          const Spacer(flex: 2),
+          const SizedBox(height: 24),
 
           // CTA: "I'm ready"
           SizedBox(

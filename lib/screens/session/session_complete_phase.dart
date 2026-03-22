@@ -47,7 +47,7 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Spacer(flex: 2),
+          const Spacer(flex: 3),
 
           // "Step complete" overline
           Text(
@@ -84,6 +84,21 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
 
           const SizedBox(height: 16),
 
+          // Completion message (D-13)
+          if (widget.session.completionMessage != null)
+            Text(
+              widget.session.completionMessage!,
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            )
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 800.ms),
+
+          if (widget.session.completionMessage != null)
+            const SizedBox(height: 16),
+
           // Next step preview
           if (widget.session.nextStepTitle != null)
             Text(
@@ -92,9 +107,14 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
               textAlign: TextAlign.center,
             )
                 .animate()
-                .fadeIn(duration: 300.ms, delay: 900.ms),
+                .fadeIn(
+                  duration: 300.ms,
+                  delay: widget.session.completionMessage != null
+                      ? 1000.ms
+                      : 900.ms,
+                ),
 
-          const Spacer(flex: 3),
+          const Spacer(flex: 2),
         ],
       ),
     );

@@ -63,7 +63,7 @@ class _SessionReflectPhaseState extends State<SessionReflectPhase> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 64),
+            const SizedBox(height: 48),
 
             // Headline
             Text(
