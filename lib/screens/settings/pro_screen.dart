@@ -78,8 +78,8 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                     ),
 
                     // Debug tier toggle (debug mode + web only)
-                    if (kDebugMode && kIsWeb)
-                      _buildDebugTierBar(),
+                    // if (kDebugMode && kIsWeb)
+                    //   _buildDebugTierBar(),
 
                     // Scrollable body
                     Expanded(

@@ -2,7 +2,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const baseUrl = 'https://api.trysomething.io';
+  static const baseUrl = 'https://api.trysomething.io/api';
 
   // Auth
   static const authRegister = '/auth/register';
