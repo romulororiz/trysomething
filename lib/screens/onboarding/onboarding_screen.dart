@@ -22,8 +22,7 @@ import '../../theme/spacing.dart';
 //  INTERVAL HELPER
 // ═══════════════════════════════════════════════════════
 
-double _iv(double v, double begin, double end,
-    [Curve curve = Curves.easeOut]) {
+double _iv(double v, double begin, double end, [Curve curve = Curves.easeOut]) {
   if (v <= begin) return 0.0;
   if (v >= end) return 1.0;
   return curve.transform((v - begin) / (end - begin));
@@ -44,10 +43,13 @@ class _VibeItem {
 final _vibeItems = [
   _VibeItem('Creative', 'creative', MdiIcons.paletteOutline, MdiIcons.palette),
   _VibeItem('Relaxing', 'relaxing', MdiIcons.yoga, MdiIcons.meditation),
-  _VibeItem('Social', 'social', MdiIcons.accountGroupOutline, MdiIcons.accountGroup),
+  _VibeItem(
+      'Social', 'social', MdiIcons.accountGroupOutline, MdiIcons.accountGroup),
   _VibeItem('Active', 'physical', MdiIcons.flashOutline, MdiIcons.flash),
-  _VibeItem('Intellectual', 'intellectual', MdiIcons.bookOpenPageVariantOutline, MdiIcons.bookOpenPageVariant),
-  _VibeItem('Outdoors', 'outdoors', MdiIcons.pineTreeVariantOutline, MdiIcons.pineTree),
+  _VibeItem('Intellectual', 'intellectual', MdiIcons.bookOpenPageVariantOutline,
+      MdiIcons.bookOpenPageVariant),
+  _VibeItem('Outdoors', 'outdoors', MdiIcons.pineTreeVariantOutline,
+      MdiIcons.pineTree),
   _VibeItem('Tech', 'technical', MdiIcons.laptopAccount, MdiIcons.memory),
   _VibeItem('Culinary', 'culinary', MdiIcons.chefHat, MdiIcons.chefHat),
 ];
@@ -381,13 +383,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     shadowColor: Colors.transparent,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(Spacing.radiusCta),
+                      borderRadius: BorderRadius.circular(Spacing.radiusCta),
                     ),
                     elevation: 0,
                   ),
                   child: Text(labels[_currentPage],
-                      style: AppTypography.sansButton.copyWith(color: Colors.white)),
+                      style: AppTypography.sansButton
+                          .copyWith(color: Colors.white)),
                 ),
               ),
             ),
@@ -448,18 +450,28 @@ class _VibesPage extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // Title
               Transform.translate(
                 offset: Offset(0, 20 * (1 - titleSlide)),
                 child: Opacity(
                   opacity: titleOp,
-                  child: Text(
-                    'What vibes\nare you into?',
-                    style: AppTypography.serifTitle.copyWith(fontSize: 34),
+                  child: Text.rich(
+                    TextSpan(children: [
+                      TextSpan(
+                        text: 'What ',
+                        style: AppTypography.serifTitle
+                            .copyWith(fontSize: 34, color: AppColors.coral),
+                      ),
+                      TextSpan(
+                        text: 'vibes\nare you into?',
+                        style: AppTypography.serifTitle.copyWith(fontSize: 34),
+                      ),
+                    ]),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
@@ -470,22 +482,23 @@ class _VibesPage extends StatelessWidget {
                 opacity: subOp,
                 child: Text(
                   'Select a few categories to help us\npersonalize your recommendations.',
+                  textAlign: TextAlign.center,
                   style: AppTypography.sansBody
                       .copyWith(color: AppColors.driftwood, height: 1.5),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
-              // 2×4 Grid
+              // 2×4 Grid — all cards fit on screen, no scrolling
               Expanded(
                 child: Opacity(
                   opacity: gridOp,
                   child: GridView.count(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.4,
-                    padding: const EdgeInsets.only(bottom: 120),
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.8,
+                    physics: const NeverScrollableScrollPhysics(),
                     children: _vibeItems.map((item) {
                       final isSelected = vibes.contains(item.key);
                       return _VibeCard(
@@ -569,8 +582,7 @@ class _VibeCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: AppColors.coral,
                   ),
-                  child: const Icon(Icons.check,
-                      size: 14, color: Colors.white),
+                  child: const Icon(Icons.check, size: 14, color: Colors.white),
                 ),
               ),
           ],
@@ -628,8 +640,14 @@ class _TimeBudgetPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Time & Budget',
-                          style: AppTypography.serifTitle),
+                      Text.rich(TextSpan(children: [
+                        TextSpan(
+                          text: 'Time ',
+                          style: AppTypography.serifTitle
+                              .copyWith(color: AppColors.coral),
+                        ),
+                        TextSpan(text: '& Budget'),
+                      ]), style: AppTypography.serifTitle),
                       const SizedBox(height: 8),
                       Text(
                         'Customize your journey constraints so we can\nfind hobbies that actually fit your life.',
@@ -737,8 +755,8 @@ class _TimeBudgetPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Budget Level',
-            style: AppTypography.sansSection
-                .copyWith(color: AppColors.nearBlack)),
+            style:
+                AppTypography.sansSection.copyWith(color: AppColors.nearBlack)),
         const SizedBox(height: 16),
         Row(
           children: List.generate(3, (i) {
@@ -755,9 +773,7 @@ class _TimeBudgetPage extends StatelessWidget {
                     color: AppColors.sand,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected
-                          ? AppColors.coral
-                          : Colors.transparent,
+                      color: isSelected ? AppColors.coral : Colors.transparent,
                       width: 1.5,
                     ),
                   ),
@@ -784,9 +800,8 @@ class _TimeBudgetPage extends StatelessWidget {
                             color: isSelected
                                 ? AppColors.nearBlack
                                 : AppColors.driftwood,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                           )),
                       const SizedBox(height: 4),
                       Text(subtitle,
@@ -810,8 +825,8 @@ class _TimeBudgetPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Preference',
-            style: AppTypography.sansSection
-                .copyWith(color: AppColors.nearBlack)),
+            style:
+                AppTypography.sansSection.copyWith(color: AppColors.nearBlack)),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -826,8 +841,7 @@ class _TimeBudgetPage extends StatelessWidget {
                     color: !social ? AppColors.sand : AppColors.warmWhite,
                     borderRadius: BorderRadius.circular(Spacing.radiusBadge),
                     border: Border.all(
-                      color:
-                          !social ? AppColors.sandDark : Colors.transparent,
+                      color: !social ? AppColors.sandDark : Colors.transparent,
                     ),
                   ),
                   child: Row(
@@ -867,14 +881,11 @@ class _TimeBudgetPage extends StatelessWidget {
                     children: [
                       Icon(AppIcons.group,
                           size: 18,
-                          color:
-                              social ? Colors.white : AppColors.driftwood),
+                          color: social ? Colors.white : AppColors.driftwood),
                       const SizedBox(width: 8),
                       Text('Social',
                           style: AppTypography.sansButton.copyWith(
-                            color: social
-                                ? Colors.white
-                                : AppColors.driftwood,
+                            color: social ? Colors.white : AppColors.driftwood,
                           )),
                     ],
                   ),
@@ -937,10 +948,10 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
   // 3D perspective transforms per card: (rotateX, rotateY, rotateZ)
   // Strong tilts to match the mockup's dramatic 3D-floating look
   static const _cardTransforms = [
-    (-0.15, 0.10, -0.04),  // top-left: tilts back-right
-    (0.10, -0.15, 0.04),   // top-right: tilts back-left
-    (0.12, 0.10, -0.03),   // bottom-left: tilts forward-right
-    (-0.10, -0.12, 0.05),  // bottom-right: tilts forward-left
+    (-0.15, 0.10, -0.04), // top-left: tilts back-right
+    (0.10, -0.15, 0.04), // top-right: tilts back-left
+    (0.12, 0.10, -0.03), // bottom-left: tilts forward-right
+    (-0.10, -0.12, 0.05), // bottom-right: tilts forward-left
   ];
 
   // Float offsets per card (amplitude, phase)
@@ -958,7 +969,6 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     )..repeat(reverse: true);
-
   }
 
   @override
@@ -997,32 +1007,32 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                       ..rotateY(0.10)
                       ..rotateZ(-0.04),
                     child: Transform.translate(
-                      offset: Offset(0, math.sin(_floatCtrl.value * math.pi + 0.0) * 3.0),
+                      offset: Offset(
+                          0, math.sin(_floatCtrl.value * math.pi + 0.0) * 3.0),
                       child: Container(
-                      margin: const EdgeInsets.only(top: 8, left: 4),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated.withAlpha(200),
-                        borderRadius:
-                            BorderRadius.circular(Spacing.radiusBadge),
-                        border:
-                            Border.all(color: AppColors.textWhisper),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(MdiIcons.autoFix,
-                              size: 11, color: AppColors.textSecondary),
-                          const SizedBox(width: 3),
-                          Text('Curated for you',
-                              style: AppTypography.sansTiny.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600)),
-                        ],
+                        margin: const EdgeInsets.only(top: 8, left: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated.withAlpha(200),
+                          borderRadius:
+                              BorderRadius.circular(Spacing.radiusBadge),
+                          border: Border.all(color: AppColors.textWhisper),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(MdiIcons.autoFix,
+                                size: 11, color: AppColors.textSecondary),
+                            const SizedBox(width: 3),
+                            Text('Curated for you',
+                                style: AppTypography.sansTiny.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   ),
                 ),
               ),
@@ -1049,26 +1059,17 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                           ),
 
                           // Decorative dots
-                          _dot(areaW * 0.85, areaH * 0.02, 6,
-                              AppColors.coral),
+                          _dot(areaW * 0.85, areaH * 0.02, 6, AppColors.coral),
                           _dot(areaW * 0.08, areaH * 0.30, 4,
                               AppColors.warmGray),
-                          _dot(areaW * 0.92, areaH * 0.50, 5,
-                              AppColors.amber),
+                          _dot(areaW * 0.92, areaH * 0.50, 5, AppColors.amber),
                           _dot(areaW * 0.45, areaH * 0.75, 3,
                               AppColors.warmGray),
 
                           // Hobby cards (4 matched)
-                          for (int i = 0;
-                              i < 4 && i < topMatches.length;
-                              i++)
-                            _buildFloatingCard(
-                                topMatches[i],
-                                areaW,
-                                areaH,
-                                i,
-                                v,
-                                widget.matchReasons[topMatches[i].id] ?? []),
+                          for (int i = 0; i < 4 && i < topMatches.length; i++)
+                            _buildFloatingCard(topMatches[i], areaW, areaH, i,
+                                v, widget.matchReasons[topMatches[i].id] ?? []),
 
                           // "98% Match" floating badge
                           _buildMatchBadge(areaW, areaH, v),
@@ -1100,8 +1101,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                               child: CustomPaint(
                                 painter: _WaveUnderlinePainter(
                                   progress: titleOp,
-                                  color:
-                                      AppColors.coral.withAlpha(160),
+                                  color: AppColors.coral.withAlpha(160),
                                 ),
                               ),
                             ),
@@ -1115,8 +1115,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                     Opacity(
                       opacity: bodyOp,
                       child: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(
                           "We've curated a personalized list of\nhobbies just for you. Dive in and find\nyour next passion.",
                           textAlign: TextAlign.center,
@@ -1195,8 +1194,7 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                     imageUrl: hobby.imageUrl,
                     fit: BoxFit.cover,
                     memCacheWidth: 600,
-                    placeholder: (_, __) =>
-                        Container(color: AppColors.sand),
+                    placeholder: (_, __) => Container(color: AppColors.sand),
                     errorWidget: (_, __, ___) =>
                         Container(color: AppColors.sand),
                   ),
@@ -1212,14 +1210,17 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
                             : const [0.0, 0.45, 1.0],
                         colors: isTopMatch
                             ? [
-                                Colors.black.withAlpha(20),  // clear top
-                                Colors.black.withAlpha(40),  // still visible middle
-                                Colors.black.withAlpha(190), // dark bottom for text
+                                Colors.black.withAlpha(20), // clear top
+                                Colors.black
+                                    .withAlpha(40), // still visible middle
+                                Colors.black
+                                    .withAlpha(190), // dark bottom for text
                               ]
                             : [
-                                Colors.black.withAlpha(10),  // almost clear top
-                                Colors.black.withAlpha(30),  // light middle
-                                Colors.black.withAlpha(200), // dark bottom for text
+                                Colors.black.withAlpha(10), // almost clear top
+                                Colors.black.withAlpha(30), // light middle
+                                Colors.black
+                                    .withAlpha(200), // dark bottom for text
                               ],
                       ),
                     ),
@@ -1309,11 +1310,14 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
 
     // Compute actual match percentage for top match (card index 2)
     final topMatches = widget.matchedHobbies;
-    final topMatchId = topMatches.length > 2 ? topMatches[2].id : (topMatches.isNotEmpty ? topMatches.first.id : '');
+    final topMatchId = topMatches.length > 2
+        ? topMatches[2].id
+        : (topMatches.isNotEmpty ? topMatches.first.id : '');
     final score = widget.matchScores[topMatchId] ?? 0;
     // Max: 3 (budget) + 3 (time) + 2 (social) + vibes count
     final maxScore = 8 + widget.vibes.length;
-    final pct = maxScore > 0 ? (score / maxScore * 100).round().clamp(0, 100) : 0;
+    final pct =
+        maxScore > 0 ? (score / maxScore * 100).round().clamp(0, 100) : 0;
 
     return Positioned(
       left: areaW * 0.22,
@@ -1387,8 +1391,7 @@ class _WaveUnderlinePainter extends CustomPainter {
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
-    final drawn =
-        metrics.first.extractPath(0, metrics.first.length * progress);
+    final drawn = metrics.first.extractPath(0, metrics.first.length * progress);
     canvas.drawPath(
       drawn,
       Paint()
@@ -1400,8 +1403,7 @@ class _WaveUnderlinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WaveUnderlinePainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(_WaveUnderlinePainter old) => old.progress != progress;
 }
 
 /// Subtle floating particles that drift slowly across the card area.
