@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-22T12:31:59.099Z"
+last_updated: "2026-03-22T14:24:01.269Z"
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 7
-  total_plans: 14
-  completed_plans: 12
+  total_plans: 17
+  completed_plans: 13
 ---
 
 # STATE.md — TrySomething v1.0 Launch Readiness
@@ -28,8 +28,8 @@ progress:
 
 ## Current Position
 
-Phase: 09 (app-store-assets-and-admin) — EXECUTING
-Plan: 2 of 2
+Phase: 09.1 (session-screen-redesign-the-breathing-ring) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Plan: 2 of 2
 | Phase 08 P01 | 2min | 1 tasks | 1 files |
 | Phase 10 P01 | 10min | 2 tasks | 4 files |
 | Phase 09 P01 | 2min | 2 tasks | 2 files |
+| Phase 09.1 P01 | 6min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Plan: 2 of 2
 | Use ./node_modules/.bin/tsc instead of npx tsc | Phase 10 | Direct binary avoids nvm/npm version mismatch on Windows dev machine |
 | CA92.1 reason code for UserDefaults privacy manifest | Phase 9 | Covers Hive and SharedPreferences reading their own keys |
 | iPhone-only targeting (TARGETED_DEVICE_FAMILY=1) | Phase 9 | Eliminates iPad screenshot requirement for App Store submission |
+| Single CustomPainter for all 4 ring layers | Phase 09.1 | One painter with 4 canvas.draw calls is more efficient than 4 stacked CustomPaint widgets |
+| Film grain as static PNG overlay, not per-frame noise | Phase 09.1 | Static 256x256 PNG at 1.5% opacity is visually identical to dynamic noise and costs zero GPU |
+| Placeholder background pending Plan 02 ring integration | Phase 09.1 | SessionParticleField removed; Container placeholder keeps build green until 5-layer stack in Plan 02 |
 
 ### Architecture Notes
 
