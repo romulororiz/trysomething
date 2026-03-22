@@ -616,6 +616,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
 
+                  const SizedBox(height: 10),
+
+                  // ── Delete account ──
+                  GestureDetector(
+                    onTap: () => _handleDeleteAccount(context, ref),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete_forever_outlined,
+                              size: 20, color: AppColors.textMuted),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Delete account',
+                                  style: AppTypography.sansLabel
+                                      .copyWith(color: AppColors.textSecondary)),
+                              const SizedBox(height: 2),
+                              Text('Permanently delete your data',
+                                  style: AppTypography.sansTiny
+                                      .copyWith(color: AppColors.textMuted)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   const SizedBox(height: 32),
 
                   // ── App footer ──
@@ -692,6 +726,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  // ── Account deletion ──
+
+  void _handleDeleteAccount(BuildContext context, WidgetRef ref) {
+    final user = ref.read(authProvider).user;
+    if (user == null) return;
+
+    if (user.hasPassword) {
+      _showDeleteAccountSheet(context, ref);
+    } else {
+      _showDeleteAccountDialog(context, ref);
+    }
+  }
+
+  void _showDeleteAccountSheet(BuildContext context, WidgetRef ref) {
+    showAppSheet(
+      context: context,
+      title: 'Delete account',
+      builder: (ctx) => _DeleteAccountSheetContent(
+        onDelete: (password) => _executeDeleteAccount(context, ref, password: password),
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+    showAppSheet(
+      context: context,
+      title: 'Delete account',
+      builder: (ctx) => _DeleteAccountDialogContent(
+        onDelete: () => _executeDeleteAccount(context, ref),
+      ),
+    );
+  }
+
+  Future<void> _executeDeleteAccount(BuildContext context, WidgetRef ref, {String? password}) async {
+    final success = await ref.read(authProvider.notifier).deleteAccount(password: password);
+
+    if (!context.mounted) return;
+
+    if (success) {
+      // Clear SharedPreferences (superset of logout)
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.clear();
+
+      // Reset onboarding state
+      ref.read(onboardingCompleteProvider.notifier).reset();
+
+      if (!context.mounted) return;
+
+      // Show snackbar before navigating (avoids context issues)
+      showAppSnackbar(context, message: 'Account scheduled for deletion', type: AppSnackbarType.info);
+
+      // Navigate to login
+      if (context.mounted) context.go('/login');
+    } else {
+      // Show error, stay on Settings
+      showAppSnackbar(context, message: 'Failed to delete account. Please try again.', type: AppSnackbarType.error);
+    }
+  }
+
   void _showResetHobbiesDialog(BuildContext context, WidgetRef ref) {
     showAppConfirmDialog(
       context: context,
@@ -741,6 +834,248 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case 2: return 'High';
       default: return 'Any';
     }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACCOUNT DELETION HELPERS
+// ═══════════════════════════════════════════════════════
+
+Widget _buildDeletionWarning() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        'Your account will be scheduled for deletion. Your data will be permanently removed after 30 days.',
+        style: AppTypography.body.copyWith(
+          color: AppColors.textSecondary,
+          height: 1.5,
+        ),
+      ),
+      const SizedBox(height: 12),
+      Text(
+        'Active subscriptions are not automatically cancelled.',
+        style: AppTypography.body.copyWith(
+          color: AppColors.textSecondary,
+          height: 1.5,
+        ),
+      ),
+      const SizedBox(height: 8),
+      GestureDetector(
+        onTap: () => _openSubscriptionManagement(),
+        child: Text(
+          'Manage Subscriptions',
+          style: AppTypography.body.copyWith(
+            color: AppColors.accent,
+            fontWeight: FontWeight.w600,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+Future<void> _openSubscriptionManagement() async {
+  final String url;
+  if (Platform.isIOS) {
+    url = 'https://apps.apple.com/account/subscriptions';
+  } else {
+    url = 'https://play.google.com/store/account/subscriptions';
+  }
+  final uri = Uri.parse(url);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
+/// Bottom sheet content for email users — includes password field.
+class _DeleteAccountSheetContent extends StatefulWidget {
+  final Future<void> Function(String password) onDelete;
+
+  const _DeleteAccountSheetContent({required this.onDelete});
+
+  @override
+  State<_DeleteAccountSheetContent> createState() =>
+      _DeleteAccountSheetContentState();
+}
+
+class _DeleteAccountSheetContentState
+    extends State<_DeleteAccountSheetContent> {
+  final _passwordController = TextEditingController();
+  bool _isDeleting = false;
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDeletionWarning(),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: true,
+            style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Enter your password',
+              hintStyle:
+                  AppTypography.body.copyWith(color: AppColors.textMuted),
+              filled: true,
+              fillColor: AppColors.glassBackground,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              errorText: _errorText,
+            ),
+            onChanged: (_) {
+              if (_errorText != null) setState(() => _errorText = null);
+            },
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: GestureDetector(
+              onTap: _isDeleting
+                  ? null
+                  : () async {
+                      final password = _passwordController.text.trim();
+                      if (password.isEmpty) {
+                        setState(
+                            () => _errorText = 'Password is required');
+                        return;
+                      }
+                      setState(() => _isDeleting = true);
+                      Navigator.of(context).pop();
+                      await widget.onDelete(password);
+                    },
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: _isDeleting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Delete Account',
+                        style: AppTypography.button
+                            .copyWith(color: Colors.white),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet content for OAuth users — no password field.
+class _DeleteAccountDialogContent extends StatefulWidget {
+  final Future<void> Function() onDelete;
+
+  const _DeleteAccountDialogContent({required this.onDelete});
+
+  @override
+  State<_DeleteAccountDialogContent> createState() =>
+      _DeleteAccountDialogContentState();
+}
+
+class _DeleteAccountDialogContentState
+    extends State<_DeleteAccountDialogContent> {
+  bool _isDeleting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDeletionWarning(),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.glassBackground,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: AppTypography.button
+                          .copyWith(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _isDeleting
+                      ? null
+                      : () async {
+                          setState(() => _isDeleting = true);
+                          Navigator.of(context).pop();
+                          await widget.onDelete();
+                        },
+                  child: Container(
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _isDeleting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            'Delete Account',
+                            style: AppTypography.button
+                                .copyWith(color: Colors.white),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
