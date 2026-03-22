@@ -84,7 +84,11 @@ Plans:
   3. After confirming deletion, the app clears all local storage (Hive boxes, SharedPreferences, secure token storage) and logs out of RevenueCat
   4. After deletion completes, the app navigates to the unauthenticated login screen and cannot access any protected route
   5. If the deletion API call fails, an error message is shown and no local data is wiped prematurely
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [x] 05-01-PLAN.md — Data layer: hasPassword field, CacheManager.clearAll(), repository + provider deleteAccount()
+- [ ] 05-02-PLAN.md — Settings UI: delete tile, confirmation flows, warning text, subscription link, local cleanup
 
 ### Phase 6: Restore Purchases
 **Goal:** Users can restore their Pro subscription on any new device without contacting support
@@ -152,7 +156,7 @@ Plans:
 | 2. Apple OAuth Routing Fix | 0/? | Not started | — |
 | 3. Legal Documents — Host and Link | 0/? | Not started | — |
 | 4. Account Deletion + Data Export — Backend | 0/? | Not started | — |
-| 5. Account Deletion — Flutter UX | 0/? | Not started | — |
+| 5. Account Deletion — Flutter UX | 1/2 | In Progress | — |
 | 6. Restore Purchases | 0/? | Not started | — |
 | 7. Dead Code Cleanup | 0/? | Not started | — |
 | 8. Sonnet AI Upgrade | 0/? | Not started | — |
@@ -210,4 +214,4 @@ Phase 10 (Pre-Commit Hooks) ── independent, parallel with all
 ---
 
 *Roadmap created: 2026-03-21*
-*Last updated: 2026-03-21 after Phase 1 planning*
+*Last updated: 2026-03-21 after Phase 5 planning*

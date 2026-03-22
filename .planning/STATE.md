@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-21T19:15:26.711Z"
+last_updated: "2026-03-22T07:14:46.014Z"
 progress:
   total_phases: 10
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 3
+  total_plans: 8
+  completed_plans: 7
 ---
 
 # STATE.md — TrySomething v1.0 Launch Readiness
@@ -28,8 +28,8 @@ progress:
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 05 (account-deletion-flutter-ux) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -44,6 +44,12 @@ Plan: Not started
 ---
 | Phase 01 P01 | 2min | 1 tasks | 2 files |
 | Phase 01 P02 | 2min | 2 tasks | 3 files |
+| Phase 03 P02 | 2min | 2 tasks | 3 files |
+| Phase 03 P01 | 6min | 2 tasks | 3 files |
+| Phase 04 P01 | 4min | 2 tasks | 4 files |
+| Phase 04 P02 | 4min | 3 tasks | 6 files |
+| Phase 05 P01 | 4min | 2 tasks | 8 files |
+| Phase 05 P01 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -60,12 +66,15 @@ Plan: Not started
 | Screenshots after Phase 8 (Sonnet upgrade) | Phase 9 | Screenshots should reflect final AI-powered experience |
 | Used query='coach' in GenerationLog to distinguish coach from hobby generation | Phase 1 | Reuses existing query field; no schema change needed |
 | Log coach messages AFTER AI response (not before) | Phase 1 | Failed/timed-out API calls should not count against user's rate limit |
+| Default hasPassword to true for backwards compat | Phase 5 | Shows password field if server hasn't deployed yet (safer default) |
+| Use box.clear() not deleteBoxFromDisk() for Hive | Phase 5 | Keeps boxes open, prevents "Box already closed" crashes |
+| deleteAccount() returns bool, leaves SharedPrefs/onboarding to caller | Phase 5 | AuthNotifier has no WidgetRef; Settings screen handles those |
 
 ### Architecture Notes
 
 - `GenerationLog` has no FK to `User` (plain `userId String`) — must be deleted explicitly in `$transaction` before `user.delete`
 - All other 13 user FK tables have `onDelete: Cascade` — handled at DB level automatically
-- `CacheManager` has no `clearAll()` method — must be added (clears `_dataBox` and `_metaBox` Hive boxes)
+- `CacheManager.clearAll()` added in Phase 5 Plan 1 — uses box.clear() on both `_dataBox` and `_metaBox`
 - `deletedAt` field requires a Prisma schema migration — commit migration to git before deploying
 - Apple Sign-In requires token revocation call (Apple REST API) on account deletion per TN3194
 - Sonnet output may wrap JSON in markdown code fences — `extractJson()` guard must strip before `JSON.parse`

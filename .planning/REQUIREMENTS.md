@@ -11,15 +11,15 @@ Requirements for App Store and Play Store submission readiness.
 
 - [ ] **COMP-01**: User can delete their account via confirmation dialog in Settings screen
 - [ ] **COMP-02**: Account deletion uses soft-delete (`deletedAt` field) with 30-day deferred purge
-- [ ] **COMP-03**: Account deletion cascades across all 14 user-related tables + GenerationLog
-- [ ] **COMP-04**: Account deletion clears all client-side storage (Hive, SharedPreferences, secure storage, RevenueCat logout)
+- [x] **COMP-03**: Account deletion cascades across all 14 user-related tables + GenerationLog
+- [x] **COMP-04**: Account deletion clears all client-side storage (Hive, SharedPreferences, secure storage, RevenueCat logout)
 - [ ] **COMP-05**: Account deletion UI warns user to cancel subscription manually before proceeding
 - [ ] **COMP-06**: Auth middleware rejects tokens for soft-deleted users (`deletedAt` check)
 - [ ] **COMP-07**: User can export all personal data as JSON via `GET /api/users/me/export`
 - [ ] **COMP-08**: Data export uses explicit field allowlist (excludes `passwordHash`, `revenuecatId`, `GenerationLog` internals)
-- [ ] **COMP-09**: Terms of Service hosted as public HTML page on Next.js website
-- [ ] **COMP-10**: Privacy Policy hosted as public HTML page on Next.js website
-- [ ] **COMP-11**: Settings screen links to hosted Terms and Privacy Policy
+- [x] **COMP-09**: Terms of Service hosted as public HTML page on Next.js website
+- [x] **COMP-10**: Privacy Policy hosted as public HTML page on Next.js website
+- [x] **COMP-11**: Settings screen links to hosted Terms and Privacy Policy
 - [ ] **COMP-12**: iOS app includes Apple Privacy Manifests for Firebase, RevenueCat, and PostHog SDKs
 - [ ] **COMP-13**: App Privacy Labels completed in App Store Connect (requires hosted privacy policy)
 - [ ] **COMP-14**: Data Safety Form completed in Google Play Console (requires hosted privacy policy)
@@ -77,15 +77,15 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 |-------------|-------|--------|
 | COMP-01 | Phase 4 | Pending |
 | COMP-02 | Phase 4 | Pending |
-| COMP-03 | Phase 4 | Pending |
-| COMP-04 | Phase 5 | Pending |
+| COMP-03 | Phase 4 | Complete |
+| COMP-04 | Phase 5 | Complete |
 | COMP-05 | Phase 5 | Pending |
 | COMP-06 | Phase 4 | Pending |
 | COMP-07 | Phase 4 | Pending |
 | COMP-08 | Phase 4 | Pending |
-| COMP-09 | Phase 3 | Pending |
-| COMP-10 | Phase 3 | Pending |
-| COMP-11 | Phase 3 | Pending |
+| COMP-09 | Phase 3 | Complete |
+| COMP-10 | Phase 3 | Complete |
+| COMP-11 | Phase 3 | Complete |
 | COMP-12 | Phase 9 | Pending |
 | COMP-13 | Phase 9 | Pending |
 | COMP-14 | Phase 9 | Pending |
