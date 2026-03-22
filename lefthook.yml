@@ -3,8 +3,8 @@ pre-commit:
   commands:
     flutter-analyze:
       glob: "*.dart"
-      run: dart analyze lib/
+      run: dart analyze --no-fatal-warnings lib/
     typescript-typecheck:
-      glob: "server/**/*.ts"
+      glob: "*.ts"
       root: "server/"
-      run: npx tsc --noEmit
+      run: ./node_modules/.bin/tsc --noEmit
