@@ -162,7 +162,7 @@ class _ProLockedOverlay extends StatelessWidget {
         child,
         Positioned.fill(
           child: Container(
-            color: AppColors.background.withValues(alpha: 0.85),
+            color: AppColors.background.withValues(alpha: 0.98),
           ),
         ),
         Center(
@@ -654,7 +654,7 @@ class _RestartCard extends StatelessWidget {
                     child: Center(
                       child: Text("Let's go",
                           style: AppTypography.button
-                              .copyWith(color: AppColors.background)),
+                              .copyWith(color: const Color.fromARGB(255, 255, 255, 255))),
                     ),
                   ),
                 ),

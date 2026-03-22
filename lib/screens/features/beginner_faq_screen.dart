@@ -345,12 +345,12 @@ class _FaqCardState extends ConsumerState<_FaqCard>
                   color: AppColors.glassBorder,
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 30),
                   child: Text(
                     widget.faq.answer,
-                    style: AppTypography.sansBody.copyWith(
+                    style: AppTypography.sansBodySmall.copyWith(
                       color: AppColors.textSecondary,
-                      height: 1.65,
+                      height: 1.7,
                     ),
                   ),
                 ),

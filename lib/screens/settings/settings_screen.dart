@@ -131,8 +131,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       style: AppTypography.caption
                           .copyWith(color: AppColors.accent)),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text('\u00b7',
                       style: TextStyle(color: AppColors.textMuted)),
                 ),
@@ -164,7 +164,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final authUser = ref.watch(authProvider).user;
     final profile = ref.watch(profileProvider);
 
-    final displayName = authUser?.displayName ?? profile.username;
+    final rawName = authUser?.displayName ?? profile.username;
+    final displayName = rawName
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
     final email = authUser?.email ?? '';
     final avatarUrl = authUser?.avatarUrl ?? profile.avatarUrl;
 
@@ -767,12 +771,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (success) {
       ref.read(proStatusProvider.notifier).sync();
       showAppSnackbar(context,
-          message: 'Pro subscription restored!',
-          type: AppSnackbarType.success);
+          message: 'Pro subscription restored!', type: AppSnackbarType.success);
     } else {
       showAppSnackbar(context,
-          message: 'No previous purchase found.',
-          type: AppSnackbarType.info);
+          message: 'No previous purchase found.', type: AppSnackbarType.info);
     }
   }
 
@@ -1198,8 +1200,8 @@ class _ProfileSection extends StatelessWidget {
         children: [
           // Avatar
           Container(
-            width: 64,
-            height: 64,
+            width: 74,
+            height: 74,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
@@ -1236,7 +1238,7 @@ class _ProfileSection extends StatelessWidget {
                   style: AppTypography.sansLabel.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
-                    fontSize: 16,
+                    fontSize: 18,
                   ),
                 ),
                 if (email.isNotEmpty) ...[
@@ -1244,7 +1246,7 @@ class _ProfileSection extends StatelessWidget {
                   Text(
                     email,
                     style: AppTypography.sansTiny
-                        .copyWith(color: AppColors.textMuted),
+                        .copyWith(color: AppColors.textMuted, fontSize: 13),
                   ),
                 ],
               ],

@@ -145,7 +145,7 @@ class AppTypography {
 
   static TextStyle get sansBodySmallItalic => GoogleFonts.manrope(
         fontSize: 14,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         height: 1.5,
         color: AppColors.textSecondary,
         fontStyle: FontStyle.italic,
