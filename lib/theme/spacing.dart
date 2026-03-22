@@ -59,7 +59,7 @@ class Spacing {
   /// + breathing room (26px) = inset + 100.
   static double scrollBottom(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    return bottomInset + 20;
+    return bottomInset + 100;
   }
   static const double buttonCtaHeight = 56;
   static const double buttonPrimaryHeight = 54;
