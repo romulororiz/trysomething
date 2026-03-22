@@ -177,7 +177,7 @@ Plans:
 | 7. Dead Code Cleanup | 0/1 | Not started | — |
 | 8. Sonnet AI Upgrade | 0/1 | Not started | — |
 | 9. App Store Assets and Admin | 0/2 | Not started | — |
-| 10. Pre-Commit Hooks | 1/1 | Complete   | 2026-03-22 |
+| 10. Pre-Commit Hooks | 1/1 | Complete    | 2026-03-22 |
 
 ---
 
