@@ -1,0 +1,10 @@
+pre-commit:
+  parallel: true
+  commands:
+    flutter-analyze:
+      glob: "*.dart"
+      run: dart analyze lib/
+    typescript-typecheck:
+      glob: "server/**/*.ts"
+      root: "server/"
+      run: npx tsc --noEmit
