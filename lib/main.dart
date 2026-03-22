@@ -88,16 +88,22 @@ void main() async {
     child: const TrySomethingApp(),
   );
 
-  // Initialize Sentry on mobile, skip on web (Firebase dependency)
-  if (kIsWeb) {
+  // Sentry DSN via --dart-define. Empty string skips Sentry init.
+  // IMPORTANT: Rotate this DSN after moving to env vars — it is in git history.
+  const sentryDsn = String.fromEnvironment(
+    'SENTRY_DSN',
+  );
+
+  // Initialize Sentry on mobile, skip on web or if DSN is not set
+  if (kIsWeb || sentryDsn.isEmpty) {
+    if (!kIsWeb && sentryDsn.isEmpty) {
+      debugPrint('[Sentry] SENTRY_DSN not set — skipping Sentry init');
+    }
     runApp(app);
   } else {
     await SentryFlutter.init(
       (options) {
-        options.dsn = const String.fromEnvironment(
-          'SENTRY_DSN',
-          defaultValue: 'https://6e008b52ef2d7b5faa06c5b24015cc63@o4510999072473088.ingest.de.sentry.io/4510999081844816',
-        );
+        options.dsn = sentryDsn;
         options.tracesSampleRate = 0.2;
         options.replay.sessionSampleRate = 0.1;
         options.replay.onErrorSampleRate = 1.0;

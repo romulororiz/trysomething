@@ -12,19 +12,14 @@ import '../../components/app_overlays.dart';
 /// Ring-centric layout: the BreathingRing is rendered by session_screen.dart
 /// (Layer 4 of the 5-layer Stack). This widget positions content AROUND
 /// the ring's known location (~42% from top, 270dp ring).
-///
-/// Shows: overline (hobby + step), rolling timer inside ring area,
-/// step instructions below ring, coach tip icon, glass pause/play button,
-/// and an elegant completion celebration.
-///
-/// Also renders the "completing" moment when
-/// [session.phase] is [SessionPhase.completing].
 class SessionTimerPhase extends StatelessWidget {
   final SessionState session;
   final VoidCallback onPause;
   final VoidCallback onResume;
   final VoidCallback onEndEarly;
   final VoidCallback onEndEarlyExit;
+  /// DEV ONLY: triggers the real completion flow via SessionNotifier
+  final VoidCallback? onDevComplete;
 
   const SessionTimerPhase({
     super.key,
@@ -33,6 +28,7 @@ class SessionTimerPhase extends StatelessWidget {
     required this.onResume,
     required this.onEndEarly,
     required this.onEndEarlyExit,
+    this.onDevComplete,
   });
 
   bool get _isCompleting => session.phase == SessionPhase.completing;
@@ -44,8 +40,6 @@ class SessionTimerPhase extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final safeTop = MediaQuery.of(context).padding.top;
-    // Ring center is at screenHeight * 0.42 (absolute).
-    // SafeArea shifts content down by safeTop, so subtract it.
     final ringCenterY = screenHeight * 0.42 - safeTop;
 
     return Stack(
@@ -56,7 +50,7 @@ class SessionTimerPhase extends StatelessWidget {
           left: 32,
           right: 32,
           child: Text(
-            '${session.hobbyTitle.toUpperCase()} \u00b7 ${session.stepTitle}',
+            '${session.hobbyTitle.toUpperCase()}\n${session.stepTitle}',
             style: AppTypography.overline,
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -66,7 +60,7 @@ class SessionTimerPhase extends StatelessWidget {
 
         // Timer/completion centered EXACTLY at ring center
         Positioned(
-          top: _isCompleting ? ringCenterY - 60 : ringCenterY - 40,
+          top: _isCompleting ? ringCenterY - 60 : ringCenterY - 85,
           left: 32,
           right: 32,
           child: _isCompleting
@@ -115,7 +109,7 @@ class SessionTimerPhase extends StatelessWidget {
         // Step instructions + coach tip below ring
         if (!_isCompleting)
           Positioned(
-            top: ringCenterY + 160, // below the ring (ring radius ~135)
+            top: ringCenterY + 80,
             left: 32,
             right: 32,
             child: Column(
@@ -167,12 +161,35 @@ class SessionTimerPhase extends StatelessWidget {
               ],
             ),
           ),
+
+        // DEV ONLY: Button to trigger real completion flow
+        if (onDevComplete != null && !_isCompleting)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: onDevComplete,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.glassBackground,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.glassBorder),
+                ),
+                child: Text(
+                  'DEV: ✓',
+                  style: AppTypography.monoBadge.copyWith(
+                    color: AppColors.textMuted,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
 //  ROLLING DIGIT TIMER — individual digits animate
 // ═══════════════════════════════════════════════════════
 

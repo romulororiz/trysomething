@@ -8,22 +8,26 @@ class SubscriptionService {
 
   static const _entitlement = 'pro';
 
-  // Platform-specific RevenueCat public API keys
-  static const _appleKey = 'appl_SkiBGKbnsWiBfFNnLWfPfFqYJXC';
-  static const _googleKey = 'goog_REPLACE_WITH_GOOGLE_KEY'; // TODO: add after Google Play setup
+  // Platform-specific RevenueCat public API keys via --dart-define.
+  // defaultValue keeps dev builds working without env vars set.
+  // IMPORTANT: Rotate these keys after moving to env vars — they are in git history.
+  static const _appleKey = String.fromEnvironment(
+    'REVENUECAT_APPLE_KEY',
+  );
+  static const _googleKey = String.fromEnvironment(
+    'REVENUECAT_GOOGLE_KEY',
+    defaultValue: '', // TODO: add after Google Play setup
+  );
 
   /// Initialize RevenueCat SDK.
   Future<void> init() async {
     if (_initialized) return;
 
-    // Use env var if provided, otherwise pick platform key.
-    final envKey = const String.fromEnvironment('REVENUECAT_API_KEY');
+    // Pick the platform-appropriate key.
     final String apiKey;
-    if (envKey.isNotEmpty) {
-      apiKey = envKey;
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS && _appleKey.isNotEmpty) {
       apiKey = _appleKey;
-    } else if (defaultTargetPlatform == TargetPlatform.android && !_googleKey.contains('REPLACE')) {
+    } else if (defaultTargetPlatform == TargetPlatform.android && _googleKey.isNotEmpty) {
       apiKey = _googleKey;
     } else {
       // No valid key for this platform — skip RevenueCat, run in free mode

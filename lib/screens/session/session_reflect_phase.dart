@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../components/glass_card.dart';
 import '../../models/session.dart';
 import '../../theme/app_colors.dart';
@@ -79,7 +80,6 @@ class _SessionReflectPhaseState extends State<SessionReflectPhase> {
               choice: ReflectionChoice.lovedIt,
               label: 'Loved it',
               description: 'I could do this again',
-              symbol: const _LovedItSymbol(),
               isSelected: _selected == ReflectionChoice.lovedIt,
               dimmed: _selected != null && _selected != ReflectionChoice.lovedIt,
               onTap: () => _onSelect(ReflectionChoice.lovedIt),
@@ -91,7 +91,6 @@ class _SessionReflectPhaseState extends State<SessionReflectPhase> {
               choice: ReflectionChoice.okay,
               label: 'It was okay',
               description: 'Still figuring it out',
-              symbol: const _OkaySymbol(),
               isSelected: _selected == ReflectionChoice.okay,
               dimmed: _selected != null && _selected != ReflectionChoice.okay,
               onTap: () => _onSelect(ReflectionChoice.okay),
@@ -103,7 +102,6 @@ class _SessionReflectPhaseState extends State<SessionReflectPhase> {
               choice: ReflectionChoice.struggled,
               label: 'Struggled',
               description: 'Something felt off',
-              symbol: const _StruggledSymbol(),
               isSelected: _selected == ReflectionChoice.struggled,
               dimmed: _selected != null && _selected != ReflectionChoice.struggled,
               onTap: () => _onSelect(ReflectionChoice.struggled),
@@ -204,7 +202,6 @@ class _ReflectionCard extends StatelessWidget {
   final ReflectionChoice choice;
   final String label;
   final String description;
-  final Widget symbol;
   final bool isSelected;
   final bool dimmed;
   final VoidCallback onTap;
@@ -213,25 +210,39 @@ class _ReflectionCard extends StatelessWidget {
     required this.choice,
     required this.label,
     required this.description,
-    required this.symbol,
     required this.isSelected,
     required this.dimmed,
     required this.onTap,
   });
 
+  IconData get _icon {
+    switch (choice) {
+      case ReflectionChoice.lovedIt:
+        return PhosphorIconsRegular.heartStraight;
+      case ReflectionChoice.okay:
+        return PhosphorIconsRegular.minusCircle;
+      case ReflectionChoice.struggled:
+        return PhosphorIconsRegular.cloudRain;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      opacity: dimmed ? 0.5 : 1.0,
+      opacity: dimmed ? 0.4 : 1.0,
       duration: const Duration(milliseconds: 200),
       child: GlassCard(
         onTap: onTap,
         borderColor:
-            isSelected ? AppColors.textPrimary : AppColors.glassBorder,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            isSelected ? AppColors.accent : Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           children: [
-            SizedBox(width: 48, height: 48, child: symbol),
+            Icon(
+              _icon,
+              size: 24,
+              color: isSelected ? AppColors.accent : AppColors.textMuted,
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -241,7 +252,7 @@ class _ReflectionCard extends StatelessWidget {
                     label,
                     style: AppTypography.body.copyWith(
                       fontWeight: FontWeight.w600,
-                      fontSize: 18,
+                      fontSize: 17,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -250,6 +261,12 @@ class _ReflectionCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (isSelected)
+              Icon(
+                PhosphorIconsBold.check,
+                size: 18,
+                color: AppColors.accent,
+              ),
           ],
         ),
       ),
@@ -257,167 +274,3 @@ class _ReflectionCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────
-//  Reflection symbols — abstract brushstroke marks
-// ─────────────────────────────────────────────────
-
-/// "Loved it" — upward flowing curves.
-class _LovedItSymbol extends StatelessWidget {
-  const _LovedItSymbol();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _LovedItPainter());
-  }
-}
-
-class _LovedItPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.textPrimary
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    // Three curves sweeping upward
-    final path = Path()
-      ..moveTo(size.width * 0.15, size.height * 0.8)
-      ..cubicTo(
-        size.width * 0.25, size.height * 0.3,
-        size.width * 0.35, size.height * 0.5,
-        size.width * 0.45, size.height * 0.2,
-      );
-    canvas.drawPath(path, paint);
-
-    final path2 = Path()
-      ..moveTo(size.width * 0.35, size.height * 0.85)
-      ..cubicTo(
-        size.width * 0.45, size.height * 0.35,
-        size.width * 0.55, size.height * 0.45,
-        size.width * 0.65, size.height * 0.15,
-      );
-    canvas.drawPath(path2, paint);
-
-    final path3 = Path()
-      ..moveTo(size.width * 0.55, size.height * 0.9)
-      ..cubicTo(
-        size.width * 0.65, size.height * 0.4,
-        size.width * 0.75, size.height * 0.5,
-        size.width * 0.85, size.height * 0.2,
-      );
-    canvas.drawPath(path3, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-/// "It was okay" — gentle sine wave.
-class _OkaySymbol extends StatelessWidget {
-  const _OkaySymbol();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _OkayPainter());
-  }
-}
-
-class _OkayPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.textPrimary
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path()..moveTo(size.width * 0.1, size.height * 0.5);
-
-    // Smooth sine wave — 2 periods
-    const steps = 60;
-    for (int i = 1; i <= steps; i++) {
-      final t = i / steps;
-      final x = size.width * (0.1 + 0.8 * t);
-      final y = size.height * 0.5 +
-          size.height * 0.2 *
-              _sin(t * 2 * 3.14159265 * 2); // ~2 periods
-      path.lineTo(x, y);
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  double _sin(double x) {
-    // Simple inline sin (avoids importing dart:math for one call)
-    double result = x;
-    double term = x;
-    for (int i = 1; i <= 7; i++) {
-      term *= -x * x / ((2 * i) * (2 * i + 1));
-      result += term;
-    }
-    return result;
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-/// "Struggled" — soft figure-8 knot.
-class _StruggledSymbol extends StatelessWidget {
-  const _StruggledSymbol();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _StruggledPainter());
-  }
-}
-
-class _StruggledPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.textPrimary
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    // Figure-8 / infinity loop
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final rx = size.width * 0.3;
-    final ry = size.height * 0.2;
-
-    final path = Path();
-    const steps = 80;
-    for (int i = 0; i <= steps; i++) {
-      final t = i / steps * 2 * 3.14159265;
-      // Lemniscate of Bernoulli approximation
-      final denom = 1 + _sin(t) * _sin(t);
-      final x = cx + rx * _cos(t) / denom;
-      final y = cy + ry * _sin(t) * _cos(t) / denom;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  double _sin(double x) {
-    double result = x;
-    double term = x;
-    for (int i = 1; i <= 7; i++) {
-      term *= -x * x / ((2 * i) * (2 * i + 1));
-      result += term;
-    }
-    return result;
-  }
-
-  double _cos(double x) => _sin(x + 1.5707963);
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}

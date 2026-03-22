@@ -220,19 +220,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/session/:hobbyId/:stepId',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
+          final extra = (state.extra as Map<String, dynamic>?) ?? <String, dynamic>{};
           return CustomTransitionPage(
             child: SessionScreen(
               hobbyId: state.pathParameters['hobbyId']!,
               stepId: state.pathParameters['stepId']!,
-              hobbyTitle: extra['hobbyTitle'] as String,
-              hobbyCategory: extra['hobbyCategory'] as String,
-              stepTitle: extra['stepTitle'] as String,
-              stepDescription: extra['stepDescription'] as String,
+              hobbyTitle: extra['hobbyTitle'] as String? ?? '',
+              hobbyCategory: extra['hobbyCategory'] as String? ?? '',
+              stepTitle: extra['stepTitle'] as String? ?? '',
+              stepDescription: extra['stepDescription'] as String? ?? '',
               stepInstructions: extra['stepInstructions'] as String? ?? '',
               whatYouNeed: extra['whatYouNeed'] as String? ?? '',
-              recommendedMinutes: extra['recommendedMinutes'] as int,
-              completionMode: extra['completionMode'] as CompletionMode,
+              recommendedMinutes: extra['recommendedMinutes'] as int? ?? 15,
+              completionMode: extra['completionMode'] as CompletionMode? ?? CompletionMode.timer,
               nextStepTitle: extra['nextStepTitle'] as String?,
               completionMessage: extra['completionMessage'] as String?,
               coachTip: extra['coachTip'] as String?,
@@ -264,6 +264,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     )
                   : null,
               autoSend: (extra['autoSend'] as bool?) ?? false,
+              focusEntryId: extra['focusEntryId'] as String?,
             );
           }
           return CustomTransitionPage(

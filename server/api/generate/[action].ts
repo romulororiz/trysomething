@@ -443,7 +443,7 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 429, 'Rate limit exceeded');
   }
 
-  const { hobbyId, message, conversationHistory, modeOverride } = req.body ?? {};
+  const { hobbyId, message, conversationHistory, modeOverride, focusEntryId } = req.body ?? {};
 
   if (!hobbyId || typeof hobbyId !== "string") {
     return errorResponse(res, 400, "hobbyId is required");
@@ -509,7 +509,14 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
         : detectCoachMode(userState, daysSinceLastSession);
 
     const journalEntries = recentJournal.map(
-      (j: any) => `[${new Date(j.createdAt).toLocaleDateString()}] ${(j.text ?? "").slice(0, 100)}`
+      (j: any) => {
+        const dateStr = new Date(j.createdAt).toLocaleDateString();
+        const text = (j.text ?? "").slice(0, 150);
+        const isFocused = focusEntryId && j.id === focusEntryId;
+        return isFocused
+          ? `>>> [${dateStr}] ${text} <<< (THE USER IS ASKING ABOUT THIS ENTRY — reference it naturally without quoting it back verbatim)`
+          : `[${dateStr}] ${text}`;
+      }
     );
 
     const systemPrompt = buildCoachSystemPrompt(

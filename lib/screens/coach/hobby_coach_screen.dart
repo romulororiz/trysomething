@@ -156,6 +156,10 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     _selectedMode = mode;
   }
 
+  String? _focusEntryId;
+
+  void setFocusEntryId(String? id) => _focusEntryId = id;
+
   Future<void> send(String message) async {
     if (_sending || message.trim().isEmpty) return;
     _limitHit = false;
@@ -193,6 +197,7 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
           'hobbyId': hobbyId,
           'message': message.trim(),
           'modeOverride': _selectedMode,
+          if (_focusEntryId != null) 'focusEntryId': _focusEntryId,
           'conversationHistory': state
               .take(state.length - 1) // exclude the just-added user message
               .map((m) => {'role': m.role, 'content': m.content})
@@ -251,10 +256,15 @@ class CoachEntryContext {
   /// If true, the prefilled message is sent automatically after first frame.
   final bool autoSend;
 
+  /// If set, the server highlights this journal entry in the coach's context
+  /// so it knows which reflection the user is referring to.
+  final String? focusEntryId;
+
   const CoachEntryContext({
     this.prefilledMessage,
     this.forceMode,
     this.autoSend = false,
+    this.focusEntryId,
   });
 }
 
@@ -287,6 +297,10 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     _mode = widget.entryContext?.forceMode ?? _detectMode();
 
     final ctx = widget.entryContext;
+    if (ctx?.focusEntryId != null) {
+      ref.read(coachProvider(widget.hobbyId).notifier)
+          .setFocusEntryId(ctx!.focusEntryId);
+    }
     if (ctx?.prefilledMessage != null) {
       if (ctx!.autoSend) {
         WidgetsBinding.instance.addPostFrameCallback((_) {

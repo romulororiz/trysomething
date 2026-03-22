@@ -314,6 +314,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
+                      alignment: WrapAlignment.center,
                       children: [
                         'creative',
                         'physical',

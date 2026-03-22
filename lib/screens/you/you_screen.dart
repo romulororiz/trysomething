@@ -77,6 +77,17 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       }
     }
 
+    // Sort active hobbies the same way as Home screen:
+    // most recently active first (lastActivityAt ?? startedAt, descending).
+    activeEntries.sort((a, b) {
+      final aTime = a.userHobby.lastActivityAt ?? a.userHobby.startedAt;
+      final bTime = b.userHobby.lastActivityAt ?? b.userHobby.startedAt;
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return bTime.compareTo(aTime);
+    });
+
     if (_currentHobbyPage >= activeEntries.length && activeEntries.isNotEmpty) {
       _currentHobbyPage = activeEntries.length - 1;
     }

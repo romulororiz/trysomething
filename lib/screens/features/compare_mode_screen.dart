@@ -352,7 +352,7 @@ class CompareModeScreen extends ConsumerWidget {
                       ref
                           .read(userHobbiesProvider.notifier)
                           .startTrying(winnerId);
-                      context.pop();
+                      context.go('/home?hobby=$winnerId');
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(0, 48),

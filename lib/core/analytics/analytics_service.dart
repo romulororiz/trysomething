@@ -8,19 +8,27 @@ class AnalyticsService {
 
   bool _initialized = false;
 
+  // PostHog API key via --dart-define. Empty string skips init.
+  // IMPORTANT: Rotate this key after moving to env vars — it is in git history.
+  static const _apiKey = String.fromEnvironment(
+    'POSTHOG_API_KEY',
+  );
+
   /// Initialize PostHog SDK.
+  /// Skips initialization if POSTHOG_API_KEY is not set (empty).
   Future<void> init() async {
+    if (_apiKey.isEmpty) {
+      debugPrint('[Analytics] POSTHOG_API_KEY not set — skipping PostHog init');
+      return;
+    }
+
     try {
-      const apiKey = String.fromEnvironment(
-        'POSTHOG_API_KEY',
-        defaultValue: 'phx_YBR1OSrdQgfVPK55QJVNqh1CzOSy9r6qFCh5uhgZoy7R2PL',
-      );
       const host = String.fromEnvironment(
         'POSTHOG_HOST',
         defaultValue: 'https://us.i.posthog.com',
       );
 
-      final config = PostHogConfig(apiKey);
+      final config = PostHogConfig(_apiKey);
       config.host = host;
       config.captureApplicationLifecycleEvents = true;
       config.debug = kDebugMode;

@@ -598,7 +598,9 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
     }
 
     final results = _nlpSearch(allHobbies);
-    final fewResults = results.length < 3;
+    final hasExactMatch = results.any((h) =>
+        h.title.toLowerCase() == _searchQuery.toLowerCase());
+    final showGenerate = !hasExactMatch;
     final isGenerating = genState.status == GenerationStatus.generating;
 
     if (results.isEmpty) {
@@ -667,8 +669,8 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
           ),
         ),
       ),
-      // AI generation widgets
-      if (isPro && fewResults && !isGenerating && genState.status != GenerationStatus.error)
+      // AI generation widgets — show whenever no exact title match
+      if (isPro && showGenerate && !isGenerating && genState.status != GenerationStatus.error)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
           sliver: SliverToBoxAdapter(
@@ -682,19 +684,19 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(MdiIcons.creationOutline, size: 16, color: AppColors.coral),
                   const SizedBox(width: 8),
-                  Text('Find more with AI', style: AppTypography.body.copyWith(
+                  Text('Generate "$_searchQuery"', style: AppTypography.body.copyWith(
                       color: AppColors.coral, fontWeight: FontWeight.w600)),
                 ]),
               ),
             ),
           ),
         ),
-      if (isPro && fewResults && isGenerating)
+      if (isPro && showGenerate && isGenerating)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
           sliver: SliverToBoxAdapter(child: _AiSearchingTile()),
         ),
-      if (!isPro && fewResults)
+      if (!isPro && showGenerate)
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           sliver: SliverToBoxAdapter(
@@ -703,7 +705,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
             ),
           ),
         ),
-      if (isPro && fewResults && genState.status == GenerationStatus.error)
+      if (isPro && showGenerate && genState.status == GenerationStatus.error)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
           sliver: SliverToBoxAdapter(

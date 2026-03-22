@@ -12,6 +12,7 @@ import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
 import '../../components/glass_card.dart';
+import '../../components/app_background.dart';
 
 /// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
 class HobbyJournalScreen extends ConsumerStatefulWidget {
@@ -42,8 +43,9 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
     final filtered = _applyFilter(sortedEntries);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
         child: Column(
           children: [
             // Header
@@ -88,22 +90,38 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                   ? _buildEmptyState()
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-                      itemCount: filtered.length + 1,
-                      separatorBuilder: (_, index) =>
-                          index < filtered.length - 1
-                              ? const SizedBox(height: 14)
-                              : const SizedBox.shrink(),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 14),
                       itemBuilder: (context, index) {
-                        if (index < filtered.length) {
-                          return _JournalEntryCard(entry: filtered[index]);
-                        }
-                        // ── Post-reflection coach nudge ──
-                        return _buildCoachNudge(context);
+                        final entry = filtered[index];
+                        return _DismissibleJournalCard(
+                          entry: entry,
+                          onDismissed: () {
+                            ref.read(journalProvider.notifier).removeEntry(entry.id);
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Entry deleted'),
+                                backgroundColor: AppColors.surfaceElevated,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 4),
+                                action: SnackBarAction(
+                                  label: 'Undo',
+                                  textColor: AppColors.coral,
+                                  onPressed: () {
+                                    ref.read(journalProvider.notifier).addEntry(entry);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
             ),
           ],
         ),
+      ),
       ),
       floatingActionButton: SizedBox(
         width: 48,
@@ -151,82 +169,35 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.coral.withValues(alpha: 0.1),
+                color: AppColors.coral.withValues(alpha: 0.08),
               ),
-              child: const Icon(Icons.edit_note_rounded,
-                  size: 28, color: AppColors.coral),
+              child: const Icon(Icons.auto_stories_rounded,
+                  size: 30, color: AppColors.coral),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: Spacing.xl),
             Text(
-              'No entries yet',
-              style: AppTypography.title.copyWith(fontSize: 17),
+              'Your story starts here',
+              style: AppTypography.title.copyWith(fontSize: 18),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.sm),
             Text(
-              'After a session, jot down what happened.\nWhat felt good? What was annoying?',
+              'Your reflections will appear here after each session. '
+              'Take a moment to notice what worked and what felt hard.',
               textAlign: TextAlign.center,
-              style: AppTypography.sansBodySmall
-                  .copyWith(color: AppColors.textSecondary.withAlpha(80)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  COACH NUDGE — post-reflection CTA
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildCoachNudge(BuildContext context) {
-    // Find the active hobby id to route the coach to.
-    final userHobbies = ref.read(userHobbiesProvider);
-    final activeEntries = userHobbies.entries.where(
-      (e) =>
-          e.value.status == HobbyStatus.active ||
-          e.value.status == HobbyStatus.trying,
-    );
-    final hobbyId = activeEntries.isNotEmpty
-        ? activeEntries.first.key
-        : (userHobbies.isNotEmpty ? userHobbies.keys.first : '');
-
-    if (hobbyId.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: GlassCard(
-        onTap: () => context.push('/coach/$hobbyId', extra: {
-          'message':
-              'I just added a journal entry. Help me plan my next session based on what I reflected on.',
-          'mode': 'momentum',
-          'autoSend': false,
-        }),
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            const Icon(Icons.auto_awesome,
-                size: 16, color: AppColors.coral),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Turn this reflection into a plan',
-                style: AppTypography.body.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
+              style: AppTypography.body.copyWith(
+                color: AppColors.textMuted,
+                height: 1.5,
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 16, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -481,6 +452,235 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
 }
 
 // ═══════════════════════════════════════════════════════
+//  SESSION REFLECTION DETECTION
+// ═══════════════════════════════════════════════════════
+
+/// Reflection emoji prefixes written by the session flow.
+/// Entries whose text starts with one of these are session reflections.
+const _reflectionPrefixes = [
+  '\u2764\uFE0F',   // ❤️ Loved it
+  '\uD83D\uDC4C',   // 👌 It was okay
+  '\u2601\uFE0F',   // ☁️ Struggled
+];
+
+/// Returns the reflection emoji if [text] is a session reflection, else null.
+String? _sessionReflectionEmoji(String text) {
+  for (final prefix in _reflectionPrefixes) {
+    if (text.startsWith(prefix)) return prefix;
+  }
+  return null;
+}
+
+/// Strips the reflection prefix ("❤️ Loved it — ") from the display text.
+String _stripReflectionPrefix(String text) {
+  // Pattern: "<emoji> <label> — <user text>"
+  final dashIndex = text.indexOf('\u2014'); // em dash
+  if (dashIndex != -1 && dashIndex + 2 < text.length) {
+    return text.substring(dashIndex + 2); // skip " — "
+  }
+  return text;
+}
+
+// ═══════════════════════════════════════════════════════
+//  DISMISSIBLE WRAPPER
+// ═══════════════════════════════════════════════════════
+
+/// Custom swipe-to-delete that reveals a delete button behind the card.
+/// The card slides left with its right-side border radius flattening to 0,
+/// creating a seamless join with the delete zone's rounded right corners.
+/// Uses GestureDetector + AnimationController for full visual control.
+class _DismissibleJournalCard extends ConsumerStatefulWidget {
+  final JournalEntry entry;
+  final VoidCallback onDismissed;
+
+  const _DismissibleJournalCard({
+    required this.entry,
+    required this.onDismissed,
+  });
+
+  @override
+  ConsumerState<_DismissibleJournalCard> createState() =>
+      _DismissibleJournalCardState();
+}
+
+class _DismissibleJournalCardState
+    extends ConsumerState<_DismissibleJournalCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  static const double _deleteWidth = 80.0;
+  static const double _radius = 20.0;
+  double _dragExtent = 0;
+  bool _isOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    _dragExtent += details.delta.dx;
+    _dragExtent = _dragExtent.clamp(-_deleteWidth, 0.0);
+    _controller.value = (-_dragExtent / _deleteWidth).clamp(0.0, 1.0);
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    if (_controller.value > 0.4 || (details.primaryVelocity ?? 0) < -500) {
+      _controller.animateTo(1.0, curve: Curves.easeOut);
+      _isOpen = true;
+      _dragExtent = -_deleteWidth;
+    } else {
+      _controller.animateTo(0.0, curve: Curves.easeOut);
+      _isOpen = false;
+      _dragExtent = 0;
+    }
+  }
+
+  void _close() {
+    _controller.animateTo(0.0, curve: Curves.easeOut);
+    _isOpen = false;
+    _dragExtent = 0;
+  }
+
+  void _onDelete() {
+    showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Spacing.radiusTile),
+        ),
+        title: Text(
+          'Delete entry?',
+          style: AppTypography.title.copyWith(fontSize: 18),
+        ),
+        content: Text(
+          'This journal entry will be permanently removed.',
+          style: AppTypography.body.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Cancel',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'Delete',
+              style: AppTypography.caption.copyWith(
+                color: const Color(0xFFE57373),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).then((confirmed) {
+      if (confirmed == true) {
+        widget.onDismissed();
+      } else {
+        _close();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onHorizontalDragUpdate: _onHorizontalDragUpdate,
+      onHorizontalDragEnd: _onHorizontalDragEnd,
+      onTap: _isOpen ? _close : null,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final slideOffset = -_controller.value * _deleteWidth;
+          // Right-side radius flattens from 20 → 0 as card slides open
+          final rightRadius = Radius.circular(_radius * (1 - _controller.value));
+          const leftRadius = Radius.circular(_radius);
+
+          return Stack(
+            children: [
+              // Delete zone — bottom layer, fixed width at right edge
+              if (_controller.value > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: _deleteWidth,
+                  child: GestureDetector(
+                    onTap: _onDelete,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE57373),
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(_radius),
+                          bottomRight: Radius.circular(_radius),
+                        ),
+                      ),
+                      child: Center(
+                        child: Opacity(
+                          opacity: _controller.value,
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              // Card — top layer, slides left to reveal delete behind it
+              Transform.translate(
+                offset: Offset(slideOffset, 0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.only(
+                      topLeft: leftRadius,
+                      bottomLeft: leftRadius,
+                      topRight: rightRadius,
+                      bottomRight: rightRadius,
+                    ),
+                    border: Border.all(
+                      color: AppColors.glassBorder,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: _JournalEntryCard.buildContent(
+                    context,
+                    ref,
+                    widget.entry,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 //  JOURNAL ENTRY CARD
 // ═══════════════════════════════════════════════════════
 
@@ -489,7 +689,7 @@ class _JournalEntryCard extends ConsumerWidget {
 
   const _JournalEntryCard({required this.entry});
 
-  String _formatDate(DateTime date) {
+  static String _formatDate(DateTime date) {
     final months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -503,84 +703,175 @@ class _JournalEntryCard extends ConsumerWidget {
     return '${months[date.month - 1]} ${date.day}';
   }
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  /// Builds the inner content column for a journal entry.
+  /// Used by both the standalone GlassCard widget and the swipeable variant.
+  static Widget buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    JournalEntry entry,
+  ) {
     final hobbyName = entry.hobbyId != null
         ? (ref.watch(hobbyByIdProvider(entry.hobbyId!)).valueOrNull?.title ?? entry.hobbyId!)
         : 'General';
 
+    final reflectionEmoji = _sessionReflectionEmoji(entry.text);
+    final isSessionEntry = reflectionEmoji != null;
+    final displayText = isSessionEntry
+        ? _stripReflectionPrefix(entry.text)
+        : entry.text;
+
+    // Coach CTA is only shown when the entry has an associated hobby
+    final showCoachCta = entry.hobbyId != null && entry.hobbyId!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Date header + hobby pill + session badge
+        Row(
+          children: [
+            Text(
+              _formatDate(entry.createdAt),
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(width: Spacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+              ),
+              child: Text(
+                hobbyName,
+                style: AppTypography.sansTiny.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const Spacer(),
+            // Session reflection badge
+            if (isSessionEntry)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.coral.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      reflectionEmoji,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Session',
+                      style: AppTypography.sansTiny.copyWith(
+                        color: AppColors.coral,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+
+        const SizedBox(height: Spacing.md),
+
+        // Text content
+        Text(
+          displayText,
+          style: AppTypography.body.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.6,
+          ),
+        ),
+
+        // Photo thumbnail
+        if (entry.photoUrl != null) ...[
+          const SizedBox(height: Spacing.md),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Spacing.radiusTile),
+            child: CachedNetworkImage(
+              imageUrl: entry.photoUrl!,
+              height: 160,
+              width: double.infinity,
+              memCacheWidth: 600,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => Container(
+                height: 160,
+                color: AppColors.surfaceElevated,
+                child: const Center(
+                  child: Icon(Icons.camera_alt_outlined, size: 28, color: AppColors.textMuted),
+                ),
+              ),
+              errorWidget: (_, __, ___) => Container(
+                height: 160,
+                color: AppColors.surfaceElevated,
+                child: const Center(
+                  child: Icon(Icons.image_outlined, size: 28, color: AppColors.textMuted),
+                ),
+              ),
+            ),
+          ),
+        ],
+
+        // ── Per-entry coach CTA ──
+        if (showCoachCta) ...[
+          const SizedBox(height: Spacing.md),
+          GestureDetector(
+            onTap: () {
+              context.push('/coach/${entry.hobbyId}', extra: {
+                'message': 'Let\'s discuss this journal entry.',
+                'mode': 'momentum',
+                'autoSend': false,
+                'focusEntryId': entry.id,
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.glassBackground,
+                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                border: Border.all(color: AppColors.glassBorder),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.auto_awesome,
+                      size: 12, color: AppColors.coral),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Discuss with coach',
+                    style: AppTypography.sansTiny.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSessionEntry = _sessionReflectionEmoji(entry.text) != null;
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       borderRadius: Spacing.radiusCard,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Date header + hobby pill
-          Row(
-            children: [
-              Text(
-                _formatDate(entry.createdAt),
-                style: AppTypography.monoCaption,
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceElevated,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                ),
-                child: Text(
-                  hobbyName,
-                  style: AppTypography.sansTiny.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Text content
-          Text(
-            entry.text,
-            style: AppTypography.body.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.6,
-            ),
-          ),
-
-          // Photo thumbnail
-          if (entry.photoUrl != null) ...[
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(Spacing.radiusTile),
-              child: CachedNetworkImage(
-                imageUrl: entry.photoUrl!,
-                height: 160,
-                width: double.infinity,
-                memCacheWidth: 600,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  height: 160,
-                  color: AppColors.surfaceElevated,
-                  child: const Center(
-                    child: Icon(Icons.camera_alt_outlined, size: 28, color: AppColors.textMuted),
-                  ),
-                ),
-                errorWidget: (_, __, ___) => Container(
-                  height: 160,
-                  color: AppColors.surfaceElevated,
-                  child: const Center(
-                    child: Icon(Icons.image_outlined, size: 28, color: AppColors.textMuted),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
+      borderColor: isSessionEntry
+          ? AppColors.coral.withValues(alpha: 0.15)
+          : null,
+      child: buildContent(context, ref, entry),
     );
   }
 }

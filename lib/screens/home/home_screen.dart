@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../components/app_background.dart';
+import '../../components/app_overlays.dart';
 import '../../components/glass_card.dart';
 import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
@@ -44,6 +45,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _pageController = PageController(initialPage: initialIndex);
   }
 
+  @override
+  void didUpdateWidget(covariant HomeScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.initialHobbyId != null &&
+        widget.initialHobbyId != old.initialHobbyId) {
+      final targetIndex = _findHobbyIndex(widget.initialHobbyId);
+      if (targetIndex != _currentPage) {
+        setState(() => _currentPage = targetIndex);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(targetIndex);
+          }
+        });
+      }
+    }
+  }
+
+  /// Find the index of [hobbyId] in the sorted active entries list.
+  /// Uses the same sort order as build() — most recently active first.
   int _findHobbyIndex(String? hobbyId) {
     if (hobbyId == null) return 0;
     final userHobbies = ref.read(userHobbiesProvider);
@@ -51,7 +71,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .where((e) =>
             e.value.status == HobbyStatus.trying ||
             e.value.status == HobbyStatus.active)
-        .toList();
+        .toList()
+      ..sort((a, b) {
+        final aTime = a.value.lastActivityAt ?? a.value.startedAt;
+        final bTime = b.value.lastActivityAt ?? b.value.startedAt;
+        if (aTime == null && bTime == null) return 0;
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
     final idx = activeEntries.indexWhere((e) => e.key == hobbyId);
     return idx >= 0 ? idx : 0;
   }
@@ -653,8 +681,8 @@ class _RestartCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text("Let's go",
-                          style: AppTypography.button
-                              .copyWith(color: const Color.fromARGB(255, 255, 255, 255))),
+                          style: AppTypography.button.copyWith(
+                              color: const Color.fromARGB(255, 255, 255, 255))),
                     ),
                   ),
                 ),
@@ -855,6 +883,232 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
     });
   }
 
+  /// Confirmation sheet before uncompleting a step.
+  void _showUncompleteConfirmation(BuildContext context, RoadmapStep step) {
+    showAppSheet(
+      context: context,
+      title: 'Mark as incomplete?',
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This will remove your progress for this step. Are you sure?',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.glassBackground,
+                        borderRadius:
+                            BorderRadius.circular(Spacing.radiusButton),
+                        border: Border.all(
+                            color: AppColors.glassBorder, width: 0.5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Cancel',
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      ref
+                          .read(userHobbiesProvider.notifier)
+                          .toggleStep(widget.hobby.id, step.id);
+                    },
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.textMuted.withValues(alpha: 0.15),
+                        borderRadius:
+                            BorderRadius.circular(Spacing.radiusButton),
+                        border: Border.all(
+                            color: AppColors.textMuted.withValues(alpha: 0.3),
+                            width: 0.5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Mark Incomplete',
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.textMuted,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Bottom sheet for marking an incomplete step complete without a session.
+  void _showMarkCompleteSheet(BuildContext context, RoadmapStep step) {
+    showAppSheet(
+      context: context,
+      title: 'Mark as complete?',
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Step context
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.glassBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    step.title,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    step.description,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'You can mark this step done if you\'ve already completed it outside the app.',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Primary CTA: Start Session (coral)
+            GestureDetector(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                HapticFeedback.lightImpact();
+                final i = widget.hobby.roadmapSteps
+                    .indexWhere((s) => s.id == step.id);
+                final followingTitle = i + 1 < widget.hobby.roadmapSteps.length
+                    ? widget.hobby.roadmapSteps[i + 1].title
+                    : null;
+                context.push(
+                  '/session/${widget.hobby.id}/${step.id}',
+                  extra: <String, dynamic>{
+                    'hobbyTitle': widget.hobby.title,
+                    'hobbyCategory': widget.hobby.category,
+                    'stepTitle': step.title,
+                    'stepDescription': step.description,
+                    'stepInstructions': '',
+                    'whatYouNeed': '',
+                    'recommendedMinutes': step.estimatedMinutes,
+                    'completionMode': step.effectiveMode,
+                    'nextStepTitle': followingTitle,
+                    'completionMessage': step.completionMessage,
+                    'coachTip': step.coachTip,
+                  },
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(Spacing.radiusButton),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'Start Session',
+                    style: AppTypography.body.copyWith(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Secondary: Mark Complete (text-style)
+            GestureDetector(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                ref
+                    .read(userHobbiesProvider.notifier)
+                    .toggleStep(widget.hobby.id, step.id);
+              },
+              child: Container(
+                width: double.infinity,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(Spacing.radiusButton),
+                ),
+                child: Center(
+                  child: Text(
+                    'Mark Complete',
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final steps = widget.hobby.roadmapSteps;
@@ -912,11 +1166,11 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
             }),
             onTap: () {
               if (isCompleted) {
-                ref
-                    .read(userHobbiesProvider.notifier)
-                    .toggleStep(widget.hobby.id, step.id);
+                _showUncompleteConfirmation(context, step);
               } else if (!isFocused) {
                 _setFocusedStep(step.id);
+              } else {
+                _showMarkCompleteSheet(context, step);
               }
             },
             staggerIndex: i,

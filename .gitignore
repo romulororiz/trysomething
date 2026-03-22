@@ -24,10 +24,13 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code launch config contains --dart-define secrets (OAuth client IDs, API keys)
+.vscode/launch.json
+
+# Firebase config files contain API keys (regenerate locally via FlutterFire CLI)
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-info.plist
 
 # Flutter/Dart/Pub related
 **/doc/api/

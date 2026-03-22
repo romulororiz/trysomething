@@ -53,9 +53,7 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
           Text(
             'STEP COMPLETE',
             style: AppTypography.overline,
-          )
-              .animate()
-              .fadeIn(duration: 300.ms, delay: 500.ms),
+          ).animate().fadeIn(duration: 300.ms, delay: 500.ms),
 
           const SizedBox(height: 12),
 
@@ -78,9 +76,7 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
                 size: 22,
               ),
             ],
-          )
-              .animate()
-              .fadeIn(duration: 300.ms, delay: 700.ms),
+          ).animate().fadeIn(duration: 300.ms, delay: 700.ms),
 
           const SizedBox(height: 16),
 
@@ -92,9 +88,7 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
-            )
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 800.ms),
+            ).animate().fadeIn(duration: 300.ms, delay: 800.ms),
 
           if (widget.session.completionMessage != null)
             const SizedBox(height: 16),
@@ -105,9 +99,7 @@ class _SessionCompletePhaseState extends State<SessionCompletePhase> {
               'Next: ${widget.session.nextStepTitle}',
               style: AppTypography.body.copyWith(fontSize: 14),
               textAlign: TextAlign.center,
-            )
-                .animate()
-                .fadeIn(
+            ).animate().fadeIn(
                   duration: 300.ms,
                   delay: widget.session.completionMessage != null
                       ? 1000.ms

@@ -56,26 +56,35 @@ class BeginnerFaqScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                        child: Material(
-                      color: Colors.transparent,
-                      child: Builder(builder: (_) {
-                        final words = hobby?.title.split(' ') ?? [];
-                        if (words.length <= 1) {
-                          return Text(hobby?.title ?? hobbyId,
-                              style: AppTypography.serifHeading);
-                        }
-                        return Text.rich(TextSpan(children: [
-                          TextSpan(
-                            text: words.first,
-                            style: AppTypography.serifHeading
-                                .copyWith(color: AppColors.accent),
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Builder(builder: (_) {
+                          final words = hobby?.title.split(' ') ?? [];
+                          if (words.length <= 1) {
+                            return Text(hobby?.title ?? hobbyId,
+                                style: AppTypography.serifHeading);
+                          }
+                          return Text.rich(TextSpan(children: [
+                            TextSpan(
+                              text: words.first,
+                              style: AppTypography.serifHeading
+                                  .copyWith(color: AppColors.accent),
+                            ),
+                            TextSpan(
+                              text: ' ${words.skip(1).join(' ')}',
+                              style: AppTypography.serifHeading,
+                            ),
+                          ]));
+                        }),
+                        Text(
+                          'FAQs',
+                          style: AppTypography.title.copyWith(
+                            fontSize: 14,
+                            color: AppColors.textMuted,
                           ),
-                          TextSpan(
-                            text: ' ${words.skip(1).join(' ')} FAQs',
-                            style: AppTypography.serifHeading,
-                          ),
-                        ]));
-                      }),
+                        ),
+                      ],
                     )),
                   ],
                 ),
@@ -312,7 +321,7 @@ class _FaqCardState extends ConsumerState<_FaqCard>
                   child: Text(
                     widget.faq.question,
                     style: AppTypography.sansBody.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w400,
                       height: 1.4,
                       color: AppColors.textPrimary,
                     ),

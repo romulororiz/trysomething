@@ -102,8 +102,7 @@ class BreathingRingPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(dotX, dotY),
         3,
-        Paint()
-          ..color = AppColors.accent.withValues(alpha: 0.8 * ringOpacity),
+        Paint()..color = AppColors.accent.withValues(alpha: 0.8 * ringOpacity),
       );
     }
 
@@ -142,7 +141,7 @@ class BreathingRing extends StatefulWidget {
   const BreathingRing({
     super.key,
     required this.progress,
-    this.breathCycleDuration = const Duration(milliseconds: 4000),
+    this.breathCycleDuration = const Duration(milliseconds: 2000),
     this.glowIntensity = 0.15,
     this.ringOpacity = 1.0,
     this.ringSize = 270,
@@ -185,9 +184,7 @@ class BreathingRingState extends State<BreathingRing>
     setState(() {
       // Rise to 0.012 at halfway (0.5), then back to 0
       final v = _pulseController.value;
-      _pulseScale = v < 0.5
-          ? v * 2 * 0.012
-          : (1.0 - v) * 2 * 0.012;
+      _pulseScale = v < 0.5 ? v * 2 * 0.012 : (1.0 - v) * 2 * 0.012;
     });
   }
 

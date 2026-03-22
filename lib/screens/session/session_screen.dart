@@ -3,10 +3,11 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../components/breathing_ring.dart';
 import '../../models/session.dart';
+import '../../models/social.dart';
+import '../../providers/feature_providers.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
-import 'session_complete_phase.dart';
 import 'session_prepare_phase.dart';
 import 'session_reflect_phase.dart';
 import 'session_timer_phase.dart';
@@ -203,6 +204,39 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     return (session.elapsedSeconds / total).clamp(0.0, 1.0);
   }
 
+  /// Persist a session reflection as a journal entry (fire and forget).
+  ///
+  /// Prefixes the text with a reflection emoji so the journal UI can
+  /// identify session-sourced entries later.
+  void _saveSessionJournal({
+    required String hobbyId,
+    required ReflectionChoice choice,
+    required String journalText,
+  }) {
+    final emoji = switch (choice) {
+      ReflectionChoice.lovedIt => '\u2764\uFE0F',   // ❤️
+      ReflectionChoice.okay    => '\uD83D\uDC4C',   // 👌
+      ReflectionChoice.struggled => '\u2601\uFE0F',  // ☁️
+    };
+    final label = switch (choice) {
+      ReflectionChoice.lovedIt   => 'Loved it',
+      ReflectionChoice.okay      => 'It was okay',
+      ReflectionChoice.struggled => 'Struggled',
+    };
+    final prefixedText = '$emoji $label — $journalText';
+
+    final entry = JournalEntry(
+      id: 'j_${DateTime.now().millisecondsSinceEpoch}',
+      hobbyId: hobbyId,
+      text: prefixedText,
+      createdAt: DateTime.now(),
+    );
+
+    // Optimistic add via the journal notifier (also calls API)
+    ref.read(journalProvider.notifier).addEntry(entry);
+    debugPrint('[Session] Journal entry saved for hobby $hobbyId');
+  }
+
   void _exitSession() {
     final session = ref.read(sessionProvider);
     // Mark step complete in user state if session finished successfully
@@ -223,24 +257,37 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Duration _breathCycleDuration(SessionState session) {
     if (session.isPaused) return const Duration(milliseconds: 8000); // D-11
     final remaining = session.selectedMinutes * 60 - session.elapsedSeconds;
-    if (session.phase == SessionPhase.timer && remaining > 0 && remaining < 60) {
+    if (session.phase == SessionPhase.timer &&
+        remaining > 0 &&
+        remaining < 60) {
       return const Duration(milliseconds: 3000); // D-12
     }
     return const Duration(milliseconds: 4000); // D-10
   }
 
-  /// Whether the breathing ring should be visible (Issue 5).
-  /// Visible during prepare, timer, and completing — hidden for reflect/complete.
-  bool _ringVisible(SessionState session) {
-    return session.phase == SessionPhase.prepare ||
-        session.phase == SessionPhase.timer ||
-        session.phase == SessionPhase.completing;
+  /// Ring opacity per phase:
+  /// - prepare: barely visible (0.12) — subtle preview behind content
+  /// - timer: full (1.0), dimmed when paused (0.4)
+  /// - completing/reflect/complete: hidden (0.0)
+  double _ringOpacity(SessionState session) {
+    switch (session.phase) {
+      case SessionPhase.prepare:
+        return 0.0;
+      case SessionPhase.timer:
+        return session.isPaused ? 0.4 : 1.0;
+      case SessionPhase.completing:
+      case SessionPhase.reflect:
+      case SessionPhase.complete:
+        return 0.0;
+    }
   }
 
   /// Glow intensity increases during last minute (D-24).
   double _glowIntensity(SessionState session) {
     final remaining = session.selectedMinutes * 60 - session.elapsedSeconds;
-    if (session.phase == SessionPhase.timer && remaining > 0 && remaining < 60) {
+    if (session.phase == SessionPhase.timer &&
+        remaining > 0 &&
+        remaining < 60) {
       return 0.25; // D-24: intensified glow in last minute
     }
     return 0.15; // Default
@@ -260,7 +307,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
     // Milestone pulse: trigger at 50% progress (D-23)
     final progress = _computeProgress(session);
-    if (progress >= 0.5 && !_halfwayPulseFired && session.phase == SessionPhase.timer) {
+    if (progress >= 0.5 &&
+        !_halfwayPulseFired &&
+        session.phase == SessionPhase.timer) {
       _halfwayPulseFired = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _ringKey.currentState?.triggerMilestonePulse();
@@ -323,7 +372,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               child: Center(
                 child: IgnorePointer(
                   child: AnimatedOpacity(
-                    opacity: _ringVisible(session) ? (session.isPaused ? 0.4 : 1.0) : 0.0,
+                    opacity: _ringOpacity(session),
                     duration: const Duration(milliseconds: 400),
                     child: BreathingRing(
                       key: _ringKey,
@@ -389,6 +438,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           onEndEarlyExit: () {
             if (mounted) Navigator.of(context).maybePop();
           },
+          onDevComplete: notifier.devForceComplete,
         );
 
       case SessionPhase.reflect:
@@ -401,16 +451,31 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               journalText: journalText,
               photoPath: photoPath,
             );
+
+            // Save journal entry via API (fire and forget)
+            if (journalText != null && journalText.trim().isNotEmpty) {
+              _saveSessionJournal(
+                hobbyId: session.hobbyId,
+                choice: choice,
+                journalText: journalText.trim(),
+              );
+            }
+
+            _exitSession();
           },
-          onSkip: notifier.skipReflection,
+          onSkip: () {
+            notifier.skipReflection();
+            _exitSession();
+          },
         );
 
       case SessionPhase.complete:
-        return SessionCompletePhase(
-          key: const ValueKey('complete'),
-          session: session,
-          onExit: _exitSession,
-        );
+        // After reflect, go straight home — completion was already shown
+        // during the "completing" phase in the timer.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _exitSession();
+        });
+        return const SizedBox.shrink();
     }
   }
 }
@@ -439,9 +504,7 @@ class _BreathingBackgroundState extends State<_BreathingBackground> {
 
   @override
   Widget build(BuildContext context) {
-    final target = widget.active
-        ? (_brightPhase ? 1.0 : 0.0)
-        : 0.0;
+    final target = widget.active ? (_brightPhase ? 1.0 : 0.0) : 0.0;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: target),

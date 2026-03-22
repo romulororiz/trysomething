@@ -156,8 +156,8 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
                   loading: () => const CostCalculatorSkeleton(),
                   error: (err, _) => ErrorRetryWidget(
                     error: err,
-                    onRetry: () => ref.invalidate(
-                        costBreakdownProvider(widget.hobbyId)),
+                    onRetry: () =>
+                        ref.invalidate(costBreakdownProvider(widget.hobbyId)),
                   ),
                   data: (costData) => kitItems.isEmpty && costData == null
                       ? _buildEmptyState()
@@ -205,6 +205,8 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
   // ── Header ──────────────────────────────────────────
 
   Widget _buildHeader(BuildContext context, String hobbyName) {
+    final hobby = ref.watch(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 20, 4),
       child: Row(
@@ -217,8 +219,7 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
               decoration: BoxDecoration(
                 color: AppColors.glassBackground,
                 shape: BoxShape.circle,
-                border:
-                    Border.all(color: AppColors.glassBorder, width: 0.5),
+                border: Border.all(color: AppColors.glassBorder, width: 0.5),
               ),
               child: const Icon(Icons.arrow_back_rounded,
                   size: 18, color: AppColors.textSecondary),
@@ -227,26 +228,35 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
           const SizedBox(width: 14),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Cost Breakdown',
-                  style: AppTypography.title.copyWith(
-                    fontSize: 18,
-                    color: AppColors.textPrimary,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Builder(builder: (_) {
+                final words = hobby?.title.split(' ') ?? [];
+                if (words.length <= 1) {
+                  return Text(hobby?.title ?? widget.hobbyId,
+                      style: AppTypography.serifHeading);
+                }
+                return Text.rich(TextSpan(children: [
+                  TextSpan(
+                    text: words.first,
+                    style: AppTypography.serifHeading
+                        .copyWith(color: AppColors.accent),
                   ),
-                ),
-                Text(
-                  hobbyName,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
+                  TextSpan(
+                    text: ' ${words.skip(1).join(' ')}',
+                    style: AppTypography.serifHeading,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                ]));
+              }),
+              Text(
+                'Cost Breakdown',
+                style: AppTypography.title.copyWith(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
                 ),
-              ],
-            ),
-          ),
+              ),
+            ],
+          )),
         ],
       ),
     );
@@ -443,8 +453,8 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
           final item = items[i];
           if (!visible.contains(item)) return const SizedBox.shrink();
           final isDisabled = _disabledItems.contains(i);
-          final canToggle = _selectedTier == CostTier.bestValue &&
-              item.isOptional;
+          final canToggle =
+              _selectedTier == CostTier.bestValue && item.isOptional;
 
           return _buildItemRow(item, i, isDisabled, canToggle)
               .animate()
@@ -541,8 +551,7 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color:
-                                    AppColors.accent.withValues(alpha: 0.08),
+                                color: AppColors.accent.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -703,8 +712,8 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
               _timelineBar('3 months', cost.threeMonth, maxCost,
                   const Color(0xFFFFB347), 1),
               const SizedBox(height: 14),
-              _timelineBar('1 year', cost.oneYear, maxCost,
-                  AppColors.accent, 2),
+              _timelineBar(
+                  '1 year', cost.oneYear, maxCost, AppColors.accent, 2),
             ],
           ),
         ),

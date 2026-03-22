@@ -154,18 +154,27 @@ class SessionNotifier extends StateNotifier<SessionState?> {
     );
     // Enhanced haptic alarm pattern
     HapticFeedback.mediumImpact();
-    Future.delayed(const Duration(milliseconds: 200), () => HapticFeedback.lightImpact());
-    Future.delayed(const Duration(milliseconds: 400), () => HapticFeedback.lightImpact());
-    Future.delayed(const Duration(milliseconds: 600), () => HapticFeedback.mediumImpact());
+    Future.delayed(
+        const Duration(milliseconds: 200), () => HapticFeedback.lightImpact());
+    Future.delayed(
+        const Duration(milliseconds: 400), () => HapticFeedback.lightImpact());
+    Future.delayed(
+        const Duration(milliseconds: 600), () => HapticFeedback.mediumImpact());
     debugPrint('[Session] Timer complete — entering completion moment');
 
     // Hold on the completion moment for 2 seconds, then advance.
-    _completionDelayTimer = Timer(const Duration(seconds: 2), () {
+    _completionDelayTimer = Timer(const Duration(seconds: 5), () {
       if (state != null && state!.phase == SessionPhase.completing) {
         state = state!.copyWith(phase: SessionPhase.reflect);
         debugPrint('[Session] → Reflect phase');
       }
     });
+  }
+
+  /// DEV ONLY: Force-complete the timer to test the completion flow.
+  void devForceComplete() {
+    if (state == null) return;
+    _completeTimer();
   }
 
   // ───────────────────────────────────────────────

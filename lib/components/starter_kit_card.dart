@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/hobby.dart';
@@ -50,7 +49,7 @@ class _StarterKitCardState extends State<StarterKitCard> {
         children: [
           Row(
             children: [
-              Icon(Icons.shopping_bag_outlined,
+              const Icon(Icons.shopping_bag_outlined,
                   size: 16, color: AppColors.coral),
               const SizedBox(width: 8),
               Expanded(
@@ -100,8 +99,7 @@ class _StarterKitCardState extends State<StarterKitCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(AppIcons.shoppingList,
-                      size: 14, color: AppColors.coral),
+                  Icon(AppIcons.shoppingList, size: 14, color: AppColors.coral),
                   const SizedBox(width: 6),
                   Text('Open Shopping Checklist',
                       style: AppTypography.sansTiny
@@ -119,73 +117,68 @@ class _StarterKitCardState extends State<StarterKitCard> {
     return GestureDetector(
       onTap: () => _openAffiliateLink(item),
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 8, top: 10),
         child: Row(
           children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: item.imageUrl!,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 88,
-                        placeholder: (_, __) =>
-                            Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => Container(
-                          color: AppColors.surfaceElevated,
-                          child: const Icon(Icons.image_outlined,
-                              size: 16, color: AppColors.textWhisper),
-                        ),
-                      )
-                    : Container(
-                        color: AppColors.surfaceElevated,
-                        child: Icon(
-                          item.isOptional
-                              ? Icons.add_circle_outline
-                              : Icons.check_circle_outline,
-                          size: 18,
-                          color: AppColors.textWhisper,
-                        ),
-                      ),
+            // Bullet dot
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: item.isOptional
+                    ? AppColors.textWhisper
+                    : AppColors.textMuted,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
+
+            // Item name
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.name,
-                      style: AppTypography.sansBodySmall.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  if (item.isOptional)
-                    Text('Optional',
-                        style: AppTypography.sansTiny
-                            .copyWith(color: AppColors.textMuted)),
-                ],
+              child: Text(
+                item.name,
+                style: AppTypography.sansBodySmall.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+
+            // Optional tag
+            if (item.isOptional) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.glassBackground,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'optional',
+                  style: AppTypography.sansTiny.copyWith(
+                    color: AppColors.textMuted,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+            ],
+
+            // Cost badge
+            const SizedBox(width: 8),
             if (item.cost > 0)
               Text('CHF ${item.cost}',
                   style: AppTypography.monoBadge.copyWith(
-                    color: AppColors.coral,
-                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
                   ))
             else
               Text('FREE',
                   style: AppTypography.monoBadge.copyWith(
                     color: AppColors.sage,
-                    fontWeight: FontWeight.w700,
                   )),
             const SizedBox(width: 6),
             const Icon(Icons.open_in_new_rounded,
-                size: 12, color: AppColors.textWhisper),
+                size: 10, color: AppColors.textWhisper),
           ],
         ),
       ),
