@@ -102,7 +102,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — Restore tile in Settings + unit tests for restore flow (SUB-01)
+- [x] 06-01-PLAN.md — Restore tile in Settings + unit tests for restore flow (SUB-01)
 
 ### Phase 7: Dead Code Cleanup
 **Goal:** The 7 hidden feature screens and their associated code are fully removed with no breakage to active screens

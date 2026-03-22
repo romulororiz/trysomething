@@ -38,7 +38,7 @@ Requirements for App Store and Play Store submission readiness.
 
 ### Subscription
 
-- [ ] **SUB-01**: Restore Purchases button available on paywall screen and/or Settings (Apple guideline 3.1.1)
+- [x] **SUB-01**: Restore Purchases button available on paywall screen and/or Settings (Apple guideline 3.1.1)
 
 ### Cleanup
 
@@ -95,7 +95,7 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 | AI-01 | Phase 8 | Pending |
 | AI-02 | Phase 8 | Pending |
 | AI-03 | Phase 8 | Pending |
-| SUB-01 | Phase 6 | Pending |
+| SUB-01 | Phase 6 | Complete |
 | CLEAN-01 | Phase 7 | Pending |
 | DX-01 | Phase 10 | Pending |
 
