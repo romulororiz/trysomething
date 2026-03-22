@@ -162,11 +162,11 @@ Plans:
   6. Breathing animation cycles: 4s active, 8s paused, 3s last minute
   7. Four dead component files deleted (~1015 lines): particle_timer_painter, category_shape_painter, brushstroke_timer_painter, session_glow_widget
   8. All session widget tests pass including new BreathingRing and coach tip assertions
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 09.1-01-PLAN.md — Foundation: BreathingRing + FilmGrainOverlay components, coachTip data plumbing, dead file deletion
-- [ ] 09.1-02-PLAN.md — Core rewrite: session_screen.dart 5-layer Stack + session_timer_phase.dart ring-centric layout
+- [x] 09.1-02-PLAN.md — Core rewrite: session_screen.dart 5-layer Stack + session_timer_phase.dart ring-centric layout
 - [ ] 09.1-03-PLAN.md — Phase polish: prepare/complete/reflect updates + test suite updates
 
 ### Phase 10: Pre-Commit Hooks
