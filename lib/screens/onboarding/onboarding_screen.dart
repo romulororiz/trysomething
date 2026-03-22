@@ -136,7 +136,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   void _skip() {
-    _completeOnboarding();
+    // Mark onboarding complete without saving quiz answers (defaults kept)
+    ref.read(onboardingCompleteProvider.notifier).complete();
+
+    // Skip match results — user didn't complete the quiz so matches
+    // would be based on defaults and not meaningful
+    ref.read(sharedPreferencesProvider).setBool('matchResultsSeen', true);
+
+    ref.read(analyticsProvider).trackEvent('onboarding_skipped');
+
+    // Navigate to trial offer (router guard will redirect to /home after)
+    context.go('/trial-offer');
   }
 
   void _completeOnboarding() {
