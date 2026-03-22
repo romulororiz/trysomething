@@ -118,6 +118,22 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
   });
 
   if (existing) {
+    // Fire-and-forget FAQ generation if not yet generated for this hobby
+    prisma.faqItem.count({ where: { hobbyId: existing.id } }).then((count) => {
+      if (count === 0) {
+        generateFaqContent(existing.title, existing.categoryId)
+          .then((faqData) =>
+            Promise.all(
+              faqData.map((item) =>
+                prisma.faqItem.create({
+                  data: { hobbyId: existing.id, question: item.question, answer: item.answer },
+                })
+              )
+            )
+          )
+          .catch((err) => console.error(`[FAQ] Background generation failed for ${existing.id}:`, err));
+      }
+    }).catch(() => {});
     return res.status(200).json({ hobby: mapHobby(existing), existed: true });
   }
 
@@ -148,6 +164,22 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
 
     if (postGenDupe) {
       await logGeneration(userId, trimmed, "success", "Returned existing (post-gen match)", postGenDupe.id);
+      // Fire-and-forget FAQ generation if not yet generated for this hobby
+      prisma.faqItem.count({ where: { hobbyId: postGenDupe.id } }).then((count) => {
+        if (count === 0) {
+          generateFaqContent(postGenDupe.title, postGenDupe.categoryId)
+            .then((faqData) =>
+              Promise.all(
+                faqData.map((item) =>
+                  prisma.faqItem.create({
+                    data: { hobbyId: postGenDupe.id, question: item.question, answer: item.answer },
+                  })
+                )
+              )
+            )
+            .catch((err) => console.error(`[FAQ] Background generation failed for ${postGenDupe.id}:`, err));
+        }
+      }).catch(() => {});
       return res.status(200).json({ hobby: mapHobby(postGenDupe), existed: true });
     }
 
