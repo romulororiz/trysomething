@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-22T12:26:48.369Z"
+last_updated: "2026-03-22T12:31:59.099Z"
 progress:
   total_phases: 11
   completed_phases: 7
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # STATE.md — TrySomething v1.0 Launch Readiness
@@ -28,8 +28,8 @@ progress:
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
+Phase: 09 (app-store-assets-and-admin) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Plan: Not started
 | Phase 07 P01 | 5min | 2 tasks | 10 files |
 | Phase 08 P01 | 2min | 1 tasks | 1 files |
 | Phase 10 P01 | 10min | 2 tasks | 4 files |
+| Phase 09 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Plan: Not started
 | Use --no-fatal-warnings for dart analyze in pre-commit | Phase 10 | Pre-existing warnings (2 unused_element) would block all Dart commits; errors still abort |
 | Exclude test/ from tsconfig.json for tsc --noEmit | Phase 10 | Vitest uses own transform; broken test imports don't affect production type safety |
 | Use ./node_modules/.bin/tsc instead of npx tsc | Phase 10 | Direct binary avoids nvm/npm version mismatch on Windows dev machine |
+| CA92.1 reason code for UserDefaults privacy manifest | Phase 9 | Covers Hive and SharedPreferences reading their own keys |
+| iPhone-only targeting (TARGETED_DEVICE_FAMILY=1) | Phase 9 | Eliminates iPad screenshot requirement for App Store submission |
 
 ### Architecture Notes
 

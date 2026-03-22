@@ -145,7 +145,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Privacy manifest + iPhone-only device targeting (COMP-12)
+- [x] 09-01-PLAN.md — Privacy manifest + iPhone-only device targeting (COMP-12)
 - [ ] 09-02-PLAN.md — Store submission checklists, screenshots, metadata, demo account (COMP-13, COMP-14)
 
 ### Phase 10: Pre-Commit Hooks

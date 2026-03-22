@@ -20,7 +20,7 @@ Requirements for App Store and Play Store submission readiness.
 - [x] **COMP-09**: Terms of Service hosted as public HTML page on Next.js website
 - [x] **COMP-10**: Privacy Policy hosted as public HTML page on Next.js website
 - [x] **COMP-11**: Settings screen links to hosted Terms and Privacy Policy
-- [ ] **COMP-12**: iOS app includes Apple Privacy Manifests for Firebase, RevenueCat, and PostHog SDKs
+- [x] **COMP-12**: iOS app includes Apple Privacy Manifests for Firebase, RevenueCat, and PostHog SDKs
 - [ ] **COMP-13**: App Privacy Labels completed in App Store Connect (requires hosted privacy policy)
 - [ ] **COMP-14**: Data Safety Form completed in Google Play Console (requires hosted privacy policy)
 
@@ -86,7 +86,7 @@ Deferred to v1.1 milestone. Tracked but not in current roadmap.
 | COMP-09 | Phase 3 | Complete |
 | COMP-10 | Phase 3 | Complete |
 | COMP-11 | Phase 3 | Complete |
-| COMP-12 | Phase 9 | Pending |
+| COMP-12 | Phase 9 | Complete |
 | COMP-13 | Phase 9 | Pending |
 | COMP-14 | Phase 9 | Pending |
 | SEC-01 | Phase 1 | Complete |
