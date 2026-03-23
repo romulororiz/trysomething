@@ -49,7 +49,7 @@
 - [x] **Phase 11: Lifecycle Schema Migration** — Add `paused` enum value and pause tracking fields to Prisma schema and Dart model; run codegen before any downstream work (completed 2026-03-23)
 - [x] **Phase 12: Hobby Completion Flow + Stop** — Server-side completion detection, celebration overlay, Home completed state, and free stop/abandon action (completed 2026-03-23)
 - [x] **Phase 13: Detail Page Content Gating** — Free vs Pro content sections with `ProGateSection` widget and server-side endpoint guards (completed 2026-03-23)
-- [ ] **Phase 14: Pause/Resume Lifecycle** — Pro-gated pause action, paused state display, resume, Pro-lapse auto-resume, and streak-safe pause duration tracking
+- [x] **Phase 14: Pause/Resume Lifecycle** — Pro-gated pause action, paused state display, resume, Pro-lapse auto-resume, and streak-safe pause duration tracking (completed 2026-03-23)
 
 ---
 
@@ -108,7 +108,7 @@ Plans:
   3. The You tab shows a distinct "Paused" filter state so the user can find their paused hobby alongside Active / Saved / Tried
   4. Tapping "Resume" from Home or You restores the hobby to active status with all completed steps intact and the correct streak — the pause gap is not counted as inactivity
   5. If a Pro subscription lapses while a hobby is paused, the hobby automatically transitions to active (not stuck in paused), and the user sees it normally on their next app open
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 14-01-PLAN.md — Repository + provider pause/resume methods + server PUT extension + webhook auto-resume
 - [ ] 14-02-PLAN.md — Home paused state + pause menu + confirmation sheet + You tab Paused filter
@@ -135,7 +135,7 @@ Plans:
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 14. Pause/Resume Lifecycle | v1.1 | 0/2 | Not started | — |
+| 14. Pause/Resume Lifecycle | 2/2 | Complete   | 2026-03-23 | — |
 
 ---
 

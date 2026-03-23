@@ -17,10 +17,10 @@ Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phase
 ### Lifecycle
 
 - [x] **LIFE-01**: User can stop/abandon an active hobby (free) — moves to Tried with confirmation prompt, no progress preserved
-- [ ] **LIFE-02**: User can pause an active hobby (Pro) — preserves progress, streaks, completed steps; requires active Pro entitlement
-- [ ] **LIFE-03**: User can resume a paused hobby (Pro) — picks up where they left off with streak continuity
-- [ ] **LIFE-04**: Home shows paused hobby with frosted glass card (opacity 0.7), "Paused" chip, coral "Resume" CTA, days-paused counter
-- [ ] **LIFE-05**: You tab shows Paused as a distinct filter state alongside Active/Saved/Tried with pause icon on card
+- [x] **LIFE-02**: User can pause an active hobby (Pro) — preserves progress, streaks, completed steps; requires active Pro entitlement
+- [x] **LIFE-03**: User can resume a paused hobby (Pro) — picks up where they left off with streak continuity
+- [x] **LIFE-04**: Home shows paused hobby with frosted glass card (opacity 0.7), "Paused" chip, coral "Resume" CTA, days-paused counter
+- [x] **LIFE-05**: You tab shows Paused as a distinct filter state alongside Active/Saved/Tried with pause icon on card
 - [ ] **LIFE-06**: Pro subscription lapse auto-resumes paused hobbies as active (no data lost, removes pause state gracefully)
 - [ ] **LIFE-07**: Pause duration excluded from streak calculation (pausedDurationDays subtracted from gap)
 
@@ -85,10 +85,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GATE-04 | Phase 13 | Complete |
 | GATE-05 | Phase 13 | Complete |
 | GATE-06 | Phase 13 | Complete |
-| LIFE-02 | Phase 14 | Pending |
-| LIFE-03 | Phase 14 | Pending |
-| LIFE-04 | Phase 14 | Pending |
-| LIFE-05 | Phase 14 | Pending |
+| LIFE-02 | Phase 14 | Complete |
+| LIFE-03 | Phase 14 | Complete |
+| LIFE-04 | Phase 14 | Complete |
+| LIFE-05 | Phase 14 | Complete |
 | LIFE-06 | Phase 14 | Pending |
 | LIFE-07 | Phase 14 | Pending |
 

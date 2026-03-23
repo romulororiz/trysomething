@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
-status: unknown
-last_updated: "2026-03-23T18:35:18.153Z"
+status: complete
+last_updated: "2026-03-23T21:10:10.512Z"
 progress:
   total_phases: 14
   completed_phases: 14
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 26
+  completed_plans: 26
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — Phase 13 complete (content gating UI + server-side Pro gating)*
+*Last updated: 2026-03-23 — Phase 14 Plan 02 complete (pause/resume UI on Home and You screens)*
 
 ---
 
@@ -23,18 +23,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** v1.1 Phase 13 — Detail Page Content Gating
+**Current focus:** v1.1 complete — all phases done
 
 ---
 
 ## Current Position
 
-Phase: 13 of 14 (Detail Page Content Gating) -- COMPLETE
-Plan: 2 of 2 in Phase 13 (COMPLETE)
-Status: Phase 13 complete
-Last activity: 2026-03-23 — Completed 13-02-PLAN.md (content gating UI with ProGateSection, PlanFirstSessionCard, locked quick links)
+Phase: 14 of 14 (Pause/Resume Lifecycle) -- COMPLETE
+Plan: 2 of 2 in Phase 14 (Plan 02 COMPLETE)
+Status: v1.1 milestone complete -- all 8 plans across 4 phases done
+Last activity: 2026-03-23 — Completed 14-02-PLAN.md (pause/resume UI on Home and You screens)
 
-Progress: [#########░] 90% (v1.1) — 6 of 7 plans complete
+Progress: [##########] 100% (v1.1) — 8 of 8 plans complete
 
 ---
 
@@ -56,12 +56,14 @@ Progress: [#########░] 90% (v1.1) — 6 of 7 plans complete
 | 11. Schema Migration | 2/2 | Complete |
 | 12. Completion Flow + Stop | 2/2 | Complete |
 | 13. Content Gating | 2/2 | Complete |
-| 14. Pause/Resume | 0/? | Not started |
+| 14. Pause/Resume | 2/2 | Complete |
 
 | Phase 12 P01 | 7min | 2 tasks | 5 files |
 | Phase 12 P02 | 15min | 3 tasks | 8 files |
 | Phase 13 P01 | 2min | 2 tasks | 2 files |
 | Phase 13 P02 | 7min | 4 tasks | 5 files |
+| Phase 14 P01 | 12min | 3 tasks | 7 files |
+| Phase 14 P02 | 7min | 2 tasks | 2 files |
 
 ---
 
@@ -93,6 +95,15 @@ Progress: [#########░] 90% (v1.1) — 6 of 7 plans complete
 - [13-02] ProGateSection is a StatelessWidget receiving isLocked as param -- parent controls state, no internal provider reads
 - [13-02] PlanFirstSessionCard uses optional overrides for multi-mode reuse (detail defaults vs home 3-mode)
 - [13-02] Quick link lock badges: 8px lock icon in 16px surfaceElevated circle at top-right of feature icon
+- [14-01] resumeHobby restores to HobbyStatus.trying (not active) per LIFE-03 -- setActive() is the only path to active status
+- [14-01] No Pro gate on resumeHobby -- resume always free, pause initiation gating is UI-only
+- [14-01] Explicit null for pausedAt in Dio body on resume -- conditional send when pausedAt==null && lastActivityAt!=null
+- [14-01] EXPIRATION auto-resume uses loop (not updateMany) for per-row pausedDurationDays accumulation
+- [14-01] vi.mock path in server tests: ../lib/db (from test/) not ../../lib/db (which resolves outside server/)
+- [14-02] Pause button uses coral at 15% opacity (non-destructive) vs solid coral for Stop (destructive) -- visual hierarchy distinguishes actions
+- [14-02] Paused Home page strips all content except image, title, chip, counter, and Resume CTA -- no coach/roadmap/schedule
+- [14-02] Tab order Active/Paused/Saved/Tried places Paused adjacent to Active for quick toggling
+- [14-02] activeCount in profile header excludes paused hobbies after split from activeEntries
 
 ### Blockers/Concerns
 
@@ -104,10 +115,10 @@ Progress: [#########░] 90% (v1.1) — 6 of 7 plans complete
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Completed 13-02-PLAN.md (content gating UI with ProGateSection, PlanFirstSessionCard, locked quick links)
+Stopped at: Completed 14-02-PLAN.md (pause/resume UI on Home and You screens)
 Resume file: None
 
-Next action: Phase 14 — Pause/Resume
+Next action: v1.1 milestone complete. Proceed to F.4 E2E testing or next milestone.
 
 ---
 
