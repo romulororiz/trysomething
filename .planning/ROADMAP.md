@@ -131,7 +131,7 @@ Plans:
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 13. Detail Page Content Gating | 2/2 | Complete   | 2026-03-23 | — |
+| 13. Detail Page Content Gating | 2/2 | Complete    | 2026-03-23 | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
 
 ---
