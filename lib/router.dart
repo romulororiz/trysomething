@@ -39,7 +39,9 @@ import 'core/analytics/analytics_provider.dart';
 //  NAVIGATION KEYS
 // ═══════════════════════════════════════════════════════
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+/// Exposed for screens that need to push full-screen overlays above the shell.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+final _rootNavigatorKey = rootNavigatorKey;
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 // ═══════════════════════════════════════════════════════

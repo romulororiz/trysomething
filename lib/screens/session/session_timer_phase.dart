@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -159,6 +160,25 @@ class SessionTimerPhase extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+
+        // DEV ONLY: Skip to completion — hidden in release builds
+        if (kDebugMode && onDevComplete != null && !_isCompleting)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: onDevComplete,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text('DEV: Skip',
+                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+              ),
             ),
           ),
 

@@ -1216,7 +1216,7 @@ class _EmptyActivePrompt extends StatelessWidget {
               child: Center(
                 child: Text('Discover hobbies',
                     style: AppTypography.button
-                        .copyWith(color: AppColors.background)),
+                        .copyWith(color: AppColors.textPrimary)),
               ),
             ),
           ),

@@ -174,6 +174,14 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
     }
   }
 
+  /// Remove a stale hobby entry from local state (e.g., hobby deleted from DB).
+  void removeHobby(String hobbyId) {
+    if (!state.containsKey(hobbyId)) return;
+    state = Map<String, UserHobby>.from(state)..remove(hobbyId);
+    _save();
+    debugPrint('[UserHobbies] Removed stale hobby: $hobbyId');
+  }
+
   void saveHobby(String hobbyId) {
     if (state.containsKey(hobbyId)) return;
     final snapshot = Map<String, UserHobby>.from(state);
@@ -196,11 +204,21 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   }
 
   void toggleSave(String hobbyId) {
-    if (state.containsKey(hobbyId) && state[hobbyId]!.status == HobbyStatus.saved) {
+    final hobby = state[hobbyId];
+    if (hobby != null && hobby.status == HobbyStatus.saved) {
       unsaveHobby(hobbyId);
-    } else if (!state.containsKey(hobbyId)) {
-      saveHobby(hobbyId);
+    } else if (hobby == null || hobby.status == HobbyStatus.done) {
+      // Not in map, or completed — (re)save it
+      final snapshot = Map<String, UserHobby>.from(state);
+      state = {
+        ...state,
+        hobbyId: UserHobby(hobbyId: hobbyId, status: HobbyStatus.saved),
+      };
+      _save();
+      _analytics.trackEvent('hobby_saved', {'hobby_id': hobbyId});
+      _apiCall(snapshot, () async => _repo.saveHobby(hobbyId));
     }
+    // For trying/active/paused — do nothing (hobby is in progress, not a save toggle)
   }
 
   bool isSaved(String hobbyId) {
@@ -289,6 +307,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
     // so concurrent toggles don't cascade-wipe each other's changes.
     try {
       final (updatedHobby, hobbyCompleted) = await _repo.toggleStep(hobbyId, stepId);
+      debugPrint('[UserHobbies] Server returned: status=${updatedHobby.status}, hobbyCompleted=$hobbyCompleted, completedAt=${updatedHobby.completedAt}');
       state = {
         ...state,
         hobbyId: updatedHobby,
@@ -358,7 +377,8 @@ final hobbyCountByStatusProvider = Provider.family<int, HobbyStatus>((ref, statu
 
 /// Whether a specific hobby is saved/bookmarked
 final isHobbySavedProvider = Provider.family<bool, String>((ref, hobbyId) {
-  return ref.watch(userHobbiesProvider).containsKey(hobbyId);
+  final hobby = ref.watch(userHobbiesProvider)[hobbyId];
+  return hobby?.status == HobbyStatus.saved;
 });
 
 /// Whether the user can start a new hobby (Pro = unlimited, Free = 1 active).

@@ -6,6 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../router.dart' show rootNavigatorKey;
+import '../session/hobby_completion_screen.dart';
 import '../../components/app_background.dart';
 import '../../components/app_overlays.dart';
 import '../../components/glass_card.dart';
@@ -95,6 +97,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userHobbies = ref.watch(userHobbiesProvider);
     final isPro = ref.watch(isProProvider);
 
+    // DEBUG: log all hobby statuses on every rebuild
+    for (final e in userHobbies.entries) {
+      debugPrint('[Home] hobby=${e.key} status=${e.value.status} completedAt=${e.value.completedAt}');
+    }
+
     final activeEntries = userHobbies.entries
         .where((e) =>
             e.value.status == HobbyStatus.trying ||
@@ -122,12 +129,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (activeEntries.isEmpty) {
       Future.microtask(
           () => ref.read(shellLoadingProvider.notifier).state = false);
-      if (doneEntries.isNotEmpty) {
-        return _CompletedHomeState(
-          hobbyId: doneEntries.first.key,
-          userHobby: doneEntries.first.value,
-        );
-      }
+      // No completed home state — celebration is a one-time overlay.
+      // Home goes straight to empty state when no active hobbies.
       return _EmptyHomeState();
     }
 
@@ -285,9 +288,12 @@ class _HobbyPage extends ConsumerWidget {
               style: TextStyle(color: AppColors.textMuted))),
       data: (hobby) {
         if (hobby == null) {
-          return const Center(
-              child: Text('Hobby not found',
-                  style: TextStyle(color: AppColors.textMuted)));
+          // Stale local entry — hobby was deleted from DB.
+          // Auto-remove so it doesn't block the Home screen.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(userHobbiesProvider.notifier).removeHobby(userHobby.hobbyId);
+          });
+          return const SizedBox.shrink();
         }
         return _HobbyPageContent(hobby: hobby, userHobby: userHobby);
       },
@@ -643,7 +649,7 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   coachMode = 'rescue';
                 } else if (stepsCompleted == 0) {
                   coachTitle = 'Plan your first session';
-                  coachSubtitle = 'Get a tiny, doable plan for tonight';
+                  coachSubtitle = 'Get a tiny first-session plan, no experience needed.';
                   coachMessage =
                       'Help me start tonight. I want a tiny first session plan for ${hobby.title}.';
                   coachMode = 'start';
@@ -659,24 +665,36 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   onTap: () => context.push('/coach/${hobby.id}', extra: {
                     'message': coachMessage,
                     'mode': coachMode,
-                    'autoSend': true,
+                    'autoSend': stepsCompleted > 0,
                   }),
+                  padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      Icon(MdiIcons.chatProcessingOutline,
-                          size: 22, color: AppColors.textSecondary),
+                      // Coral circle icon — matches detail page card style
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.coral.withValues(alpha: 0.12),
+                        ),
+                        child: const Icon(Icons.auto_awesome, size: 20, color: AppColors.coral),
+                      ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(coachTitle,
-                                style:
-                                    AppTypography.title.copyWith(fontSize: 16)),
+                                style: AppTypography.sansLabel.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                )),
                             const SizedBox(height: 2),
                             Text(coachSubtitle,
-                                style: AppTypography.body
-                                    .copyWith(color: AppColors.textSecondary)),
+                                style: AppTypography.sansTiny.copyWith(
+                                  color: AppColors.textSecondary,
+                                )),
                           ],
                         ),
                       ),
@@ -1074,7 +1092,7 @@ class _EmptyHomeState extends StatelessWidget {
                     child: Center(
                       child: Text('Discover hobbies',
                           style: AppTypography.button
-                              .copyWith(color: AppColors.background)),
+                              .copyWith(color: AppColors.textPrimary)),
                     ),
                   ),
                 ),
@@ -1202,11 +1220,19 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       Navigator.of(ctx).pop();
-                      ref
+                      final hobbyCompleted = await ref
                           .read(userHobbiesProvider.notifier)
                           .toggleStep(widget.hobby.id, step.id);
+                      if (hobbyCompleted && context.mounted) {
+                        rootNavigatorKey.currentState?.push(
+                          HobbyCompletionScreen.route(
+                            hobbyId: widget.hobby.id,
+                            hobbyTitle: widget.hobby.title,
+                          ),
+                        );
+                      }
                     },
                     child: Container(
                       height: 44,
@@ -1347,11 +1373,19 @@ class _RoadmapJourneyState extends ConsumerState<_RoadmapJourney> {
             const SizedBox(height: 10),
             // Secondary: Mark Complete (text-style)
             GestureDetector(
-              onTap: () {
+              onTap: () async {
                 Navigator.of(ctx).pop();
-                ref
+                final hobbyCompleted = await ref
                     .read(userHobbiesProvider.notifier)
                     .toggleStep(widget.hobby.id, step.id);
+                if (hobbyCompleted && context.mounted) {
+                  rootNavigatorKey.currentState?.push(
+                    HobbyCompletionScreen.route(
+                      hobbyId: widget.hobby.id,
+                      hobbyTitle: widget.hobby.title,
+                    ),
+                  );
+                }
               },
               child: Container(
                 width: double.infinity,

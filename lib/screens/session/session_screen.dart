@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../components/breathing_ring.dart';
+import '../../models/hobby.dart';
 import '../../models/session.dart';
 import '../../models/social.dart';
 import '../../providers/feature_providers.dart';
@@ -238,13 +239,48 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     debugPrint('[Session] Journal entry saved for hobby $hobbyId');
   }
 
+  bool _isExiting = false;
+
   Future<void> _exitSession() async {
+    // Guard against double-calls (reflect onSubmit + complete phase both trigger this)
+    if (_isExiting) return;
+    _isExiting = true;
+
     final session = ref.read(sessionProvider);
     // Mark step complete in user state if session finished successfully
     if (session != null && session.isComplete) {
-      final hobbyCompleted = await ref
-          .read(userHobbiesProvider.notifier)
-          .toggleStep(session.hobbyId, session.stepId);
+      // Only toggle if step is NOT already completed (prevents un-toggling)
+      final userHobbies = ref.read(userHobbiesProvider);
+      final hobby = userHobbies[session.hobbyId];
+      final alreadyCompleted = hobby?.completedStepIds.contains(session.stepId) ?? false;
+
+      bool hobbyCompleted = false;
+      debugPrint('[Session] _exitSession: hobbyId=${session.hobbyId}, stepId=${session.stepId}, alreadyCompleted=$alreadyCompleted, completedSteps=${hobby?.completedStepIds.length ?? 0}');
+      if (!alreadyCompleted) {
+        try {
+          hobbyCompleted = await ref
+              .read(userHobbiesProvider.notifier)
+              .toggleStep(session.hobbyId, session.stepId);
+          debugPrint('[Session] toggleStep returned hobbyCompleted=$hobbyCompleted');
+        } catch (e) {
+          debugPrint('[Session] toggleStep FAILED: $e');
+        }
+      } else {
+        // Step was already completed before this session.
+        // The server already transitioned the hobby to done when the step was
+        // toggled earlier (from Home checkboxes). Check local status.
+        final refreshedHobby = ref.read(userHobbiesProvider)[session.hobbyId];
+        if (refreshedHobby?.status == HobbyStatus.done) {
+          hobbyCompleted = true;
+          debugPrint('[Session] Step already completed, hobby is done — showing celebration');
+        } else {
+          // Hobby not done yet — this step was completed but others remain.
+          // Trigger setDone check: maybe server marked it done but local state
+          // hasn't caught up. Force a status check.
+          debugPrint('[Session] Step already completed, hobby status: ${refreshedHobby?.status}');
+        }
+      }
+
       ref.read(sessionProvider.notifier).completeSession();
       if (mounted) {
         if (hobbyCompleted) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../router.dart' show rootNavigatorKey;
 import '../../components/cinematic_scaffold.dart';
 import '../../components/glass_card.dart';
 import '../../providers/user_provider.dart';
@@ -29,8 +29,9 @@ class HobbyCompletionScreen extends ConsumerWidget {
     required String hobbyTitle,
   }) {
     return PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 600),
-      reverseTransitionDuration: const Duration(milliseconds: 400),
+      opaque: true,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (_, __, ___) => HobbyCompletionScreen(
         hobbyId: hobbyId,
         hobbyTitle: hobbyTitle,
@@ -148,7 +149,10 @@ class HobbyCompletionScreen extends ConsumerWidget {
                 width: double.infinity,
                 height: Spacing.buttonCtaHeight,
                 child: ElevatedButton(
-                  onPressed: () => context.go('/discover'),
+                  onPressed: () {
+                    // Pop this full-screen overlay from the root navigator
+                    rootNavigatorKey.currentState?.pop();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
