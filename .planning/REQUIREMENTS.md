@@ -1,109 +1,102 @@
 # Requirements: TrySomething
 
-**Defined:** 2026-03-21
-**Core Value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
+**Defined:** 2026-03-23
+**Core Value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it through guided support.
 
-## v1.0 Requirements
+## v1.1 Requirements
 
-Requirements for App Store and Play Store submission readiness.
+Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phases.
 
-### Compliance
+### Completion Flow
 
-- [ ] **COMP-01**: User can delete their account via confirmation dialog in Settings screen
-- [ ] **COMP-02**: Account deletion uses soft-delete (`deletedAt` field) with 30-day deferred purge
-- [x] **COMP-03**: Account deletion cascades across all 14 user-related tables + GenerationLog
-- [x] **COMP-04**: Account deletion clears all client-side storage (Hive, SharedPreferences, secure storage, RevenueCat logout)
-- [ ] **COMP-05**: Account deletion UI warns user to cancel subscription manually before proceeding
-- [ ] **COMP-06**: Auth middleware rejects tokens for soft-deleted users (`deletedAt` check)
-- [ ] **COMP-07**: User can export all personal data as JSON via `GET /api/users/me/export`
-- [ ] **COMP-08**: Data export uses explicit field allowlist (excludes `passwordHash`, `revenuecatId`, `GenerationLog` internals)
-- [x] **COMP-09**: Terms of Service hosted as public HTML page on Next.js website
-- [x] **COMP-10**: Privacy Policy hosted as public HTML page on Next.js website
-- [x] **COMP-11**: Settings screen links to hosted Terms and Privacy Policy
-- [x] **COMP-12**: iOS app includes Apple Privacy Manifests for Firebase, RevenueCat, and PostHog SDKs
-- [ ] **COMP-13**: App Privacy Labels completed in App Store Connect (requires hosted privacy policy)
-- [ ] **COMP-14**: Data Safety Form completed in Google Play Console (requires hosted privacy policy)
+- [ ] **COMP-01**: Hobby auto-transitions to `done` status when all roadmap steps are completed (server-side detection in step completion endpoint, returns `hobbyCompleted` flag)
+- [ ] **COMP-02**: Celebration screen displays when user completes the final step (distinct from regular step completion, hobby-specific copy with hobby title and step count)
+- [ ] **COMP-03**: Home shows completed state with "pick your next hobby" CTA linking to Discover when active hobby is done
+- [ ] **COMP-04**: Completed hobbies appear in You tab "Tried" section with completion date
 
-### Security
+### Lifecycle
 
-- [x] **SEC-01**: RevenueCat webhook verifies Authorization header and fails closed (rejects when env var unset)
-- [x] **SEC-02**: Coach rate limiting enforced server-side via GenerationLog count query (replaces client-side Hive check)
-- [x] **SEC-03**: Apple OAuth routing fixed in `vercel.json` (add `|apple` to auth action regex)
+- [ ] **LIFE-01**: User can stop/abandon an active hobby (free) — moves to Tried with confirmation prompt, no progress preserved
+- [ ] **LIFE-02**: User can pause an active hobby (Pro) — preserves progress, streaks, completed steps; requires active Pro entitlement
+- [ ] **LIFE-03**: User can resume a paused hobby (Pro) — picks up where they left off with streak continuity
+- [ ] **LIFE-04**: Home shows paused hobby with frosted glass card (opacity 0.7), "Paused" chip, coral "Resume" CTA, days-paused counter
+- [ ] **LIFE-05**: You tab shows Paused as a distinct filter state alongside Active/Saved/Tried with pause icon on card
+- [ ] **LIFE-06**: Pro subscription lapse auto-resumes paused hobbies as active (no data lost, removes pause state gracefully)
+- [ ] **LIFE-07**: Pause duration excluded from streak calculation (pausedDurationDays subtracted from gap)
 
-### AI
+### Content Gating
 
-- [x] **AI-01**: AI generation upgraded from Haiku to Sonnet (deploy `outputs/ai_generator.ts` and `outputs/action.ts`)
-- [x] **AI-02**: Coach stale detection uses `lastActivityAt` instead of `startedAt` for days-inactive calculation
-- [x] **AI-03**: AI response parsing includes `extractJson()` guard for Sonnet output format safety
+- [ ] **GATE-01**: Detail page shows for free users: hero image, spec badge, "why it fits you", "start in 20 minutes", what to expect, full 4-stage roadmap overview, "Start Hobby" CTA
+- [ ] **GATE-02**: Detail page Pro-locked sections: why people stop, starter kit list, plan first session, cost breakdown, FAQ, budget alternatives
+- [ ] **GATE-03**: Locked sections render as glass card with lock icon, section title, one-line teaser text, "Unlock with Pro" pill
+- [ ] **GATE-04**: Tapping any locked section triggers existing `showProUpgrade()` bottom sheet
+- [ ] **GATE-05**: Server-side gate on `/api/generate/faq`, `/api/generate/cost`, `/api/generate/budget` endpoints — return 403 for non-Pro users
+- [ ] **GATE-06**: Plan First Session card on Home (for active hobby) uses same component as detail page version, ungated for active hobby
 
-### Subscription
+### Schema
 
-- [x] **SUB-01**: Restore Purchases button available on paywall screen and/or Settings (Apple guideline 3.1.1)
-
-### Cleanup
-
-- [x] **CLEAN-01**: Remove 7 hidden feature screens (~7,000 lines) with GitNexus impact analysis per file before deletion
-
-### Developer Experience
-
-- [x] **DX-01**: Pre-commit hooks via Lefthook enforcing TypeScript lint (`server/`) + Flutter analyze (`lib/`)
+- [ ] **SCHM-01**: Add `paused` to `HobbyStatus` enum in Prisma schema and Flutter model via two-step migration (add enum value first, then use it)
+- [ ] **SCHM-02**: Add `pausedAt DateTime?` and `pausedDurationDays Int @default(0)` fields to UserHobby model
+- [ ] **SCHM-03**: Server-side step completion endpoint sets `status = done` and `completedAt = now()` when all steps are complete (single transaction)
 
 ## v2 Requirements
 
-Deferred to v1.1 milestone. Tracked but not in current roadmap.
+Deferred to future release. Tracked but not in current roadmap.
 
-### Code Quality
+### Enhanced Lifecycle
 
-- **QUAL-01**: Co-locate mapper functions with their consumers (currently centralized in `mappers.ts`)
-- **QUAL-02**: Add golden triangle tests for shared middleware (`errorResponse`, `methodNotAllowed`, `requireAuth`)
-- **QUAL-03**: Refactor oversized screens (profile 2,021 lines, home 1,977, discover 1,813, settings 1,564, you 1,346)
-- **QUAL-04**: Clean dead mapper functions (`mapChallengeResponse`, `mapActivityLog`, etc.)
+- **LIFE-08**: Multiple pause/resume cycles tracked with PauseLog join table
+- **LIFE-09**: "Restart hobby" action — reset all progress and start fresh
+- **LIFE-10**: Hobby archive — hide from all views but preserve data
+
+### Enhanced Gating
+
+- **GATE-07**: Progressive unlock — completing Stage 1 unlocks Stage 2 preview for free users
+- **GATE-08**: Time-limited Pro trial on specific hobby (try Pro features for one hobby only)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Buddy mode / Community stories / Local discovery | Routes already removed; screens deleted in CLEAN-01 |
-| Real-time chat | Not core to hobby guidance; high complexity |
-| Multi-language / i18n | English-only for v1.0 launch |
-| Custom push notification scheduling | FCM already works; advanced scheduling is v2 |
-| OAuth providers beyond Google + Apple | Two providers sufficient for v1.0 |
-| Redis/Upstash rate limiting | GenerationLog + Postgres is sufficient at current scale |
-| Hard account deletion | Soft-delete chosen for JWT/webhook safety; purge after 30 days |
+| Gating the roadmap overview | Roadmap visibility drives engagement and conversion — hiding it hurts free users |
+| Removing free coach messages | 3 msg/month demonstrates value and drives upgrades; zero messages = no trial |
+| 30-day timer enforcement | Steps are the real progression; 30 days is marketing, not a constraint |
+| Blur overlay on locked content | Research shows lock icon + clear CTA outperforms blur (cleaner, more intentional) |
+| Hard-deleting stopped hobbies | Keep data for analytics and potential "restart" in v2 |
+| Gating active hobby features on Home | Free users who started a hobby should succeed — frustrated users don't convert |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | Phase 4 | Pending |
-| COMP-02 | Phase 4 | Pending |
-| COMP-03 | Phase 4 | Complete |
-| COMP-04 | Phase 5 | Complete |
-| COMP-05 | Phase 5 | Pending |
-| COMP-06 | Phase 4 | Pending |
-| COMP-07 | Phase 4 | Pending |
-| COMP-08 | Phase 4 | Pending |
-| COMP-09 | Phase 3 | Complete |
-| COMP-10 | Phase 3 | Complete |
-| COMP-11 | Phase 3 | Complete |
-| COMP-12 | Phase 9 | Complete |
-| COMP-13 | Phase 9 | Pending |
-| COMP-14 | Phase 9 | Pending |
-| SEC-01 | Phase 1 | Complete |
-| SEC-02 | Phase 1 | Complete |
-| SEC-03 | Phase 2 | Complete |
-| AI-01 | Phase 8 | Complete |
-| AI-02 | Phase 8 | Complete |
-| AI-03 | Phase 8 | Complete |
-| SUB-01 | Phase 6 | Complete |
-| CLEAN-01 | Phase 7 | Complete |
-| DX-01 | Phase 10 | Complete |
+| SCHM-01 | — | Pending |
+| SCHM-02 | — | Pending |
+| SCHM-03 | — | Pending |
+| COMP-01 | — | Pending |
+| COMP-02 | — | Pending |
+| COMP-03 | — | Pending |
+| COMP-04 | — | Pending |
+| LIFE-01 | — | Pending |
+| LIFE-02 | — | Pending |
+| LIFE-03 | — | Pending |
+| LIFE-04 | — | Pending |
+| LIFE-05 | — | Pending |
+| LIFE-06 | — | Pending |
+| LIFE-07 | — | Pending |
+| GATE-01 | — | Pending |
+| GATE-02 | — | Pending |
+| GATE-03 | — | Pending |
+| GATE-04 | — | Pending |
+| GATE-05 | — | Pending |
+| GATE-06 | — | Pending |
 
 **Coverage:**
-- v1.0 requirements: 23 total
-- Mapped to phases: 23
-- Unmapped: 0
+- v1.1 requirements: 20 total
+- Mapped to phases: 0
+- Unmapped: 20 ⚠️
 
 ---
-*Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 — Traceability populated after roadmap creation*
+*Requirements defined: 2026-03-23*
+*Last updated: 2026-03-23 after initial definition*
