@@ -36,6 +36,9 @@ class MockUserProgressRepository implements UserProgressRepository {
     HobbyStatus status, {
     DateTime? startedAt,
     DateTime? completedAt,
+    DateTime? pausedAt,
+    int? pausedDurationDays,
+    DateTime? lastActivityAt,
   }) async {
     calls.add('updateStatus:$hobbyId:${status.name}');
     if (shouldFail) throw Exception('mock failure');
@@ -43,10 +46,10 @@ class MockUserProgressRepository implements UserProgressRepository {
   }
 
   @override
-  Future<UserHobby> toggleStep(String hobbyId, String stepId) async {
+  Future<(UserHobby, bool)> toggleStep(String hobbyId, String stepId) async {
     calls.add('toggleStep:$hobbyId:$stepId');
     if (shouldFail) throw Exception('mock failure');
-    return UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying);
+    return (UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying), false);
   }
 
   @override
@@ -256,11 +259,12 @@ class _ServerDataRepo implements UserProgressRepository {
   Future<void> unsaveHobby(String hobbyId) async {}
   @override
   Future<UserHobby> updateStatus(String hobbyId, HobbyStatus status,
-          {DateTime? startedAt, DateTime? completedAt}) async =>
+          {DateTime? startedAt, DateTime? completedAt, DateTime? pausedAt,
+           int? pausedDurationDays, DateTime? lastActivityAt}) async =>
       UserHobby(hobbyId: hobbyId, status: status);
   @override
-  Future<UserHobby> toggleStep(String hobbyId, String stepId) async =>
-      UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying);
+  Future<(UserHobby, bool)> toggleStep(String hobbyId, String stepId) async =>
+      (UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying), false);
   @override
   Future<List<UserHobby>> syncHobbies(List<UserHobby> hobbies) async => hobbies;
   @override

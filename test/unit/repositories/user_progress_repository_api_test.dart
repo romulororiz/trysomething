@@ -9,11 +9,12 @@ import 'package:trysomething/models/hobby.dart';
 void main() {
   group('HobbyStatus enum', () {
     test('has exactly the expected values', () {
-      expect(HobbyStatus.values, hasLength(4));
+      expect(HobbyStatus.values, hasLength(5));
       expect(HobbyStatus.values, containsAll([
         HobbyStatus.saved,
         HobbyStatus.trying,
         HobbyStatus.active,
+        HobbyStatus.paused,
         HobbyStatus.done,
       ]));
     });

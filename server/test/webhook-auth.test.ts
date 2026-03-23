@@ -5,6 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 vi.mock("../../lib/db", () => ({
   prisma: {
     user: { findUnique: vi.fn(), update: vi.fn() },
+    userHobby: { findMany: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -177,5 +178,59 @@ describe("RevenueCat webhook auth guard", () => {
       status: "skipped",
       reason: "anonymous_user",
     });
+  });
+
+  it("auto-resumes paused hobbies on EXPIRATION event (LIFE-06)", async () => {
+    process.env.REVENUECAT_WEBHOOK_SECRET = "test-secret";
+    process.env.NODE_ENV = "production";
+
+    const { prisma } = await import("../../lib/db");
+    // Mock user lookup
+    (prisma.user.findUnique as any).mockResolvedValue({
+      id: "user-1",
+      isLifetime: false,
+    });
+    // Mock user update (subscription downgrade)
+    (prisma.user.update as any).mockResolvedValue({});
+    // Mock finding paused hobbies
+    (prisma.userHobby.findMany as any).mockResolvedValue([
+      { hobbyId: "hobby-a", pausedAt: new Date("2026-03-01"), pausedDurationDays: 2 },
+    ]);
+    // Mock hobby update (auto-resume)
+    (prisma.userHobby.update as any).mockResolvedValue({});
+
+    const handler = (await import("../api/users/[path]")).default;
+    const req = mockReq({
+      method: "POST",
+      query: { path: "revenuecat-webhook" },
+      headers: { authorization: "Bearer test-secret" },
+      body: {
+        event: {
+          type: "EXPIRATION",
+          app_user_id: "user-1",
+          expiration_at_ms: Date.now(),
+        },
+      },
+    });
+    const res = mockRes();
+
+    await handler(req, res);
+
+    // Verify paused hobbies were queried
+    expect(prisma.userHobby.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", status: "paused" },
+      })
+    );
+    // Verify auto-resume was called
+    expect(prisma.userHobby.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId_hobbyId: { userId: "user-1", hobbyId: "hobby-a" } },
+        data: expect.objectContaining({
+          status: "active",
+          pausedAt: null,
+        }),
+      })
+    );
   });
 });
