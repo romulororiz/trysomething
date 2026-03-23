@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
-status: ready_to_plan
-last_updated: "2026-03-23T08:30:00.000Z"
+status: executing
+last_updated: "2026-03-23T11:32:24.000Z"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 4
+  completed_plans: 1
 ---
 
 # STATE.md — TrySomething
@@ -30,11 +30,11 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 11 of 14 (Lifecycle Schema Migration)
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-03-23 — v1.1 roadmap created, Phase 11 ready
+Plan: 2 of 2 in Phase 11
+Status: Executing
+Last activity: 2026-03-23 — Completed 11-01-PLAN.md (schema + mapper + step completion)
 
-Progress: [░░░░░░░░░░] 0% (v1.1)
+Progress: [##░░░░░░░░] 25% (v1.1) — 1 of 4 plans complete
 
 ---
 
@@ -53,7 +53,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 
 | Phase | Plans Complete | Status |
 |-------|----------------|--------|
-| 11. Schema Migration | 0/? | Not started |
+| 11. Schema Migration | 1/2 | In progress |
 | 12. Completion Flow + Stop | 0/? | Not started |
 | 13. Content Gating | 0/? | Not started |
 | 14. Pause/Resume | 0/? | Not started |
@@ -69,6 +69,10 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 - Resume is always free; only initiating a pause requires Pro entitlement — prevents paused hobbies being stranded on subscription lapse
 - Content gating targets new AI generation calls only — previously cached FAQ/cost/budget content remains accessible to avoid App Store §3.1.2(a) retroactive-gating risk
 
+- [11-01] Extracted toggleStepCompletion as exported function taking db client parameter for testability -- enables direct unit testing with mocked transaction client
+- [11-01] Completion detection only runs on step addition, not removal -- un-toggling never reverts done status (permanent completion in v1.1)
+- [11-01] Activity log and challenge progress kept outside $transaction as non-critical side effects
+
 ### Blockers/Concerns
 
 - Phase 14 needs a 30-min RevenueCat webhook spike before coding: EXPIRATION event payload shape, how to identify `userId` in serverless function, Neon free-tier connection pool timing
@@ -79,10 +83,10 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: v1.1 roadmap created — ROADMAP.md, STATE.md, REQUIREMENTS.md traceability updated
+Stopped at: Completed 11-01-PLAN.md (schema migration, mapper update, transactional step completion)
 Resume file: None
 
-Next action: `/gsd:plan-phase 11`
+Next action: Execute 11-02-PLAN.md
 
 ---
 

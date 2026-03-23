@@ -35,9 +35,9 @@ Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phase
 
 ### Schema
 
-- [ ] **SCHM-01**: Add `paused` to `HobbyStatus` enum in Prisma schema and Flutter model via two-step migration (add enum value first, then use it)
-- [ ] **SCHM-02**: Add `pausedAt DateTime?` and `pausedDurationDays Int @default(0)` fields to UserHobby model
-- [ ] **SCHM-03**: Server-side step completion endpoint sets `status = done` and `completedAt = now()` when all steps are complete (single transaction)
+- [x] **SCHM-01**: Add `paused` to `HobbyStatus` enum in Prisma schema and Flutter model via two-step migration (add enum value first, then use it)
+- [x] **SCHM-02**: Add `pausedAt DateTime?` and `pausedDurationDays Int @default(0)` fields to UserHobby model
+- [x] **SCHM-03**: Server-side step completion endpoint sets `status = done` and `completedAt = now()` when all steps are complete (single transaction)
 
 ## v2 Requirements
 
@@ -71,9 +71,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHM-01 | Phase 11 | Pending |
-| SCHM-02 | Phase 11 | Pending |
-| SCHM-03 | Phase 11 | Pending |
+| SCHM-01 | Phase 11 | Complete |
+| SCHM-02 | Phase 11 | Complete |
+| SCHM-03 | Phase 11 | Complete |
 | COMP-01 | Phase 12 | Pending |
 | COMP-02 | Phase 12 | Pending |
 | COMP-03 | Phase 12 | Pending |
