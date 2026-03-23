@@ -78,7 +78,10 @@ Plans:
   2. After dismissing the celebration, the Home tab shows a "You finished — pick your next hobby" state with a coral CTA linking to Discover, not the normal active hobby dashboard
   3. The completed hobby appears in the You tab "Tried" section with its completion date visible
   4. Tapping the 3-dot menu on an active hobby card presents a "Stop hobby" option that, after a confirmation prompt, moves the hobby to Tried and frees the active hobby slot immediately — no waiting for a network response
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 12-01-PLAN.md — Surface hobbyCompleted flag through data layer + celebration screen
+- [ ] 12-02-PLAN.md — Home completed state + stop action + Tried tab cards + detail read-only
 
 ### Phase 13: Detail Page Content Gating
 **Goal:** Free users see a rich preview of a hobby's detail page and are clearly shown what Pro unlocks, without losing any content they already had access to
@@ -123,8 +126,8 @@ Plans:
 | 9. App Store Assets | v1.0 | 2/2 | Complete | 2026-03-22 |
 | 9.1. Session Screen Redesign | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
-| 11. Lifecycle Schema Migration | 2/2 | Complete    | 2026-03-23 | — |
-| 12. Hobby Completion Flow + Stop | v1.1 | 0/? | Not started | — |
+| 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
+| 12. Hobby Completion Flow + Stop | v1.1 | 0/2 | Planned | — |
 | 13. Detail Page Content Gating | v1.1 | 0/? | Not started | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
 
@@ -180,4 +183,4 @@ Phase 11 (Schema Migration)
 
 *Roadmap created: 2026-03-21 (v1.0)*
 *v1.1 phases added: 2026-03-23*
-*Last updated: 2026-03-23 after Phase 11 planning*
+*Last updated: 2026-03-23 after Phase 12 planning*
