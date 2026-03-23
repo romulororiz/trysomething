@@ -64,7 +64,10 @@
   2. `flutter analyze` passes with zero errors after adding `HobbyStatus.paused` to the Dart enum and running `build_runner`
   3. All existing `switch` statements on `HobbyStatus` compile without exhaustive-switch warnings — every switch has a `paused` case
   4. The step completion endpoint (`PATCH /api/users/hobbies/:id/steps/:stepId`) sets `status = done` and `completedAt = now()` atomically when the final step is recorded, and returns a `hobbyCompleted` flag in its response
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 11-01-PLAN.md — Prisma schema + migrations + mapper + step completion endpoint
+- [ ] 11-02-PLAN.md — Dart model + codegen + exhaustive switch fixes
 
 ### Phase 12: Hobby Completion Flow + Stop
 **Goal:** Users reach a genuine completion moment when they finish their 30-day hobby — the app recognises it, celebrates it, and the Home tab reflects the new state; users can also stop/abandon a hobby at any time
@@ -120,7 +123,7 @@
 | 9. App Store Assets | v1.0 | 2/2 | Complete | 2026-03-22 |
 | 9.1. Session Screen Redesign | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
-| 11. Lifecycle Schema Migration | v1.1 | 0/? | Not started | — |
+| 11. Lifecycle Schema Migration | v1.1 | 0/2 | Not started | — |
 | 12. Hobby Completion Flow + Stop | v1.1 | 0/? | Not started | — |
 | 13. Detail Page Content Gating | v1.1 | 0/? | Not started | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
@@ -177,4 +180,4 @@ Phase 11 (Schema Migration)
 
 *Roadmap created: 2026-03-21 (v1.0)*
 *v1.1 phases added: 2026-03-23*
-*Last updated: 2026-03-23 after v1.1 roadmap creation*
+*Last updated: 2026-03-23 after Phase 11 planning*
