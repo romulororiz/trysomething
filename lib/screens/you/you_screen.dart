@@ -26,27 +26,22 @@ class YouScreen extends ConsumerStatefulWidget {
 }
 
 class _YouScreenState extends ConsumerState<YouScreen> {
-  late PageController _hobbyPageController;
-  late PageController _savedPageController;
-  late PageController _triedPageController;
+  final _hobbyPageController = PageController(viewportFraction: 0.88);
+  final _savedPageController = PageController(viewportFraction: 0.88);
+  final _triedPageController = PageController(viewportFraction: 0.88);
+  final _pausedPageController = PageController(viewportFraction: 0.88);
   int _currentHobbyPage = 0;
   int _savedPage = 0;
   int _triedPage = 0;
+  int _pausedPage = 0;
   int _selectedTab = 0; // 0=Active, 1=Paused, 2=Saved, 3=Tried
-
-  @override
-  void initState() {
-    super.initState();
-    _hobbyPageController = PageController(viewportFraction: 0.88);
-    _savedPageController = PageController(viewportFraction: 0.88);
-    _triedPageController = PageController(viewportFraction: 0.88);
-  }
 
   @override
   void dispose() {
     _hobbyPageController.dispose();
     _savedPageController.dispose();
     _triedPageController.dispose();
+    _pausedPageController.dispose();
     super.dispose();
   }
 
@@ -110,6 +105,10 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       _savedPage = savedEntries.length - 1;
     }
     if (savedEntries.isEmpty) _savedPage = 0;
+    if (_pausedPage >= pausedEntries.length && pausedEntries.isNotEmpty) {
+      _pausedPage = pausedEntries.length - 1;
+    }
+    if (pausedEntries.isEmpty) _pausedPage = 0;
     if (_triedPage >= triedEntries.length && triedEntries.isNotEmpty) {
       _triedPage = triedEntries.length - 1;
     }
@@ -308,6 +307,9 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         return _PausedTabContent(
           key: const ValueKey('paused'),
           entries: pausedEntries,
+          pausedPage: _pausedPage,
+          pausedPageController: _pausedPageController,
+          onPageChanged: (i) => setState(() => _pausedPage = i),
         );
       case 2:
         return _SavedTabContent(
@@ -600,7 +602,17 @@ class _ActiveTabContent extends ConsumerWidget {
 // ── Paused tab content ──
 class _PausedTabContent extends ConsumerWidget {
   final List<_HobbyWithMeta> entries;
-  const _PausedTabContent({super.key, required this.entries});
+  final int pausedPage;
+  final PageController pausedPageController;
+  final ValueChanged<int> onPageChanged;
+
+  const _PausedTabContent({
+    super.key,
+    required this.entries,
+    required this.pausedPage,
+    required this.pausedPageController,
+    required this.onPageChanged,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -614,110 +626,145 @@ class _PausedTabContent extends ConsumerWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: entries.map((meta) {
-          final daysPaused = meta.userHobby.pausedAt != null
-              ? DateTime.now().difference(meta.userHobby.pausedAt!).inDays
-              : 0;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Opacity(
-              opacity: 0.7,
-              child: GlassCard(
-                onTap: () => context.push('/hobby/${meta.hobby.id}'),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      // Thumbnail
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          width: 56,
-                          height: 56,
-                          child: CachedNetworkImage(
-                            imageUrl: meta.hobby.imageUrl,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 112,
-                            placeholder: (_, __) => Container(
-                                color: AppColors.surfaceElevated),
-                            errorWidget: (_, __, ___) => Container(
-                              color: AppColors.surfaceElevated,
-                              child: const Icon(Icons.image_outlined,
-                                  size: 20, color: AppColors.textMuted),
-                            ),
-                          ),
-                        ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (entries.length == 1)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _PausedHobbyCard(meta: entries.first),
+          )
+        else ...[
+          SizedBox(
+            height: 130,
+            child: PageView.builder(
+              controller: pausedPageController,
+              itemCount: entries.length,
+              onPageChanged: onPageChanged,
+              itemBuilder: (context, i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _PausedHobbyCard(meta: entries[i]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          PageDots(
+            count: entries.length,
+            current: pausedPage,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Paused hobby card — image bg + dark overlay + PAUSED chip ──
+class _PausedHobbyCard extends ConsumerWidget {
+  final _HobbyWithMeta meta;
+  const _PausedHobbyCard({required this.meta});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hobby = meta.hobby;
+    final daysPaused = meta.userHobby.pausedAt != null
+        ? DateTime.now().difference(meta.userHobby.pausedAt!).inDays
+        : 0;
+    final daysLabel = daysPaused == 0
+        ? 'Paused today'
+        : 'Paused for $daysPaused ${daysPaused == 1 ? "day" : "days"}';
+
+    return GestureDetector(
+      onTap: () => context.push('/hobby/${hobby.id}'),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 130,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Hobby image background
+              CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 600,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.surfaceElevated),
+              ),
+
+              // Dark overlay
+              Container(
+                color: AppColors.background.withValues(alpha: 0.75),
+              ),
+
+              // Text content
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // PAUSED chip (same style as Home paused page)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: AppColors.glassBorder, width: 0.5),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(meta.hobby.title,
-                                style: AppTypography.body
-                                    .copyWith(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            Row(children: [
-                              // PAUSED chip
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                      color: AppColors.glassBorder,
-                                      width: 0.5),
-                                ),
-                                child: Text('PAUSED',
-                                    style: AppTypography.overline.copyWith(
-                                        color: AppColors.textMuted,
-                                        fontSize: 10)),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                daysPaused == 0
-                                    ? 'Today'
-                                    : '${daysPaused}d',
-                                style: AppTypography.caption
-                                    .copyWith(color: AppColors.textMuted),
-                              ),
-                            ]),
-                          ],
-                        ),
+                      child: Text('PAUSED',
+                          style: AppTypography.overline.copyWith(
+                              color: AppColors.textMuted,
+                              fontSize: 10,
+                              letterSpacing: 2)),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Hobby title
+                    Text(hobby.title,
+                        style: AppTypography.body
+                            .copyWith(color: AppColors.textPrimary)),
+
+                    // Days paused
+                    const SizedBox(height: 2),
+                    Text(daysLabel,
+                        style: AppTypography.caption
+                            .copyWith(color: AppColors.textMuted)),
+                  ],
+                ),
+              ),
+
+              // Resume button — bottom right
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: GestureDetector(
+                  onTap: () => ref
+                      .read(userHobbiesProvider.notifier)
+                      .resumeHobby(hobby.id),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: const LinearGradient(
+                        colors: [AppColors.coral, Color(0xFFFF5252)],
                       ),
-                      // Resume CTA
-                      SizedBox(
-                        height: 36,
-                        child: ElevatedButton(
-                          onPressed: () => ref
-                              .read(userHobbiesProvider.notifier)
-                              .resumeHobby(meta.hobby.id),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            elevation: 0,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                          ),
-                          child: Text('Resume',
-                              style: AppTypography.caption.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                    ],
+                    ),
+                    child: Text('Resume',
+                        style: AppTypography.caption.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600)),
                   ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1387,43 +1434,34 @@ class _HairlineDivider extends StatelessWidget {
 class _EmptyActivePrompt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Text(
-            'Start your first hobby',
-            style: AppTypography.title.copyWith(fontSize: 17),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Find something that fits your life and try it for a week.',
-            textAlign: TextAlign.center,
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => context.go('/discover'),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('No active hobbies',
+                style: TextStyle(color: AppColors.textMuted)),
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: () => context.go('/discover'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [AppColors.coral, Color(0xFFFF5252)],
+                  ),
+                ),
                 child: Text('Discover hobbies',
-                    style: AppTypography.button
-                        .copyWith(color: AppColors.textPrimary)),
+                    style: AppTypography.caption.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600)),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1498,105 +1536,80 @@ class _SavedHobbySwipeCard extends ConsumerWidget {
     return GestureDetector(
       onTap: () => context.push('/hobby/${hobby.id}'),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: SizedBox(
           height: 130,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Image — same as CollectorCard
-              Transform.scale(
-                scale: 1.05,
-                child: CachedNetworkImage(
-                  imageUrl: hobby.imageUrl,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 800,
-                  placeholder: (_, __) =>
-                      Container(color: AppColors.surfaceElevated),
-                  errorWidget: (_, __, ___) =>
-                      Container(color: AppColors.surfaceElevated),
-                ),
+              // Hobby image background
+              CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 600,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.surfaceElevated),
               ),
-              // Gradient — identical to CollectorCard
+
+              // Bottom gradient for text readability
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x1A0A0A0F), Color(0xF80A0A0F)],
+                    colors: [Color(0x00000000), Color(0xE0000000)],
+                    stops: [0.3, 1.0],
                   ),
                 ),
               ),
-              // Heart unsave — top right, tapping directly unsaves
+
+              // Text content — bottom-left
               Positioned(
-                top: 10,
-                right: 10,
+                left: 20,
+                right: 50,
+                bottom: 14,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(hobby.title,
+                        style: AppTypography.body.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${hobby.costText} · ${hobby.timeText}',
+                      style: AppTypography.caption
+                          .copyWith(color: Colors.white.withValues(alpha: 0.6)),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Heart unsave — top right
+              Positioned(
+                right: 12,
+                top: 12,
                 child: GestureDetector(
                   onTap: () => ref
                       .read(userHobbiesProvider.notifier)
                       .unsaveHobby(hobby.id),
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    width: 36,
-                    height: 36,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.35),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.favorite_rounded,
-                      size: 18,
+                      size: 16,
                       color: AppColors.accent,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 8,
-                          color: AppColors.accent.withValues(alpha: 0.5),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-              ),
-              // Bottom content — same structure as CollectorCard
-              Positioned(
-                left: 14,
-                right: 14,
-                bottom: 12,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'SAVED FOR LATER',
-                      style: AppTypography.overline.copyWith(
-                        color: AppColors.textPrimary.withValues(alpha: 0.35),
-                        fontSize: 9,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: _CoralFirstWordTitle(
-                            title: hobby.title,
-                            style: AppTypography.title.copyWith(
-                              fontSize: 18,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          hobby.costText,
-                          style: AppTypography.monoTiny.copyWith(
-                            color: AppColors.textPrimary.withValues(alpha: 0.45),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ),
             ],
