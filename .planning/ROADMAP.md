@@ -46,7 +46,7 @@
 
 **Milestone Goal:** Fix broken hobby completion flow, add pause/stop lifecycle, and gate detail page content for Pro conversion.
 
-- [ ] **Phase 11: Lifecycle Schema Migration** — Add `paused` enum value and pause tracking fields to Prisma schema and Dart model; run codegen before any downstream work
+- [x] **Phase 11: Lifecycle Schema Migration** — Add `paused` enum value and pause tracking fields to Prisma schema and Dart model; run codegen before any downstream work (completed 2026-03-23)
 - [ ] **Phase 12: Hobby Completion Flow + Stop** — Server-side completion detection, celebration overlay, Home completed state, and free stop/abandon action
 - [ ] **Phase 13: Detail Page Content Gating** — Free vs Pro content sections with `ProGateSection` widget and server-side endpoint guards
 - [ ] **Phase 14: Pause/Resume Lifecycle** — Pro-gated pause action, paused state display, resume, Pro-lapse auto-resume, and streak-safe pause duration tracking
@@ -64,7 +64,7 @@
   2. `flutter analyze` passes with zero errors after adding `HobbyStatus.paused` to the Dart enum and running `build_runner`
   3. All existing `switch` statements on `HobbyStatus` compile without exhaustive-switch warnings — every switch has a `paused` case
   4. The step completion endpoint (`PATCH /api/users/hobbies/:id/steps/:stepId`) sets `status = done` and `completedAt = now()` atomically when the final step is recorded, and returns a `hobbyCompleted` flag in its response
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 11-01-PLAN.md — Prisma schema + migrations + mapper + step completion endpoint
 - [ ] 11-02-PLAN.md — Dart model + codegen + exhaustive switch fixes
@@ -123,7 +123,7 @@ Plans:
 | 9. App Store Assets | v1.0 | 2/2 | Complete | 2026-03-22 |
 | 9.1. Session Screen Redesign | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
-| 11. Lifecycle Schema Migration | 1/2 | In Progress|  | — |
+| 11. Lifecycle Schema Migration | 2/2 | Complete   | 2026-03-23 | — |
 | 12. Hobby Completion Flow + Stop | v1.1 | 0/? | Not started | — |
 | 13. Detail Page Content Gating | v1.1 | 0/? | Not started | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |

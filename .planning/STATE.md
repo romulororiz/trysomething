@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
 status: executing
-last_updated: "2026-03-23T11:32:24.000Z"
+last_updated: "2026-03-23T11:55:17.000Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — v1.1 roadmap created*
+*Last updated: 2026-03-23 — Phase 11 complete (schema migration)*
 
 ---
 
@@ -30,11 +30,11 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 11 of 14 (Lifecycle Schema Migration)
-Plan: 2 of 2 in Phase 11
-Status: Executing
-Last activity: 2026-03-23 — Completed 11-01-PLAN.md (schema + mapper + step completion)
+Plan: 2 of 2 in Phase 11 (COMPLETE)
+Status: Phase 11 complete
+Last activity: 2026-03-23 — Completed 11-02-PLAN.md (Dart model migration)
 
-Progress: [##░░░░░░░░] 25% (v1.1) — 1 of 4 plans complete
+Progress: [#####░░░░░] 50% (v1.1) — 2 of 4 plans complete
 
 ---
 
@@ -53,7 +53,7 @@ Progress: [##░░░░░░░░] 25% (v1.1) — 1 of 4 plans complete
 
 | Phase | Plans Complete | Status |
 |-------|----------------|--------|
-| 11. Schema Migration | 1/2 | In progress |
+| 11. Schema Migration | 2/2 | Complete |
 | 12. Completion Flow + Stop | 0/? | Not started |
 | 13. Content Gating | 0/? | Not started |
 | 14. Pause/Resume | 0/? | Not started |
@@ -72,6 +72,9 @@ Progress: [##░░░░░░░░] 25% (v1.1) — 1 of 4 plans complete
 - [11-01] Extracted toggleStepCompletion as exported function taking db client parameter for testability -- enables direct unit testing with mocked transaction client
 - [11-01] Completion detection only runs on step addition, not removal -- un-toggling never reverts done status (permanent completion in v1.1)
 - [11-01] Activity log and challenge progress kept outside $transaction as non-critical side effects
+- [11-02] Paused hobbies appear in Active tab temporarily until Phase 14 adds Paused filter
+- [11-02] Paused hobbies occupy Free-tier active slot to prevent bypass
+- [11-02] No default cases in exhaustive switches -- Dart 3 exhaustiveness is the safety net
 
 ### Blockers/Concerns
 
@@ -83,10 +86,10 @@ Progress: [##░░░░░░░░] 25% (v1.1) — 1 of 4 plans complete
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Completed 11-01-PLAN.md (schema migration, mapper update, transactional step completion)
+Stopped at: Completed 11-02-PLAN.md (Dart model migration, enum update, switch stubs, slot guard)
 Resume file: None
 
-Next action: Execute 11-02-PLAN.md
+Next action: Phase 12 — Completion Flow + Stop
 
 ---
 
