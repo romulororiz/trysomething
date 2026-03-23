@@ -8,6 +8,7 @@ import '../../providers/feature_providers.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
+import 'hobby_completion_screen.dart';
 import 'session_prepare_phase.dart';
 import 'session_reflect_phase.dart';
 import 'session_timer_phase.dart';
@@ -237,16 +238,30 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     debugPrint('[Session] Journal entry saved for hobby $hobbyId');
   }
 
-  void _exitSession() {
+  Future<void> _exitSession() async {
     final session = ref.read(sessionProvider);
     // Mark step complete in user state if session finished successfully
     if (session != null && session.isComplete) {
-      ref
+      final hobbyCompleted = await ref
           .read(userHobbiesProvider.notifier)
           .toggleStep(session.hobbyId, session.stepId);
+      ref.read(sessionProvider.notifier).completeSession();
+      if (mounted) {
+        if (hobbyCompleted) {
+          Navigator.of(context).pushReplacement(
+            HobbyCompletionScreen.route(
+              hobbyId: session.hobbyId,
+              hobbyTitle: session.hobbyTitle,
+            ),
+          );
+        } else {
+          Navigator.of(context).maybePop();
+        }
+      }
+    } else {
+      ref.read(sessionProvider.notifier).completeSession();
+      if (mounted) Navigator.of(context).maybePop();
     }
-    ref.read(sessionProvider.notifier).completeSession();
-    if (mounted) Navigator.of(context).maybePop();
   }
 
   // ═══════════════════════════════════════════════════════
