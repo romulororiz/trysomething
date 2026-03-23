@@ -26,12 +26,12 @@ Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phase
 
 ### Content Gating
 
-- [ ] **GATE-01**: Detail page shows for free users: hero image, spec badge, "why it fits you", "start in 20 minutes", what to expect, full 4-stage roadmap overview, "Start Hobby" CTA
-- [ ] **GATE-02**: Detail page Pro-locked sections: why people stop, starter kit list, plan first session, cost breakdown, FAQ, budget alternatives
-- [ ] **GATE-03**: Locked sections render as glass card with lock icon, section title, one-line teaser text, "Unlock with Pro" pill
-- [ ] **GATE-04**: Tapping any locked section triggers existing `showProUpgrade()` bottom sheet
+- [x] **GATE-01**: Detail page shows for free users: hero image, spec badge, "why it fits you", "start in 20 minutes", what to expect, full 4-stage roadmap overview, "Start Hobby" CTA
+- [x] **GATE-02**: Detail page Pro-locked sections: why people stop, starter kit list, plan first session, cost breakdown, FAQ, budget alternatives
+- [x] **GATE-03**: Locked sections render as glass card with lock icon, section title, one-line teaser text, "Unlock with Pro" pill
+- [x] **GATE-04**: Tapping any locked section triggers existing `showProUpgrade()` bottom sheet
 - [x] **GATE-05**: Server-side gate on `/api/generate/faq`, `/api/generate/cost`, `/api/generate/budget` endpoints — return 403 for non-Pro users
-- [ ] **GATE-06**: Plan First Session card on Home (for active hobby) uses same component as detail page version, ungated for active hobby
+- [x] **GATE-06**: Plan First Session card on Home (for active hobby) uses same component as detail page version, ungated for active hobby
 
 ### Schema
 
@@ -79,12 +79,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-03 | Phase 12 | Complete |
 | COMP-04 | Phase 12 | Complete |
 | LIFE-01 | Phase 12 | Complete |
-| GATE-01 | Phase 13 | Pending |
-| GATE-02 | Phase 13 | Pending |
-| GATE-03 | Phase 13 | Pending |
-| GATE-04 | Phase 13 | Pending |
+| GATE-01 | Phase 13 | Complete |
+| GATE-02 | Phase 13 | Complete |
+| GATE-03 | Phase 13 | Complete |
+| GATE-04 | Phase 13 | Complete |
 | GATE-05 | Phase 13 | Complete |
-| GATE-06 | Phase 13 | Pending |
+| GATE-06 | Phase 13 | Complete |
 | LIFE-02 | Phase 14 | Pending |
 | LIFE-03 | Phase 14 | Pending |
 | LIFE-04 | Phase 14 | Pending |

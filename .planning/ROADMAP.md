@@ -48,7 +48,7 @@
 
 - [x] **Phase 11: Lifecycle Schema Migration** — Add `paused` enum value and pause tracking fields to Prisma schema and Dart model; run codegen before any downstream work (completed 2026-03-23)
 - [x] **Phase 12: Hobby Completion Flow + Stop** — Server-side completion detection, celebration overlay, Home completed state, and free stop/abandon action (completed 2026-03-23)
-- [ ] **Phase 13: Detail Page Content Gating** — Free vs Pro content sections with `ProGateSection` widget and server-side endpoint guards
+- [x] **Phase 13: Detail Page Content Gating** — Free vs Pro content sections with `ProGateSection` widget and server-side endpoint guards (completed 2026-03-23)
 - [ ] **Phase 14: Pause/Resume Lifecycle** — Pro-gated pause action, paused state display, resume, Pro-lapse auto-resume, and streak-safe pause duration tracking
 
 ---
@@ -93,7 +93,7 @@ Plans:
   3. Tapping any locked section opens the existing Pro upgrade bottom sheet — no new modal or navigation required
   4. A Pro user on the same screen sees all sections fully expanded with no gate UI visible
   5. Sending a generate request (`/api/generate/faq`, `/api/generate/cost`, `/api/generate/budget`) as a free user returns a 403 response from the server — the gate is enforced server-side, not just client-side
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 13-01-PLAN.md — Server-side requirePro() helper + 403 gating on faq/cost/budget endpoints
 - [ ] 13-02-PLAN.md — ProGateSection widget + detail screen gating + HobbyQuickLinks locked mode + PlanFirstSessionCard extraction
@@ -131,7 +131,7 @@ Plans:
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 13. Detail Page Content Gating | 1/2 | In Progress|  | — |
+| 13. Detail Page Content Gating | 2/2 | Complete   | 2026-03-23 | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
 
 ---

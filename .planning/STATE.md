@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
 status: in-progress
-last_updated: "2026-03-23T18:23:00.000Z"
+last_updated: "2026-03-23T18:28:00.000Z"
 progress:
   total_phases: 14
   completed_phases: 13
-  total_plans: 23
-  completed_plans: 23
+  total_plans: 24
+  completed_plans: 24
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — Phase 13 Plan 01 complete (server-side Pro gating)*
+*Last updated: 2026-03-23 — Phase 13 complete (content gating UI + server-side Pro gating)*
 
 ---
 
@@ -29,12 +29,12 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 13 of 14 (Detail Page Content Gating) -- IN PROGRESS
-Plan: 1 of 2 in Phase 13 (Plan 01 COMPLETE)
-Status: Phase 13 in progress
-Last activity: 2026-03-23 — Completed 13-01-PLAN.md (server-side Pro tier gating on faq/cost/budget)
+Phase: 13 of 14 (Detail Page Content Gating) -- COMPLETE
+Plan: 2 of 2 in Phase 13 (COMPLETE)
+Status: Phase 13 complete
+Last activity: 2026-03-23 — Completed 13-02-PLAN.md (content gating UI with ProGateSection, PlanFirstSessionCard, locked quick links)
 
-Progress: [#########░] 90% (v1.1) — 5 of 6 plans complete
+Progress: [#########░] 90% (v1.1) — 6 of 7 plans complete
 
 ---
 
@@ -55,12 +55,13 @@ Progress: [#########░] 90% (v1.1) — 5 of 6 plans complete
 |-------|----------------|--------|
 | 11. Schema Migration | 2/2 | Complete |
 | 12. Completion Flow + Stop | 2/2 | Complete |
-| 13. Content Gating | 1/2 | In progress |
+| 13. Content Gating | 2/2 | Complete |
 | 14. Pause/Resume | 0/? | Not started |
 
 | Phase 12 P01 | 7min | 2 tasks | 5 files |
 | Phase 12 P02 | 15min | 3 tasks | 8 files |
 | Phase 13 P01 | 2min | 2 tasks | 2 files |
+| Phase 13 P02 | 7min | 4 tasks | 5 files |
 
 ---
 
@@ -88,6 +89,10 @@ Progress: [#########░] 90% (v1.1) — 5 of 6 plans complete
 - [12-02] isFullyCompleted heuristic: completedStepIds.length >= roadmapSteps.length for distinguishing completed vs stopped in Tried tab
 - [13-01] PAID_TIERS constant array for DRY tier checking -- avoids repeating pro/trial/lifetime strings
 - [13-01] requirePro takes (userId, res) not (req, res) since userId is already extracted by requireAuth -- avoids redundant token parsing
+- [13-02] Used ImageFiltered instead of BackdropFilter for content gating blur -- avoids scroll jank in sliver lists
+- [13-02] ProGateSection is a StatelessWidget receiving isLocked as param -- parent controls state, no internal provider reads
+- [13-02] PlanFirstSessionCard uses optional overrides for multi-mode reuse (detail defaults vs home 3-mode)
+- [13-02] Quick link lock badges: 8px lock icon in 16px surfaceElevated circle at top-right of feature icon
 
 ### Blockers/Concerns
 
@@ -99,10 +104,10 @@ Progress: [#########░] 90% (v1.1) — 5 of 6 plans complete
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Completed 13-01-PLAN.md (server-side Pro gating on faq/cost/budget endpoints)
+Stopped at: Completed 13-02-PLAN.md (content gating UI with ProGateSection, PlanFirstSessionCard, locked quick links)
 Resume file: None
 
-Next action: Phase 13 Plan 02 — Client-side content gating UI
+Next action: Phase 14 — Pause/Resume
 
 ---
 
