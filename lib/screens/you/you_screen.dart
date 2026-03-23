@@ -30,7 +30,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
   late PageController _savedPageController;
   int _currentHobbyPage = 0;
   int _savedPage = 0;
-  int _selectedTab = 0; // 0=Active, 1=Saved, 2=Tried
+  int _selectedTab = 0; // 0=Active, 1=Paused, 2=Saved, 3=Tried
 
   @override
   void initState() {
@@ -58,6 +58,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
     final allHobbies = allHobbiesAsync.valueOrNull ?? [];
 
     final activeEntries = <_HobbyWithMeta>[];
+    final pausedEntries = <_HobbyWithMeta>[];
     final savedEntries = <_HobbyWithMeta>[];
     final triedEntries = <_HobbyWithMeta>[];
 
@@ -70,8 +71,9 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       switch (uh.status) {
         case HobbyStatus.trying:
         case HobbyStatus.active:
-        case HobbyStatus.paused: // Phase 14 will add Paused filter tab
           activeEntries.add(meta);
+        case HobbyStatus.paused:
+          pausedEntries.add(meta);
         case HobbyStatus.saved:
           savedEntries.add(meta);
         case HobbyStatus.done:
@@ -90,6 +92,13 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       return bTime.compareTo(aTime);
     });
 
+    // Sort paused hobbies by pausedAt descending (most recently paused first).
+    pausedEntries.sort((a, b) {
+      final aTime = a.userHobby.pausedAt ?? DateTime(0);
+      final bTime = b.userHobby.pausedAt ?? DateTime(0);
+      return bTime.compareTo(aTime);
+    });
+
     if (_currentHobbyPage >= activeEntries.length && activeEntries.isNotEmpty) {
       _currentHobbyPage = activeEntries.length - 1;
     }
@@ -102,7 +111,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         ? activeEntries[_currentHobbyPage.clamp(0, activeEntries.length - 1)]
         : null;
 
-    final allEntries = [...activeEntries, ...savedEntries, ...triedEntries];
+    final allEntries = [...activeEntries, ...pausedEntries, ...savedEntries, ...triedEntries];
     final totalStepsCompleted = allEntries.fold(
         0, (sum, m) => sum + m.userHobby.completedStepIds.length);
     final bestStreak = allEntries.fold(
@@ -141,6 +150,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                     selected: _selectedTab,
                     onSelect: (i) => setState(() => _selectedTab = i),
                     activeCt: activeEntries.length,
+                    pausedCt: pausedEntries.length,
                     savedCt: savedEntries.length,
                     triedCt: triedEntries.length,
                   ),
@@ -168,6 +178,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                       child: _buildTabContent(
                         tab: _selectedTab,
                         activeEntries: activeEntries,
+                        pausedEntries: pausedEntries,
                         savedEntries: savedEntries,
                         triedEntries: triedEntries,
                         visibleMeta: visibleMeta,
@@ -270,6 +281,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
   Widget _buildTabContent({
     required int tab,
     required List<_HobbyWithMeta> activeEntries,
+    required List<_HobbyWithMeta> pausedEntries,
     required List<_HobbyWithMeta> savedEntries,
     required List<_HobbyWithMeta> triedEntries,
     required _HobbyWithMeta? visibleMeta,
@@ -285,6 +297,11 @@ class _YouScreenState extends ConsumerState<YouScreen> {
           onPageChanged: (i) => setState(() => _currentHobbyPage = i),
         );
       case 1:
+        return _PausedTabContent(
+          key: const ValueKey('paused'),
+          entries: pausedEntries,
+        );
+      case 2:
         return _SavedTabContent(
           key: const ValueKey('saved'),
           entries: savedEntries,
@@ -292,7 +309,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
           savedPageController: _savedPageController,
           onPageChanged: (i) => setState(() => _savedPage = i),
         );
-      case 2:
+      case 3:
         return _TriedTabContent(
           key: const ValueKey('tried'),
           entries: triedEntries,
@@ -434,6 +451,7 @@ class _TabPills extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onSelect;
   final int activeCt;
+  final int pausedCt;
   final int savedCt;
   final int triedCt;
 
@@ -441,6 +459,7 @@ class _TabPills extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     required this.activeCt,
+    required this.pausedCt,
     required this.savedCt,
     required this.triedCt,
   });
@@ -449,6 +468,7 @@ class _TabPills extends StatelessWidget {
   Widget build(BuildContext context) {
     final tabs = [
       ('Active', activeCt),
+      ('Paused', pausedCt),
       ('Saved', savedCt),
       ('Tried', triedCt),
     ];
@@ -562,6 +582,132 @@ class _ActiveTabContent extends ConsumerWidget {
             child: _StatsChipRow(meta: visibleMeta!),
           ),
       ],
+    );
+  }
+}
+
+// ── Paused tab content ──
+class _PausedTabContent extends ConsumerWidget {
+  final List<_HobbyWithMeta> entries;
+  const _PausedTabContent({super.key, required this.entries});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (entries.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Center(
+          child: Text('No paused hobbies',
+              style: TextStyle(color: AppColors.textMuted)),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: entries.map((meta) {
+          final daysPaused = meta.userHobby.pausedAt != null
+              ? DateTime.now().difference(meta.userHobby.pausedAt!).inDays
+              : 0;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Opacity(
+              opacity: 0.7,
+              child: GlassCard(
+                onTap: () => context.push('/hobby/${meta.hobby.id}'),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Thumbnail
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: CachedNetworkImage(
+                            imageUrl: meta.hobby.imageUrl,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 112,
+                            placeholder: (_, __) => Container(
+                                color: AppColors.surfaceElevated),
+                            errorWidget: (_, __, ___) => Container(
+                              color: AppColors.surfaceElevated,
+                              child: const Icon(Icons.image_outlined,
+                                  size: 20, color: AppColors.textMuted),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(meta.hobby.title,
+                                style: AppTypography.body
+                                    .copyWith(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Row(children: [
+                              // PAUSED chip
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                      color: AppColors.glassBorder,
+                                      width: 0.5),
+                                ),
+                                child: Text('PAUSED',
+                                    style: AppTypography.overline.copyWith(
+                                        color: AppColors.textMuted,
+                                        fontSize: 10)),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                daysPaused == 0
+                                    ? 'Today'
+                                    : '${daysPaused}d',
+                                style: AppTypography.caption
+                                    .copyWith(color: AppColors.textMuted),
+                              ),
+                            ]),
+                          ],
+                        ),
+                      ),
+                      // Resume CTA
+                      SizedBox(
+                        height: 36,
+                        child: ElevatedButton(
+                          onPressed: () => ref
+                              .read(userHobbiesProvider.notifier)
+                              .resumeHobby(meta.hobby.id),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 0,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          child: Text('Resume',
+                              style: AppTypography.caption.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
