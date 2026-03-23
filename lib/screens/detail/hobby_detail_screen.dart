@@ -253,31 +253,87 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
             ),
           ),
 
-          // Floating CTA at bottom
+          // Floating CTA at bottom (hidden for done hobbies)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
-              decoration: const BoxDecoration(
-                gradient: Spacing.ctaFadeGradient,
-              ),
-              child: SafeArea(
-                top: false,
-                child: TryTodayButton(
-                  text: 'Start hobby',
-                  onPressed: () {
-                    final canStart = ref.read(canStartHobbyProvider(widget.hobbyId));
-                    if (!canStart) {
-                      context.push('/pro');
-                      return;
-                    }
-                    context.push('/quickstart/${widget.hobbyId}');
-                  },
+            child: Builder(builder: (context) {
+              final userHobby = ref.watch(userHobbiesProvider)[widget.hobbyId];
+              final isDone = userHobby?.status == HobbyStatus.done;
+
+              if (isDone) {
+                // Muted status chip instead of Start CTA for completed/stopped hobbies
+                final totalSteps = hobby.roadmapSteps.length;
+                final completedSteps = userHobby!.completedStepIds.length;
+                final isFullyCompleted =
+                    totalSteps > 0 && completedSteps >= totalSteps;
+
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
+                  decoration: const BoxDecoration(
+                    gradient: Spacing.ctaFadeGradient,
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Container(
+                      width: double.infinity,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.glassBackground,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: AppColors.glassBorder, width: 0.5),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isFullyCompleted
+                                ? Icons.check_circle_rounded
+                                : Icons.stop_circle_outlined,
+                            size: 18,
+                            color: isFullyCompleted
+                                ? AppColors.success
+                                : AppColors.textMuted,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isFullyCompleted ? 'Completed' : 'Tried',
+                            style: AppTypography.body.copyWith(
+                              color: AppColors.textMuted,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return Container(
+                padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
+                decoration: const BoxDecoration(
+                  gradient: Spacing.ctaFadeGradient,
                 ),
-              ),
-            ),
+                child: SafeArea(
+                  top: false,
+                  child: TryTodayButton(
+                    text: 'Start hobby',
+                    onPressed: () {
+                      final canStart =
+                          ref.read(canStartHobbyProvider(widget.hobbyId));
+                      if (!canStart) {
+                        context.push('/pro');
+                        return;
+                      }
+                      context.push('/quickstart/${widget.hobbyId}');
+                    },
+                  ),
+                ),
+              );
+            }),
           ),
         ],
       ),

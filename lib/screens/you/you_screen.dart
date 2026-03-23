@@ -1414,14 +1414,32 @@ class _TriedHobbyCard extends StatelessWidget {
     final hobby = meta.hobby;
     final uh = meta.userHobby;
 
-    String triedLabel = '';
-    if (uh.startedAt != null && uh.lastActivityAt != null) {
+    // Determine if hobby was fully completed vs stopped partway
+    final totalSteps = hobby.roadmapSteps.length;
+    final completedSteps = uh.completedStepIds.length;
+    final isFullyCompleted = totalSteps > 0 && completedSteps >= totalSteps;
+
+    // Status icon and label
+    final statusIcon = isFullyCompleted
+        ? const Icon(Icons.check_circle_rounded,
+            size: 16, color: AppColors.success)
+        : const Icon(Icons.stop_circle_outlined,
+            size: 16, color: AppColors.textMuted);
+    final statusLabel = isFullyCompleted ? 'Completed' : 'Stopped';
+    final statusColor = isFullyCompleted ? AppColors.success : AppColors.textMuted;
+
+    // Date label: prefer completedAt, fallback to existing weeks label
+    String dateLabel = '';
+    if (uh.completedAt != null) {
+      final d = uh.completedAt!;
+      dateLabel = '${_monthName(d.month)} ${d.day}, ${d.year}';
+    } else if (uh.startedAt != null && uh.lastActivityAt != null) {
       final days = uh.lastActivityAt!.difference(uh.startedAt!).inDays;
       final weeks = (days / 7).ceil();
-      triedLabel = weeks <= 1 ? '1 week' : '$weeks weeks';
+      dateLabel = weeks <= 1 ? '1 week' : '$weeks weeks';
       final month = _monthName(uh.lastActivityAt!.month);
       final year = uh.lastActivityAt!.year;
-      triedLabel = '$triedLabel in $month $year';
+      dateLabel = '$dateLabel in $month $year';
     }
 
     return GestureDetector(
@@ -1436,12 +1454,35 @@ class _TriedHobbyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Status icon + label row
+            Row(
+              children: [
+                statusIcon,
+                const SizedBox(width: 6),
+                Text(statusLabel,
+                    style: AppTypography.caption
+                        .copyWith(color: statusColor)),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Hobby title
             Text(hobby.title,
                 style: AppTypography.body
                     .copyWith(color: AppColors.textSecondary)),
-            if (triedLabel.isNotEmpty) ...[
+
+            // Date
+            if (dateLabel.isNotEmpty) ...[
               const SizedBox(height: 2),
-              Text(triedLabel,
+              Text(dateLabel,
+                  style: AppTypography.caption
+                      .copyWith(color: AppColors.textMuted)),
+            ],
+
+            // Step progress (guard against empty roadmapSteps)
+            if (hobby.roadmapSteps.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text('$completedSteps/$totalSteps steps',
                   style: AppTypography.caption
                       .copyWith(color: AppColors.textMuted)),
             ],
