@@ -135,7 +135,7 @@ Plans:
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 14. Pause/Resume Lifecycle | 2/2 | Complete   | 2026-03-23 | — |
+| 14. Pause/Resume Lifecycle | 2/2 | Complete    | 2026-03-23 | — |
 
 ---
 

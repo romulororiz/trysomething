@@ -21,8 +21,8 @@ Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phase
 - [x] **LIFE-03**: User can resume a paused hobby (Pro) — picks up where they left off with streak continuity
 - [x] **LIFE-04**: Home shows paused hobby with frosted glass card (opacity 0.7), "Paused" chip, coral "Resume" CTA, days-paused counter
 - [x] **LIFE-05**: You tab shows Paused as a distinct filter state alongside Active/Saved/Tried with pause icon on card
-- [ ] **LIFE-06**: Pro subscription lapse auto-resumes paused hobbies as active (no data lost, removes pause state gracefully)
-- [ ] **LIFE-07**: Pause duration excluded from streak calculation (pausedDurationDays subtracted from gap)
+- [x] **LIFE-06**: Pro subscription lapse auto-resumes paused hobbies as active (no data lost, removes pause state gracefully)
+- [x] **LIFE-07**: Pause duration excluded from streak calculation (pausedDurationDays subtracted from gap)
 
 ### Content Gating
 
