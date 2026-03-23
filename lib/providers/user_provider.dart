@@ -183,7 +183,9 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   }
 
   void saveHobby(String hobbyId) {
-    if (state.containsKey(hobbyId)) return;
+    final existing = state[hobbyId];
+    // Skip if already saved, trying, active, or paused — only save fresh or re-save done hobbies
+    if (existing != null && existing.status != HobbyStatus.done) return;
     final snapshot = Map<String, UserHobby>.from(state);
     state = {
       ...state,
@@ -209,14 +211,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       unsaveHobby(hobbyId);
     } else if (hobby == null || hobby.status == HobbyStatus.done) {
       // Not in map, or completed — (re)save it
-      final snapshot = Map<String, UserHobby>.from(state);
-      state = {
-        ...state,
-        hobbyId: UserHobby(hobbyId: hobbyId, status: HobbyStatus.saved),
-      };
-      _save();
-      _analytics.trackEvent('hobby_saved', {'hobby_id': hobbyId});
-      _apiCall(snapshot, () async => _repo.saveHobby(hobbyId));
+      saveHobby(hobbyId);
     }
     // For trying/active/paused — do nothing (hobby is in progress, not a save toggle)
   }
@@ -353,6 +348,68 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
         await _repo.updateStatus(hobbyId, HobbyStatus.done, completedAt: DateTime.now());
       } catch (e) {
         debugPrint('[UserHobbies] stopHobby API call failed: $e');
+      }
+    }();
+  }
+
+  /// Pause a hobby. Sets status to paused and records pausedAt timestamp.
+  /// Optimistic, no rollback on API failure. Pro gate is enforced in UI only.
+  void pauseHobby(String hobbyId) {
+    final existing = state[hobbyId];
+    if (existing == null) return;
+    final now = DateTime.now();
+    state = {
+      ...state,
+      hobbyId: existing.copyWith(
+        status: HobbyStatus.paused,
+        pausedAt: now,
+      ),
+    };
+    _save();
+    _analytics.trackEvent('hobby_paused', {'hobby_id': hobbyId});
+    () async {
+      try {
+        await _repo.updateStatus(hobbyId, HobbyStatus.paused, pausedAt: now);
+      } catch (e) {
+        debugPrint('[UserHobbies] pauseHobby API call failed: $e');
+      }
+    }();
+  }
+
+  /// Resume a paused hobby. Always free — no Pro gate (LIFE-03).
+  /// Restores status to trying, clears pausedAt, accumulates pausedDurationDays,
+  /// and resets lastActivityAt for a fresh 24h streak window (LIFE-07).
+  void resumeHobby(String hobbyId) {
+    final existing = state[hobbyId];
+    if (existing == null) return;
+    final now = DateTime.now();
+    final elapsed = existing.pausedAt != null
+        ? now.difference(existing.pausedAt!).inDays
+        : 0;
+    state = {
+      ...state,
+      hobbyId: existing.copyWith(
+        status: HobbyStatus.trying,
+        pausedAt: null,
+        pausedDurationDays: existing.pausedDurationDays + elapsed,
+        lastActivityAt: now,
+      ),
+    };
+    _save();
+    _analytics.trackEvent('hobby_resumed', {
+      'hobby_id': hobbyId,
+      'paused_days': elapsed,
+    });
+    () async {
+      try {
+        await _repo.updateStatus(
+          hobbyId,
+          HobbyStatus.trying,
+          pausedDurationDays: existing.pausedDurationDays + elapsed,
+          lastActivityAt: now,
+        );
+      } catch (e) {
+        debugPrint('[UserHobbies] resumeHobby API call failed: $e');
       }
     }();
   }
