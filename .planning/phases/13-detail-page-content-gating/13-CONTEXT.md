@@ -14,7 +14,7 @@ Gate specific sections of the hobby detail page behind Pro. Free users see a ric
 ## Implementation Decisions
 
 ### Locked card design
-- Real content renders behind a `BackdropFilter` blur (not placeholder shimmer)
+- Real content renders behind an `ImageFiltered` blur (not BackdropFilter — causes scroll jank in lists; not placeholder shimmer)
 - Overlay on top of blur: centered lock icon (24px) + section title + coral "Unlock with Pro" pill button
 - Tapping anywhere on the locked card opens the existing `showProUpgrade()` bottom sheet
 - Same blur treatment for ALL gated sections (consistent pattern — user learns "blurred = Pro")
