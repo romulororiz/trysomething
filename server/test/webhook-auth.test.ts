@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Mock Prisma before importing handler
-vi.mock("../../lib/db", () => ({
+// Path resolved relative to handler file (server/api/users/[path].ts → ../../lib/db = server/lib/db)
+vi.mock("../lib/db", () => ({
   prisma: {
     user: { findUnique: vi.fn(), update: vi.fn() },
     userHobby: { findMany: vi.fn(), update: vi.fn() },
@@ -184,20 +185,26 @@ describe("RevenueCat webhook auth guard", () => {
     process.env.REVENUECAT_WEBHOOK_SECRET = "test-secret";
     process.env.NODE_ENV = "production";
 
-    const { prisma } = await import("../../lib/db");
-    // Mock user lookup
-    (prisma.user.findUnique as any).mockResolvedValue({
-      id: "user-1",
-      isLifetime: false,
-    });
-    // Mock user update (subscription downgrade)
-    (prisma.user.update as any).mockResolvedValue({});
-    // Mock finding paused hobbies
-    (prisma.userHobby.findMany as any).mockResolvedValue([
-      { hobbyId: "hobby-a", pausedAt: new Date("2026-03-01"), pausedDurationDays: 2 },
-    ]);
-    // Mock hobby update (auto-resume)
-    (prisma.userHobby.update as any).mockResolvedValue({});
+    // Re-apply mocks after resetModules to ensure fresh imports use them
+    const mockPrisma = {
+      user: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "user-1",
+          isLifetime: false,
+          proSince: null,
+          revenuecatId: null,
+        }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      userHobby: {
+        findMany: vi.fn().mockResolvedValue([
+          { hobbyId: "hobby-a", pausedAt: new Date("2026-03-01"), pausedDurationDays: 2 },
+        ]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+    };
+
+    vi.doMock("../lib/db", () => ({ prisma: mockPrisma }));
 
     const handler = (await import("../api/users/[path]")).default;
     const req = mockReq({
@@ -216,14 +223,20 @@ describe("RevenueCat webhook auth guard", () => {
 
     await handler(req, res);
 
+    // Verify handler returned 200 OK (not error)
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "ok", event: "EXPIRATION" })
+    );
+
     // Verify paused hobbies were queried
-    expect(prisma.userHobby.findMany).toHaveBeenCalledWith(
+    expect(mockPrisma.userHobby.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: "user-1", status: "paused" },
       })
     );
     // Verify auto-resume was called
-    expect(prisma.userHobby.update).toHaveBeenCalledWith(
+    expect(mockPrisma.userHobby.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId_hobbyId: { userId: "user-1", hobbyId: "hobby-a" } },
         data: expect.objectContaining({

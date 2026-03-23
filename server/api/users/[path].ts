@@ -417,7 +417,7 @@ async function handleHobbyDetail(
 
     // PUT /users/hobbies/:hobbyId — update status (upsert to handle race conditions)
     if (req.method === "PUT") {
-      const { status, startedAt, completedAt } = req.body ?? {};
+      const { status, startedAt, completedAt, pausedAt, pausedDurationDays, lastActivityAt } = req.body ?? {};
       const hobby = await prisma.userHobby.upsert({
         where: { userId_hobbyId: { userId, hobbyId } },
         create: {
@@ -426,7 +426,11 @@ async function handleHobbyDetail(
           status: status ?? "trying",
           ...(startedAt && { startedAt: new Date(startedAt) }),
           ...(completedAt && { completedAt: new Date(completedAt) }),
-          lastActivityAt: new Date(),
+          ...(pausedAt && { pausedAt: new Date(pausedAt) }),
+          ...(pausedDurationDays !== undefined && { pausedDurationDays }),
+          lastActivityAt: lastActivityAt !== undefined
+            ? (lastActivityAt ? new Date(lastActivityAt) : new Date())
+            : new Date(),
         },
         update: {
           ...(status !== undefined && { status }),
@@ -436,7 +440,13 @@ async function handleHobbyDetail(
           ...(completedAt !== undefined && {
             completedAt: completedAt ? new Date(completedAt) : null,
           }),
-          lastActivityAt: new Date(),
+          ...(pausedAt !== undefined && {
+            pausedAt: pausedAt ? new Date(pausedAt) : null,
+          }),
+          ...(pausedDurationDays !== undefined && { pausedDurationDays }),
+          lastActivityAt: lastActivityAt !== undefined
+            ? (lastActivityAt ? new Date(lastActivityAt) : new Date())
+            : new Date(),
         },
         include: { completedSteps: { select: { stepId: true } } },
       });
@@ -1270,6 +1280,27 @@ async function handleRevenueCatWebhook(
             where: { id: userId },
             data: { subscriptionTier: "free", proExpiresAt: expiresAt },
           });
+
+          // LIFE-06: auto-resume paused hobbies on Pro lapse
+          const pausedHobbies = await prisma.userHobby.findMany({
+            where: { userId, status: "paused" },
+            select: { hobbyId: true, pausedAt: true, pausedDurationDays: true },
+          });
+          const now = new Date();
+          for (const ph of pausedHobbies) {
+            const elapsedDays = ph.pausedAt
+              ? Math.floor((now.getTime() - ph.pausedAt.getTime()) / 86_400_000)
+              : 0;
+            await prisma.userHobby.update({
+              where: { userId_hobbyId: { userId, hobbyId: ph.hobbyId } },
+              data: {
+                status: "active",
+                pausedAt: null,
+                pausedDurationDays: (ph.pausedDurationDays ?? 0) + elapsedDays,
+                lastActivityAt: now,
+              },
+            });
+          }
         }
         break;
       case "BILLING_ISSUE":

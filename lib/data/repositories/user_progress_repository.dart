@@ -11,12 +11,15 @@ abstract class UserProgressRepository {
   /// Remove a saved hobby.
   Future<void> unsaveHobby(String hobbyId);
 
-  /// Update hobby status (trying, active, done).
+  /// Update hobby status (trying, active, paused, done).
   Future<UserHobby> updateStatus(
     String hobbyId,
     HobbyStatus status, {
     DateTime? startedAt,
     DateTime? completedAt,
+    DateTime? pausedAt,
+    int? pausedDurationDays,
+    DateTime? lastActivityAt,
   });
 
   /// Toggle a roadmap step completion.

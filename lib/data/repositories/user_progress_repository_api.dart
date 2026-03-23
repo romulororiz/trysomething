@@ -37,6 +37,9 @@ class UserProgressRepositoryApi implements UserProgressRepository {
     HobbyStatus status, {
     DateTime? startedAt,
     DateTime? completedAt,
+    DateTime? pausedAt,
+    int? pausedDurationDays,
+    DateTime? lastActivityAt,
   }) async {
     final response = await _dio.put(
       ApiConstants.userHobby(hobbyId),
@@ -44,6 +47,12 @@ class UserProgressRepositoryApi implements UserProgressRepository {
         'status': status.name,
         if (startedAt != null) 'startedAt': startedAt.toIso8601String(),
         if (completedAt != null) 'completedAt': completedAt.toIso8601String(),
+        if (pausedAt != null) 'pausedAt': pausedAt.toIso8601String(),
+        // On resume (status active/trying + lastActivityAt set), send explicit null
+        // to clear pausedAt on server
+        if (pausedAt == null && lastActivityAt != null) 'pausedAt': null,
+        if (pausedDurationDays != null) 'pausedDurationDays': pausedDurationDays,
+        if (lastActivityAt != null) 'lastActivityAt': lastActivityAt.toIso8601String(),
       },
     );
     return UserHobby.fromJson(response.data as Map<String, dynamic>);
