@@ -13,6 +13,7 @@ import '../../components/app_overlays.dart';
 import '../../components/glass_card.dart';
 import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
+import '../../components/plan_first_session_card.dart';
 import '../../components/page_dots.dart';
 import '../../components/starter_kit_card.dart';
 import '../../models/hobby.dart';
@@ -639,69 +640,40 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                 String coachSubtitle;
                 String coachMessage;
                 String coachMode;
+                bool autoSend;
 
                 if (daysSinceActivity >= 7) {
                   coachTitle = 'Get back on track';
                   coachSubtitle =
-                      'It\'s been $daysSinceActivity days — let\'s restart gently';
+                      'It\'s been $daysSinceActivity days \u2014 let\'s restart gently';
                   coachMessage =
                       'I skipped $daysSinceActivity days of ${hobby.title}. Help me restart gently.';
                   coachMode = 'rescue';
+                  autoSend = false;
                 } else if (stepsCompleted == 0) {
                   coachTitle = 'Plan your first session';
                   coachSubtitle = 'Get a tiny first-session plan, no experience needed.';
                   coachMessage =
                       'Help me start tonight. I want a tiny first session plan for ${hobby.title}.';
                   coachMode = 'start';
+                  autoSend = false;
                 } else {
                   coachTitle = 'What should I do next?';
                   coachSubtitle = '$stepsCompleted of $totalSteps steps done';
                   coachMessage =
                       'What should I do next? I\'ve completed $stepsCompleted of $totalSteps steps.';
                   coachMode = 'momentum';
+                  autoSend = true;
                 }
 
-                return GlassCard(
-                  onTap: () => context.push('/coach/${hobby.id}', extra: {
-                    'message': coachMessage,
-                    'mode': coachMode,
-                    'autoSend': stepsCompleted > 0,
-                  }),
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      // Coral circle icon — matches detail page card style
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.coral.withValues(alpha: 0.12),
-                        ),
-                        child: const Icon(Icons.auto_awesome, size: 20, color: AppColors.coral),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(coachTitle,
-                                style: AppTypography.sansLabel.copyWith(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                            const SizedBox(height: 2),
-                            Text(coachSubtitle,
-                                style: AppTypography.sansTiny.copyWith(
-                                  color: AppColors.textSecondary,
-                                )),
-                          ],
-                        ),
-                      ),
-                      Icon(MdiIcons.chevronRight,
-                          size: 20, color: AppColors.textMuted),
-                    ],
-                  ),
+                return PlanFirstSessionCard(
+                  hobbyId: hobby.id,
+                  isLocked: false,
+                  title: coachTitle,
+                  subtitle: coachSubtitle,
+                  coachMessage: coachMessage,
+                  coachMode: coachMode,
+                  autoSend: autoSend,
                 );
               }),
               const SizedBox(height: 16),
