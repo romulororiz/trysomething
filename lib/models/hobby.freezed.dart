@@ -1299,6 +1299,9 @@ mixin _$UserHobby {
   Set<String> get completedStepIds => throw _privateConstructorUsedError;
   DateTime? get startedAt => throw _privateConstructorUsedError;
   DateTime? get lastActivityAt => throw _privateConstructorUsedError;
+  DateTime? get completedAt => throw _privateConstructorUsedError;
+  DateTime? get pausedAt => throw _privateConstructorUsedError;
+  int get pausedDurationDays => throw _privateConstructorUsedError;
   int get streakDays => throw _privateConstructorUsedError;
 
   /// Serializes this UserHobby to a JSON map.
@@ -1322,6 +1325,9 @@ abstract class $UserHobbyCopyWith<$Res> {
       @SetStringConverter() Set<String> completedStepIds,
       DateTime? startedAt,
       DateTime? lastActivityAt,
+      DateTime? completedAt,
+      DateTime? pausedAt,
+      int pausedDurationDays,
       int streakDays});
 }
 
@@ -1345,6 +1351,9 @@ class _$UserHobbyCopyWithImpl<$Res, $Val extends UserHobby>
     Object? completedStepIds = null,
     Object? startedAt = freezed,
     Object? lastActivityAt = freezed,
+    Object? completedAt = freezed,
+    Object? pausedAt = freezed,
+    Object? pausedDurationDays = null,
     Object? streakDays = null,
   }) {
     return _then(_value.copyWith(
@@ -1368,6 +1377,18 @@ class _$UserHobbyCopyWithImpl<$Res, $Val extends UserHobby>
           ? _value.lastActivityAt
           : lastActivityAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      completedAt: freezed == completedAt
+          ? _value.completedAt
+          : completedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      pausedAt: freezed == pausedAt
+          ? _value.pausedAt
+          : pausedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      pausedDurationDays: null == pausedDurationDays
+          ? _value.pausedDurationDays
+          : pausedDurationDays // ignore: cast_nullable_to_non_nullable
+              as int,
       streakDays: null == streakDays
           ? _value.streakDays
           : streakDays // ignore: cast_nullable_to_non_nullable
@@ -1390,6 +1411,9 @@ abstract class _$$UserHobbyImplCopyWith<$Res>
       @SetStringConverter() Set<String> completedStepIds,
       DateTime? startedAt,
       DateTime? lastActivityAt,
+      DateTime? completedAt,
+      DateTime? pausedAt,
+      int pausedDurationDays,
       int streakDays});
 }
 
@@ -1411,6 +1435,9 @@ class __$$UserHobbyImplCopyWithImpl<$Res>
     Object? completedStepIds = null,
     Object? startedAt = freezed,
     Object? lastActivityAt = freezed,
+    Object? completedAt = freezed,
+    Object? pausedAt = freezed,
+    Object? pausedDurationDays = null,
     Object? streakDays = null,
   }) {
     return _then(_$UserHobbyImpl(
@@ -1434,6 +1461,18 @@ class __$$UserHobbyImplCopyWithImpl<$Res>
           ? _value.lastActivityAt
           : lastActivityAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      completedAt: freezed == completedAt
+          ? _value.completedAt
+          : completedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      pausedAt: freezed == pausedAt
+          ? _value.pausedAt
+          : pausedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      pausedDurationDays: null == pausedDurationDays
+          ? _value.pausedDurationDays
+          : pausedDurationDays // ignore: cast_nullable_to_non_nullable
+              as int,
       streakDays: null == streakDays
           ? _value.streakDays
           : streakDays // ignore: cast_nullable_to_non_nullable
@@ -1452,6 +1491,9 @@ class _$UserHobbyImpl extends _UserHobby {
       final Set<String> completedStepIds = const <String>{},
       this.startedAt,
       this.lastActivityAt,
+      this.completedAt,
+      this.pausedAt,
+      this.pausedDurationDays = 0,
       this.streakDays = 0})
       : _completedStepIds = completedStepIds,
         super._();
@@ -1478,12 +1520,19 @@ class _$UserHobbyImpl extends _UserHobby {
   @override
   final DateTime? lastActivityAt;
   @override
+  final DateTime? completedAt;
+  @override
+  final DateTime? pausedAt;
+  @override
+  @JsonKey()
+  final int pausedDurationDays;
+  @override
   @JsonKey()
   final int streakDays;
 
   @override
   String toString() {
-    return 'UserHobby(hobbyId: $hobbyId, status: $status, completedStepIds: $completedStepIds, startedAt: $startedAt, lastActivityAt: $lastActivityAt, streakDays: $streakDays)';
+    return 'UserHobby(hobbyId: $hobbyId, status: $status, completedStepIds: $completedStepIds, startedAt: $startedAt, lastActivityAt: $lastActivityAt, completedAt: $completedAt, pausedAt: $pausedAt, pausedDurationDays: $pausedDurationDays, streakDays: $streakDays)';
   }
 
   @override
@@ -1499,6 +1548,12 @@ class _$UserHobbyImpl extends _UserHobby {
                 other.startedAt == startedAt) &&
             (identical(other.lastActivityAt, lastActivityAt) ||
                 other.lastActivityAt == lastActivityAt) &&
+            (identical(other.completedAt, completedAt) ||
+                other.completedAt == completedAt) &&
+            (identical(other.pausedAt, pausedAt) ||
+                other.pausedAt == pausedAt) &&
+            (identical(other.pausedDurationDays, pausedDurationDays) ||
+                other.pausedDurationDays == pausedDurationDays) &&
             (identical(other.streakDays, streakDays) ||
                 other.streakDays == streakDays));
   }
@@ -1512,6 +1567,9 @@ class _$UserHobbyImpl extends _UserHobby {
       const DeepCollectionEquality().hash(_completedStepIds),
       startedAt,
       lastActivityAt,
+      completedAt,
+      pausedAt,
+      pausedDurationDays,
       streakDays);
 
   /// Create a copy of UserHobby
@@ -1537,6 +1595,9 @@ abstract class _UserHobby extends UserHobby {
       @SetStringConverter() final Set<String> completedStepIds,
       final DateTime? startedAt,
       final DateTime? lastActivityAt,
+      final DateTime? completedAt,
+      final DateTime? pausedAt,
+      final int pausedDurationDays,
       final int streakDays}) = _$UserHobbyImpl;
   const _UserHobby._() : super._();
 
@@ -1554,6 +1615,12 @@ abstract class _UserHobby extends UserHobby {
   DateTime? get startedAt;
   @override
   DateTime? get lastActivityAt;
+  @override
+  DateTime? get completedAt;
+  @override
+  DateTime? get pausedAt;
+  @override
+  int get pausedDurationDays;
   @override
   int get streakDays;
 

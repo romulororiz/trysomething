@@ -133,7 +133,7 @@ class HobbyCategory with _$HobbyCategory {
 //  USER STATE MODELS
 // ═══════════════════════════════════════════════════════
 
-enum HobbyStatus { saved, trying, active, done }
+enum HobbyStatus { saved, trying, active, paused, done }
 
 @freezed
 class UserHobby with _$UserHobby {
@@ -145,6 +145,9 @@ class UserHobby with _$UserHobby {
     @SetStringConverter() @Default(<String>{}) Set<String> completedStepIds,
     DateTime? startedAt,
     DateTime? lastActivityAt,
+    DateTime? completedAt,
+    DateTime? pausedAt,
+    @Default(0) int pausedDurationDays,
     @Default(0) int streakDays,
   }) = _UserHobby;
 

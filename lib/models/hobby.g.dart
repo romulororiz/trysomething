@@ -134,6 +134,13 @@ _$UserHobbyImpl _$$UserHobbyImplFromJson(Map<String, dynamic> json) =>
       lastActivityAt: json['lastActivityAt'] == null
           ? null
           : DateTime.parse(json['lastActivityAt'] as String),
+      completedAt: json['completedAt'] == null
+          ? null
+          : DateTime.parse(json['completedAt'] as String),
+      pausedAt: json['pausedAt'] == null
+          ? null
+          : DateTime.parse(json['pausedAt'] as String),
+      pausedDurationDays: (json['pausedDurationDays'] as num?)?.toInt() ?? 0,
       streakDays: (json['streakDays'] as num?)?.toInt() ?? 0,
     );
 
@@ -145,6 +152,9 @@ Map<String, dynamic> _$$UserHobbyImplToJson(_$UserHobbyImpl instance) =>
           const SetStringConverter().toJson(instance.completedStepIds),
       'startedAt': instance.startedAt?.toIso8601String(),
       'lastActivityAt': instance.lastActivityAt?.toIso8601String(),
+      'completedAt': instance.completedAt?.toIso8601String(),
+      'pausedAt': instance.pausedAt?.toIso8601String(),
+      'pausedDurationDays': instance.pausedDurationDays,
       'streakDays': instance.streakDays,
     };
 
@@ -152,6 +162,7 @@ const _$HobbyStatusEnumMap = {
   HobbyStatus.saved: 'saved',
   HobbyStatus.trying: 'trying',
   HobbyStatus.active: 'active',
+  HobbyStatus.paused: 'paused',
   HobbyStatus.done: 'done',
 };
 
