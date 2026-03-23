@@ -17,6 +17,8 @@ import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
+import '../../components/hobby_card.dart' show FeedActionButton;
+import '../../components/share_card.dart';
 
 // ═══════════════════════════════════════════════════════
 //  NLP SEARCH KEYWORDS
@@ -206,6 +208,7 @@ class _DiscoverFeedScreenState extends ConsumerState<DiscoverFeedScreen> {
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -986,13 +989,14 @@ class _SearchBarHeaderDelegate extends SliverPersistentHeaderDelegate {
 //  HERO CARD — Full width, 55-60% height, #1 match
 // ═══════════════════════════════════════════════════════
 
-class _HeroCard extends StatelessWidget {
+class _HeroCard extends ConsumerWidget {
   final Hobby hobby;
 
   const _HeroCard({required this.hobby});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSaved = ref.watch(isHobbySavedProvider(hobby.id));
     final screenH = MediaQuery.of(context).size.height;
     final cardH = screenH * 0.55;
 
@@ -1108,6 +1112,29 @@ class _HeroCard extends StatelessWidget {
                 ],
               ),
             ),
+            // Action buttons — bottom right (animated heart + share)
+            Positioned(
+              right: 12,
+              bottom: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FeedActionButton(
+                    icon: isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
+                    label: '',
+                    onTap: () => ref.read(userHobbiesProvider.notifier).toggleSave(hobby.id),
+                    isActive: isSaved,
+                    activeColor: AppColors.coral,
+                  ),
+                  const SizedBox(height: 6),
+                  FeedActionButton(
+                    icon: AppIcons.share,
+                    label: '',
+                    onTap: () => shareHobby(context, hobby),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         ),
@@ -1120,13 +1147,14 @@ class _HeroCard extends StatelessWidget {
 //  ALTERNATE CARD — Glass card for "More For You"
 // ═══════════════════════════════════════════════════════
 
-class _AlternateCard extends StatelessWidget {
+class _AlternateCard extends ConsumerWidget {
   final Hobby hobby;
 
   const _AlternateCard({required this.hobby});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSaved = ref.watch(isHobbySavedProvider(hobby.id));
     return GlassCard(
       onTap: () => context.push('/hobby/${hobby.id}'),
       padding: EdgeInsets.zero,
@@ -1203,6 +1231,30 @@ class _AlternateCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                       fontSize: 11,
                     ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Action buttons — top right (animated heart + share)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FeedActionButton(
+                    icon: isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
+                    label: '',
+                    onTap: () => ref.read(userHobbiesProvider.notifier).toggleSave(hobby.id),
+                    isActive: isSaved,
+                    activeColor: AppColors.coral,
+                  ),
+                  const SizedBox(height: 2),
+                  FeedActionButton(
+                    icon: AppIcons.share,
+                    label: '',
+                    onTap: () => shareHobby(context, hobby),
                   ),
                 ],
               ),
@@ -1809,6 +1861,71 @@ class _AiSearchLockedTile extends StatelessWidget {
           ]),
         ),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CARD ACTION COLUMN — heart + share for discover cards
+// ═══════════════════════════════════════════════════════
+
+class _CardActionColumn extends StatelessWidget {
+  final String hobbyId;
+  final bool isSaved;
+  final VoidCallback onSave;
+  final VoidCallback onShare;
+  final bool compact;
+
+  const _CardActionColumn({
+    required this.hobbyId,
+    required this.isSaved,
+    required this.onSave,
+    required this.onShare,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = compact ? 32.0 : 40.0;
+    final iconSize = compact ? 18.0 : 22.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: onSave,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+            child: Icon(
+              isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              size: iconSize,
+              color: isSaved ? AppColors.coral : Colors.white,
+            ),
+          ),
+        ),
+        SizedBox(height: compact ? 6 : 10),
+        GestureDetector(
+          onTap: onShare,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+            child: Icon(
+              Icons.share_rounded,
+              size: iconSize,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

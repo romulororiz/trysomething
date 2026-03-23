@@ -27,72 +27,81 @@ class ProGateSection extends StatelessWidget {
 
     return GestureDetector(
       onTap: onLockTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Blurred real content (ImageFiltered, not BackdropFilter — avoids scroll jank)
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: IgnorePointer(child: child),
-            ),
-
-            // Semi-transparent overlay with lock UI
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.background.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.glassBorder, width: 0.5),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: SizedBox(
+            // Fixed height — gives the blur and Stack concrete dimensions
+            height: 160,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Blurred real content clipped to the fixed height
+                ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 6.5, sigmaY: 6.5),
+                  child: IgnorePointer(
+                    child: OverflowBox(
+                      alignment: Alignment.topCenter,
+                      maxHeight: 400,
+                      child: child,
+                    ),
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: 24,
-                      color: Colors.white.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      sectionTitle,
-                      style: AppTypography.sansLabel.copyWith(
-                        color: AppColors.textPrimary,
+
+                // Dark overlay to dim the blur
+                Container(
+                  color: AppColors.background.withValues(alpha: 0.45),
+                ),
+
+                // Lock UI centered
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        size: 24,
+                        color: Colors.white.withValues(alpha: 0.4),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        teaserText,
-                        style: AppTypography.sansTiny.copyWith(
-                          color: AppColors.textSecondary,
+                      const SizedBox(height: 10),
+                      Text(
+                        sectionTitle,
+                        style: AppTypography.sansLabel.copyWith(
+                          color: AppColors.textPrimary,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
+                      if (teaserText.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          teaserText,
+                          style: AppTypography.sansTiny.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      Text(
                         'Unlock with Pro',
-                        style: AppTypography.caption.copyWith(
-                          color: Colors.white,
+                        style: AppTypography.sansTiny.copyWith(
+                          color: AppColors.accent,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

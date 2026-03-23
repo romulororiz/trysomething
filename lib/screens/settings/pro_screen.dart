@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/subscription_provider.dart';
@@ -95,18 +96,18 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                                 TextSpan(
                                   text: 'Try',
                                   style: AppTypography.hero.copyWith(
-                                      fontSize: 20, color: AppColors.coral),
+                                      fontSize: 30, color: AppColors.coral),
                                 ),
                                 TextSpan(
                                   text: 'Something ',
                                   style: AppTypography.hero.copyWith(
-                                      fontSize: 20,
+                                      fontSize: 30,
                                       color: AppColors.textPrimary),
                                 ),
                                 TextSpan(
                                   text: 'Pro',
                                   style: AppTypography.hero.copyWith(
-                                    fontSize: 20,
+                                    fontSize: 30,
                                     color: AppColors.textPrimary,
                                     fontStyle: FontStyle.italic,
                                   ),
@@ -115,25 +116,39 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Heading
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'Unlock',
-                                    style: AppTypography.hero.copyWith(
-                                      fontSize: 32,
-                                      color: AppColors.coral,
+                            // Heading with laurel badge
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: 'Unlock',
+                                          style: AppTypography.hero.copyWith(
+                                            fontSize: 24,
+                                            color: AppColors.coral,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: ' the full\nexperience',
+                                          style: AppTypography.hero
+                                              .copyWith(fontSize: 24),
+                                        ),
+                                      ],
                                     ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  TextSpan(
-                                    text: ' the full\nexperience',
-                                    style: AppTypography.hero
-                                        .copyWith(fontSize: 32),
-                                  ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(width: 8),
+                                SvgPicture.asset(
+                                  'assets/icon/pro_badge.svg',
+                                  width: 64,
+                                  height: 64,
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 36),
 

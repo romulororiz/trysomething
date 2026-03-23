@@ -124,7 +124,7 @@ class HobbyCard extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _FeedActionButton(
+        FeedActionButton(
           icon: isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
           label: '',
           onTap: onSave,
@@ -132,7 +132,7 @@ class HobbyCard extends StatelessWidget {
           activeColor: AppColors.redHeart,
         ),
         const SizedBox(height: 0),
-        _FeedActionButton(
+        FeedActionButton(
           icon: AppIcons.share,
           label: '',
           onTap: onShare ?? () {},
@@ -242,14 +242,14 @@ class HobbyCard extends StatelessWidget {
 }
 
 /// TikTok-style action button with icon + label
-class _FeedActionButton extends StatefulWidget {
+class FeedActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
   final bool isActive;
   final Color? activeColor;
 
-  const _FeedActionButton({
+  const FeedActionButton({
     required this.icon,
     required this.label,
     this.onTap,
@@ -258,10 +258,10 @@ class _FeedActionButton extends StatefulWidget {
   });
 
   @override
-  State<_FeedActionButton> createState() => _FeedActionButtonState();
+  State<FeedActionButton> createState() => FeedActionButtonState();
 }
 
-class _FeedActionButtonState extends State<_FeedActionButton>
+class FeedActionButtonState extends State<FeedActionButton>
     with TickerProviderStateMixin {
   late AnimationController _popController;
   late Animation<double> _popScale;
@@ -340,8 +340,8 @@ class _FeedActionButtonState extends State<_FeedActionButton>
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
@@ -407,21 +407,23 @@ class _FeedActionButtonState extends State<_FeedActionButton>
               ],
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            widget.label,
-            style: AppTypography.sansTiny.copyWith(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              shadows: [
-                Shadow(
-                  blurRadius: 8,
-                  color: Colors.black.withValues(alpha: 0.5),
-                ),
-              ],
+          if (widget.label.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              widget.label,
+              style: AppTypography.sansTiny.copyWith(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                shadows: [
+                  Shadow(
+                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

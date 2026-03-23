@@ -39,6 +39,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late PageController _pageController;
   int _currentPage = 0;
+  NavigatorState? _navigator;
 
   @override
   void initState() {
@@ -46,6 +47,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final initialIndex = _findHobbyIndex(widget.initialHobbyId);
     _currentPage = initialIndex;
     _pageController = PageController(initialPage: initialIndex);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Cache the navigator while the context is fully mounted.
+    // Used in deactivate() to dismiss popup menus on tab switch.
+    _navigator = Navigator.maybeOf(context);
   }
 
   @override
@@ -63,6 +72,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       }
     }
+  }
+
+  @override
+  void deactivate() {
+    // Dismiss open popup menus when switching tabs.
+    // Uses the cached _navigator — Navigator.of(context) is unreliable
+    // during ShellRoute transitions because the ancestor chain is
+    // being restructured.
+    _navigator?.popUntil((route) => route is! PopupRoute);
+    super.deactivate();
   }
 
   /// Find the index of [hobbyId] in the sorted display entries list.
@@ -192,6 +211,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return _PausedHobbyPage(
                       key: ValueKey('paused_${userHobby.hobbyId}'),
                       userHobby: userHobby,
+                      onResume: () {
+                        // After state update, jump PageView to the hobby's
+                        // new index (it moves from paused → active section).
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          final idx = _findHobbyIndex(userHobby.hobbyId);
+                          if (_pageController.hasClients) {
+                            setState(() => _currentPage = idx);
+                            _pageController.jumpToPage(idx);
+                          }
+                        });
+                      },
                     );
                   }
                   final isLocked = !isPro && i > 0;
@@ -335,7 +365,8 @@ class _HobbyPage extends ConsumerWidget {
 
 class _PausedHobbyPage extends ConsumerWidget {
   final UserHobby userHobby;
-  const _PausedHobbyPage({super.key, required this.userHobby});
+  final VoidCallback? onResume;
+  const _PausedHobbyPage({super.key, required this.userHobby, this.onResume});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -346,102 +377,120 @@ class _PausedHobbyPage extends ConsumerWidget {
         final daysPaused = userHobby.pausedAt != null
             ? DateTime.now().difference(userHobby.pausedAt!).inDays
             : 0;
-        return Opacity(
-          opacity: 0.7,
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(
-                0, 0, 0, Spacing.scrollBottom(context)),
-            children: [
-              // Hero image (tappable to detail)
-              GestureDetector(
-                onTap: () => context.push('/hobby/${hobby.id}'),
-                child: SizedBox(
-                  height: 250,
-                  width: double.infinity,
-                  child: ShaderMask(
-                    shaderCallback: (rect) => const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white,
-                        Colors.white,
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.25, 1.0],
-                    ).createShader(rect),
-                    blendMode: BlendMode.dstIn,
-                    child: CachedNetworkImage(
-                      imageUrl: hobby.imageUrl,
-                      fit: BoxFit.cover,
-                      memCacheWidth: 800,
-                      placeholder: (_, __) =>
-                          Container(color: AppColors.surfaceElevated),
-                      errorWidget: (_, __, ___) => Container(
-                        color: AppColors.surfaceElevated,
-                        child: Icon(AppIcons.categoryIcon(hobby.category),
-                            size: 48, color: AppColors.textMuted),
+        // Full-screen blurred hobby image with centered pause overlay
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // Blurred hobby image fills entire screen
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 800,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.surfaceElevated),
+              ),
+            ),
+
+            // Dark overlay
+            Container(color: AppColors.background.withValues(alpha: 0.75)),
+
+            // Centered pause info + Resume CTA
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // "PAUSED" chip (top)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: AppColors.glassBorder, width: 0.5),
+                        ),
+                        child: Text('PAUSED',
+                            style: AppTypography.overline
+                                .copyWith(color: AppColors.textMuted, letterSpacing: 2)),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+
+                      // Hobby title
+                      Text(
+                        hobby.title,
+                        style: AppTypography.display,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Days counter
+                      Text(
+                        daysPaused == 0
+                            ? 'Paused today'
+                            : 'Paused for $daysPaused ${daysPaused == 1 ? "day" : "days"}',
+                        style: AppTypography.body
+                            .copyWith(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Progress note
+                      Text(
+                        'Your progress is saved.',
+                        style: AppTypography.sansTiny
+                            .copyWith(color: AppColors.textMuted),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Coral "Resume" CTA
+                      GestureDetector(
+                        onTap: () {
+                          ref
+                              .read(userHobbiesProvider.notifier)
+                              .resumeHobby(hobby.id);
+                          onResume?.call();
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            gradient: const LinearGradient(
+                              colors: [AppColors.coral, Color(0xFFFF5252)],
+                            ),
+                          ),
+                          child: Center(
+                            child: Text('Resume',
+                                style: AppTypography.button
+                                    .copyWith(color: Colors.white)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // View detail link
+                      GestureDetector(
+                        onTap: () => context.push('/hobby/${hobby.id}'),
+                        child: Text(
+                          'View hobby details',
+                          style: AppTypography.sansTiny.copyWith(
+                            color: AppColors.textSecondary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    // Hobby title (same style as active, no menu)
-                    Text(hobby.title, style: AppTypography.hero),
-                    const SizedBox(height: 12),
-                    // "PAUSED" chip
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: AppColors.glassBorder, width: 0.5),
-                      ),
-                      child: Text('PAUSED',
-                          style: AppTypography.overline
-                              .copyWith(color: AppColors.textMuted)),
-                    ),
-                    const SizedBox(height: 8),
-                    // Days counter
-                    Text(
-                      daysPaused == 0
-                          ? 'Paused today'
-                          : 'Paused for $daysPaused ${daysPaused == 1 ? "day" : "days"}',
-                      style: AppTypography.caption
-                          .copyWith(color: AppColors.textMuted),
-                    ),
-                    const SizedBox(height: 24),
-                    // Coral "Resume" CTA -- no confirmation needed
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: () => ref
-                            .read(userHobbiesProvider.notifier)
-                            .resumeHobby(hobby.id),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
-                        child:
-                            Text('Resume', style: AppTypography.button),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
       loading: () => const Center(child: LogoLoader()),
@@ -534,24 +583,29 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  ref
-                      .read(userHobbiesProvider.notifier)
-                      .pauseHobby(hobby.id);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-                  foregroundColor: AppColors.accent,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
+            GestureDetector(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                ref
+                    .read(userHobbiesProvider.notifier)
+                    .pauseHobby(hobby.id);
+                // Jump PageView to this hobby's new position (end of list)
+                context.go('/home?hobby=${hobby.id}');
+              },
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(
+                    colors: [AppColors.coral, Color(0xFFFF5252)],
+                  ),
                 ),
-                child: Text('Pause hobby', style: AppTypography.button),
+                child: Center(
+                  child: Text('Pause hobby',
+                      style: AppTypography.button
+                          .copyWith(color: Colors.white)),
+                ),
               ),
             ),
             const SizedBox(height: 12),

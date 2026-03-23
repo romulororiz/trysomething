@@ -13,9 +13,10 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/app_background.dart';
+import '../../components/hobby_card.dart' show FeedActionButton;
+import '../../components/share_card.dart';
 import '../../components/glass_card.dart';
 import '../../components/spec_badge.dart';
-import '../../components/share_card.dart';
 
 // ═══════════════════════════════════════════════════════
 //  DISCOVER TAB IDS
@@ -604,17 +605,19 @@ class _DiscoverFeedCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _FeedAction(
+                FeedActionButton(
                   icon: isSaved
                       ? AppIcons.heartFilled
                       : AppIcons.heartOutline,
+                  label: '',
                   isActive: isSaved,
                   activeColor: AppColors.redHeart,
                   onTap: onSave,
                 ),
-                const SizedBox(height: 4),
-                _FeedAction(
+                const SizedBox(height: 0),
+                FeedActionButton(
                   icon: AppIcons.share,
+                  label: '',
                   onTap: onShare,
                 ),
               ],
@@ -782,54 +785,13 @@ class _DiscoverFeedCard extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-//  FEED ACTION BUTTON (simplified from HobbyCard)
-// ═══════════════════════════════════════════════════════
-
-class _FeedAction extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-  final bool isActive;
-  final Color? activeColor;
-
-  const _FeedAction({
-    required this.icon,
-    this.onTap,
-    this.isActive = false,
-    this.activeColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color =
-        isActive ? (activeColor ?? Colors.white) : Colors.white;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 26,
-          color: color,
-          shadows: [
-            Shadow(
-              blurRadius: 12,
-              color: Colors.black.withValues(alpha: 0.5),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// _FeedAction removed — replaced by FeedActionButton from hobby_card.dart
 
 // ═══════════════════════════════════════════════════════
 //  DISCOVER LIST CARD — Premium vertical list item
 // ═══════════════════════════════════════════════════════
 
-class _DiscoverListCard extends StatelessWidget {
+class _DiscoverListCard extends ConsumerWidget {
   final Hobby hobby;
   final UserPreferences userPrefs;
   final VoidCallback? onTap;
@@ -841,7 +803,8 @@ class _DiscoverListCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSaved = ref.watch(isHobbySavedProvider(hobby.id));
     final reasons = computeMatchReasons(
       hobby: hobby,
       userHours: userPrefs.hoursPerWeek.toDouble(),
@@ -898,6 +861,29 @@ class _DiscoverListCard extends StatelessWidget {
                             ],
                           ),
                         ),
+                      ),
+                    ),
+                    // Heart + share — top right
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FeedActionButton(
+                            icon: isSaved ? AppIcons.heartFilled : AppIcons.heartOutline,
+                            label: '',
+                            isActive: isSaved,
+                            activeColor: AppColors.redHeart,
+                            onTap: () => ref.read(userHobbiesProvider.notifier).toggleSave(hobby.id),
+                          ),
+                          const SizedBox(height: 0),
+                          FeedActionButton(
+                            icon: AppIcons.share,
+                            label: '',
+                            onTap: () => shareHobby(context, hobby),
+                          ),
+                        ],
                       ),
                     ),
                   ],

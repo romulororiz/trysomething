@@ -28,8 +28,10 @@ class YouScreen extends ConsumerStatefulWidget {
 class _YouScreenState extends ConsumerState<YouScreen> {
   late PageController _hobbyPageController;
   late PageController _savedPageController;
+  late PageController _triedPageController;
   int _currentHobbyPage = 0;
   int _savedPage = 0;
+  int _triedPage = 0;
   int _selectedTab = 0; // 0=Active, 1=Paused, 2=Saved, 3=Tried
 
   @override
@@ -37,12 +39,14 @@ class _YouScreenState extends ConsumerState<YouScreen> {
     super.initState();
     _hobbyPageController = PageController(viewportFraction: 0.88);
     _savedPageController = PageController(viewportFraction: 0.88);
+    _triedPageController = PageController(viewportFraction: 0.88);
   }
 
   @override
   void dispose() {
     _hobbyPageController.dispose();
     _savedPageController.dispose();
+    _triedPageController.dispose();
     super.dispose();
   }
 
@@ -106,6 +110,10 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       _savedPage = savedEntries.length - 1;
     }
     if (savedEntries.isEmpty) _savedPage = 0;
+    if (_triedPage >= triedEntries.length && triedEntries.isNotEmpty) {
+      _triedPage = triedEntries.length - 1;
+    }
+    if (triedEntries.isEmpty) _triedPage = 0;
 
     final visibleMeta = activeEntries.isNotEmpty
         ? activeEntries[_currentHobbyPage.clamp(0, activeEntries.length - 1)]
@@ -313,6 +321,9 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         return _TriedTabContent(
           key: const ValueKey('tried'),
           entries: triedEntries,
+          triedPage: _triedPage,
+          triedPageController: _triedPageController,
+          onPageChanged: (i) => setState(() => _triedPage = i),
         );
       default:
         return const SizedBox.shrink(key: ValueKey('empty'));
@@ -793,12 +804,32 @@ class _SavedTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: _EmptyTabPrompt(
-          message: 'No saved hobbies yet',
-          detail: 'Heart a hobby to save it for later.',
-          actionLabel: 'Browse hobbies',
-          onAction: () => context.go('/discover'),
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('No saved hobbies yet',
+                  style: TextStyle(color: AppColors.textMuted)),
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: () => context.go('/discover'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      colors: [AppColors.coral, Color(0xFFFF5252)],
+                    ),
+                  ),
+                  child: Text('Browse hobbies',
+                      style: AppTypography.caption
+                          .copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -831,32 +862,58 @@ class _SavedTabContent extends StatelessWidget {
 // ── Tried tab content ──
 class _TriedTabContent extends StatelessWidget {
   final List<_HobbyWithMeta> entries;
+  final int triedPage;
+  final PageController triedPageController;
+  final ValueChanged<int> onPageChanged;
 
   const _TriedTabContent({
     super.key,
     required this.entries,
+    required this.triedPage,
+    required this.triedPageController,
+    required this.onPageChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24),
-        child: _EmptyTabPrompt(
-          message: 'Nothing tried yet',
-          detail: 'Complete a hobby or mark it as done to see it here.',
+        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Center(
+          child: Text('Nothing tried yet',
+              style: TextStyle(color: AppColors.textMuted)),
         ),
       );
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: entries
-          .map((m) => Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
-                child: _TriedHobbyCard(meta: m),
-              ))
-          .toList(),
+      children: [
+        if (entries.length == 1)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _TriedHobbyCard(meta: entries.first),
+          )
+        else ...[
+          SizedBox(
+            height: 130,
+            child: PageView.builder(
+              controller: triedPageController,
+              itemCount: entries.length,
+              onPageChanged: onPageChanged,
+              itemBuilder: (context, i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _TriedHobbyCard(meta: entries[i]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          PageDots(
+            count: entries.length,
+            current: triedPage,
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1590,49 +1647,73 @@ class _TriedHobbyCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => context.push('/hobby/${hobby.id}'),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.surface.withAlpha(10),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status icon + label row
-            Row(
-              children: [
-                statusIcon,
-                const SizedBox(width: 6),
-                Text(statusLabel,
-                    style: AppTypography.caption
-                        .copyWith(color: statusColor)),
-              ],
-            ),
-            const SizedBox(height: 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 130,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Hobby image background
+              CachedNetworkImage(
+                imageUrl: hobby.imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: 600,
+                placeholder: (_, __) =>
+                    Container(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.surfaceElevated),
+              ),
 
-            // Hobby title
-            Text(hobby.title,
-                style: AppTypography.body
-                    .copyWith(color: AppColors.textSecondary)),
+              // Dark overlay
+              Container(
+                color: AppColors.background.withValues(alpha: 0.75),
+              ),
 
-            // Date
-            if (dateLabel.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(dateLabel,
-                  style: AppTypography.caption
-                      .copyWith(color: AppColors.textMuted)),
+              // Text content
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Status icon + label row
+                    Row(
+                      children: [
+                        statusIcon,
+                        const SizedBox(width: 6),
+                        Text(statusLabel,
+                            style: AppTypography.caption
+                                .copyWith(color: statusColor)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Hobby title
+                    Text(hobby.title,
+                        style: AppTypography.body
+                            .copyWith(color: AppColors.textPrimary)),
+
+                    // Date + steps
+                    if (dateLabel.isNotEmpty ||
+                        hobby.roadmapSteps.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          if (dateLabel.isNotEmpty) dateLabel,
+                          if (hobby.roadmapSteps.isNotEmpty)
+                            '$completedSteps/$totalSteps steps',
+                        ].join(' · '),
+                        style: AppTypography.caption
+                            .copyWith(color: AppColors.textMuted),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
-
-            // Step progress (guard against empty roadmapSteps)
-            if (hobby.roadmapSteps.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text('$completedSteps/$totalSteps steps',
-                  style: AppTypography.caption
-                      .copyWith(color: AppColors.textMuted)),
-            ],
-          ],
+          ),
         ),
       ),
     );

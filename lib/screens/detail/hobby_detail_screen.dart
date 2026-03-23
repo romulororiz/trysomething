@@ -14,7 +14,6 @@ import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
 import '../../components/plan_first_session_card.dart';
 import '../../components/pro_gate_section.dart';
-import '../../components/pro_upgrade_sheet.dart';
 import '../../components/share_card.dart';
 import '../../providers/subscription_provider.dart';
 import '../../theme/app_colors.dart';
@@ -201,7 +200,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                         isLocked: !isPro,
                         sectionTitle: 'Why people stop',
                         teaserText: 'Know the common traps before you start',
-                        onLockTap: () => showProUpgrade(context, 'detail_gate_why_people_stop'),
+                        onLockTap: () => context.push('/pro'),
                         child: _buildWhyPeopleStop(hobby),
                       )),
                       const SizedBox(height: 16),
@@ -212,7 +211,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       isLocked: !isPro,
                       sectionTitle: 'Starter Kit',
                       teaserText: 'Everything you need to get started',
-                      onLockTap: () => showProUpgrade(context, 'detail_gate_starter_kit'),
+                      onLockTap: () => context.push('/pro'),
                       child: StarterKitCard(hobby: hobby),
                     )),
                     const SizedBox(height: 16),
@@ -221,15 +220,20 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     _staggeredCard(5, PlanFirstSessionCard(
                       hobbyId: widget.hobbyId,
                       isLocked: !isPro,
-                      onLockTap: () => showProUpgrade(context, 'detail_gate_plan_session'),
+                      onLockTap: () => context.push('/pro'),
                     )),
                     const SizedBox(height: 16),
 
-                    // 6. Quick links (GATED)
-                    _staggeredCard(6, HobbyQuickLinks(
-                      hobbyId: widget.hobbyId,
+                    // 6. Quick links (GATED — blurred like other Pro sections)
+                    _staggeredCard(6, ProGateSection(
                       isLocked: !isPro,
-                      onLockTap: () => showProUpgrade(context, 'detail_gate_quick_links'),
+                      sectionTitle: 'Deep Research',
+                      teaserText: 'Cost breakdown, FAQ, and budget alternatives',
+                      onLockTap: () => context.push('/pro'),
+                      child: HobbyQuickLinks(
+                        hobbyId: widget.hobbyId,
+                        isLocked: false,
+                      ),
                     )),
                   ]),
                 ),
