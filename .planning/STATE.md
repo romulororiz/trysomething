@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
-status: unknown
-last_updated: "2026-03-23T14:32:00.000Z"
+status: in-progress
+last_updated: "2026-03-23T18:23:00.000Z"
 progress:
-  total_phases: 13
+  total_phases: 14
   completed_phases: 13
-  total_plans: 22
-  completed_plans: 22
+  total_plans: 23
+  completed_plans: 23
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — Phase 12 complete (hobby completion flow + stop action)*
+*Last updated: 2026-03-23 — Phase 13 Plan 01 complete (server-side Pro gating)*
 
 ---
 
@@ -29,12 +29,12 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 12 of 14 (Hobby Completion Flow + Stop) -- COMPLETE
-Plan: 2 of 2 in Phase 12 (COMPLETE)
-Status: Phase 12 complete
-Last activity: 2026-03-23 — Completed 12-02-PLAN.md (Home completed state, stop action, Tried tab, detail read-only)
+Phase: 13 of 14 (Detail Page Content Gating) -- IN PROGRESS
+Plan: 1 of 2 in Phase 13 (Plan 01 COMPLETE)
+Status: Phase 13 in progress
+Last activity: 2026-03-23 — Completed 13-01-PLAN.md (server-side Pro tier gating on faq/cost/budget)
 
-Progress: [########░░] 80% (v1.1) — 4 of 5 plans complete
+Progress: [#########░] 90% (v1.1) — 5 of 6 plans complete
 
 ---
 
@@ -55,11 +55,12 @@ Progress: [########░░] 80% (v1.1) — 4 of 5 plans complete
 |-------|----------------|--------|
 | 11. Schema Migration | 2/2 | Complete |
 | 12. Completion Flow + Stop | 2/2 | Complete |
-| 13. Content Gating | 0/? | Not started |
+| 13. Content Gating | 1/2 | In progress |
 | 14. Pause/Resume | 0/? | Not started |
 
 | Phase 12 P01 | 7min | 2 tasks | 5 files |
 | Phase 12 P02 | 15min | 3 tasks | 8 files |
+| Phase 13 P01 | 2min | 2 tasks | 2 files |
 
 ---
 
@@ -85,6 +86,8 @@ Progress: [########░░] 80% (v1.1) — 4 of 5 plans complete
 - [12-02] Celebration transition is instant in (Duration.zero) with 300ms fade out for premium feel
 - [12-02] isHobbySavedProvider only returns true for saved status -- fixes incorrect bookmark state for done/active/trying hobbies
 - [12-02] isFullyCompleted heuristic: completedStepIds.length >= roadmapSteps.length for distinguishing completed vs stopped in Tried tab
+- [13-01] PAID_TIERS constant array for DRY tier checking -- avoids repeating pro/trial/lifetime strings
+- [13-01] requirePro takes (userId, res) not (req, res) since userId is already extracted by requireAuth -- avoids redundant token parsing
 
 ### Blockers/Concerns
 
@@ -96,10 +99,10 @@ Progress: [########░░] 80% (v1.1) — 4 of 5 plans complete
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Completed 12-02-PLAN.md (Home completed state, stop action, Tried tab, detail read-only)
+Stopped at: Completed 13-01-PLAN.md (server-side Pro gating on faq/cost/budget endpoints)
 Resume file: None
 
-Next action: Phase 13 — Detail Page Content Gating
+Next action: Phase 13 Plan 02 — Client-side content gating UI
 
 ---
 
