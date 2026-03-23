@@ -1,348 +1,247 @@
-# Technology Stack — Launch Readiness Additions
+# Stack Research
 
-**Project:** TrySomething v1.0 Launch Readiness
-**Researched:** 2026-03-21
-**Scope:** Stack additions for 5 new capabilities only — existing stack not re-researched
-**Overall confidence:** HIGH (all findings verified against official docs or multiple sources)
+**Domain:** Hobby lifecycle management — completion detection, pause/stop states, Pro content gating
+**Project:** TrySomething v1.1
+**Researched:** 2026-03-23
+**Scope:** NEW capabilities only — existing stack (Flutter, Riverpod, GoRouter, Prisma, RevenueCat) not re-researched
+**Confidence:** HIGH — all findings derived from direct codebase inspection, no external research needed
 
 ---
 
 ## Context: What Already Exists
 
-The base stack (Flutter 3.6.0, Riverpod 2.6.1, GoRouter 14.8.1, Node.js/TypeScript on Vercel, Prisma 6.4.1, Neon PostgreSQL, RevenueCat, PostHog, Sentry, FCM) is validated and in production. This document covers ONLY what must be added or changed for launch readiness.
+The v1.0 stack is in production and fully validated:
+
+- Flutter 3.6.0 + Riverpod 2.6.1 + GoRouter 14.8.1 + Freezed 2.5.7
+- Node.js/TypeScript on Vercel + Prisma 6.4.1 + Neon PostgreSQL
+- RevenueCat `purchases_flutter ^9.14.0` + `purchases_ui_flutter ^9.14.0`
+- `isProProvider` (Riverpod) returning `bool` — already consumed in paywall flows
+- `showProUpgrade(context, triggerMessage)` — already exists in `pro_upgrade_sheet.dart`
+- `HobbyStatus` enum: `saved | trying | active | done` (Dart + Prisma)
+- `UserHobby` model with `completedStepIds: Set<String>`, `startedAt`, `lastActivityAt`
+- `UserHobbiesNotifier.toggleStep()` — increments completed steps, fires analytics
+- `UserHobbiesNotifier.setDone()` — exists, not yet auto-triggered
+- `UserProgressRepositoryApi.updateStatus()` — already sends `PUT /api/users/hobbies/:id` with `status` and `completedAt`
+- `flutter_animate ^4.5.2` — already available for celebration animations
+
+**Conclusion: Zero new packages required for any of the v1.1 features.** Every capability is achievable through model changes, state logic additions, and conditional UI with the packages already installed.
 
 ---
 
-## New Capability 1: Prisma Interactive Transactions (Account Deletion + Data Export)
+## Recommended Stack
 
-### Verdict
+### Core Technologies
 
-No new library needed. Prisma 6.4.1 already installed includes `$transaction`. The question is which transaction pattern to use.
+No changes to core technologies. All three capability areas work entirely within the existing stack.
 
-### Two Patterns Available
+### Capability 1: Hobby Completion Detection
 
-**Sequential array transactions** — pass an array of independent operations:
+**What needs to change — no new packages.**
 
-```typescript
-await prisma.$transaction([
-  prisma.journalEntry.deleteMany({ where: { userId } }),
-  prisma.personalNote.deleteMany({ where: { userId } }),
-  prisma.scheduleEvent.deleteMany({ where: { userId } }),
-  prisma.user.delete({ where: { id: userId } }),
-]);
-```
+| Layer | Change | Details |
+|-------|--------|---------|
+| Dart model | `UserHobby` — no field changes needed | `completedStepIds: Set<String>` already tracks steps; `progressPercent(int totalSteps)` already computes ratio |
+| Dart notifier | `UserHobbiesNotifier.toggleStep()` | After adding a step, compare `completedStepIds.length == totalSteps` and call `setDone()` automatically |
+| Dart notifier | Auto-complete trigger needs `totalSteps` passed in | Change `toggleStep(String hobbyId, String stepId)` to `toggleStep(String hobbyId, String stepId, {int totalSteps = 0})` |
+| Dart provider | Add `hobbyCompletedProvider` StreamProvider or callback | Notifier can expose a `onHobbyCompleted` callback or callers can watch for `status == done` after toggle |
+| Server API | `PUT /api/users/hobbies/:hobbyId` | Already accepts `status: 'done'` and `completedAt`. No server change needed |
 
-**Interactive transactions** — async function with intermediate logic:
+**Completion detection pattern — pure Riverpod, no new package:**
 
-```typescript
-await prisma.$transaction(async (tx) => {
-  const user = await tx.user.findUnique({ where: { id: userId } });
-  if (!user) throw new Error('User not found');
-  await tx.journalEntry.deleteMany({ where: { userId } });
-  await tx.user.delete({ where: { id: userId } });
-}, { timeout: 10000, maxWait: 5000 });
-```
-
-### Which Pattern to Use
-
-**Use sequential array for the full account deletion.** The schema already has `onDelete: Cascade` on all 13 user-related foreign keys. This means deleting the `User` record in a single `prisma.user.delete()` call will cascade all child records at the database level automatically.
-
-The only records that need explicit deletion first are those without cascade constraints or where ordering matters. Looking at the schema:
-
-- `UserPreference` — `onDelete: Cascade` (auto-cascades)
-- `UserHobby` — `onDelete: Cascade` (auto-cascades)
-- `UserCompletedStep` — `onDelete: Cascade` via UserHobby (auto-cascades)
-- `UserActivityLog` — `onDelete: Cascade` (auto-cascades)
-- `JournalEntry` — `onDelete: Cascade` (auto-cascades)
-- `PersonalNote` — `onDelete: Cascade` (auto-cascades)
-- `ScheduleEvent` — `onDelete: Cascade` (auto-cascades)
-- `ShoppingCheck` — `onDelete: Cascade` (auto-cascades)
-- `CommunityStory` — `onDelete: Cascade` (auto-cascades, StoryReaction also cascades)
-- `StoryReaction` — `onDelete: Cascade` (auto-cascades)
-- `BuddyPair` — `onDelete: Cascade` on both requester and accepter
-- `UserChallenge` — `onDelete: Cascade` (auto-cascades)
-- `UserAchievement` — `onDelete: Cascade` (auto-cascades)
-- `GenerationLog` — no FK constraint (userId is a plain String, no relation)
-
-`GenerationLog` has no Prisma relation defined (userId is a bare String field, not a foreign key). It will NOT cascade. Must be deleted explicitly. Pattern:
-
-```typescript
-await prisma.$transaction([
-  prisma.generationLog.deleteMany({ where: { userId } }),
-  prisma.user.delete({ where: { id: userId } }),
-  // All other tables cascade automatically from user.delete
-]);
-```
-
-### Timeout Configuration
-
-Default interactive transaction timeout is 5000ms. For account deletion with 13 tables, increase to:
-
-```typescript
-{ timeout: 15000, maxWait: 5000 }
-```
-
-On Neon free tier with 100 connections, use `connection_limit=1` in DATABASE_URL for serverless to avoid pool exhaustion.
-
-### Data Export Pattern
-
-No new library. Use Prisma `findMany` with `include` to gather all user data, then `JSON.stringify`. For the export endpoint, a single large `prisma.$transaction` is not needed — read operations are safe to run sequentially without a transaction.
-
-```typescript
-const [profile, hobbies, journal, notes, schedule, shopping, challenges, achievements, activityLog] =
-  await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, include: { preferences: true } }),
-    prisma.userHobby.findMany({ where: { userId }, include: { completedSteps: true } }),
-    prisma.journalEntry.findMany({ where: { userId } }),
-    // ...
-  ]);
-```
-
-Return as `application/json` with `Content-Disposition: attachment; filename="trysomething-export.json"`.
-
-**Confidence:** HIGH — verified against Prisma 6 official docs and schema inspection.
-
----
-
-## New Capability 2: RevenueCat Webhook Verification
-
-### Verdict
-
-No new library needed. RevenueCat uses a simple shared-secret authorization header, not HMAC signing.
-
-### How RevenueCat Webhooks Work
-
-RevenueCat does NOT send cryptographic signatures (no `X-RevCat-Signature` header). The `x-revenuecat-signature` header mentioned in old community posts no longer exists. Their current mechanism is:
-
-1. You set an arbitrary "Authorization header value" in the RevenueCat dashboard under Integrations > Webhooks.
-2. RevenueCat sends that exact value as the `Authorization` header on every webhook POST.
-3. Your server compares the incoming header to the value you configured.
-
-This is token-based authentication, not signature-based. It is simpler but sufficient — the secret token should be a high-entropy random string.
-
-### Implementation
-
-```typescript
-function verifyRevenueCatWebhook(req: VercelRequest): boolean {
-  const incoming = req.headers['authorization'];
-  const expected = process.env.REVENUECAT_WEBHOOK_SECRET;
-  if (!expected) throw new Error('REVENUECAT_WEBHOOK_SECRET not configured');
-  if (!incoming) return false;
-  // Use timing-safe comparison to prevent timing attacks
-  const a = Buffer.from(incoming);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return require('crypto').timingSafeEqual(a, b);
+```dart
+// In UserHobbiesNotifier.toggleStep(), after updating state:
+if (!wasCompleted && existing.completedStepIds.length + 1 >= totalSteps && totalSteps > 0) {
+  setDone(hobbyId); // auto-transition to done
+  // caller observes status change and shows celebration
 }
 ```
 
-Use Node's built-in `crypto.timingSafeEqual` for the comparison — no external library needed. The `crypto` module is already available in Node.js.
+Callers watch `userHobbiesProvider` and react when `state[hobbyId]?.status == HobbyStatus.done`.
 
-### Environment Variable Required
+**Celebration screen: `flutter_animate` (already installed).**
+- `flutter_animate ^4.5.2` is in `pubspec.yaml`
+- Use `.animate().fadeIn().scale()` chains — same pattern used on session complete phase
+- No additional package needed; `lottie` would be overkill for a one-time celebration screen
 
-Add `REVENUECAT_WEBHOOK_SECRET` to Vercel environment variables. Set the same value in the RevenueCat dashboard. There is no existing `REVENUECAT_WEBHOOK_SECRET` in the current stack's env vars (the existing `REVENUECAT_API_KEY` is separate — that is the SDK public key, not the webhook secret).
+### Capability 2: Pause/Stop Lifecycle States
 
-### Additional Security: Idempotency
+**What needs to change — no new packages.**
 
-RevenueCat may send the same event more than once. The webhook handler should be idempotent — check if the event has already been processed before acting on it. Store the `event.id` from the webhook payload in a processed-events table or in `GenerationLog` with a deduplicated key.
+| Layer | Change | Details |
+|-------|--------|---------|
+| Prisma schema | Add `paused` to `HobbyStatus` enum | Requires `prisma migrate dev` |
+| Prisma schema | Add `pausedAt DateTime?` to `UserHobby` model | Stores when pause was initiated |
+| Dart `HobbyStatus` enum | Add `paused` variant | `enum HobbyStatus { saved, trying, active, paused, done }` |
+| Dart `UserHobby` model (Freezed) | Add `DateTime? pausedAt` field | Run `dart run build_runner build` after |
+| `UserHobbiesNotifier` | Add `pauseHobby(String hobbyId)` | Sets status to `paused`, records `pausedAt`, calls API |
+| `UserHobbiesNotifier` | Add `resumeHobby(String hobbyId)` | Sets status back to `active` or `trying`, clears `pausedAt`, calls API |
+| `UserHobbiesNotifier` | Add `stopHobby(String hobbyId)` | Sets status to `done` (same as completed but no celebration), calls API |
+| Server API | `PUT /api/users/hobbies/:hobbyId` | Accept `paused` status and `pausedAt` field — small handler addition |
 
-**Confidence:** HIGH — verified against RevenueCat official webhook docs and community forum posts confirming X-RevCat-Signature was removed.
+**Pause is Pro-gated via `isProProvider`** — no new gating mechanism needed. Same pattern as coach chat limit:
 
----
-
-## New Capability 3: Server-Side Rate Limiting (Vercel Serverless)
-
-### The Core Problem
-
-Vercel serverless functions are stateless — each invocation is independent with no shared memory. Traditional in-memory rate limiters (like `express-rate-limit` with default memory store) will not work because each function instance has its own counter.
-
-### Recommended Approach: Database-Backed via GenerationLog
-
-The `GenerationLog` model already exists in the schema with `@@index([userId, createdAt])`. This is the right place to count requests per user per window. No new library, no Redis, no extra cost.
-
-```typescript
-async function checkCoachRateLimit(userId: string): Promise<boolean> {
-  const windowStart = new Date();
-  windowStart.setDate(windowStart.getDate() - 1); // last 24 hours
-
-  const count = await prisma.generationLog.count({
-    where: {
-      userId,
-      status: 'success',
-      createdAt: { gte: windowStart },
-    },
-  });
-
-  return count < 20; // 20 per 24h as documented in CLAUDE.md
+```dart
+// In UI before calling notifier.pauseHobby():
+final isPro = ref.read(isProProvider);
+if (!isPro) {
+  showProUpgrade(context, 'pause_hobby');
+  return;
 }
+ref.read(userHobbiesProvider.notifier).pauseHobby(hobbyId);
 ```
 
-This COUNT query hits the `(userId, createdAt)` index and is fast. Vercel function cold start + Neon query typically < 100ms for this pattern.
+**Stop (abandon) is free** — no gating check, direct `stopHobby()` call with a confirmation dialog.
 
-### Why Not Redis/Upstash
+**Migration note:** Adding a new enum value to a PostgreSQL enum requires a migration. Prisma handles this with `prisma migrate dev`. The `paused` value must also be added to the server-side TypeScript type. No column type changes — PostgreSQL native enums are altered in-place with `ALTER TYPE`.
 
-Upstash Redis free tier exists (256MB, 500K commands/month) and `@upstash/ratelimit` works on Vercel. However:
+### Capability 3: Detail Page Content Gating
 
-- GenerationLog already exists with the right index
-- Adding Upstash introduces a new paid service dependency (free tier may not cover scale)
-- The coach endpoint is already async (2-5s AI calls) — a 50ms DB count does not change user experience
-- Existing CLAUDE.md states the plan is to move rate limiting to GenerationLog
+**What needs to change — no new packages.**
 
-Use GenerationLog. Defer Upstash/Redis to a future performance milestone if rate limit checks become a bottleneck.
+| Layer | Change | Details |
+|-------|--------|---------|
+| `hobby_detail_screen.dart` | Read `isProProvider` | `final isPro = ref.watch(isProProvider);` already imported via subscription_provider.dart |
+| Detail screen | Conditional rendering for FAQ/cost/budget sections | Show sections only when `isPro == true` |
+| Detail screen | Pro gate widget for locked sections | Render a blurred/dimmed preview card + "Unlock with Pro" CTA calling `showProUpgrade()` |
+| `feature_providers.dart` | No change needed | FAQ, cost, and budget providers already fetch lazily — just don't render them for free users |
 
-### For Login Rate Limiting (Future)
+**Gating implementation — pure Flutter conditional, no new package:**
 
-The auth endpoint has no rate limiting. If adding login rate limiting (not in this milestone), the same GenerationLog pattern applies with a separate table or a failed-login audit table. Do not block this milestone on it.
+```dart
+// In hobby_detail_screen.dart section build
+final isPro = ref.watch(isProProvider);
 
-**Confidence:** HIGH — design validated against Neon docs on Postgres rate limiting patterns and confirmed GenerationLog index exists in schema.
+if (!isPro) {
+  return _ProGateCard(
+    label: 'Full breakdown',
+    onTap: () => showProUpgrade(context, 'detail_faq'),
+  );
+}
+// render real FAQ content
+```
+
+The `_ProGateCard` is a simple `GlassCard` with blurred content preview and coral CTA — built with existing components (`GlassCard`, `AppColors.accent`, `AppTypography`). No external blur or overlay package needed.
+
+**Stage 1 free / Stages 2-4 Pro:** The roadmap is already split into 4 stages via `milestone` field on `RoadmapStep`. Stage 1 detection: filter `roadmapSteps` where `milestone == 'Stage 1'` or where `sortOrder < stepsPerStage`. The exact gating boundary should use `milestone` field since it's already populated in seed data.
 
 ---
 
-## New Capability 4: Pre-Commit Hooks (Polyglot Monorepo)
+## Supporting Libraries
 
-### Recommended Tool: Lefthook v2.1.4
+All supporting libraries are already installed. No additions.
 
-**Not Husky.** The repository is a polyglot monorepo (Flutter Dart + TypeScript) with `.git` at root, Flutter app at root, and server at `server/`. Husky is Node-centric and requires npm at root; the root of this repo is a Flutter project with no `package.json` at root. Lefthook is language-agnostic, installed as a binary, and natively supports this structure.
+| Library | Version (installed) | Role in v1.1 | Status |
+|---------|--------------------|-----------—--|--------|
+| `flutter_riverpod` | `^2.6.1` | State management for lifecycle states | Already installed |
+| `freezed_annotation` | `^2.4.4` | Adds `pausedAt` field to `UserHobby` | Already installed |
+| `flutter_animate` | `^4.5.2` | Celebration animation on completion | Already installed |
+| `purchases_flutter` | `^9.14.0` | Pro status for pause gating | Already installed |
+| `purchases_ui_flutter` | `^9.14.0` | `showProUpgrade()` paywall sheet | Already installed |
+| `shared_preferences` | `^2.3.4` | Local persistence of `pausedAt` field | Already installed |
+| `prisma` | `^6.4.1` | Adds `paused` enum value + migration | Already installed |
 
-Lefthook v2.1.4 was released March 12, 2026. It is an npm-installable binary but also works without npm at the project root.
+---
 
-### Installation
+## Development Tools
 
-Install in the server package (where npm exists):
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| `dart run build_runner build` | Regenerate Freezed files after model changes | Required after adding `paused` to enum and `pausedAt` to `UserHobby` |
+| `prisma migrate dev` | Apply `paused` enum + `pausedAt` column migration | Run from `server/` directory |
+| `flutter analyze` | Catch exhaustive switch errors after enum change | Enums used in switch statements (`canStartHobbyProvider`, `getByStatus()`) need `paused` case |
+
+---
+
+## Installation
+
+No new packages. The only setup commands are for code generation and schema migration:
 
 ```bash
-cd server && npm install --save-dev lefthook
+# After adding pausedAt to UserHobby and paused to HobbyStatus in Dart:
+dart run build_runner build --delete-conflicting-outputs
+
+# After updating prisma/schema.prisma:
+cd server && npx prisma migrate dev --name add_hobby_paused_status
 ```
-
-Then initialize hooks at the git root:
-
-```bash
-cd .. && npx --prefix server lefthook install
-```
-
-Or install system-wide via winget (Windows): `winget install lefthook`
-
-### Configuration File
-
-Place `lefthook.yml` at repository root (same level as `.git`):
-
-```yaml
-pre-commit:
-  parallel: false  # run sequentially — Flutter analyze must pass first
-  jobs:
-    - name: flutter-analyze
-      glob: "*.dart"
-      run: flutter analyze
-
-    - name: dart-format-check
-      glob: "*.dart"
-      run: dart format --output=none --set-exit-if-changed {staged_files}
-
-    - name: typescript-typecheck
-      glob: "server/**/*.ts"
-      root: "server/"
-      run: npm run lint  # runs tsc --noEmit
-
-    - name: freezed-check
-      glob: "lib/models/*.dart"
-      run: echo "WARNING: Model changed — run 'dart run build_runner build' if .freezed.dart files are stale"
-```
-
-The `root: "server/"` option runs the TypeScript check from the correct directory. The `{staged_files}` placeholder passes only changed files to dart format, keeping pre-commit fast.
-
-### Why Not Husky + lint-staged
-
-Husky 9.1.7 (last release: March 2025, no new version in 12 months) requires `package.json` with a `prepare` script. The Flutter root has no `package.json`. Setting up Husky from `server/` subdirectory with hooks pointing to root-level flutter commands requires custom shell script wrangling. Lefthook handles this naturally.
-
-### Dart Code Generation Warning
-
-The `lefthook.yml` above includes a warning for model changes. Full Freezed regeneration (`dart run build_runner build`) cannot run in a pre-commit hook because it modifies generated files that are not yet staged — this causes confusing git state. The right approach is to warn the developer and have them stage the generated files, or run build_runner as a pre-push hook instead.
-
-**Confidence:** HIGH — Lefthook v2 officially supports polyglot monorepos, verified against evilmartians/lefthook GitHub and community posts showing Flutter + Lefthook configurations working in 2025.
-
----
-
-## New Capability 5: Data Export Serialization
-
-### Verdict
-
-No new library needed. Node's built-in `JSON.stringify` is sufficient for the data export. The 14 user-related tables produce at most a few hundred KB per user.
-
-### Pattern
-
-```typescript
-const exportData = {
-  exportedAt: new Date().toISOString(),
-  version: '1.0',
-  user: {
-    id: user.id,
-    email: user.email,
-    displayName: user.displayName,
-    createdAt: user.createdAt,
-  },
-  preferences: user.preferences,
-  hobbies: userHobbies,
-  completedSteps: completedSteps,
-  journalEntries: journalEntries,
-  personalNotes: personalNotes,
-  scheduleEvents: scheduleEvents,
-  shoppingChecks: shoppingChecks,
-  challenges: challenges,
-  achievements: achievements,
-  activityLog: activityLog,
-};
-
-res.setHeader('Content-Type', 'application/json');
-res.setHeader('Content-Disposition', 'attachment; filename="trysomething-export.json"');
-res.status(200).json(exportData);
-```
-
-Strip sensitive fields before export: `passwordHash`, `revenuecatId`, `googleId`, `appleId`. These are internal identifiers the user doesn't need and shouldn't receive.
-
-**Confidence:** HIGH — standard Node.js JSON serialization, no external dependencies needed.
-
----
-
-## Summary: New Dependencies
-
-| Package | Version | Where | Purpose | Cost |
-|---------|---------|-------|---------|------|
-| `lefthook` | `^2.1.4` | `server/devDependencies` | Polyglot pre-commit hooks | Free |
-
-That's it. One new dev dependency. Everything else uses existing installed packages or Node.js built-ins.
-
----
-
-## Summary: New Environment Variables
-
-| Variable | Where | Purpose |
-|----------|-------|---------|
-| `REVENUECAT_WEBHOOK_SECRET` | Vercel + RevenueCat dashboard | Webhook auth token comparison |
 
 ---
 
 ## Alternatives Considered
 
-| Capability | Recommended | Alternative | Why Not |
-|------------|-------------|-------------|---------|
-| Rate limiting | GenerationLog COUNT query | Upstash @upstash/ratelimit | Adds paid dependency; GenerationLog already indexed; coach latency dominated by AI call |
-| Webhook verification | crypto.timingSafeEqual (built-in) | Custom HMAC library | RevenueCat doesn't sign payloads; HMAC approach is wrong for this provider |
-| Pre-commit hooks | Lefthook | Husky + lint-staged | Husky needs root package.json; Flutter project has none; lefthook is binary, language-agnostic |
-| Account deletion | Prisma $transaction + cascade | Manual delete-each-table | `onDelete: Cascade` already set on all 13 FKs; only GenerationLog needs explicit delete |
-| Data export | JSON.stringify | CSV, zip, streaming | Volumes are small (< 1MB); JSON is portable; streaming adds complexity for no benefit |
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| Extend existing `HobbyStatus` enum with `paused` | Separate `isPaused: bool` field on `UserHobby` | Enum is the correct model — status is a state machine, not a collection of booleans. Boolean fields proliferate and become inconsistent (e.g., `isPaused && status == done` is incoherent) |
+| `flutter_animate` for celebration (already installed) | `lottie` package for Lottie animations | Lottie requires custom animation files and an additional package. `flutter_animate` chains are sufficient for a one-time celebration — fade, scale, shimmer |
+| `isProProvider` + `showProUpgrade()` for content gating | Custom paywall screen / new gating widget | Both already exist and are used throughout the app. Consistency matters more than novelty |
+| Conditional rendering for gated sections | blur_widget or frosted glass overlay packages | CSS-style blur can be done with `BackdropFilter` (built into Flutter) — no new package needed |
+| `prisma migrate dev` for enum change | `prisma db push` | `migrate dev` creates a tracked migration file; `db push` is for prototyping only. Always use migrations in production |
+
+---
+
+## What NOT to Add
+
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| `lottie` package | Adds 2MB+ to app, requires custom animation files, zero celebrations currently | `flutter_animate` chains — already installed, sufficient for one-time celebration |
+| `blur_plus` or `frosted_glass` packages | Flutter's `BackdropFilter` + `ImageFilter.blur()` already built-in | `BackdropFilter` with `sigmaX/sigmaY` — used already in glass card components |
+| Any new state management approach | Riverpod `StateNotifierProvider` already handles all lifecycle states cleanly | Extend `UserHobbiesNotifier` — same provider, more methods |
+| New `paused` repository endpoint | The existing `PUT /api/users/hobbies/:hobbyId` with `status: 'paused'` is sufficient | Extend the existing handler to accept `pausedAt` |
+| Stream-based completion events | Riverpod `select()` watching for `status == done` is sufficient | `ref.listen(userHobbiesProvider.select((m) => m[hobbyId]?.status), ...)` in the calling widget |
+
+---
+
+## Version Compatibility
+
+| Package | Constraint | Compatibility Note |
+|---------|------------|-------------------|
+| `freezed` `^2.5.7` (dev) | `freezed_annotation ^2.4.4` | Matched versions, no change needed |
+| `riverpod_generator ^2.6.2` (dev) | `flutter_riverpod ^2.6.1` | Matched versions, no change needed |
+| Prisma 6.4.1 | PostgreSQL enum `ALTER TYPE` | Supported natively; `prisma migrate dev` generates correct SQL |
+| `flutter_animate ^4.5.2` | Flutter 3.6.0 | Compatible — no minimum Flutter version issue |
+
+---
+
+## Schema Change Detail
+
+The only breaking change in v1.1 is the Prisma schema. The migration SQL that `prisma migrate dev` will generate:
+
+```sql
+-- Add paused to HobbyStatus enum
+ALTER TYPE "HobbyStatus" ADD VALUE 'paused';
+
+-- Add pausedAt column to UserHobby
+ALTER TABLE "UserHobby" ADD COLUMN "pausedAt" TIMESTAMP(3);
+```
+
+PostgreSQL supports adding enum values without table rewrites. `ALTER TYPE ... ADD VALUE` is non-blocking on Neon (no table lock). Adding a nullable column to `UserHobby` is also non-blocking.
+
+**No data migration needed** — existing rows with `status = 'trying'` or `status = 'active'` remain valid. `pausedAt` defaults to `NULL` for all existing rows.
+
+---
+
+## Summary: Changes Required
+
+| Area | Change | Effort |
+|------|--------|--------|
+| `server/prisma/schema.prisma` | Add `paused` to `HobbyStatus` enum; add `pausedAt DateTime?` to `UserHobby` | 5 lines |
+| `lib/models/hobby.dart` | Add `paused` to `HobbyStatus` enum; add `DateTime? pausedAt` to `UserHobby` | 3 lines + build_runner |
+| `lib/providers/user_provider.dart` | Add `pauseHobby()`, `resumeHobby()`, `stopHobby()`; extend `toggleStep()` with auto-complete | ~50 lines |
+| `lib/data/repositories/user_progress_repository_api.dart` | Extend `updateStatus()` to pass `pausedAt` | ~5 lines |
+| `server/api/users/[path].ts` | Accept `paused` status + `pausedAt` in PUT handler | ~10 lines |
+| `lib/screens/detail/hobby_detail_screen.dart` | Add `isProProvider` watch; gate FAQ/cost/budget sections | ~30 lines |
+| `lib/screens/home/home_screen.dart` | Handle `done` status state + "pick your next hobby" CTA | ~30 lines |
+| New: celebration screen or modal | Shown when `status` transitions to `done` | ~80 lines (new file) |
+
+**Zero new packages. Zero new environment variables. One database migration.**
 
 ---
 
 ## Sources
 
-- Prisma Transactions Reference: https://www.prisma.io/docs/orm/prisma-client/queries/transactions
-- Prisma Cascading Deletes Discussion: https://github.com/prisma/prisma/discussions/5158
-- RevenueCat Webhooks Documentation: https://www.revenuecat.com/docs/integrations/webhooks
-- RevenueCat Webhook Message Verification Community: https://community.revenuecat.com/sdks-51/webhook-message-verification-7165
-- RevenueCat X-RevCat-Signature Removed: https://community.revenuecat.com/dashboard-tools-52/is-x-revenuecat-signature-removed-and-where-is-webhook-secret-key-7110
-- Lefthook GitHub (v2.1.4): https://github.com/evilmartians/lefthook
-- Neon Rate Limiting with PostgreSQL: https://neon.com/guides/rate-limiting
-- Husky Documentation: https://typicode.github.io/husky/
-- Upstash Rate Limit for Serverless: https://upstash.com/blog/upstash-ratelimit
-- Vercel Rate Limiting Guide: https://vercel.com/kb/guide/add-rate-limiting-vercel
-- Lefthook Flutter Integration: https://dev.to/arthurdenner/git-hooks-in-flutter-projects-with-lefthook-52n
+- Codebase inspection: `lib/models/hobby.dart`, `lib/providers/user_provider.dart`, `lib/providers/subscription_provider.dart`, `lib/components/pro_upgrade_sheet.dart`, `lib/data/repositories/user_progress_repository_api.dart`, `server/prisma/schema.prisma`, `pubspec.yaml`, `server/package.json`
+- Prisma enum migration: https://www.prisma.io/docs/orm/prisma-client/queries/working-with-enums (ALTER TYPE ADD VALUE is non-blocking in PostgreSQL 12+)
+- Flutter BackdropFilter: Flutter SDK built-in, no additional package
+
+---
+*Stack research for: TrySomething v1.1 — Hobby Lifecycle and Content Gating*
+*Researched: 2026-03-23*

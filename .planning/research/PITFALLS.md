@@ -1,381 +1,475 @@
-# Domain Pitfalls
+# Pitfalls Research
 
-**Domain:** Flutter mobile app — app store launch readiness (account deletion, data privacy, security hardening)
-**Researched:** 2026-03-21
-**Project:** TrySomething v1.0
+**Domain:** Flutter mobile app — hobby lifecycle states (pause/stop/complete) and Pro content gating on an existing system
+**Researched:** 2026-03-23
+**Confidence:** HIGH (codebase directly inspected + official docs verified)
+**Milestone:** TrySomething v1.1
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause app store rejection, data breaches, or require rewrites.
+Mistakes that cause data loss, store rejection, or require a schema rewrite.
 
 ---
 
-### Pitfall 1: RevenueCat Deletion Does Not Cancel the Subscription
+### Pitfall 1: Prisma Enum Migration Fails When New Value Is Also a Default in the Same Migration
 
-**What goes wrong:** Developer calls RevenueCat's delete user API during account deletion, assumes the subscription is cancelled, marks the deletion complete. The user's App Store or Play Store subscription continues billing them. If they reinstall and create a new account, RevenueCat may create a duplicate customer record. The subscription receipt is still valid at the platform level even though the RevenueCat record is gone.
+**What goes wrong:**
+Adding `paused` to the `HobbyStatus` enum AND using it as a default in the same generated migration throws:
 
-**Why it happens:** RevenueCat's customer deletion is a record-keeping operation — it removes the customer from RevenueCat's dashboard and metrics. It does NOT touch Apple's billing system or Google Play billing. Apple subscriptions cannot be cancelled programmatically by any third party, including developers. Google Play subscriptions CAN be cancelled via the Google Play Developer API but RevenueCat does not do this automatically.
-
-**Consequences:**
-- User continues to be billed after deleting their account — a serious consumer protection issue
-- If user complains to Apple/Google, it reflects on the app's review standing
-- App store submissions can be flagged if deletion flow is misleading
-
-**Prevention:**
-1. On the deletion confirmation screen, show explicit text: "Your subscription will continue until [date] — cancel it in Settings > Apple ID > Subscriptions before deleting your account"
-2. Do NOT call RevenueCat's delete API as part of account deletion — the customer record is useful for refund/dispute resolution
-3. Soft-delete the user row in your database (set `deletedAt`, anonymize PII) rather than hard-deleting, so RevenueCat's `revenuecatId` foreign key still resolves for any lingering webhook events
-4. For Google Play, call the Google Play Developer API `purchases.subscriptions.cancel` before deleting the user record
-
-**Detection:** Test on sandbox accounts: delete account, check App Store subscriptions settings — subscription should still show as active.
-
-**Phase:** Account Deletion (Phase 1 of milestone)
-
----
-
-### Pitfall 2: JWT Tokens Remain Valid After Account Deletion
-
-**What goes wrong:** The `DELETE /api/users/me` endpoint deletes the user record from PostgreSQL. The user's access token (15-min TTL) and refresh token (30-day TTL) continue to work until they naturally expire. An attacker who stole a refresh token can continue using the API for up to 30 days after the account is deleted.
-
-**Why it happens:** JWTs are stateless by design. The server does not check "does this user still exist" on every request — it only verifies the signature and expiry. Deleting the database row does not invalidate outstanding tokens.
-
-**Consequences:**
-- Deleted user's refresh token can be used to generate new access tokens for 30 days
-- If a user deletes their account expecting all access to stop immediately, it does not
-- Potential GDPR violation: processing requests from a deleted user's credentials
-
-**Prevention:**
-1. Implement a token version counter on the User model: `tokenVersion Int @default(0)`
-2. Increment `tokenVersion` on account deletion (or embed it in the JWT at issue time and check on every request)
-3. Simpler approach: maintain a Redis or in-memory blacklist for the user's `jti` claims or `userId` — check it on every authenticated request, with TTL matching the longest-lived token (30 days)
-4. Most pragmatic for this stack (no Redis): add a `deletedAt` nullable field to the User model. Add a middleware check: `if (user.deletedAt) return 401`. This is one DB lookup per request but is simple and correct.
-5. Purge all rows in a `RefreshToken` table (if one exists) or add such a table if denylist approach is used
-
-**Detection:** Delete an account, immediately try to call `GET /api/users/me` with the old access token — it should return 401, not 200.
-
-**Phase:** Account Deletion (Phase 1)
-
----
-
-### Pitfall 3: Account Deletion Leaves Orphaned Data in Tables Without Cascade
-
-**What goes wrong:** The delete endpoint correctly calls `prisma.user.delete()`, which triggers cascade deletes on all relations marked `onDelete: Cascade`. But the schema has some relations where cascade is not set (or set to `Restrict`/`SetNull`). The delete fails with a foreign key constraint violation, or worse, it succeeds but leaves orphaned rows in tables that were set to `SetNull`.
-
-**Specific risk in this schema (25 models):** The schema has `GenerationLog` (userId FK — audit trail), `CommunityStory` (authorId), `StoryReaction` (userId), `BuddyPair` (userId + buddyId — two FKs on same table). If any of these are `onDelete: Restrict` or have no action defined, the delete will fail. If any are `onDelete: SetNull`, the row survives with a null userId — orphaned content that is unlinkable and uncleanable.
-
-**Why it happens:** Prisma's default `onDelete` is `SetNull` for optional relations and `Restrict` for required relations. Developers often add models incrementally without auditing cascade behavior end-to-end.
-
-**Consequences:**
-- Delete endpoint throws 500 in production
-- User cannot delete their account (app store violation)
-- Orphaned `CommunityStory` rows with `authorId: null` show up in public feeds
-
-**Prevention:**
-1. Before writing the delete endpoint, run: `grep -n "onDelete" server/prisma/schema.prisma` and audit every relation for User-linked models
-2. Write the delete as an explicit `prisma.$transaction([...])` that manually deletes in dependency order (children before parents) rather than relying on cascades alone
-3. Test in a staging environment with a seeded user who has data in every table
-4. Add a schema review step: for every model with a `userId` field, the PR for `DELETE /api/users/me` must include the cascade behavior decision in a comment
-
-**Recommended delete order (dependency-safe):**
 ```
-GenerationLog → UserActivityLog → UserAchievement → UserChallenge →
-ShoppingCheck → ScheduleEvent → PersonalNote → JournalEntry →
-UserCompletedStep → UserHobby → StoryReaction → CommunityStory →
-BuddyPair → UserPreference → User
+ERROR: unsafe use of new value "paused" of enum type "HobbyStatus"
+HINT: New enum values must be committed before they can be used.
 ```
 
-**Detection:** Seed a test user with rows in every table, run DELETE, verify zero rows remain across all tables, verify no 500 errors.
+PostgreSQL error `55P04` prevents the entire migration from applying. Prisma generates both the `ALTER TYPE HobbyStatus ADD VALUE 'paused'` and the `ALTER TABLE "UserHobby" ALTER COLUMN "status" SET DEFAULT 'paused'` in a single transaction — which PostgreSQL rejects because the new enum value has not been committed at the point the default is applied.
 
-**Phase:** Account Deletion (Phase 1)
+**Why it happens:**
+The current schema (`server/prisma/schema.prisma` line 210-215) defines `HobbyStatus` as a PostgreSQL native enum. Adding `paused` and `stopped` triggers Prisma to emit a migration that runs both operations atomically. This is a long-standing, well-documented Prisma issue (GitHub #8424, #5290, #7251) that is still present in Prisma 6.4.1 (the version in use).
+
+**Consequences:**
+- Migration fails in production, leaving the schema unchanged
+- If `prisma migrate deploy` was run on Neon, the migration is marked as applied in `_prisma_migrations` but the enum change did not actually execute — the table is now in an inconsistent state with the migration history
+- Requires manual SQL repair in the Neon console
+
+**How to avoid:**
+Never add a new enum value and use it as a column default in the same migration file. Split into two sequential migrations:
+
+Migration 1 — add the enum values only:
+```sql
+ALTER TYPE "HobbyStatus" ADD VALUE 'paused';
+ALTER TYPE "HobbyStatus" ADD VALUE 'stopped';
+```
+
+Migration 2 — any schema changes that reference those new values.
+
+Practical approach: add the values to the Prisma schema, run `prisma migrate dev --name add_hobby_status_paused_stopped`, then manually inspect the generated SQL. If the generated migration contains both `ADD VALUE` and any usage of the new value in the same file, split it manually before running.
+
+**Warning signs:**
+- Migration file contains both `ALTER TYPE ... ADD VALUE` and `ALTER TABLE ... DEFAULT 'paused'` in the same file
+- Migration fails with `55P04` in CI or staging
+- Running `npx prisma migrate status` shows a migration as "applied" even though the schema change is not visible in the database
+
+**Phase to address:** Phase 1 — Lifecycle Schema Migration (the very first task)
 
 ---
 
-### Pitfall 4: Data Export Leaks Hashed Passwords and Internal Audit Data
+### Pitfall 2: Auto-Completion Race Condition — Last Step Triggers Two `setDone` Calls
 
-**What goes wrong:** The `GET /api/users/me/export` endpoint fetches the user record and serializes it to JSON. The User model includes `passwordHash` (bcrypt hash). The developer thinks "it's just a hash, not the real password" — but the export goes to the user, who can now share it, and anyone with the hash can run offline attacks. Separately, `GenerationLog` includes every AI query the user sent — useful for fraud audits, but its `reason` field and `status` field are internal signals that should not be disclosed.
+**What goes wrong:**
+The completion detection logic lives in `toggleStep()` in `UserHobbiesNotifier` (user_provider.dart, line 267). When the user completes the final roadmap step, the step toggle must atomically: (1) mark the step done, (2) detect that all steps are now complete, (3) transition status to `done`. If the detection check runs against stale local state and the optimistic update fires before the API rollback resolves, two events can race:
 
-**Why it happens:** Developers serialize the entire Prisma model without an explicit allowlist. "Select all, exclude nothing" is the path of least resistance.
+- The user taps the final step
+- `toggleStep` fires, adds step to `completedStepIds`, detects completion, calls `setDone`
+- Simultaneously, the previous step's API call returns a 500, rolling back state
+- `setDone` is now called on a `UserHobby` that rolled back — the hobby reverts to `trying` status but the celebration screen already showed
+
+The user sees the celebration, then returns to the home screen which shows the hobby as still active. Tapping the step again fires another completion cycle.
+
+**Why it happens:**
+The current `toggleStep` implementation uses optimistic updates with independent rollback (user_provider.dart lines 290-306). Each step is rolled back individually on failure. But completion detection reads `completedStepIds` from the current state at the time of the toggle, not from the server's authoritative count. The local `Set<String>` in SharedPreferences may drift from `UserCompletedStep` rows in Neon PostgreSQL if a prior sync failed silently.
 
 **Consequences:**
-- Password hash in the export = offline brute force attack vector (even bcrypt is attackable given enough time)
-- Internal audit fields leak implementation details — `GenerationLog.reason` reveals content safety decisions ("blocked: weapons keyword")
-- RevenueCat IDs, Sentry user IDs, internal database IDs provide correlation vectors for attackers
+- Double-completion: hobby appears `done` then reverts to `trying` in the same session
+- Analytics event `hobby_completed` fires twice
+- Celebration screen shows, user feels good — then home screen shows the hobby still active, breaking trust
+- In the worst case: `completedAt` is written to the database twice with different timestamps
 
-**Prevention:**
-1. Build the export endpoint with an explicit allowlist, never a blocklist:
-   ```typescript
-   // GOOD — only include what user owns and can read
-   const exportData = {
-     profile: { email, name, createdAt, updatedAt },
-     preferences: { hoursPerWeek, budgetLevel, preferSocial, vibes },
-     hobbies: userHobbies.map(h => ({ hobbyTitle, status, startedAt, streakDays })),
-     journal: journalEntries.map(e => ({ content, createdAt, photoUrl })),
-     // ...
-   }
-   // NOT: return user (includes passwordHash, revenuecatId, etc.)
-   ```
-2. Fields to explicitly EXCLUDE: `passwordHash`, `revenuecatId`, `generationLog` (entire table), `id` (internal integer PK — use `createdAt` for audit purposes instead)
-3. Fields borderline — decide before implementation: `googleId`, `appleId` (OAuth provider IDs — include or exclude), FCM token (exclude — operational, not personal data)
+**How to avoid:**
+Do not perform completion detection in the Flutter client. The server endpoint that records a completed step (`POST /api/users/hobbies/:hobbyId/steps/:stepId/complete`) should check the total step count after recording. If `completedStepCount === totalStepCount`, the server sets `status = done` and `completedAt = now()` in the same database transaction and returns a flag in the response body:
 
-**Detection:** Call the export endpoint on a test account, manually inspect every field in the JSON response, confirm no `passwordHash` key exists anywhere.
+```typescript
+// Server response shape
+{ stepCompleted: true, hobbyCompleted: true, completedAt: "2026-03-23T..." }
+```
 
-**Phase:** Data Export (Phase 2 of milestone)
+The Flutter client reads the `hobbyCompleted` flag from the response and triggers the celebration screen only then — not from local state inference.
+
+**Warning signs:**
+- Celebration screen shows briefly then disappears on return from navigation
+- `HobbyStatus.done` hobbies appear in the Home tab alongside `trying` hobbies
+- PostHog receives duplicate `hobby_completed` events for the same `hobbyId`
+
+**Phase to address:** Phase 2 — Completion Flow. This must be a server-driven check, not a client-side count comparison.
 
 ---
 
-### Pitfall 5: Apple Privacy Manifest Missing for Required Third-Party SDKs
+### Pitfall 3: Pause Feature Locked Behind Pro — But Pro Lapse Strands the Hobby
 
-**What goes wrong:** App is submitted to App Store Connect. The upload succeeds. Review team rejects with `ITMS-91061: Missing privacy manifest`. The app uses Firebase (FCM), RevenueCat, and PostHog — all of which are on Apple's list of "commonly used third-party SDKs" that require a `PrivacyInfo.xcprivacy` manifest file as of February 12, 2025.
+**What goes wrong:**
+A Pro user pauses a hobby. Their subscription lapses (trial ends, payment fails, or they cancel). The hobby is now in `paused` status. The client checks `isProProvider` on app start — the user is no longer Pro. The pause feature is locked. But the user's hobby is stuck in `paused` — it does not appear in the Home tab (which only shows `trying | active`) and cannot be resumed without Pro. The user effectively loses access to their in-progress hobby.
 
-**Why it happens:** This requirement is enforced at submission time by Apple's tooling. Flutter developers often work in Dart and forget that the iOS build layer links native SDKs. The Flutter package for Firebase, purchases_flutter, and posthog_flutter all link their respective iOS native SDKs. If any linked SDK on Apple's required list lacks a privacy manifest, the build is rejected.
+**Why it happens:**
+The `canStartHobbyProvider` (user_provider.dart, line 334) checks `isProProvider` for the multi-hobby gate. A similar gate on the resume action would block non-Pro users from resuming a paused hobby. There is no migration path defined for what happens to a `paused` hobby when the user loses Pro status.
 
 **Consequences:**
-- Hard rejection at App Store Connect upload — not even a review team rejection, an automated toolchain rejection
-- Firebase 10.22.0+ (March 2024) added privacy manifest support — must verify the version in `ios/Podfile.lock`
-- RevenueCat's `purchases-ios` SDK added privacy manifest support — verify via `Add Apple privacy manifest · Issue #1064 · RevenueCat/purchases-flutter`
+- Hobby with completed steps, journal entries, and a streak is inaccessible — data is preserved but the user cannot see it or interact with it
+- User's only option is to contact support or subscribe again — neither is acceptable UX
+- If the user starts a new hobby instead, they now have a `paused` orphan and a `trying` active hobby — violating the free-tier single-hobby constraint
 
-**Prevention:**
-1. Before submission, run `xcodebuild -showBuildSettings` and inspect all linked pods for `PrivacyInfo.xcprivacy` files
-2. Verify Firebase iOS SDK version is 10.22.0 or higher in `ios/Podfile.lock`
-3. Verify `purchases_flutter` is at a version that includes the privacy manifest (check the CHANGELOG)
-4. For PostHog: check `posthog-ios` CHANGELOG for privacy manifest addition; if not present, file a support issue and add a manual `PrivacyInfo.xcprivacy` for the app target covering the APIs PostHog accesses
-5. Add a custom `ios/PrivacyInfo.xcprivacy` for any app-level APIs accessed (UserDefaults, file timestamps, disk space) — this is in addition to SDK-level manifests
+**How to avoid:**
+Define the downgrade path explicitly before implementing pause. Two acceptable approaches:
 
-**Detection:** Test submission to App Store Connect TestFlight (not just `flutter build ipa`) — the upload process runs validation that catches `ITMS-91061` before a human reviewer sees it.
+Option A (recommended): Non-Pro users can always resume a paused hobby. Pro gate applies only to *initiating* a pause. Once paused, resume is always free. This is the least surprising behavior for the user.
 
-**Phase:** App Store Prep (Phase 5 of milestone)
+Option B: On Pro lapse, automatically transition all `paused` hobbies to `stopped` (moved to Tried with progress preserved). The webhook handler for `EXPIRATION` and `CANCELLATION` events must include this transition. Requires adding a webhook-side query: `prisma.userHobby.updateMany({ where: { userId, status: 'paused' }, data: { status: 'stopped' } })`.
+
+Implement the downgrade behavior in the same phase as pause, not as an afterthought.
+
+**Warning signs:**
+- Home tab shows no active hobbies but You tab shows a paused hobby
+- RevenueCat `EXPIRATION` webhook fires and no state transition happens to paused hobbies
+- User reports "I can't find my hobby" after subscription renewal reminder
+
+**Phase to address:** Phase 3 — Pause/Resume. The downgrade path must be part of the acceptance criteria for this phase, not deferred.
+
+---
+
+### Pitfall 4: Content Gating on Detail Page Breaks Existing Saved Users' Experience
+
+**What goes wrong:**
+The detail page (`hobby_detail_screen.dart`) currently shows the full FAQ, cost breakdown, and budget alternatives to all users. The plan is to gate FAQ/cost/budget behind Pro for new users. But users who saved a hobby before the gate was added have seen this content. After the update, those users see it locked — content they had access to is now behind a paywall.
+
+Apple's App Store Review Guidelines §3.1.2(a) state: "If you are changing your existing app to a subscription-based business model, you should not take away the primary functionality existing users have already paid for." The language is about previously-paid users, but review teams apply a broader interpretation: content visible to free users before an update should not become paid-only without grandfathering. A reviewer who registered as a free user before the gating update and sees locked content that was previously visible is likely to flag this.
+
+**Why it happens:**
+The detail page currently has no tier check at all — `hobby_detail_screen.dart` renders all sections unconditionally. Adding a gate after launch means existing free users experience a content removal, not just a content restriction.
+
+**Consequences:**
+- App Store rejection or review flag citing guideline §3.1.2(a)
+- Free users perceive the update negatively ("they took away features")
+- PostHog will show a spike in `detail_page_exit` events and a drop in `hobby_started` conversions from the detail page after the update
+
+**How to avoid:**
+Gate only content that was never shown to free users in production. Currently, FAQ items are lazy-loaded (generated on first view). If the generation endpoint was only accessible to Pro users from the start, gating is clean. But if free users in production have already seen FAQ content for their saved hobbies, that content is in a morally gray zone.
+
+The safest approach: gate FAQ/cost/budget generation for *new* hobbies from this release forward. Hobbies already in the database with generated FAQ content remain accessible to all users (the content is already there). The gate is: Pro users see a "Generate FAQ" button that calls the API; free users see a paywall prompt in the FAQ section.
+
+For the detail page structure, this means:
+- Stage 1 roadmap: free (already visible, keep it)
+- Starter kit: free (already visible, keep it)
+- FAQ section: free users see the paywall prompt; Pro users see the "Generate" button or cached FAQ
+- Cost breakdown: same gate as FAQ
+- Budget alternatives: same gate as FAQ
+
+This approach adds new Pro value without removing existing free value.
+
+**Warning signs:**
+- The App Store review build uses a free test account that was created after launch and sees locked content that existing free users saw before
+- Beta testers who were free users before the update report that sections "disappeared"
+- Apple review notes mention content restriction that was previously available
+
+**Phase to address:** Phase 4 — Detail Page Content Gating. The acceptance criteria must include: "A user who had access to this content before this update can still access it."
+
+---
+
+### Pitfall 5: Streak Counter Does Not Account for Pause Duration
+
+**What goes wrong:**
+`streakDays` in `UserHobby` (schema.prisma line 226, model hobby.dart line 148) counts consecutive days of activity. When a user pauses a hobby and resumes 14 days later, the streak calculation does not know about the pause — it sees a 14-day gap and resets the streak to zero.
+
+Separately, if the streak is calculated from `lastActivityAt` on the client (using `DateTime.now().difference(lastActivityAt).inDays`), the streak appears to break in real-time as the hobby sits paused. The user sees their streak dying while they are legitimately paused.
+
+**Why it happens:**
+The current schema has no `pausedAt` or `pauseDurationDays` field. There is no mechanism to distinguish "I haven't done anything for 14 days" from "I paused for 14 days." The streak counter treats both identically.
+
+**Consequences:**
+- User pauses to go on holiday, returns to find their 20-day streak is zero
+- This is a severe motivation killer — the entire point of pausing is to preserve progress
+- The home screen "This week's plan" card, which displays streak information, shows misleading data during a pause
+
+**How to avoid:**
+Add two fields to `UserHobby` in the schema:
+
+```prisma
+pausedAt       DateTime?   // set when status transitions to paused
+pauseResumedAt DateTime?   // set when status transitions back from paused
+```
+
+When calculating streaks, exclude days between `pausedAt` and `pauseResumedAt`. If multiple pause/resume cycles are needed, this requires a `PauseLog` join table or a cumulative `pausedDurationDays Int @default(0)` counter (simpler for this scale).
+
+For v1.1, the simpler approach: add `pausedAt` and accumulate `pausedDurationDays` (incremented when resuming by `DateTime.now().difference(pausedAt).inDays`). The streak calculation becomes:
+
+```
+effectiveGap = totalGapDays - pausedDurationDays
+if (effectiveGap <= 1) streak continues
+```
+
+The home screen must not show the streak decrementing during a paused state. Explicitly check `status === 'paused'` before rendering streak countdown logic.
+
+**Warning signs:**
+- Beta user reports that their streak reset after resuming a paused hobby
+- Home screen shows "Streak: 0 days" for a recently resumed hobby that had a 15+ day streak
+- `streakDays` in the database is 0 for a `UserHobby` with `status = paused` and 30 `UserCompletedStep` rows
+
+**Phase to address:** Phase 3 — Pause/Resume. Schema must include pause duration tracking from day one of pause implementation.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause delays, security gaps, or poor user experience.
+Mistakes that cause user confusion, data inconsistency, or poor UX without requiring a rewrite.
 
 ---
 
-### Pitfall 6: RevenueCat Webhook Authorization Header vs. HMAC Signature
+### Pitfall 6: Coach Context Passes Stale Status After Lifecycle Transition
 
-**What goes wrong:** Developer reads "webhook signature verification" in the task description and implements HMAC-SHA256 verification (like Stripe). RevenueCat does NOT support HMAC payload signing. Its security model is an Authorization header with a static secret set in the RevenueCat dashboard. Implementing HMAC verification means every legitimate webhook from RevenueCat fails to authenticate — all subscription events are silently dropped.
+**What goes wrong:**
+The coach system prompt (`buildCoachSystemPrompt()` in `server/api/generate/[action].ts`) includes `userState: BROWSING | SAVED | ACTIVE` and `coachMode: START | MOMENTUM | RESCUE`. After a hobby transitions to `paused` or `done`, the coach context is not updated — it still shows `ACTIVE` and `MOMENTUM` mode.
 
-**Why it happens:** RevenueCat's webhook security model is simpler than Stripe/GitHub. The community documentation calls this out clearly, but the terminology "signature verification" implies HMAC to most developers who have worked with other webhook providers.
+A user who paused a hobby and opens the coach asks "I've been away for a month, how do I get back into this?" — the coach responds as if they're mid-active, recommending the next roadmap step without acknowledging the pause.
 
-**Consequences:**
-- All subscription events (purchases, cancellations, renewals, refunds) fail to update the database
-- Users who cancel subscriptions stay as "Pro" forever
-- Users who subscribe stay as "Free" until they next open the app (which triggers a client-side entitlement check)
+**Why it happens:**
+The coach context builder reads from `UserHobby.status` but only maps to the three defined states. There is no mapping for `paused` → a new coach mode, and there is no mapping for `done` → a congratulatory mode.
 
-**Prevention:**
-1. Use header-based auth only: in the webhook handler, verify `req.headers['authorization'] === process.env.REVENUECAT_WEBHOOK_SECRET`
-2. Additionally, call RevenueCat's `GET /subscribers/{app_user_id}` REST API to verify the subscription state reported in the webhook matches RevenueCat's own records before updating the database — this is the recommended secondary verification
-3. Add replay protection: store a 30-day rolling window of processed webhook `event.id` values (in the database or Hive) and reject duplicates. RevenueCat retries up to 5 times on 60s timeout — idempotent processing is required.
+**How to avoid:**
+Add status mappings to the coach context builder:
+- `paused` → userState `PAUSED`, coachMode `RESCUE` (returning after a break is the same emotional context as rescue)
+- `done` → userState `COMPLETED`, coachMode `CELEBRATE` (or a new mode)
 
-**Detection:** Send a test webhook from RevenueCat dashboard → server logs should show the event processed, not 401.
+Also add a `pausedDays` field to the coach context so the AI knows how long the user was away. This is the `lastActivityAt` gap, clamped to the pause window.
 
-**Phase:** RevenueCat Webhook (Phase 4 of milestone)
+**Warning signs:**
+- Coach says "great job with your momentum!" to a user who just resumed after 3 weeks away
+- Coach recommends a step the user completed before pausing ("Try your first session") when they are clearly past Stage 1
+- PostHog `coach_message_sent` events from `paused` status hobbies return responses that do not acknowledge the pause
 
----
-
-### Pitfall 7: AI Model Upgrade Changes Output Schema Silently
-
-**What goes wrong:** `outputs/ai_generator.ts` upgrades the model from `claude-haiku-4-5-20251001` to `claude-sonnet-4-6`. Sonnet is more capable but also more verbose and more likely to add explanatory text around JSON. The parsing code does `JSON.parse(response.content[0].text)` — if Sonnet adds a markdown code block wrapper (` ```json ... ``` `) or a preamble sentence, this throws a SyntaxError. The generation endpoint returns 500. Users cannot generate new hobbies or get coach responses.
-
-**Why it happens:** Haiku was tuned to be more direct and structured. Sonnet, despite the same system prompt, may exhibit different formatting tendencies, especially when the prompt is ambiguous about output format. The upgraded prompts in `outputs/ai_generator.ts` use temperature 0.2-0.3 which helps, but JSON extraction robustness is still required.
-
-**Consequences:**
-- Hobby generation fails silently — user gets "Something went wrong" toast
-- Coach conversations break on first message if the coach prompt similarly fails
-- Difficult to diagnose in production without structured logging
-
-**Prevention:**
-1. Add robust JSON extraction before `JSON.parse`:
-   ```typescript
-   function extractJson(text: string): string {
-     // Strip markdown code blocks
-     const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-     if (match) return match[1].trim();
-     // Strip any leading text before first {
-     const start = text.indexOf('{');
-     const end = text.lastIndexOf('}');
-     if (start !== -1 && end !== -1) return text.slice(start, end + 1);
-     return text;
-   }
-   ```
-2. Run the upgraded prompts against 20+ test queries in staging before deploying, comparing output schemas field-by-field against what the Flutter app expects
-3. Log the raw AI response (before JSON parse) in `GenerationLog` during the first week post-deploy — this catches formatting issues immediately
-4. The upgrade files already include `validateHobbyOutput()` — ensure that function is called and failures return the `{"error":"invalid"}` sentinel, not a 500
-
-**Detection:** In staging, call `POST /api/generate/hobby` with 10 diverse queries. All should return valid JSON matching the Hobby schema.
-
-**Phase:** Sonnet AI Upgrade (Phase 3 of milestone)
+**Phase to address:** Phase 3 — Pause/Resume. The coach context update is a one-line mapping change but must be part of the same PR as the status transition.
 
 ---
 
-### Pitfall 8: Dead Code Removal Breaks Shared Components Still Used by Active Screens
+### Pitfall 7: Free User Stops a Hobby — Slot Does Not Free Up Immediately
 
-**What goes wrong:** `buddy_mode_screen.dart` is deleted along with its imports. The developer removes the corresponding provider `social_repository_api.dart` because it was only referenced by the deleted screen. But `you_screen.dart` also imports `social_repository` to display `CommunityStory` thumbnails in the "Tried" section. `dart analyze` passes because the import was removed from the deleted file — but the active screen now has a broken import. The error surfaces only at build time.
+**What goes wrong:**
+A free user has one active hobby. They tap "Stop this hobby" and confirm. The hobby moves to `stopped` (Tried). The `canStartHobbyProvider` (user_provider.dart line 334) checks the live state — but if the UI navigates to Discover before the API call completes and the optimistic update is rolled back, the user's slot appears taken. The Discover feed "Start this hobby" button is disabled even though the user stopped their active hobby.
 
-**Why it happens:** Screens being deleted have hidden shared dependencies with active screens. The dead code is identifiable, but its shared dependencies are not always identifiable by file-based inspection alone. Riverpod providers may have no `@riverpod` annotation consumers that are visible in the removed file — they may be consumed deeper in shared components.
+More subtly: if the API call to update status fails entirely, the local state rolls back to `trying`, the slot remains taken, and the user sees a "you already have an active hobby" block — even though they just explicitly stopped it.
 
-**Consequences:**
-- Build failure after "straightforward" dead code removal
-- If the developer also removes model classes (e.g., `social.dart` — `CommunityStory`, `BuddyPair`), those are used in active providers and will cause type errors
-- Provider tree can break at runtime if a provider that was keeping another alive is removed
+**How to avoid:**
+The stop action must be idempotent and must not roll back on network failure. Use a fire-and-forget pattern with local persistence: write `stopped` status to SharedPreferences immediately, do not roll back on API failure (just retry silently). The slot should free immediately on user intent. A background sync on next app start will reconcile any discrepancy.
 
-**Prevention:**
-1. **Before deleting any file**, run `gitnexus_impact({target: "ClassName", direction: "upstream"})` for every exported symbol in that file — this is mandatory per the CLAUDE.md GitNexus protocol
-2. Use `dart analyze` after EACH file deletion, not at the end of all deletions — isolates breakage immediately
-3. Do not delete model files (e.g., `social.dart`) just because the screen was deleted — models may be referenced in repositories that serve active screens
-4. Safe order: (1) delete route from `router.dart`, (2) run analyze, (3) delete screen file, (4) run analyze, (5) delete providers ONLY if analyze confirms zero references
-5. Check `providers/repository_providers.dart` — it registers all repositories at the DI layer. Removing a repository registration there breaks any provider that `ref.watch()`s it, even if the screen is gone.
+**Warning signs:**
+- "Start Hobby" button remains disabled after stopping an active hobby (network flake)
+- You tab "Tried" section shows the stopped hobby, but Home tab still shows it as active
+- User reports they can't start a new hobby after stopping their previous one
 
-**Detection:** After each file deletion, run `flutter analyze lib/` and verify zero errors before deleting the next file.
-
-**Phase:** Dead Code Cleanup (Phase 6 of milestone)
+**Phase to address:** Phase 2 — Stop/Abandon Hobby. Test explicitly with airplane mode during the stop action.
 
 ---
 
-### Pitfall 9: Apple App Store Screenshot Submission Uses Wrong Device Size
+### Pitfall 8: RevenueCat Subscription State Is Not Refreshed Before Showing Pause Gate
 
-**What goes wrong:** Developer screenshots the app on a Nothing Phone 3a (Android 6.3-inch display). Submits those screenshots for iOS. App Store Connect rejects with "Screenshots do not match required device dimensions." Or worse: the developer submits correct-size screenshots (1290 x 2796 for 6.9-inch iPhone) but they were captured with the Flutter debug banner still visible. Apple rejects on review.
+**What goes wrong:**
+RevenueCat SDK caches entitlement status and updates the cache if it is older than 5 minutes. If a user's trial expired while they had the app open (or while the app was backgrounded), the cached `isPro = true` state has not been invalidated. The user sees the "Pause hobby" option, taps it, and the pause succeeds locally — but when the app restarts, the subscription check runs a fresh `getCustomerInfo()` call, Pro status is false, and the UI is in an inconsistent state (hobby is `paused` but user is free).
 
-**Why it happens:** As of 2025, Apple requires 6.9-inch iPhone screenshots (1290 x 2796px) as mandatory for all submissions — the 6.5-inch screenshots that were mandatory previously are still accepted but the 6.9-inch is now the primary. Developers working Android-first often use Android device screenshots. The Flutter debug banner appears in debug builds and must be explicitly suppressed.
+**Why it happens:**
+`proStatusProvider` is initialized from `SubscriptionService.isPro` which reads the RevenueCat cache. The cache is at most 5 minutes stale — but for a trial that expired exactly at midnight while the user was asleep, the app might open with stale cached Pro status. The `refresh()` method is async and may not complete before the UI renders the pause option.
 
-**Consequences:**
-- App Store Connect validation error on upload (device size mismatch)
-- App review rejection (debug banner, content not matching actual app)
-- 13-inch iPad screenshots now required if the app supports iPad (even if not optimized)
+**How to avoid:**
+Before rendering the pause action, call `proStatusProvider.refresh()` explicitly and await it. This is a one-time network call per session to RevenueCat. For the pause action specifically (since it has durable consequences), do not show the option based on cached state — verify with a fresh entitlement check first.
 
-**Prevention:**
-1. Capture iOS screenshots using Xcode Simulator with iPhone 16 Pro Max (6.9-inch) — not from physical Android device
-2. Always build in release mode for screenshot capture: `flutter build ipa --release` then screenshot via Simulator
-3. Verify `debugShowCheckedModeBanner: false` in `MaterialApp` widget in `main.dart` (already likely set, but confirm)
-4. Required sizes for submission: 6.9-inch iPhone (1290x2796) is mandatory; 6.5-inch (1242x2688) no longer required but accepted
-5. If the app is iPad-capable, also provide 13-inch iPad (2064x2752) screenshots
-6. For Google Play: use the AAB format (`flutter build appbundle`) — APK submissions are no longer accepted. Target SDK must be Android 14 (API 34) minimum, Android 15 (API 35) required for new apps as of August 31, 2025.
+In `canPauseHobbyProvider` (a new provider to add alongside `canStartHobbyProvider`):
+```dart
+// Trigger a refresh before checking Pro status for gated actions
+await ref.read(proStatusProvider.notifier).refresh();
+return ref.read(isProProvider);
+```
 
-**Detection:** Run app through App Store Connect "Prepare for Submission" flow and look at screenshot validation errors before the app goes to review.
+**Warning signs:**
+- User reports they paused a hobby but it shows as "trying" on next app open
+- RevenueCat dashboard shows the user's trial ended but the database shows `status = paused`
+- Trial conversion funnel shows users pausing right at trial expiry (they see the option during grace cache window)
 
-**Phase:** App Store Prep (Phase 5 of milestone)
-
----
-
-### Pitfall 10: Google Play Data Safety Form Inaccurate for AI and Analytics SDKs
-
-**What goes wrong:** Developer fills out Google Play's Data Safety form quickly, marking "No data collected." But the app uses PostHog (analytics), Firebase (FCM + crash reporting via Sentry), RevenueCat (purchase history), and the AI coach (sends hobby context and user messages to Anthropic's API). All of these involve data collection. Google Play can reject the app or suspend it if the Data Safety form materially misrepresents data practices.
-
-**Why it happens:** The Data Safety form is long and the data types are granular. Developers underestimate what "data collection" means — it includes data sent to third-party SDKs even if the developer never directly sees it.
-
-**Consequences:**
-- App rejection with reason "Data Safety form inaccurate"
-- If approved with inaccurate form and later flagged, app can be suspended
-- User trust damage if privacy label says "no data collected" but PostHog is pinging
-
-**Required declarations for this stack:**
-- **Personal info (email address):** Collected, not optional, for core functionality
-- **User IDs:** Collected (JWT sub, RevenueCat ID)
-- **Purchase history:** Shared with RevenueCat (third party)
-- **App activity:** Collected (PostHog session events, screen views)
-- **App diagnostics:** Shared (Sentry crash reports)
-- **Device or other IDs:** Collected (FCM registration token)
-- **User-generated content:** Collected (journal entries, coach messages)
-
-**Prevention:**
-1. Before filling the form, list every SDK and what data it sends: PostHog (device info, session data, events), Firebase FCM (device token), Sentry (stack traces, device info), RevenueCat (purchase receipts, user ID), Anthropic (coach message text in API calls)
-2. Check RevenueCat's published Data Safety guidance in their community forum — they provide suggested answers for the Data Safety form
-3. Mark "Account deletion supported" — the deletion endpoint built in Phase 1 qualifies
-
-**Phase:** App Store Prep (Phase 5 of milestone)
+**Phase to address:** Phase 3 — Pause/Resume. Add a live entitlement check before writing a `paused` status transition.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 9: Completion Celebration Fires on Roadmap Step Uncomplete (Toggle)
+
+**What goes wrong:**
+`toggleStep` can un-complete a step (user mistakenly checks then unchecks). If the completion detection runs on every toggle (not just completions), a user who unchecks the final step and then rechecks it will see the celebration screen appear again on the re-check. This produces a jarring experience and emits a second `hobby_completed` analytics event.
+
+The current `toggleStep` already has a `wasCompleted` flag (user_provider.dart line 271), but if auto-completion detection is added client-side, it would need to check `!wasCompleted` (only trigger on a check, not an uncheck) — which is easy to implement correctly but also easy to forget.
+
+**How to avoid:**
+If completion detection is done server-side (per Pitfall 2 recommendation), this is automatically handled — the server only sets `status = done` when the step count reaches the total, it does not un-set it when a step is unchecked. The client simply trusts the server response.
+
+If there is any client-side completion check, add an explicit guard: only trigger completion detection when `wasCompleted == false` (step was just completed, not uncompleted).
+
+**Warning signs:**
+- Celebration screen shows when a user unchecks and rechecks the last step
+- `hobby_completed` fires twice for the same session in PostHog
+- `completedAt` in the database has a timestamp from the re-check, not the original completion
+
+**Phase to address:** Phase 2 — Completion Flow.
 
 ---
 
-### Pitfall 11: Coach Rate Limit Reset Exploitable via App Reinstall (Hive-Only)
+### Pitfall 10: Home Screen Shows No State When All Active Hobbies Complete
 
-**What goes wrong:** The current `_CoachLimitTracker` stores usage counts in Hive cache keyed by `year_month`. Uninstalling and reinstalling the app clears Hive. A free user can send unlimited coach messages by uninstalling between sessions. With the server-side rate limiting migration (using `GenerationLog`), this is fixed — but if the Hive client check is removed BEFORE the server-side check is confirmed working, there is a window with no limits at all.
+**What goes wrong:**
+`home_screen.dart` (line 112) renders `_EmptyHomeState()` when `activeEntries.isEmpty`. This covers the "no hobbies started" case. After v1.1, a user who completes their only hobby also produces `activeEntries.isEmpty` — the Home tab shows the same empty state as a brand-new user.
 
-**Prevention:** When migrating rate limiting from Hive to `GenerationLog`, implement and verify the server-side check BEFORE removing the Hive client check. Run both in parallel for one release cycle. The server-side check should return HTTP 429 which the client handles by showing the upgrade prompt.
+This is a UX failure: a user who just finished a 30-day hobby deserves a "You did it — what's next?" moment, not the same generic "Get started" prompt that new users see.
 
-**Phase:** Coach Rate Limiting (Phase 3 of milestone)
+**Why it happens:**
+The `activeEntries` filter (home_screen.dart lines 98-110) only includes `trying | active` statuses. `done` hobbies are correctly excluded. But there is no branch for "user has completed hobbies but no active ones" — it falls through to the generic empty state.
 
----
+**How to avoid:**
+Add a new branch in `home_screen.dart` build method:
 
-### Pitfall 12: Terms & Privacy Policy URLs Hardcoded to Non-HTTPS Links
+```dart
+final hasCompletedHobbies = userHobbies.values.any((h) => h.status == HobbyStatus.done);
+if (activeEntries.isEmpty && hasCompletedHobbies) {
+  return _CompletedAllState(); // celebration state with "Pick your next one" CTA
+}
+if (activeEntries.isEmpty) {
+  return _EmptyHomeState(); // generic new user state
+}
+```
 
-**What goes wrong:** Privacy Policy is hosted on a static page. The URL is added to settings screen as `http://trysomething.ch/privacy`. Apple App Store and Google Play both require privacy policy URLs to be accessible via HTTPS, served at a stable URL that doesn't redirect. If the URL 404s or redirects at review time, the submission is rejected.
+The `_CompletedAllState` widget is a distinct screen with different copy, imagery, and a Discover CTA.
 
-**Prevention:**
-1. Host at a stable HTTPS URL before submission
-2. Test the URL from an iOS device (not your development machine) to verify it loads
-3. Apple also checks that the privacy policy URL in App Store Connect metadata matches or is consistent with what's shown in-app
+**Warning signs:**
+- QA tester completes a hobby and Home tab shows the new-user empty state
+- "Get started" button on the empty state is shown to a user who has 30 completed step rows
+- User navigates away from Home immediately after completing — no discovery prompt shown
 
-**Phase:** Terms & Privacy (Phase 5 of milestone)
-
----
-
-### Pitfall 13: Prisma Migration Not Committed to Git
-
-**What goes wrong:** The `DELETE /api/users/me` endpoint requires schema changes (adding `deletedAt` nullable field, possibly a token version counter). Developer runs `prisma migrate dev` locally. The migration exists only in Neon (production) and local environment. Another developer (or a future redeploy) runs `prisma migrate deploy` and gets migration conflicts. Rollback is impossible because there is no migration history in the repo.
-
-**Prevention:**
-1. All `prisma migrate dev` runs must be committed: commit the generated file in `server/prisma/migrations/`
-2. Never use `prisma db push` in production (it bypasses migration history)
-3. Document the schema versioning in the PR that adds `deletedAt`
-
-**Phase:** Account Deletion (Phase 1)
+**Phase to address:** Phase 2 — Completion Flow (specifically the "home completed state" requirement from PROJECT.md).
 
 ---
 
-### Pitfall 14: Vercel Serverless Cold Start Causes Webhook Timeout
+## Technical Debt Patterns
 
-**What goes wrong:** RevenueCat sends a webhook event (subscription renewed). The Vercel serverless function is cold (no recent traffic). Cold start takes 2-4 seconds. RevenueCat has a 60-second timeout for webhooks, so the event is eventually processed — but during a traffic spike (many users renewing at the same time), Prisma connection pool exhaustion on Neon free tier (100 connections) causes timeout. RevenueCat retries the failed events. Without idempotency protection, the subscription update runs multiple times.
+Shortcuts that seem reasonable but create long-term problems.
 
-**Prevention:**
-1. Webhook handler must be idempotent: check if the event's `event.id` was already processed before updating the database
-2. Use Prisma's `upsert` or check `existing = await prisma.userHobby.findFirst({where: {userId, processed: true}})` pattern
-3. The 100-connection Neon limit is a real concern — webhook handlers should use minimal Prisma queries (one read, one write max)
-
-**Phase:** RevenueCat Webhook (Phase 4)
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Client-side completion detection (counting local steps) | Avoids a server round-trip on step toggle | Race conditions, double-completion events, drift from server truth | Never — server must own completion authority |
+| Single `stopped` value serves both "user quit" and "subscription lapsed" | Simpler schema | Cannot distinguish intentional quits from forced stops in analytics; cannot auto-restart on re-subscribe | Never — use a `stopReason` field or separate `lapsed` status |
+| Paused hobbies resume with the same coach mode (no context reset) | Zero code change | Coach gives advice appropriate for active users to someone returning from a 3-week break | Never — coach context must acknowledge the return |
+| Gating FAQ/cost behind Pro without server-side enforcement | Faster to build (just hide widgets) | Client-side gate can be bypassed; calling the generation endpoint directly still works for non-Pro users | Never — the API endpoint must check `subscriptionTier` before generating |
+| Using SharedPreferences as the source of truth for `paused` status | Works offline | SharedPreferences can be cleared by the OS on low storage; a pause that only lives in SharedPreferences is lost on reinstall | Never — `paused` is a durable state, must be in the server DB |
 
 ---
 
-## Phase-Specific Warnings
+## Integration Gotchas
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Account Deletion | RevenueCat subscription still active after DB delete | Show explicit "cancel subscription first" warning in UI; document that deletion does not cancel billing |
-| Account Deletion | JWT tokens valid 30 days after user row deleted | Add `deletedAt` check in auth middleware; return 401 for deleted users |
-| Account Deletion | Cascade delete fails on unsupported FK relations | Audit every FK in schema.prisma before writing the endpoint; use explicit transaction order |
-| Data Export | `passwordHash` included in serialized User | Use explicit allowlist in export, never full model serialize |
-| Data Export | `GenerationLog` leaks content safety decision reasons | Exclude entire `GenerationLog` table from export — it is an audit tool, not user data |
-| Sonnet Upgrade | JSON parsing fails if Sonnet adds markdown wrappers | Add `extractJson()` helper before `JSON.parse()`; validate output schema with `validateHobbyOutput()` |
-| RevenueCat Webhook | HMAC-based verification blocks all legitimate webhooks | RevenueCat uses header auth only, not payload signing — use `Authorization` header check |
-| RevenueCat Webhook | Duplicate event processing on retry | Store processed `event.id` values; use idempotent DB upsert patterns |
-| Dead Code Cleanup | Shared models/providers deleted with screens | Run `gitnexus_impact` on every exported symbol before deleting; run `dart analyze` after each file deletion |
-| App Store Prep | Privacy manifest missing for Firebase/RevenueCat/PostHog | Verify each SDK version includes `PrivacyInfo.xcprivacy`; add app-level manifest for system API access |
-| App Store Prep | Screenshots from Android device rejected for iOS | Capture iOS screenshots on Xcode Simulator, iPhone 16 Pro Max dimensions |
-| App Store Prep | Google Play Data Safety form underreports SDK data collection | Enumerate all SDKs and their data; PostHog/RevenueCat/Sentry all require disclosure |
-| Coach Rate Limiting | Window with no limits if Hive check removed before server check verified | Migrate server-side first, run in parallel, then remove Hive check |
+Common mistakes when connecting to external services.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| RevenueCat — Pro gate on pause | Checking cached `isPro` before showing the pause option | Call `getCustomerInfo()` (forces cache refresh) before writing a `paused` status transition — stale cache causes inconsistent state |
+| RevenueCat — subscription lapse | No handler for `EXPIRATION` webhook that transitions `paused` hobbies | `EXPIRATION` event handler must query `UserHobby.findMany({ where: { userId, status: 'paused' } })` and transition to `stopped` or `trying` per the defined downgrade policy |
+| RevenueCat — offline check for content gate | Using cached `isPro` to decide whether to show Pro FAQ/cost sections | Always call `getCustomerInfo()` on detail page open for gated sections; 5-min cache is acceptable but cold-start cache can be 30+ days stale |
+| Prisma — adding `paused` enum value | Running `prisma migrate dev` and deploying the generated migration directly | Inspect the generated SQL; if it contains both `ADD VALUE` and any usage of the new value in the same transaction, split into two migration files before deploying |
+| Neon + Vercel — migration during traffic | Running `prisma migrate deploy` while serverless functions have live connections | Run migrations during low-traffic windows; Neon free tier limits connections and `ALTER TYPE` on a live table holds a lock |
+| Anthropic coach — status context | Passing `status: 'paused'` to the prompt without defining what it means in the system prompt | Add explicit handling in the coach system prompt: "If userState is PAUSED, the user is returning from a deliberate break. Acknowledge the return warmly and ask how they feel about picking up where they left off." |
+
+---
+
+## Performance Traps
+
+Patterns that work at small scale but fail as usage grows.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Counting total roadmap steps in the Flutter client on every step toggle | Imperceptible at 1K users | Count steps server-side in the completion endpoint; cache `totalStepCount` in `UserHobby` or `Hobby` | At 10K users with many concurrent toggles, local counts diverge from server |
+| Loading all `UserHobby` rows (all statuses) to determine active count for the free-tier gate | Works with 1-5 hobbies | Add a `status` index on `UserHobby`; filter server-side for active count | At 50+ hobbies per user (power users), map iteration in Dart becomes noticeable |
+| Coach system prompt includes all completed steps in roadmap annotation | Fine with 8 steps | Cap at 20 steps or summarize completed stages as a block; don't enumerate every step | Hobby with 30+ steps pushes context beyond 4K tokens for Haiku; Claude Sonnet handles more but still adds latency |
+| Server checks Pro status by calling RevenueCat REST API on every coach message | Works at 10 req/min | Cache `subscriptionTier` on the User model in Neon and update it via webhook; read from Neon, not RevenueCat API | RevenueCat API rate limits at ~150 req/min per app; coach is high-frequency |
+
+---
+
+## Security Mistakes
+
+Domain-specific security issues beyond general web security.
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Content gate enforced only on the Flutter client (hiding FAQ widget) | Pro users can call `POST /api/generate/faq` directly via curl or Postman — client gate provides no protection | Enforce `subscriptionTier === 'pro'` check in the API endpoint handler, not just in Flutter |
+| Stop/pause endpoints accessible without ownership check | User A can stop User B's hobby by knowing the hobbyId (UUIDs are not secret if leaked via analytics) | Every lifecycle mutation endpoint must verify `userHobby.userId === authenticatedUserId` before updating |
+| `completedAt` timestamp set client-side | Client can claim a hobby was completed at any time in the past by sending a spoofed `completedAt` | Set `completedAt = new Date()` server-side in the completion endpoint; never accept it from the client |
+| Pause as a vector for content generation abuse | Paused users cannot use the coach (no active hobby context) but the gate might not be enforced | Explicitly check that hobby status is `active` or `trying` before processing a coach message; return 403 for `paused` or `done` hobbies |
+
+---
+
+## UX Pitfalls
+
+Common user experience mistakes in this domain.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Stop action is immediate with no confirmation | User taps "Stop" accidentally and loses their active hobby slot | Two-step confirmation: "Are you sure? Your progress will be saved in Tried." with a distinct "Stop hobby" destructive button — not the same coral CTA used for positive actions |
+| Pause action doesn't explain what pausing does | User doesn't understand that Pro is required, progress is preserved, and they can resume | Before the Pro gate paywall, show one line of copy: "Pausing saves your streak and progress. You can resume whenever you're ready." |
+| Completion celebration navigates automatically back to Home | User feels rushed — they want to sit with the achievement | Stay on the celebration screen until the user explicitly taps "Pick my next hobby" or "Done"; do not auto-navigate with a timer |
+| Pro content gate (FAQ/cost) shows a blank space for free users | Users don't know why the section is empty — they think the content failed to load | Show a visible "Pro feature" card with a brief description and upgrade CTA where the section would be; never show a blank |
+| Completed hobbies disappear from Home without explanation | User opens the app after finishing and sees the empty/new-user state — confused about where their hobby went | Add a one-time "You finished [Hobby]! Here's what's next" moment on first Home tab open after completion; then move to the discovery CTA |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete but are missing critical pieces.
+
+- [ ] **Hobby completion:** Celebration screen shows — verify that `status = done` is also written to Neon and `completedAt` is set server-side, not just in Hive/SharedPreferences
+- [ ] **Pause feature:** Pause button is hidden behind Pro gate — verify the API endpoint also rejects `status = paused` mutations from non-Pro users (client gate alone is insufficient)
+- [ ] **Stop hobby:** Hobby moves to Tried list — verify the home tab slot frees immediately for free users AND the server reflects the change (not just local state)
+- [ ] **Streak on resume:** Streak count is non-zero after resume — verify the `pausedDurationDays` was subtracted from the gap calculation, not just the raw `lastActivityAt` difference
+- [ ] **Coach context:** Coach is accessible after resume — verify the system prompt contains the `PAUSED` → `RESCUE` mode mapping and the return duration is included
+- [ ] **Content gate:** FAQ section shows paywall prompt to free users — verify that calling `POST /api/generate/faq` directly with a free user's JWT returns 403, not 200
+- [ ] **Downgrade path:** Pro subscription lapses with a paused hobby — verify the EXPIRATION webhook transitions the hobby to a defined non-paused state (not left stranded in paused forever)
+- [ ] **Migration safety:** `paused` enum value deployed to Neon — verify with `SELECT unnest(enum_range(NULL::"HobbyStatus"));` that the value exists before deploying any code that references it
+
+---
+
+## Recovery Strategies
+
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Prisma migration partially applied (enum value added but not migration history) | HIGH | Manually run `ALTER TYPE "HobbyStatus" ADD VALUE IF NOT EXISTS 'paused'` in Neon console; mark the migration as applied manually in `_prisma_migrations`; re-run `prisma migrate deploy` |
+| Double-completion: `hobby_completed` fires twice | MEDIUM | Add deduplication: check `status = done` before processing any completion request server-side; `IF status != 'done' THEN update` (conditional update prevents double-write) |
+| Paused hobbies stranded when Pro lapses | HIGH | Write a one-time migration script: `UPDATE "UserHobby" SET status = 'stopped' WHERE status = 'paused' AND userId IN (SELECT id FROM "User" WHERE subscriptionTier = 'free')` — run manually in Neon |
+| Streak incorrectly zeroed after resume | MEDIUM | Recalculate using `UserCompletedStep.completedAt` timestamps — the raw step data is still there; rebuild `streakDays` from step completion history |
+| Content gate is client-only, free users calling API directly | LOW | Deploy server-side check immediately; no data damage, just unauthorized generations in `GenerationLog` which can be audited |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Prisma enum migration transaction error | Phase 1 — Lifecycle Schema | Inspect generated SQL before running migrate; test on staging Neon branch first |
+| Auto-completion race condition | Phase 2 — Completion Flow | Server returns `hobbyCompleted` flag; integration test: complete last step twice rapidly, verify single `done` transition |
+| Pro lapse strands paused hobby | Phase 3 — Pause/Resume | Implement and test the EXPIRATION webhook transition; verify with RevenueCat sandbox cancel event |
+| Content gating removes existing free features | Phase 4 — Detail Page Gating | QA with a pre-existing free account; verify FAQ sections gate new generation, not existing cached content |
+| Streak does not account for pause duration | Phase 3 — Pause/Resume | Add `pausedAt` + `pausedDurationDays` to schema; unit test streak calculation with 14-day pause |
+| Coach context stale after lifecycle transition | Phase 3 — Pause/Resume | Verify coach prompt includes PAUSED state mapping; send a message from a paused hobby and inspect system prompt |
+| Stop action does not free the hobby slot | Phase 2 — Stop/Abandon | Test with airplane mode during stop action; verify `canStartHobbyProvider` returns true after stop regardless of network |
+| RevenueCat stale cache on pause gate | Phase 3 — Pause/Resume | Test with a trial account at the moment of expiry; verify live entitlement check before writing paused |
+| Celebration fires on step uncomplete | Phase 2 — Completion Flow | Toggle the last step on and off three times; verify celebration fires exactly once |
+| Home shows wrong empty state after completion | Phase 2 — Completion Flow | Complete all steps of a hobby and return to Home; verify `_CompletedAllState` renders, not `_EmptyHomeState` |
 
 ---
 
 ## Sources
 
-- [Apple: Offering account deletion in your app](https://developer.apple.com/support/offering-account-deletion-in-your-app/) — HIGH confidence (official Apple documentation)
-- [Apple TN3194: Handling account deletions and revoking tokens for Sign in with Apple](https://developer.apple.com/documentation/technotes/tn3194-handling-account-deletions-and-revoking-tokens-for-sign-in-with-apple) — HIGH confidence (official Apple technote)
-- [RevenueCat: Account deletion rules on the App Store](https://www.revenuecat.com/blog/engineering/app-store-account-deletion/) — MEDIUM confidence (official RevenueCat engineering blog)
-- [RevenueCat: How to handle subscription when deleting a user](https://community.revenuecat.com/general-questions-7/how-to-handle-subscription-when-deleting-a-user-4339) — MEDIUM confidence (official RevenueCat community)
-- [RevenueCat: Best practices on handling webhooks](https://community.revenuecat.com/general-questions-7/best-practices-on-handling-webhooks-5054) — MEDIUM confidence (official RevenueCat community)
-- [RevenueCat: Webhook message verification](https://community.revenuecat.com/sdks-51/webhook-message-verification-7165) — MEDIUM confidence (confirms no HMAC signing, header-only)
-- [Apple: Privacy updates for App Store submissions (Feb 2025 manifest requirement)](https://developer.apple.com/news/?id=3d8a9yyh) — HIGH confidence (official Apple developer news)
-- [RevenueCat purchases-flutter: Add Apple privacy manifest Issue #1064](https://github.com/RevenueCat/purchases-flutter/issues/1064) — MEDIUM confidence (official repo issue)
-- [Google Play: Understanding app account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111) — HIGH confidence (official Google Play policy)
-- [Webhook security: Preventing replay attacks](https://dohost.us/index.php/2026/02/15/preventing-replay-attacks-implementing-timestamps-and-nonces-in-webhook-handlers/) — MEDIUM confidence (community guide, February 2026)
-- [JWT invalidation after account deletion](https://www.descope.com/blog/post/jwt-logout-risks-mitigations) — MEDIUM confidence (security vendor documentation)
-- [Promptfoo: Model upgrades break agent safety](https://www.promptfoo.dev/blog/model-upgrades-break-agent-safety/) — MEDIUM confidence (verified with Anthropic knowledge of Sonnet behavior)
-- [App Store screenshot requirements 2025-2026](https://www.mobileaction.co/guide/app-screenshot-sizes-and-guidelines-for-the-app-store/) — MEDIUM confidence (multiple sources agree on 6.9-inch requirement)
-- Project CONCERNS.md — HIGH confidence (direct codebase analysis, 2026-03-21)
+- [Prisma GitHub #8424: Migration fails when adding enum value used as default](https://github.com/prisma/prisma/issues/8424) — HIGH confidence (official Prisma issue tracker, confirmed root cause)
+- [Prisma GitHub #5290: ALTER TYPE enum migrations fail in PostgreSQL](https://github.com/prisma/prisma/issues/5290) — HIGH confidence (official Prisma issue tracker)
+- [Prisma GitHub #7251: Can't add value to enum in Postgres Database](https://github.com/prisma/prisma/issues/7251) — HIGH confidence (official Prisma issue tracker)
+- [RevenueCat Docs: Getting Subscription Status / Offline caching behavior](https://www.revenuecat.com/docs/customers/customer-info) — HIGH confidence (official RevenueCat documentation)
+- [RevenueCat Community: Subscription expires when user is offline](https://community.revenuecat.com/sdks-51/subscription-expires-when-user-is-offline-5002) — MEDIUM confidence (official RevenueCat community forum)
+- [Apple App Store Review Guidelines §3.1.2(a) — Subscription content restrictions](https://developer.apple.com/app-store/review/guidelines/) — HIGH confidence (official Apple documentation)
+- [Riverpod GitHub #1215: Race conditions in event sequence processing](https://github.com/rrousselGit/riverpod/issues/1215) — MEDIUM confidence (official Riverpod issue tracker)
+- [Neon Docs: Connect from Prisma — connection pooling for serverless](https://neon.com/docs/guides/prisma) — HIGH confidence (official Neon documentation)
+- Direct codebase analysis: `server/prisma/schema.prisma`, `lib/providers/user_provider.dart`, `lib/providers/subscription_provider.dart`, `lib/screens/home/home_screen.dart`, `lib/screens/detail/hobby_detail_screen.dart` — HIGH confidence (live codebase, 2026-03-23)
+
+---
+
+*Pitfalls research for: TrySomething v1.1 — Hobby Lifecycle & Content Gating*
+*Researched: 2026-03-23*

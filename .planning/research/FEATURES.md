@@ -1,357 +1,252 @@
-# Feature Landscape: App Store Launch Readiness
+# Feature Research: Hobby Lifecycle & Monetization (v1.1)
 
-**Domain:** Mobile app store submission compliance and launch readiness
-**Researched:** 2026-03-21
-**Confidence:** HIGH (Apple/Google official docs + RevenueCat official docs confirmed)
+**Domain:** Mobile hobby guidance app — completion flows, pause/stop lifecycle, Pro content gating
+**Researched:** 2026-03-23
+**Confidence:** MEDIUM-HIGH (web research + competitive analysis; no Context7 equivalent for UX patterns)
 
 ---
 
 ## Context
 
-TrySomething is a Flutter app preparing for first submission to both the Apple App Store and Google Play Store. The core product is built. This research covers only the compliance, legal, and submission-readiness features required to pass review and launch without rejection.
+TrySomething v1.0 shipped with a working session screen, step completion tracking, and RevenueCat Pro subscription. v1.1 adds three new feature areas on top of this existing foundation:
+
+1. **Hobby completion flow** — auto-transition when all roadmap steps are done, celebration, "pick next hobby" state
+2. **Pause/stop lifecycle** — free users can stop (abandon) a hobby, Pro users can pause (preserve progress)
+3. **Detail page content gating** — free users see hero + Stage 1 only; Pro sees full FAQ, cost, budget alternatives
+
+Research question: how do apps like Headspace, Duolingo, Strava, and habit trackers handle these three mechanics? What are the table stakes, differentiators, and anti-features?
 
 ---
 
-## Table Stakes
+## Competitive Benchmarks
 
-Features that are mandatory. Missing any of these = guaranteed rejection.
+### Completion Celebrations
 
-### 1. Account Deletion (In-App)
+**Duolingo:** Lesson completion triggers immediate full-screen "celebration moment" — confetti animation, mascot character reacts, XP awarded with counter animation. Course (unit) completion earns a trophy ("Golden Owl") with triumphant audio. The celebration is a *transition point*, not an endpoint — it leads directly into a next-step recommendation ("deepen your skills," "try a harder path"). Key pattern: acknowledge the win, then redirect immediately.
 
-**Why expected:** Apple guideline 5.1.1(v) — mandatory since June 30, 2022. Google Play Data Safety policy — required for all apps supporting account creation. Blocking rejection.
+**Headspace:** Course completion surfaces a badge + milestone screen with the user's total stats ("You've meditated X minutes"). Warm, low-key — not confetti. Then prompts: "Explore what's next." The celebration is proportional to the effort (a 3-session beginner course gets a smaller celebration than completing a full series).
 
-**What it must do:**
-- Delete the full account record and all associated personal data from the backend
-- Be initiatable from within the app (Settings screen) — not just via email or web
-- Show a confirmation flow that is clear but not obstruction (Apple: "cannot make deletion unnecessarily difficult")
-- Warn about active subscription — inform user billing continues through Apple/Google until cancelled, provide link to manage subscription
-- Inform user what data will be deleted and what (if any) will be retained and why
-- Call Sign in with Apple REST API to revoke tokens when deleting Apple OAuth accounts
-- Cascade-delete all associated records: UserHobby, JournalEntry, PersonalNote, ScheduleEvent, ShoppingCheck, UserCompletedStep, UserActivityLog, UserChallenge, UserAchievement
+**Habit trackers (Loop, Streaks, Habi):** Day-level completion is lightweight — checkmark animation, streak counter increments. Milestone completions (7-day, 30-day streak) trigger a distinct celebration state: full-screen modal with the streak number prominent, brief animation, share prompt. The pattern: micro-celebration for daily tasks, macro-celebration for milestones.
 
-**UX pattern for TrySomething:**
-1. Settings → "Delete Account" (visible, not buried)
-2. Screen explaining what gets deleted (all data, journal entries, progress) and what persists (none)
-3. If user has active Pro subscription: warning that they must cancel billing separately + link to `https://apps.apple.com/account/subscriptions`
-4. Final confirmation: require password re-entry OR typed phrase (e.g., "DELETE") — prevents accidental taps
-5. Async deletion: show "Deletion in progress" state + email confirmation on completion
-6. Log out and return to login screen when done
+**Pattern consensus:** Completion celebrations should be *proportional and immediate*, then pivot to next action. A roadmap stage completion (e.g., Stage 1 done) warrants a mid-level celebration. Completing the entire 4-stage hobby roadmap warrants the largest celebration the app has. Never leave the user at a dead end after celebrating — always present a clear next step.
 
-**Complexity:** Medium
-**Guideline:** Apple 5.1.1(v), Google Play Data Safety policy
+### Pause/Resume Mechanics
 
----
+**Strava:** Activities have explicit pause (mid-session) and save (end-session) states. "Auto-pause" detects rest via GPS/accelerometer and pauses the timer without user action. The recording is not deleted on pause — it is preserved in full. There is no "soft stop" — you either pause (continue later in the same session) or save/discard (end the session permanently). Strava does not have a concept of "pausing" a training plan across days.
 
-### 2. Privacy Policy — Hosted and Linked
+**Habit trackers (modern, 2025):** Apps like Loop and Habi now offer habit-level pause — "archive" a habit without deleting its history. Archived habits stop appearing in the daily checklist but preserve all past completion data. Resuming restores the habit to active with full history intact. Streaks freeze on archive rather than resetting. This emerged from user feedback: life happens, users needed to stop tracking without losing progress.
 
-**Why expected:** Apple requires a live URL in App Store Connect AND accessible from within the app. Google Play requires a non-PDF, non-geofenced public URL. Both: mandatory for all apps, no exceptions.
+**Duolingo:** Has a "streak freeze" item (purchasable in the in-app shop) that protects against a broken streak for one missed day. No explicit "pause course" — the course simply waits. There is no progress loss from inactivity, only streak loss.
 
-**What it must do:**
-- Policy hosted at a stable public URL (not a PDF, not a Google Doc)
-- URL entered in App Store Connect metadata and Google Play Console
-- Accessible with one tap from within the app (Settings screen is canonical location)
-- Must state: what data is collected, how it's used, third-party SDKs (Firebase, PostHog, Sentry, RevenueCat, Unsplash), retention periods, user rights under FADP/GDPR
+**Pattern consensus:** Pause = freeze state, preserve progress, remove from active queue. Resume = restore to active queue with full history. The distinction from "stop" is purely about progress preservation — stopped hobbies lose their current position in the roadmap. Pause is universally a premium mechanic in 2025 (competitors charge for it or offer limited freezes in the free tier).
 
-**UX pattern for TrySomething:**
-- Host on the existing Next.js landing page at `/privacy` (already Next.js, just add a page)
-- Settings screen: "Privacy Policy" → opens in-app WebView or system browser
-- Also add "Terms of Service" link in the same location
+### Content Gating
 
-**Complexity:** Low (policy already drafted as .docx — just needs hosting and linking)
-**Guideline:** Apple 5.1.1, Google Play User Data policy
+**Headspace:** Free tier gives access to a small set of "basics" content (a few sessions, intro meditations). The majority of the catalog is locked — visible in browse but tapping a locked session shows a paywall. The lock is shown inline: sessions display a padlock icon overlay on the thumbnail. No blur, just a lock icon + greyed-out state. Tapping the locked content immediately surfaces a full-screen paywall, not an inline prompt. The free tier is intentionally small to create upgrade pressure. Conversion: 12% of free users convert (14-day trial is a key driver).
+
+**Masterclass/Skillshare pattern (MEDIUM confidence):** Show the first lesson/chapter free, lock subsequent content. The locked content is visible in the chapter list with a lock icon. Tapping it opens a full-screen upgrade prompt. The preview of lesson 1 is the sales pitch.
+
+**RevenueCat / industry research (2025):** The winning freemium content gating pattern is *not* "blur everything" — it is "show enough to create conviction, gate the depth." Research from analyzing 20 successful mobile paywalls (fline.dev): 95% of high-converting paywalls use full-screen overlays when the user actively tries to access premium content, rather than row-level blur. Freemium conversion: 2-5% typical in fitness/learning apps; trial-to-paid conversion much higher (23-40%).
+
+**Blinkist's "Honest Paywall":** User can read the first few paragraphs of any summary, then hits a soft gate that offers the trial. The preview is genuine value, not teaser text. This raised conversion by 23% over a hard gate. The pattern: give real value in the preview, make the gap between preview and full access obvious without being hostile.
+
+**Key finding:** Blur overlays are common but research suggests they underperform vs. lock icon + clear upgrade CTA. The best pattern for TrySomething's detail page: show Stage 1 in full, then a "locked" divider before Stages 2-4 with a clear upgrade prompt. Not a blur, not a full-screen block — an inline gate at the content boundary.
 
 ---
 
-### 3. Terms of Service — Hosted and Linked
-
-**Why expected:** Not technically mandated like privacy policy, but Apple will reject apps with missing or placeholder legal links. Required for FADP compliance (contract basis for data processing). Subscription apps especially need ToS covering billing terms.
-
-**What it must do:**
-- Hosted at stable public URL
-- Accessible from Settings screen
-- Covers: service description, subscription terms (7-day trial, CHF 4.99/month, CHF 39.99/year), cancellation policy, refund policy, user conduct
-
-**Complexity:** Low (already drafted as .docx)
-
----
-
-### 4. Restore Purchases Button
-
-**Why expected:** Apple explicitly requires a "Restore Purchases" mechanism for apps selling auto-renewable subscriptions. Rejection under guideline 3.1.1 without it. Reviewers test purchase → reinstall → restore flow.
-
-**What it must do:**
-- Button visible on the paywall screen AND in Settings/Pro screen
-- Calls `RevenueCat.restorePurchases()` on user tap only (not programmatically — triggers OS-level sign-in prompt)
-- Re-unlocks Pro entitlement if subscription found
-- Shows success/failure feedback to user
-
-**Complexity:** Low (RevenueCat SDK has the method, just needs UI button)
-**Guideline:** Apple 3.1.1
-
----
-
-### 5. App Privacy Labels (Apple) + Data Safety Section (Google)
-
-**Why expected:** Blocking submission on both platforms. Cannot submit without completing these forms in the respective consoles.
-
-**Apple — Privacy Nutrition Labels (App Store Connect):**
-Must disclose all data collected by app AND third-party SDKs. For TrySomething:
-- **Contact Info:** Email address (account creation)
-- **Identifiers:** User ID, Device ID (analytics/PostHog)
-- **Usage Data:** App interactions, session data (PostHog analytics)
-- **Diagnostics:** Crash data (Sentry)
-- **User Content:** Journal entries (stored on server, user-linked)
-- **Purchase History:** Transaction IDs (RevenueCat)
-- Third-party SDKs to disclose: Firebase (FCM), PostHog, Sentry, RevenueCat
-
-**Google — Data Safety Form (Play Console):**
-Same categories as above. Firebase has official guidance doc at `firebase.google.com/docs/android/play-data-disclosure`. RevenueCat counts as "service provider" (processes data on developer's behalf). PostHog: disclose as analytics service provider. Mark account deletion as supported.
-
-**Complexity:** Low (admin task in consoles) but easy to get wrong — allocate dedicated time
-**Guideline:** Apple App Privacy Details requirement; Google Play Data Safety policy
-
----
-
-### 6. Demo Account Credentials in App Review Notes
-
-**Why expected:** Apple requires working login credentials if the app requires sign-in. Without them, reviewers cannot access the app — automatic rejection under guideline 2.1 (incomplete functionality).
-
-**What it must do:**
-- Create a dedicated test account (e.g., `reviewer@trysomething.app`) pre-loaded with data
-- Account must have: completed onboarding, one active hobby with some journal entries, Pro subscription access (via sandbox entitlement)
-- Include in App Review Notes: email, password, step-by-step instructions to reach key screens
-- Provide note about subscription: "Use sandbox environment — Pro features are unlocked via RevenueCat sandbox entitlement on this account"
-
-**Complexity:** Low (admin task)
-**Guideline:** Apple 2.1
-
----
-
-### 7. Apple OAuth Routing Fix
-
-**Why expected:** Apple Sign-In is a technical requirement from Apple: apps offering third-party login must offer Sign in with Apple as an equivalent option. TrySomething already has Apple OAuth code but `vercel.json` route regex excludes the `apple` action. This means Apple Sign-In silently fails in production — guaranteed rejection.
-
-**What it must fix:**
-- `vercel.json` route regex: change `(register|login|refresh|google)` → `(register|login|refresh|google|apple)`
-- Test full Apple OAuth flow on a real iOS device before submission
-
-**Complexity:** Low (one-line config change + testing)
-**Guideline:** Apple 4.8 (Sign in with Apple)
-
----
-
-### 8. App Store Screenshots — Required Device Sizes
-
-**Why expected:** Apple will not accept submissions missing required screenshot sizes. As of 2025–2026, 6.9-inch iPhone (1290×2796px) and 13-inch iPad (2064×2752px) screenshots are mandatory. All other sizes are auto-scaled from these.
-
-**What it must cover:**
-- 10 screenshots max per localized listing
-- First 3 screenshots are most important (users rarely scroll past)
-- No placeholder UI, no debug banners, no Flutter debug mode ribbon
-- Must match actual app functionality — showing features not in the app is a rejection reason
-- Overlay text on screenshots is standard practice and recommended for clarity
-
-**Screenshot sequence recommendation for TrySomething:**
-1. Home screen with active hobby + "Week N of [Hobby]" — shows core value
-2. Discover feed hero card — shows personalization
-3. Hobby detail with roadmap — shows structure and commitment flow
-4. Session timer (particle formation) — shows unique UX
-5. AI coach conversation — shows differentiator
-6. Paywall/Pro screen — required to show subscription offering exists
-
-**Complexity:** Medium (design + production work, not just code)
-
----
-
-### 9. App Metadata — Title, Subtitle, Description, Keywords
-
-**Why expected:** Misleading or incomplete metadata is the second most common rejection reason. Apple actively compares app behavior to its metadata.
-
-**Requirements:**
-- **iOS App Title:** max 30 characters
-- **iOS Subtitle:** max 30 characters
-- **iOS Description:** No prohibited claims ("best", "#1" without evidence), no placeholder text
-- **iOS Keywords:** max 100 characters, comma-separated
-- **Google Play Short Description:** max 80 characters
-- **Google Play Full Description:** max 4000 characters
-- Content rating questionnaire must be completed honestly
-- Description must not promise features not yet built
-
-**Complexity:** Low (copywriting task)
-
----
-
-### 10. Content Rating Questionnaire
-
-**Why expected:** Required by both App Store and Google Play. Incorrect answers can cause removal post-launch.
-
-**For TrySomething:** No violence, no adult content, no user-generated content visible to others, no social networking (social features hidden). Should receive a 4+ / Everyone rating. The AI coach generates hobby content only, filtered by content_guard.ts.
-
-**Complexity:** Low (admin task)
-
----
-
-## Differentiators
-
-Features that improve approval confidence and user experience post-approval. Not strictly required but materially affect review outcomes and launch success.
-
-### 1. Data Export (FADP/GDPR Portability)
-
-**Value:** Required by Swiss FADP Art. 28 (data portability right) and GDPR Article 20. Not an App Store rejection trigger, but a legal compliance requirement for operating in Switzerland/EU. Users can request data export — failing to honor this is a regulatory violation, not an app store violation.
-
-**What to build:**
-- `GET /api/users/me/export` endpoint returning JSON
-- Response includes: user profile, preferences, all UserHobby records with status, all JournalEntry records with text and dates, all UserCompletedStep records, all ScheduleEvent records
-- Response must be in a "structured, commonly used, machine-readable format" — JSON satisfies this
-- Delivered inline (direct download) is sufficient for v1.0; email delivery would be more user-friendly but is optional
-- Must be mentioned in the Privacy Policy
-- In-app trigger: Settings → "Download My Data" → informs user they'll receive a file → triggers download
-
-**Complexity:** Medium (backend endpoint + client download flow)
-**Regulatory basis:** FADP Art. 28, GDPR Art. 20
-
----
-
-### 2. RevenueCat Webhook Signature Verification
-
-**Value:** Without this, a malicious actor who discovers the webhook URL can send fake subscription events (e.g., fake Pro upgrades). This is a security gap, not an App Store requirement. Fixes a HIGH-severity exploitable vulnerability before production traffic.
-
-**What to build:**
-- Add `Authorization` header check on webhook receiver — RevenueCat sends a configurable auth header with every webhook call
-- Configure a secret authorization header value in RevenueCat dashboard
-- Server verifies header on every incoming webhook POST, returns 401 if missing or wrong
-- This is the only webhook verification method RevenueCat currently supports (no payload signing)
-
-**Complexity:** Low (server-side header check, ~20 lines of code)
-
----
-
-### 3. Server-Side Rate Limiting for AI Coach
-
-**Value:** Current rate limiting uses Hive (client-side) for the 3 messages/month free tier limit — trivially bypassable. Moving to server-side `GenerationLog` table makes it tamper-proof and consistent across devices.
-
-**What to build:**
-- On `POST /api/generate/coach`: query `GenerationLog` table for user's message count in rolling 30-day window
-- Return 429 with clear message if limit exceeded (free users: 3/month)
-- Pro users: no limit (check entitlement before enforcing)
-- Already have `GenerationLog` model in Prisma schema — just add the count query
-
-**Complexity:** Low (server-side query, ~30 lines)
-
----
-
-### 4. Subscription Cancellation Guidance in Delete Account Flow
-
-**Value:** Apple specifically requires that apps with auto-renewable subscriptions notify users during account deletion that billing continues through Apple. Failure to do this is a specific callout in Apple's account deletion documentation. Required for compliance, improves user trust.
-
-**What to build:**
-- In the account deletion confirmation screen: detect if user has active Pro subscription
-- If active: show inline warning + "Manage Subscription" link before allowing deletion to proceed
-- Link to `https://apps.apple.com/account/subscriptions` (iOS) or Google Play subscription management (Android)
-
-**Complexity:** Low (conditional UI block in deletion flow)
-
----
-
-### 5. App Icon — Final Production Version
-
-**Value:** App icons with quality issues or that look placeholder-y are flagged by reviewers. The icon also directly impacts install conversion on the store listing.
-
-**TrySomething status:** Icon exists (`assets/icon/app_icon.png` — coral brushstroke "T" on `#0A0A0F`). Needs verification at all required sizes:
-- iOS: 1024×1024px (App Store), system generates smaller sizes
-- Android: 512×512px (Play Store), plus adaptive icon layers (foreground + background separately)
-
-**Complexity:** Low (verification + possibly re-export at correct specs)
-
----
-
-## Anti-Features
-
-Features to explicitly NOT build for this launch milestone. Building these would delay launch without proportional compliance benefit.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|---|---|---|
-| Email-based data deletion request | Apple explicitly rejects this — users must be able to delete from within the app | Build in-app deletion flow as described above |
-| "Request deletion" form that takes days to process | Fine for regulated industries, but Apple says general apps cannot require support flows | Async deletion is OK, but must be automatic (not manual review) |
-| Biometric auth for deletion confirmation | Adds complexity, platform-specific code, testing burden | Password re-entry or typed phrase is sufficient and simpler |
-| PDF-hosted Privacy Policy | Google Play explicitly rejects non-HTML privacy policy URLs | Host as HTML page on Next.js site |
-| Separate localized app store listings | Adds significant asset/copy production work for v1.0 | English-only for v1.0 is explicit out-of-scope decision |
-| GDPR consent banner / cookie consent flow | App does not use tracking cookies; analytics is PostHog (no advertising); not required for a non-advertising app | Disclose PostHog in privacy labels as analytics, no consent banner needed |
-| "Right to erasure" 30-day SLA tracking | Enterprise-grade GDPR compliance machinery — overkill for solo developer v1.0 | Account deletion satisfies erasure right; document timeline in Privacy Policy ("deletion completes within 24-48 hours") |
-| Separate FADP privacy notice | FADP is substantially aligned with GDPR; GDPR-compliant privacy policy covers FADP requirements with minor additions | Add Swiss-specific language to main Privacy Policy |
+## Feature Landscape
+
+### Table Stakes (Users Expect These)
+
+Features users assume exist. Missing these = product feels incomplete or broken.
+
+| Feature | Why Expected | Complexity | Existing Dependencies |
+|---------|--------------|------------|----------------------|
+| Completion celebration distinct from step completion | Every learning/habit app has a different moment for "you finished the whole thing" vs "you did one step" | LOW | `session_complete_phase.dart` exists; need a separate `hobby_complete_screen.dart` |
+| Completed hobbies visible in You tab "Tried" section | Users expect to see their history; "Tried" status already exists in `UserHobby` enum | LOW | `you_screen.dart` + `UserHobby.status == done` already modeled |
+| Home shows a "what's next" state after hobby completion | Users don't know what to do after finishing; dead-end state feels broken | LOW | `home_screen.dart` needs a new conditional branch for `status == done` |
+| Stop/abandon action available | Users need an exit ramp that isn't "delete account"; standard in every app with ongoing commitments | LOW | `UserHobby.status = tried` path exists in model, needs UI |
+| Stop action asks for a reason | Every app with abandon/cancel flows asks "why are you stopping" — provides feedback + makes the user pause | LOW | Quit reasons pattern already exists in the codebase (Sprint D's commitment flow) |
+| Paused hobbies visually distinct from active hobbies | A "paused" hobby must look different in the You tab and Home tab — same look as active is confusing | LOW | New `paused` status needed in `UserHobby` enum (schema change) |
+| Resume paused hobby single-tap | If pause exists, resume must be frictionless — not buried in settings | LOW | Depends on paused status existing |
+| Detail page load speed unchanged after gating | Users expect the page to feel the same speed — gating logic must not add visible latency | LOW | Existing detail page loads; just conditional rendering, no new API calls needed |
+
+### Differentiators (Competitive Advantage)
+
+Features that set TrySomething apart. Not required, but reinforce the product thesis.
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Completion celebration that feels earned, not generic | Most apps use the same confetti + badge. A celebration that references the specific hobby ("You tried 4 sessions of Watercolor painting") feels personal | MEDIUM | Requires passing hobby name + session count into the celebration screen; Lottie animation or existing particle painter could power the visual |
+| Home "pick your next hobby" state with personalized recommendations | After completing a hobby, showing 3 curated next recommendations (same category, adjacent difficulty, or user-expressed interest) is more likely to retain the user than a generic "explore" CTA | MEDIUM | Needs `hobby_repository.getSimilarHobbies()` call + a home state branch; leverages existing recommendation infrastructure |
+| Pause reasons (brief optional capture) | "What made you want to pause?" — optional single-tap (not a form) gives product insight and helps the AI coach restart better when resumed | LOW | Single bottom sheet with 3-4 tap options; stored in `UserHobby.pauseReason` (new field) |
+| Coach-aware resume (uses `lastActivityAt` to tailor first message) | When a user resumes a paused hobby, the AI coach's first message acknowledges the gap: "You paused 3 weeks ago — want to pick up from Step 4, or ease back in?" | MEDIUM | `lastActivityAt` already tracked; coach system prompt needs a "returning after pause" mode |
+| Stage 1 preview that feels complete, not teaser-y | Free users get the full Stage 1 roadmap steps — not a preview of 2 steps. Completing Stage 1 is a real milestone. This builds enough conviction to upgrade for Stages 2-4 | LOW | Just conditional rendering — show all steps in Stage 1, lock the rest |
+| Inline upgrade prompt uses hobby-specific value copy | "See what's next in your Woodcarving journey" is more effective than a generic "Upgrade to Pro" | LOW | Pass hobby title into the paywall copy; existing `pro_upgrade_sheet.dart` needs parameterization |
+
+### Anti-Features (Commonly Requested, Often Problematic)
+
+| Feature | Why Requested | Why Problematic | Better Approach |
+|---------|---------------|-----------------|-----------------|
+| Streak reset on stop/abandon | Strava/Duolingo discipline model; "consequences make habits stick" | TrySomething users are already overwhelmed adults — punishing them for stopping makes quitting the app the rational choice | Record the stop without penalty; celebrate what they did try ("You completed Stage 1!") |
+| Blur overlay on locked content | Looks premium, creates visual tension | Research shows blur underperforms vs clean lock + upgrade CTA; blur also degrades performance on lower-end Android devices | Lock icon + warm-toned divider section at the stage boundary |
+| Full-screen paywall on every locked content tap | Maximizes upgrade prompt exposure | Breaks the browsing flow; users learn to avoid tapping; trains avoidance not desire | Inline upgrade prompt at the gating boundary, dismissible; full-screen paywall only when user explicitly taps "Upgrade" CTA |
+| "Pause" available to free users | Fairness argument; "why punish free users?" | Pause is the clearest Pro differentiator in this feature set — it is the feature that converts. Giving it away removes upgrade pressure | Free users get "Stop" (no progress loss in history, but position resets); Pro users get "Pause" (position preserved) |
+| Auto-complete hobby after N days of inactivity | "Move on" logic — detect stale hobbies | Creates resentment; user comes back after a vacation to find their hobby marked as abandoned | Never auto-complete or auto-stop. Only status changes the user initiates. Surface "still going?" prompt after 14 days of inactivity instead |
+| Gamification points/XP for completion | Duolingo-style motivation | Out of scope for v1.1; adds complexity to UI and data model; misaligned with TrySomething's "quiet support" voice | Celebrate with copy and imagery, not a points counter |
+| Share completion to social | "This milestone deserves an audience" | Hidden features (community) were deleted in v1.0 for scope reasons; reintroducing social surface contradicts that decision | Let users screenshot naturally; no share sheet needed |
 
 ---
 
 ## Feature Dependencies
 
 ```
-Privacy Policy hosted → can submit to App Store Connect + Play Console
-Terms of Service hosted → can link from Settings
-Account deletion endpoint (backend) → Account deletion UX (frontend)
-Account deletion UX → Subscription cancellation guidance (part of same flow)
-RevenueCat webhook security → safe for production traffic
-App Privacy Labels → requires Privacy Policy to be finalized first (must match what's disclosed)
-Demo account created → App Review Notes can be written
-Screenshots produced → App Store Connect submission can be completed
+[Paused status in UserHobby enum] (schema migration)
+    └──required by──> [Pause action UI]
+    └──required by──> [Resume action UI]
+    └──required by──> [Home shows paused state]
+    └──required by──> [You tab shows paused hobbies]
+
+[Hobby auto-complete detection] (all steps done → status = done)
+    └──required by──> [Completion celebration screen]
+    └──required by──> [Home completed state]
+    └──required by──> [You tab "Tried" population]
+
+[Completion celebration screen] (new screen or overlay)
+    └──enhances──> [Home completed state] (same data, different surface)
+
+[Pro entitlement check] (RevenueCat, already exists)
+    └──gates──> [Pause action] (free users see "Stop" only)
+    └──gates──> [Detail page Stages 2-4]
+    └──gates──> [Full FAQ / cost / budget sections]
+
+[Stage 1 free preview] (conditional rendering on detail page)
+    └──depends on──> [Hobby roadmap steps already loaded] (already done)
+    └──feeds──> [Inline upgrade prompt] (shown at the stage boundary)
+
+[Inline upgrade prompt] (new widget, parameterized by hobby)
+    └──navigates to──> [pro_upgrade_sheet.dart] (already exists, needs parameterization)
 ```
 
----
+### Dependency Notes
 
-## MVP Recommendation
-
-**For Apple App Store submission (ordered by dependency and blocking status):**
-
-1. **Apple OAuth route fix** — One-line config change, unblocks Apple Sign-In testing, required before iOS submission. Do first.
-2. **Privacy Policy + ToS hosting** — Already drafted, just publish to Next.js site. Required before completing Privacy Labels.
-3. **Account deletion endpoint (backend)** — Server-side cascade delete. Required by Apple 5.1.1(v), certain rejection without it.
-4. **Account deletion UX (client)** — Settings flow with confirmation + subscription warning. Depends on backend.
-5. **Restore Purchases button** — Add to paywall + Settings. Required by Apple 3.1.1. Low effort.
-6. **App Privacy Labels** — Admin task in App Store Connect. Requires Privacy Policy finalized. Do after policy is live.
-7. **Demo account + App Review Notes** — Create test account, write instructions. Do just before submission.
-8. **Screenshots** — Design and export at 1290×2796px for iPhone. Do in parallel with code tasks.
-9. **App metadata** — Title, subtitle, description, keywords. Low effort, do last.
-
-**For Google Play submission (after iOS, shares most work):**
-10. **Data Safety Form** — Admin task in Play Console. Firebase guidance doc available. Do after Privacy Policy finalized.
-11. **Content Rating Questionnaire** — 10-minute admin task.
-12. **Android screenshots** — Can reuse iOS screenshots with slight sizing adjustments.
-
-**Defer to post-launch (v1.1) but do before EU/CH scale:**
-- Data export endpoint (FADP portability) — legally required but not an app store gate
-- Server-side rate limiting for AI coach — security improvement, not launch blocker
+- **Paused status requires schema migration:** `UserHobby.status` enum currently has `saved / trying / active / done`. Adding `paused` requires a Prisma migration + server-side handling. This is the single schema change in v1.1. Must happen before any pause UI is built.
+- **Auto-complete detection has two candidates:** Either the Flutter client detects "all steps done" after a step completion event and calls `PATCH /api/users/hobbies/:id` with `status: done`, OR the server triggers it on step-complete. Client-side is simpler and sufficient for v1.1 — no background job needed.
+- **Content gating has no schema dependency:** Free vs Pro rendering is purely conditional on `subscriptionProvider.isPro`. No new backend endpoints needed. All gating is client-side rendering logic.
+- **Inline upgrade prompt conflicts with full-screen paywall:** Do not navigate to a full-screen paywall when the user taps a locked section header. Show an inline sheet. Full-screen paywall is reserved for the explicit "Upgrade to Pro" CTA tap in Settings or the paywall sheet CTA.
 
 ---
 
-## Common Rejection Reasons Specific to TrySomething
+## MVP Definition
 
-Based on the known codebase state and research findings:
+This milestone has a defined scope from `PROJECT.md`. Everything below maps directly to the 9 active requirements.
 
-| Rejection Risk | Guideline | Status | Mitigation |
-|---|---|---|---|
-| No account deletion in-app | 5.1.1(v) | NOT BUILT | Build `DELETE /api/users/me` + UX flow |
-| Apple OAuth silently broken | 4.8 | BROKEN (vercel.json regex) | One-line fix in vercel.json |
-| No Restore Purchases button | 3.1.1 | LIKELY MISSING | Add to paywall + settings |
-| No Privacy Policy URL | 5.1.1 | NOT HOSTED | Publish to Next.js site |
-| Missing Privacy Labels | Privacy Details | NOT COMPLETED | Admin task in App Store Connect |
-| Dead code / hidden features | 2.3.3 | PARTIALLY PRESENT | Delete 7,000+ lines of hidden screen code |
-| Flutter debug banner in screenshots | 2.3 | RISK | Ensure `flutter run --release` for screenshots |
-| Demo credentials not provided | 2.1 | NOT PREPARED | Create test account, write review notes |
-| Placeholder metadata | 2.3 | NOT WRITTEN | Write final title/description/keywords |
-| Subscription without Restore button | 3.1.1 | LIKELY MISSING | Add restore button |
+### Launch With (v1.1 — all required)
+
+- [x] **Auto-complete detection** — Client detects all steps done, PATCHes hobby status to `done` — *why essential: broken without it; users have no completion state*
+- [x] **Completion celebration screen** — Distinct from step completion; hobby-specific copy; next-step CTA — *why essential: completing a 30-day hobby deserves acknowledgement; without it the app feels broken at its most important moment*
+- [x] **Home completed state** — Shows "You finished [Hobby]! Pick your next one" with 2-3 recommendations — *why essential: dead-end home screen after completion is a retention killer*
+- [x] **Completed hobbies in You tab "Tried" section** — Status `done` → renders in Tried section — *why essential: Tried section exists, just not populated*
+- [x] **Stop/abandon action (free)** — Moves to `tried` status; asks for a stop reason (optional); coral CTA is "Stop this hobby" — *why essential: users need an exit; missing this creates frustration*
+- [x] **Pause action (Pro)** — Requires schema migration to add `paused` status; preserves step progress; shows in Home as paused state — *why essential: key Pro differentiator; directly on the active requirements list*
+- [x] **Resume paused hobby (Pro)** — Single-tap from Home or You tab paused section — *why essential: pause without resume is a trap*
+- [x] **Detail page Stage 1 free, Stages 2-4 locked** — Conditional rendering based on `isPro`; inline upgrade prompt at boundary — *why essential: current detail page shows everything to everyone, removing monetization leverage*
+- [x] **Detail page FAQ + cost + budget locked for free** — Same gating pattern; free users see a 1-line teaser ("5 questions beginners ask") + lock — *why essential: required by active milestone requirements*
+
+### Add After Validation (v1.2)
+
+- [ ] **Personalized "pick your next hobby" recommendations** — After completion, surface similar hobbies based on category/difficulty — *trigger: if completion→discover funnel drop-off is measurable in PostHog*
+- [ ] **Coach-aware resume message** — AI coach detects pause gap and opens with a re-engagement message — *trigger: if resume rate is below 30% (paused hobbies not being resumed)*
+- [ ] **Pause reason capture** — Optional single-tap reason on pause (Life got busy / Trying something else / Need a break) — *trigger: product feedback value; add once pause adoption is measurable*
+
+### Future Consideration (v2+)
+
+- [ ] **Completion milestone sharing** — Let users share a "I completed 30 days of [Hobby]" card — *why defer: social sharing requires design investment; community features previously removed*
+- [ ] **Hobby streak tracking** — Days-in-a-row streak counter displayed on Home — *why defer: streaks create anxiety in TrySomething's "overwhelmed adult" target user; contradicts product thesis*
+- [ ] **Progress recovery after stop** — Free users who stopped can "undo" within 24h — *why defer: adds state complexity; stop is intentional*
+
+---
+
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Auto-complete detection + status update | HIGH | LOW | P1 |
+| Completion celebration screen | HIGH | LOW-MEDIUM | P1 |
+| Home completed state | HIGH | LOW | P1 |
+| Stop/abandon action (free) | HIGH | LOW | P1 |
+| Pause action (Pro) + schema migration | HIGH | MEDIUM | P1 |
+| Resume paused hobby | HIGH | LOW | P1 |
+| Detail page Stage 1 free / Stages 2-4 locked | HIGH | LOW | P1 |
+| Detail page FAQ + cost + budget gating | MEDIUM | LOW | P1 |
+| Completed hobbies in You tab Tried section | MEDIUM | LOW | P1 |
+| Inline upgrade prompt (parameterized) | MEDIUM | LOW | P2 |
+| Personalized next-hobby recommendations | HIGH | MEDIUM | P2 |
+| Coach-aware resume message | MEDIUM | MEDIUM | P2 |
+| Pause reason capture | LOW | LOW | P3 |
+
+**Priority key:**
+- P1: Required for v1.1 milestone closure
+- P2: High-value follow-on, target v1.2
+- P3: Nice to have, v2+
+
+---
+
+## Competitor Feature Analysis
+
+| Feature | Duolingo | Headspace | Habit Trackers (Loop/Habi) | TrySomething Approach |
+|---------|----------|-----------|----------------------------|-----------------------|
+| Completion celebration | Full-screen, mascot animation, trophy award, immediate next-step redirect | Badge + stats milestone, low-key, next-step prompt | Full-screen modal for milestone streaks (7d/30d), lightweight for daily completion | Hobby-specific copy ("You did it with [Hobby]"), particle painter or animated icon, next-step CTA to Discover |
+| Course/plan completion transition | Redirects to "Daily Refresh" or harder path immediately | Prompts "what's next" in catalog | None (habits are indefinite) | Home switches to completed state with "pick your next" recommendations |
+| Pause/resume | Streak freeze (limited, purchasable) | No pause concept | Archive (free) / resume (free) | Stop (free, position resets) / Pause (Pro, position preserved) |
+| Content gating | Locked units/skills visible with lock icon, tapping opens full-screen paywall | Locked sessions show padlock on thumbnail, tap = full-screen paywall | No content gating (no premium content tiers in most habit trackers) | Stage 1 fully unlocked; inline upgrade prompt at Stage 2 boundary; locked sections show faded rows + lock icon |
+| Inline vs full-screen paywall | Full-screen only when tapping locked content | Full-screen on locked content tap | N/A | Inline prompt at boundary (new), full-screen on explicit "Upgrade" CTA tap only |
+| Free tier depth | Several starter units free (enough to feel the product) | A small set of basics (meditation fundamentals) | Usually fully free (revenue from paid plan or no monetization) | Full Stage 1 (Try It) free — 3-5 real sessions; meaningful enough to build conviction for Pro upgrade |
+
+---
+
+## Implementation Notes Specific to TrySomething
+
+### Completion Detection
+
+The cleanest approach: in `SessionNotifier` (or wherever the final step completion is confirmed), check if all `UserCompletedStep` records exist for this hobby's roadmap steps. If yes, PATCH `UserHobby.status = done`. This is a client-side check on an event that already happens. No background job, no server-side trigger.
+
+Existing infrastructure: `UserCompletedStep` table with `@@unique([userId, hobbyId, stepId])`. Count the user's completed steps for this hobby and compare to the hobby's total step count. If equal, auto-complete.
+
+### Pause Schema Migration
+
+`UserHobby.status` enum needs `paused` added. Prisma migration is a one-liner. The server's hobby endpoint needs to accept `paused` as a valid status in PATCH requests. The Flutter `UserHobby` Freezed model needs the enum value added. Both are small changes but require careful coordination (migration before code deploys).
+
+### Content Gating on Detail Page
+
+No new API calls. The `hobby_detail_screen.dart` already loads all data (roadmap steps, FAQ, cost, budget). Gating is purely `if (isPro) { ... } else { showLockedSection() }`. The locked section widget needs to be built once and reused for FAQ, cost, and budget gating. Inline upgrade prompt is a bottom sheet, not a navigation push.
+
+### Stop vs. Pause UX Language
+
+Research shows the terminology matters. Use:
+- "Stop this hobby" (free) — not "Quit," not "Abandon," not "Delete"
+- "Pause this hobby" (Pro) — not "Archive," not "Freeze"
+- "Resume" (Pro, from paused state) — not "Restart"
+
+"Stop" implies intentional completion of what was tried. "Pause" implies temporary. "Resume" implies continuation. These are the least loaded terms in the domain.
 
 ---
 
 ## Sources
 
-- [Apple App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) — HIGH confidence (official)
-- [Apple: Offering Account Deletion in Your App](https://developer.apple.com/support/offering-account-deletion-in-your-app/) — HIGH confidence (official)
-- [Apple App Privacy Details](https://developer.apple.com/app-store/app-privacy-details/) — HIGH confidence (official)
-- [Google Play: Account Deletion Requirements](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en) — HIGH confidence (official)
-- [Google Play: Data Safety Section](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en-GB) — HIGH confidence (official)
-- [Firebase for Android: Play Data Disclosure](https://firebase.google.com/docs/android/play-data-disclosure) — HIGH confidence (official)
-- [RevenueCat: Restoring Purchases](https://www.revenuecat.com/docs/getting-started/restoring-purchases) — HIGH confidence (official)
-- [RevenueCat: Webhooks](https://www.revenuecat.com/docs/integrations/webhooks) — HIGH confidence (official)
-- [App Store Requirements: iOS & Android Submission Guide 2026](https://natively.dev/articles/app-store-requirements) — MEDIUM confidence (community guide, cross-checked with official docs)
-- [App Store Review Guidelines (2025): Checklist + Top Rejection Reasons](https://nextnative.dev/blog/app-store-review-guidelines) — MEDIUM confidence (community guide)
-- [GDPR Article 20: Right to Data Portability](https://gdpr-info.eu/art-20-gdpr/) — HIGH confidence (official legal text)
-- [Switzerland FADP Overview](https://usercentrics.com/knowledge-hub/switzerland-federal-data-protection-act-fadp/) — MEDIUM confidence (verified against multiple sources)
+- [Duolingo: Streak Milestone Design](https://blog.duolingo.com/streak-milestone-design-animation/) — MEDIUM confidence (official Duolingo blog, 2024)
+- [Duolingo Home Screen Redesign — Science Behind It](https://blog.duolingo.com/new-duolingo-home-screen-design/) — MEDIUM confidence (official, 2024)
+- [Learnings from Analyzing 20 Successful Mobile Paywalls — fline.dev](https://www.fline.dev/freemiumkit-learnings-from-analyzing-mobile-paywalls/) — MEDIUM confidence (independent research, verified patterns match industry consensus)
+- [How Blinkist Increased Trial Conversions by 23%](https://growth.design/case-studies/trial-paywall-challenge) — MEDIUM confidence (case study, widely cited)
+- [Strava: Auto-Pause Support Doc](https://support.strava.com/hc/en-us/articles/216919277-Auto-Pause) — HIGH confidence (official Strava support, 2025)
+- [Top Fitness App Paywalls: UX Patterns + Pricing Insights](https://dev.to/paywallpro/top-fitness-app-paywalls-ux-patterns-pricing-insights-2868) — MEDIUM confidence (industry analysis, 2025)
+- [Headspace Free vs Paid Features](https://livetoplant.com/free-vs-paid-features-of-the-headspace-meditation-app-explained/) — MEDIUM confidence (independent review, 2025)
+- [RevenueCat: Hard Paywall vs Soft Paywall](https://www.revenuecat.com/blog/growth/hard-paywall-vs-soft-paywall/) — HIGH confidence (RevenueCat official, primary paywall infrastructure provider)
+- [RevenueCat: Freemium Playbook](https://www.revenuecat.com/docs/playbooks/guides/freemium) — HIGH confidence (official RevenueCat docs)
+- [Streaks and Milestones for Gamification — Plotline](https://www.plotline.so/blog/streaks-for-gamification-in-mobile-apps/) — MEDIUM confidence (2025, industry analysis)
+- [Best Habit Tracker Apps 2026 — Reclaim](https://reclaim.ai/blog/habit-tracker-apps) — MEDIUM confidence (product comparison, 2026)
+
+---
+
+*Feature research for: TrySomething v1.1 — hobby completion flow, pause/stop lifecycle, Pro content gating*
+*Researched: 2026-03-23*

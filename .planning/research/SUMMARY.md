@@ -1,219 +1,158 @@
 # Project Research Summary
 
-**Project:** TrySomething v1.0 Launch Readiness
-**Domain:** Mobile app store compliance, security hardening, legal data privacy
-**Researched:** 2026-03-21
+**Project:** TrySomething v1.1 — Hobby Lifecycle & Content Gating
+**Domain:** Flutter mobile hobby-guidance app — completion flows, pause/stop states, Pro content gating
+**Researched:** 2026-03-23
 **Confidence:** HIGH
 
 ## Executive Summary
 
-TrySomething is a production-ready Flutter app (full stack operational, Sprints A–E complete) that requires a focused compliance and security sprint before it can pass App Store and Google Play review. The core product is built; what remains is a well-scoped set of regulatory, legal, and security requirements that are non-negotiable for first submission. None of the work requires architectural rewrites — all new features integrate as additive changes into the existing `users/[path].ts` handler switch-case pattern, Riverpod auth provider, and settings screen.
+TrySomething v1.1 adds three capability areas on top of a fully-working v1.0 production system: auto-completion detection when all roadmap steps are done, a pause/stop lifecycle (free users can stop, Pro users can pause with progress preserved), and detail page content gating (Stage 1 and starter kit remain free; Stages 2-4, FAQ, cost, and budget alternatives lock behind Pro). The core research finding is that all three capabilities are achievable with zero new packages — the existing stack (Riverpod, Freezed, flutter_animate, RevenueCat, Prisma) already contains every primitive needed. The only infrastructure change is a single Prisma schema migration to add a `paused` variant to the `HobbyStatus` enum and a nullable `pausedAt` column to `UserHobby`.
 
-The recommended approach is to sequence work strictly by blocking dependencies: legal documents must be hosted before privacy labels can be completed; the server-side account deletion endpoint must exist before the Flutter UI can be built; security hardening (webhook verification, server-side rate limiting) should be addressed before production traffic arrives. The Apple OAuth routing bug (`vercel.json` regex missing `|apple`) is a one-line fix that unblocks iOS testing and must be done first. Five of the ten table-stakes features are administrative tasks (privacy labels, metadata, screenshots, content rating, demo account) — they require no code but require dedicated time allocation.
+The recommended build order is strictly phase-sequential because of a hard dependency chain: the schema migration must be deployed and Freezed codegen must run before any UI touching the `paused` status is built. Completion detection (Phase 2) is the highest user-value item and should ship before pause/stop (Phase 4), since completion is the core product moment — finishing a 30-day hobby — while pause is an edge-case lifecycle action. Content gating (Phase 3) has no data dependencies and can be built in parallel with Phase 2 after Phase 1 codegen completes.
 
-The primary risk vector is App Store rejection through oversight: account deletion UX that does not warn about subscription continuation, Apple Privacy Manifest missing for Firebase/RevenueCat/PostHog SDKs, or screenshots captured from the Android test device rather than iOS Simulator. Secondary risks are security gaps in the webhook handler (currently accepts all traffic if env var is unset) and the JWT validity window (tokens remain valid up to 30 days after account deletion). Both are preventable with targeted changes documented in the architecture research.
+The dominant risks are not UI complexity but infrastructure correctness: the Prisma enum migration must be split to avoid a known PostgreSQL transaction error; completion detection must be server-driven (not client-counted) to avoid race conditions and duplicate analytics events; and the Pro subscription downgrade path for paused hobbies must be defined and implemented in the same phase as pause itself — not deferred. Each of these is a critical pitfall with documented recovery cost of HIGH if missed.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The existing stack requires exactly one new dev dependency for this milestone: `lefthook@^2.1.4` (pre-commit hooks for the polyglot Flutter+TypeScript monorepo). Everything else — Prisma `$transaction`, RevenueCat webhook verification via `crypto.timingSafeEqual`, server-side rate limiting via `GenerationLog`, and data export via `JSON.stringify` — uses packages already installed. Husky is the wrong choice here because the repository root is a Flutter project with no `package.json`; Lefthook is a language-agnostic binary that handles this structure natively.
+No new packages are required. The entire v1.1 feature set is achievable through model changes, state logic additions, and conditional UI using the packages already installed. The only setup commands are `dart run build_runner build --delete-conflicting-outputs` (after Freezed model changes) and `npx prisma migrate dev --name add_hobby_paused_status` (from the `server/` directory).
 
-**Core technologies (new or changed):**
-- `lefthook@^2.1.4`: Pre-commit hooks — only new dev dependency, handles polyglot monorepo (Flutter Dart + TypeScript)
-- `prisma.$transaction` (already installed): Account deletion with cascading deletes — all 13 user FK tables have `onDelete: Cascade`; only `GenerationLog` needs explicit deletion (bare `userId String`, no FK)
-- `crypto.timingSafeEqual` (Node.js built-in): Webhook verification — RevenueCat uses Authorization header, NOT HMAC; using HMAC would drop all legitimate webhook events
-- `GenerationLog` (existing Prisma model, `@@index([userId, createdAt])`): Server-side coach rate limiting — replaces bypassable Hive client-side check
-- `JSON.stringify` (built-in): Data export — user data volumes are small (<1MB); streaming is unnecessary complexity
-
-**New environment variable required:**
-- `REVENUECAT_WEBHOOK_SECRET`: Set in Vercel + RevenueCat dashboard; currently absent, causing webhook endpoint to silently accept all traffic
+**Core technologies:**
+- `flutter_riverpod ^2.6.1`: State management for all lifecycle state transitions — extend `UserHobbiesNotifier` with `pauseHobby()`, `resumeHobby()`, `stopHobby()`; completion detection reads from server response flag
+- `freezed_annotation ^2.4.4`: Add `HobbyStatus.paused` enum variant and `DateTime? pausedAt` / `int pausedDurationDays` fields to `UserHobby` — requires build_runner regeneration after changes
+- `flutter_animate ^4.5.2`: Completion celebration animation — already installed, sufficient for fade/scale/shimmer chains; no Lottie package needed
+- `purchases_flutter ^9.14.0` + `isProProvider`: Gate pause action and detail page Stages 2-4 using the same pattern already used for coach chat limits and the paywall sheet
+- `prisma ^6.4.1`: One schema migration — `ALTER TYPE HobbyStatus ADD VALUE 'paused'` plus nullable `pausedAt` and `pausedDurationDays` columns on `UserHobby` — all non-blocking on Neon
 
 ### Expected Features
 
-The full feature landscape is documented in `.planning/research/FEATURES.md`. The table-stakes features are defined by Apple and Google guidelines — missing any is a guaranteed rejection.
+**Must have (table stakes — all required for v1.1 milestone):**
+- Auto-complete detection: server returns `hobbyCompleted: true` flag when final step is recorded; Flutter reads the flag and triggers celebration
+- Completion celebration screen: distinct from per-step completion; hobby-specific copy; "pick your next hobby" CTA; stays until user taps, does not auto-navigate
+- Home completed state: `_CompletedAllState` widget when `activeEntries.isEmpty && hasCompletedHobbies` — distinct from generic new-user empty state
+- Completed hobbies in You tab "Tried" section: `done` status already maps here; no change required
+- Stop/abandon action (free): moves to `tried` status, two-step confirmation, asks for stop reason (optional), frees the hobby slot immediately regardless of network state
+- Pause action (Pro-gated): requires schema migration; preserves step progress; `pausedAt` timestamp recorded; resume is always free (Pro gate only on initiating a pause)
+- Resume paused hobby: single-tap from Home or You tab; restores status to `trying`, clears `pausedAt`, adds gap to `pausedDurationDays`
+- Detail page Stage 1 free / Stages 2-4 locked: conditional rendering via `ProGateSection` widget; inline upgrade prompt at stage boundary (not full-screen paywall)
+- Detail page FAQ + cost + budget locked for free users: same `ProGateSection` pattern; gate new AI generation calls, not existing cached content
 
-**Must have (table stakes — guaranteed rejection without):**
-- Account deletion in-app (Settings → confirmation → cascade-delete all data) — Apple 5.1.1(v), mandatory since June 2022
-- Privacy Policy hosted at stable HTTPS URL (not PDF) — both stores require; already drafted as .docx, just needs hosting
-- Terms of Service hosted and linked from Settings — required for subscription apps; already drafted as .docx
-- Restore Purchases button on paywall and in Settings — Apple 3.1.1; RevenueCat SDK has `restorePurchases()` method, just needs UI
-- App Privacy Labels (App Store Connect) + Data Safety Form (Google Play) — blocking submission; requires Privacy Policy finalized first
-- Demo account credentials in App Review Notes — Apple 2.1; without them reviewers cannot access the app
-- Apple OAuth routing fix (`vercel.json` regex) — Apple Sign-In silently fails in production; one-line fix
-- App Store screenshots at correct device sizes (6.9-inch iPhone, 1290×2796px for iOS) — not from Android test device
-- App metadata (title/subtitle/description/keywords within character limits) — required to complete submission
-- Content Rating Questionnaire (should receive 4+/Everyone) — blocking submission on both platforms
+**Should have (target v1.2):**
+- Personalized "pick your next hobby" recommendations after completion (similar category/difficulty)
+- Coach-aware resume: AI coach acknowledges pause gap in first message after resume
+- Pause reason capture: optional single-tap (Life got busy / Trying something else / Need a break)
 
-**Should have (compliance and security — not app store gates but legally required or security-critical):**
-- Data export endpoint `GET /api/users/me/export` — FADP Art. 28, GDPR Art. 20 portability right
-- RevenueCat webhook authorization hardening (mandatory env var, not optional) — prevents fake subscription events
-- Server-side AI coach rate limiting via `GenerationLog` — replaces bypassable client-side Hive check
-- Subscription cancellation guidance in delete account flow — Apple specifically calls this out in deletion docs
+**Defer to v2+:**
+- Completion milestone sharing (social features previously removed in v1.0)
+- Hobby streak tracking (contradicts product thesis for overwhelmed adults)
+- Progress recovery after stop (adds state complexity; stop is intentional)
 
-**Defer to v1.1:**
-- Localized app store listings (English-only for v1.0 is explicit decision)
-- GDPR consent banner (not required: app uses no advertising tracking)
-- Email-based deletion flow (Apple explicitly rejects this; in-app is required)
+### Architecture Approach
 
-### Architecture
-
-All new features integrate as additive changes into the existing consolidated handler pattern. No new Vercel function files should be created — the project merges handlers to stay within Vercel's 12-function free tier limit (noted in comment at `users/[path].ts` line ~1090). Three new switch cases go into `users/[path].ts`: `delete`, `export`, and the existing webhook guard fix. One new utility file `server/lib/rate_limit.ts` exports `checkCoachRateLimit()`. On the Flutter side, `AuthNotifier` gains a `deleteAccount()` method that mirrors the existing `logout()` flow with a server call prepended.
+The system is a Flutter Riverpod client reading from `userHobbiesProvider` (local-first, Hive-backed, API-synced), talking to Vercel serverless Node/TS endpoints backed by Neon PostgreSQL via Prisma. All three capability areas follow existing patterns: Riverpod state machines for lifecycle, `isProProvider` for gating, repository `updateStatus()` for API sync. Four new files are needed and eight existing files are modified. Content gating is purely client-side conditional rendering — the server returns all data and the client gates based on `isProProvider`. Completion detection is the exception: the server must own the `done` transition in the same database transaction as step recording, to prevent race conditions.
 
 **Major components:**
-1. `DELETE /api/users/me` (new switch case) — `prisma.$transaction([generationLog.deleteMany, user.delete])`, cascades 13 FK tables automatically at DB level; returns 200, client runs logout cleanup
-2. `GET /api/users/me/export` (new switch case) — `Promise.all` over 11 tables, strips `passwordHash`/`revenuecatId`/`appleId`/`googleId`, returns `application/json` with `Content-Disposition: attachment`
-3. `server/lib/rate_limit.ts` (new utility) — `checkCoachRateLimit(userId, isProUser)` counting `GenerationLog` rows with `query: 'coach'` in a 30-day rolling window
-4. `handleRevenueCatWebhook` (modified guard) — fail hard (`500`) if `REVENUECAT_WEBHOOK_SECRET` env var missing; currently fails open (accepts all traffic)
-5. `AuthNotifier.deleteAccount()` (new Flutter method) — DELETE server call + `TokenStorage.clearTokens()` + `CacheManager.clearAll()` (needs new method) + auth state → unauthenticated
-6. `lib/screens/settings/settings_screen.dart` (modified) — "Delete Account" button + confirmation dialog + subscription warning + Privacy Policy / Terms links
-7. `server/vercel.json` (modified) — add routes for `delete`, `export`; fix auth regex to include `|apple`
-
-**Key patterns to follow:**
-- New user endpoints → add switch case to existing `users/[path].ts`, not new files
-- Account deletion → `prisma.$transaction` callback style (interactive), not sequential array
-- Data export → `Promise.all` + `res.json()`, not streaming
-- Rate limiting → `GenerationLog` COUNT query, not in-memory (serverless functions share no memory)
+1. `UserHobbiesNotifier` (user_provider.dart) — add `pauseHobby()`, `resumeHobby()`, `stopHobby()`; `_exitSession()` reads the server's `hobbyCompleted` flag instead of inferring from local step count
+2. `HobbyLifecycleSheet` (new: `lib/components/hobby_lifecycle_sheet.dart`) — bottom sheet offering Stop (free) and Pause (Pro-gated); entry point from 3-dot icon on active hobby card in Home
+3. `HobbyCompletionCelebration` (new: `lib/components/hobby_completion_celebration.dart`) — imperative Navigator overlay pushed from `_exitSession()`, not a GoRouter route; user-dismissed
+4. `ProGateSection` (new: `lib/screens/detail/pro_gate_section.dart`) — blur + lock + coral CTA wrapper; applied to Stages 2-4 roadmap and to FAQ/cost/budget sections in detail screen
+5. `HomeCompletedState` (new: `lib/screens/home/home_completed_state.dart`) — "You finished — what's next?" card with Discover CTA; shown when `activeEntries.isEmpty && hasCompletedHobbies`
 
 ### Critical Pitfalls
 
-1. **RevenueCat deletion does not cancel billing** — Account deletion removes the DB row but Apple/Google subscriptions keep billing. Prevention: show explicit subscription cancellation warning with link to subscription management before allowing deletion to complete. Do NOT call RevenueCat's delete user API as part of account deletion (RevenueCat customer record is needed for dispute resolution).
+1. **Prisma enum migration transaction error** — Adding `paused` to `HobbyStatus` and using it as a default in the same migration triggers PostgreSQL error `55P04` (confirmed in Prisma issues #8424, #5290, #7251; still present in Prisma 6.4.1). Prevention: manually inspect generated SQL before deploying; if `ALTER TYPE ADD VALUE` and any usage of the new value appear in the same file, split into two sequential migration files.
 
-2. **JWT tokens valid 30 days after account deletion** — Deleting the User row does not invalidate outstanding JWTs. Prevention: add `deletedAt` nullable field to User model, check it in auth middleware and return 401 if set. Alternatively, implement token version counter (`tokenVersion` on User). A Prisma migration is required — commit it to git.
+2. **Auto-completion race condition** — Client-side step counting against local `completedStepIds` can fire `setDone()` on stale state, producing duplicate `hobby_completed` analytics events and a celebration screen that contradicts the Home tab state. Prevention: server endpoint returns a `hobbyCompleted: true` flag and sets `status = done` server-side in the same transaction; Flutter reads the flag, never infers completion from local counts.
 
-3. **Apple Privacy Manifest missing for SDK tier** — Firebase FCM, RevenueCat `purchases_flutter`, and PostHog are all on Apple's "commonly used third-party SDKs" list requiring `PrivacyInfo.xcprivacy` (required since February 12, 2025). Automated toolchain rejects the upload before human review. Prevention: verify SDK versions include manifests; run TestFlight upload (not just `flutter build ipa`) to catch `ITMS-91061` early.
+3. **Pro lapse strands paused hobby** — If subscription lapses, hobby is stuck in `paused` and invisible to the user (excluded from both active and tried views). Prevention: resume is always free (Pro gate applies only to initiating a pause); implement the RevenueCat `EXPIRATION` webhook handler to transition paused hobbies to `stopped` in the same phase as pause.
 
-4. **RevenueCat webhook HMAC confusion** — RevenueCat uses Authorization header auth, NOT HMAC payload signing. Implementing HMAC verification (like Stripe) means all legitimate webhook events fail authentication and subscription state never updates. Prevention: use `req.headers['authorization'] === Bearer ${secret}` only.
+4. **Content gating removes existing free access** — Detail page currently shows FAQ/cost/budget to all users. Retrospectively gating it may trigger App Store Review Guideline §3.1.2(a). Prevention: gate only new AI generation calls; free users see a paywall prompt for the "Generate" button; previously generated cached content remains accessible to all users.
 
-5. **Orphaned data or cascade failure on account deletion** — `GenerationLog` has no FK relation to `User` (plain `userId String` field) so database-level cascade does not apply. Must be deleted explicitly before `user.delete`. All other 13 tables already have `onDelete: Cascade`. Prevention: always use the `$transaction([generationLog.deleteMany, user.delete])` pattern, never a bare `user.delete`.
+5. **Streak counter breaks on resume** — Without `pausedDurationDays` tracked, the streak calculation sees a pause gap as inactivity and resets the streak to zero. Prevention: add `pausedDurationDays Int @default(0)` to the schema in Phase 1; streak formula: `effectiveGap = totalGapDays - pausedDurationDays`; Home screen must not decrement streak countdown while `status == paused`.
 
 ## Implications for Roadmap
 
-Based on combined research, suggested phase structure (10 discrete phases, ordered by blocking dependencies):
+Based on combined research, the build order is dictated by a hard dependency chain: schema migration first, then completion flow and content gating in parallel, then pause/stop lifecycle last.
 
-### Phase 1: Server Security Hardening
-**Rationale:** Webhook gap is an immediately exploitable security vulnerability in production. Fix before any production traffic reaches the live endpoint. No dependencies on other phases.
-**Delivers:** Hardened RevenueCat webhook verification; server-side AI coach rate limiting replacing bypassable client-side Hive check
-**Addresses:** FEATURES.md Differentiators #2 (webhook security) and #3 (server-side rate limiting)
-**Avoids:** Pitfall 6 (HMAC confusion), Pitfall 11 (Hive rate limit bypass window — deploy server-side check before removing client-side check)
+### Phase 1: Lifecycle Schema Migration
+**Rationale:** Everything downstream depends on `HobbyStatus.paused`, `pausedAt`, and `pausedDurationDays` existing in both the Prisma schema and the Dart model. Freezed codegen breaks the build if enum values are out of sync. This is the only database change in v1.1 and must be deployed and compiled before any UI work starts.
+**Delivers:** Prisma migration applied to Neon; `HobbyStatus.paused` enum in Dart; `UserHobby.pausedAt` and `UserHobby.pausedDurationDays` Freezed fields; build_runner codegen complete; `mapUserHobby()` mapper updated; any `switch` statements on `HobbyStatus` updated with `paused` case to prevent exhaustive-switch compile errors
+**Avoids:** Pitfall 1 (enum migration) — inspect generated SQL before running; Pitfall 5 (streak tracking fields added now before any pause logic references them)
 
-### Phase 2: Apple OAuth Routing Fix
-**Rationale:** One-line `vercel.json` change that unblocks Apple Sign-In testing on real iOS device. Must be verified before app store submission. No dependencies.
-**Delivers:** Working Apple Sign-In in production (`|apple` added to auth route regex)
-**Avoids:** Guaranteed rejection under Apple guideline 4.8
+### Phase 2: Completion Flow
+**Rationale:** Highest user value, lowest risk. Only touches three existing files plus two new ones. The existing `setDone()` and `toggleStep()` machinery is already wired end-to-end — the only missing pieces are the server returning a `hobbyCompleted` flag and `_exitSession()` reading it. Stop action (free, no schema dependency) is also included here as the simpler half of the lifecycle sheet.
+**Delivers:** Server-side completion detection (step endpoint returns `hobbyCompleted` flag); `HobbyCompletionCelebration` overlay triggered from `_exitSession()`; `HomeCompletedState` widget for post-completion home tab; Stop action with confirmation dialog; You tab "Tried" section already correct
+**Implements:** Architecture Patterns 1 (post-step completion check, server-driven) and 4 (lifecycle sheet, stop branch only)
+**Avoids:** Pitfall 2 (race condition — server owns completion authority), Pitfall 7 (stop must free slot immediately, fire-and-forget API sync), Pitfall 9 (celebration fires only on `!wasCompleted`), Pitfall 10 (distinct `_CompletedAllState` vs generic `_EmptyHomeState`)
 
-### Phase 3: Legal Documents — Host and Link
-**Rationale:** Privacy Policy and Terms of Service are already drafted as .docx files. Publishing them to the Next.js site (`/privacy`, `/terms`) is low effort and is a prerequisite for completing App Privacy Labels in App Store Connect.
-**Delivers:** Stable HTTPS URLs for Privacy Policy and Terms of Service; Settings screen links to both
-**Avoids:** Pitfall 12 (non-HTTPS URLs rejected), guaranteed rejection for missing Privacy Policy link
+### Phase 3: Detail Page Content Gating
+**Rationale:** Zero data dependencies — purely conditional rendering on `isProProvider` which already works. Can run in parallel with Phase 2 after Phase 1 codegen is complete. No migration, no provider changes, no new server endpoints needed.
+**Delivers:** `ProGateSection` widget (BackdropFilter blur + lock icon + coral CTA); Stages 2-4 roadmap gated in `HobbyDetailScreen`; FAQ/cost/budget sections gated with inline bottom-sheet upgrade prompt; Stage 1 and starter kit fully free; existing cached FAQ content remains accessible
+**Implements:** Architecture Pattern 3 (content gating via `isProProvider`)
+**Avoids:** Pitfall 4 (existing free access preserved — gate new generation, not cached content)
 
-### Phase 4: Account Deletion — Backend
-**Rationale:** Must be built before the Flutter UI can be tested. The server-side cascade pattern is fully documented; `onDelete: Cascade` is already present on all 13 FK tables; only `GenerationLog` needs explicit deletion.
-**Delivers:** `DELETE /api/users/me` endpoint with atomic `$transaction`; `GET /api/users/me/export` endpoint (FADP compliance)
-**Uses:** Prisma `$transaction` (already installed), `Promise.all` for export
-**Avoids:** Pitfall 3 (orphaned data), Pitfall 4 (passwordHash in export), Pitfall 13 (migration not committed)
-
-### Phase 5: Account Deletion — Flutter UX
-**Rationale:** Depends on Phase 4 (server endpoint). Mirrors existing `logout()` flow. Requires `CacheManager.clearAll()` (3-line addition) before `AuthNotifier.deleteAccount()` can be built.
-**Delivers:** Settings → Delete Account flow with confirmation dialog, active subscription warning, and typed-phrase confirmation; `AuthNotifier.deleteAccount()` method; `CacheManager.clearAll()` utility
-**Avoids:** Pitfall 1 (no subscription warning), Pitfall 2 (JWT invalidation — `deletedAt` check in middleware)
-
-### Phase 6: Restore Purchases Button
-**Rationale:** No dependencies; RevenueCat SDK already has `restorePurchases()`. Required by Apple 3.1.1. Add to paywall screen and Settings/Pro screen.
-**Delivers:** Restore Purchases UI on paywall and Settings; RevenueCat entitlement re-check on restore
-**Avoids:** Guaranteed rejection under Apple guideline 3.1.1
-
-### Phase 7: Dead Code Cleanup
-**Rationale:** 7 hidden screens with routes removed (buddy mode, community stories, local discovery, year in review, weekly challenge, mood match, seasonal picks) should have their files deleted before submission. Apple guideline 2.3.3 flags dead code. Must be done carefully — shared models and providers may still be referenced by active screens.
-**Delivers:** Removal of ~7,000 lines of hidden screen code; cleaner dependency graph
-**Avoids:** Pitfall 8 (shared components deleted with screens — run `gitnexus_impact` on every exported symbol before deleting; run `dart analyze` after each file)
-
-### Phase 8: Sonnet AI Upgrade
-**Rationale:** Upgrade files (`outputs/ai_generator.ts`, `outputs/action.ts`) are already written and ready to deploy. Model upgrade improves coach quality for the launch user base. Must be staged and validated for JSON parsing robustness.
-**Delivers:** Claude Sonnet replacing Haiku for all AI generation; hardened prompts with `validateHobbyOutput()`; correct `lastActivityAt` usage in coach
-**Avoids:** Pitfall 7 (Sonnet adds markdown wrappers around JSON — add `extractJson()` helper before `JSON.parse`)
-
-### Phase 9: App Store Prep — Assets and Admin
-**Rationale:** Parallel work stream: screenshots, app icon verification, app metadata, privacy labels, demo account. All depend on Phase 3 (Privacy Policy live) and Phase 8 (final app state for screenshots). Most tasks are non-code.
-**Delivers:** iOS screenshots at 1290×2796px (iPhone 16 Pro Max Simulator, release mode); Android screenshot adaptation; app icon at 1024×1024px and adaptive icon layers; Privacy Labels completed in App Store Connect; Data Safety Form in Google Play; Content Rating questionnaire; demo account with review notes; title/subtitle/description/keywords
-**Avoids:** Pitfall 5 (Apple Privacy Manifest missing — verify SDK versions before upload), Pitfall 9 (screenshots from Android device rejected), Pitfall 10 (Data Safety form inaccurate)
-
-### Phase 10: Pre-Commit Hooks and CI
-**Rationale:** Lefthook `lefthook.yml` at repo root covering Flutter analyze, dart format check, TypeScript typecheck. Install in `server/devDependencies`. Low risk, can be done in parallel with any other phase. Recommended before Phase 7 (dead code cleanup) so format issues are caught automatically.
-**Delivers:** `lefthook.yml` config; `server/devDependencies` entry; git hooks active for all future commits
-**Uses:** `lefthook@^2.1.4` (only new dependency in this milestone)
+### Phase 4: Pause/Resume Lifecycle
+**Rationale:** Depends on Phase 1 (enum variant) and reuses the lifecycle sheet scaffolding from Phase 2. Scheduled last because it has the most cross-cutting concerns: server webhook, streak calculation, coach context update, and RevenueCat cache handling. Building it last means Phase 2 and Phase 3 are already validated before touching the more complex pause machinery.
+**Delivers:** `pauseHobby()` and `resumeHobby()` notifier methods with live RevenueCat entitlement check before writing `paused` status; Pause option in `HobbyLifecycleSheet` (alongside existing Stop); Home tab paused-state display (dim card with "Paused" badge in `activeEntries`); RevenueCat `EXPIRATION` webhook handler transitioning paused hobbies to `stopped` on lapse; `pausedDurationDays` accumulation on resume; streak calculation using effective gap; coach context updated to map `paused` → `RESCUE` mode with `pausedDays` in prompt
+**Implements:** Architecture Patterns 2 (paused status as `HobbyStatus` variant) and 4 (lifecycle sheet, pause branch)
+**Avoids:** Pitfall 3 (downgrade path built in same phase), Pitfall 5 (streak accounts for pause duration), Pitfall 6 (coach context updated), Pitfall 8 (live RevenueCat entitlement check before writing paused)
 
 ### Phase Ordering Rationale
 
-- Phases 1–2 (security + OAuth fix) come first because they are unblocked and fix live vulnerabilities
-- Phase 3 (legal docs) must precede Phase 9 (privacy labels) — App Store Connect requires a live URL before the labels form can be completed
-- Phase 4 (backend deletion) must precede Phase 5 (Flutter deletion UX) — cannot build client without server
-- Phase 7 (dead code) is best done after Phase 6 (restore purchases) — confirms all active screens are in final state before deletions
-- Phase 8 (AI upgrade) should precede Phase 9 (screenshots) — screenshots should reflect the final app quality
-- Phase 9 is the last code-required phase before submission; its admin tasks (metadata, demo account) can overlap with other phases
-- Phase 10 (pre-commit hooks) is independent and can run in parallel with any phase
+- Phase 1 before everything: Freezed codegen must succeed before any file referencing `HobbyStatus.paused` can compile. This is a hard build dependency, not a soft preference. Exhaustive switch statements on `HobbyStatus` (in `canStartHobbyProvider`, `getByStatus()`) will produce compile errors until the `paused` case is handled.
+- Phase 2 before Phase 4: Completion flow has 3× the user impact of pause (it is the core product moment) and no blocked dependencies after Phase 1. It also establishes the lifecycle sheet component that Phase 4 extends.
+- Phase 3 in parallel with Phase 2: Content gating is pure conditional UI; starting it after Phase 1 codegen allows both Phase 2 and Phase 3 to complete in the same sprint window.
+- Phase 4 last: Has the most pitfalls, the most external integration concerns (RevenueCat webhook), and the most cross-cutting changes. Doing it last means every other v1.1 feature is already shipped and tested.
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 5 (Account Deletion Flutter):** JWT invalidation via `deletedAt` requires a Prisma schema migration — confirm migration procedure for Neon free tier and the impact on token validation middleware (`core/auth/` JWT interceptor)
-- **Phase 7 (Dead Code Cleanup):** Hidden screen dependency graph is not fully mapped — use `gitnexus_impact` for every exported symbol in each of the 7 screens before deletion; social.dart models (`CommunityStory`, `BuddyPair`) likely have active downstream consumers
+Phases with standard patterns (skip `/gsd:research-phase`):
+- **Phase 1:** Schema migration pattern is well-documented; the Prisma split-migration workaround is explicit in three Prisma GitHub issues
+- **Phase 2:** Riverpod state machine, imperative Navigator overlay, and home state branching are all standard Flutter patterns with full code samples in ARCHITECTURE.md
+- **Phase 3:** Conditional rendering with an existing provider; `BackdropFilter` is Flutter built-in; no new patterns needed
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (Security Hardening):** Both changes are fully specified in STACK.md and ARCHITECTURE.md with code samples
-- **Phase 2 (OAuth Routing Fix):** One-line `vercel.json` change, fully specified
-- **Phase 3 (Legal Documents):** Static pages on Next.js site; standard pattern
-- **Phase 4 (Backend Deletion):** Cascade pattern fully specified; `$transaction` pattern is standard Prisma
-- **Phase 6 (Restore Purchases):** RevenueCat SDK method is documented; UI addition only
-- **Phase 8 (AI Upgrade):** Files already written and ready; validation checklist specified
-- **Phase 10 (Pre-Commit Hooks):** `lefthook.yml` config specified in STACK.md with exact YAML
+Phases that may benefit from a targeted research spike before implementation:
+- **Phase 4 (Pause/Resume):** The RevenueCat webhook integration for subscription lapse handling needs a 30-minute spike before coding. Specifically: the EXPIRATION event payload shape, how to identify the affected `userId` in the serverless function, and whether the Neon free-tier connection pool can handle the synchronous hobby status update in the webhook response window. Reference: `https://www.revenuecat.com/docs/integrations/webhooks`.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All findings verified against official docs; only one new dependency (lefthook), rest use existing packages |
-| Features | HIGH | Apple and Google guidelines are authoritative official documentation; compliance requirements are binary (pass/fail) |
-| Architecture | HIGH | Based on direct codebase inspection of `schema.prisma`, `users/[path].ts`, and `vercel.json`; patterns are well-established |
-| Pitfalls | HIGH | 5 critical pitfalls sourced from official Apple/Google/RevenueCat docs; JWT and cascade pitfalls are documented security patterns |
+| Stack | HIGH | Derived entirely from direct codebase inspection; all packages verified in pubspec.yaml; zero new packages required |
+| Features | MEDIUM-HIGH | Core requirements from PROJECT.md are definitive; competitive benchmarks (Duolingo, Headspace, Strava) from secondary sources; paywall pattern research from RevenueCat official docs (HIGH) and independent analysis (MEDIUM) |
+| Architecture | HIGH | Based on direct file inspection of all relevant source files; code patterns verified against live codebase; call sites and method signatures confirmed with line references |
+| Pitfalls | HIGH | Critical pitfalls backed by official Prisma GitHub issues, RevenueCat official docs, Apple App Store Review Guidelines, and direct codebase analysis |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **`deletedAt` migration scope:** ARCHITECTURE.md recommends adding `deletedAt` to User model to invalidate JWTs post-deletion. This is the pragmatic approach (no Redis required) but requires a Prisma migration. Confirm whether Neon free tier supports live migrations without downtime before planning Phase 5.
-- **PostHog Privacy Manifest:** PITFALLS.md flags Firebase and RevenueCat manifests with specific version references, but PostHog's `PrivacyInfo.xcprivacy` status is less certain ("check posthog-ios CHANGELOG — if not present, add manual manifest"). This needs explicit version verification during Phase 9.
-- **Apple Sign-In token revocation:** Apple requires calling the Sign in with Apple REST API to revoke tokens when deleting an Apple OAuth account. This adds complexity to Phase 4 (server-side deletion). The scope of this token revocation call needs confirmation against Apple TN3194 during Phase 4 planning.
-- **`CacheManager.clearAll()` scope:** The existing `CacheManager` has no `clearAll()` method. ARCHITECTURE.md notes it needs to clear `_dataBox` and `_metaBox`. Confirm which Hive boxes are open in the app before implementing to ensure complete local data cleanup on account deletion.
+- **RevenueCat EXPIRATION webhook payload format:** Research confirms the webhook is needed and what it must do, but the exact event payload shape and how to identify the affected user in a serverless Vercel function needs explicit verification before Phase 4 starts. Do not assume the payload structure matches Stripe's — RevenueCat uses its own format. Reference: `https://www.revenuecat.com/docs/integrations/webhooks`.
+- **Stop vs done status distinction in analytics:** Research recommends logging `hobby_abandoned` vs `hobby_completed` in `UserActivityLog`, but the current `ActivityLog` Prisma model needs verification that the `action` field accepts these values before Phase 2 coding starts. Confirm `action` field type and any enum constraints.
+- **Detail page existing cached FAQ content scope:** Research identifies the App Store guideline risk but leaves open whether any free users in production have seen generated FAQ content. Before deploying Phase 3, query `GenerationLog` to check whether FAQ items have been generated for free-tier users. This determines whether "gate new generation only" is sufficient or whether a grandfather exclusion is needed.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Apple App Store Review Guidelines — https://developer.apple.com/app-store/review/guidelines/
-- Apple: Offering Account Deletion — https://developer.apple.com/support/offering-account-deletion-in-your-app/
-- Apple TN3194: Sign in with Apple token revocation — https://developer.apple.com/documentation/technotes/tn3194-handling-account-deletions-and-revoking-tokens-for-sign-in-with-apple
-- Apple App Privacy Details — https://developer.apple.com/app-store/app-privacy-details/
-- Apple Privacy Manifest requirement (Feb 2025) — https://developer.apple.com/news/?id=3d8a9yyh
-- Google Play Account Deletion Requirements — https://support.google.com/googleplay/android-developer/answer/13327111
-- Google Play Data Safety — https://support.google.com/googleplay/android-developer/answer/10787469
-- GDPR Article 20 (data portability) — https://gdpr-info.eu/art-20-gdpr/
-- RevenueCat Webhooks Documentation — https://www.revenuecat.com/docs/integrations/webhooks
-- RevenueCat Restoring Purchases — https://www.revenuecat.com/docs/getting-started/restoring-purchases
-- Prisma Transactions Reference — https://www.prisma.io/docs/orm/prisma-client/queries/transactions
-- Direct schema inspection (`server/prisma/schema.prisma`) — confirmed cascade behavior on all 25 models
-- Direct handler inspection (`server/api/users/[path].ts`, `server/api/generate/[action].ts`) — confirmed function limit comment, existing patterns
-- Direct config inspection (`server/vercel.json`) — confirmed missing `|apple` in auth regex
+- Direct codebase inspection: `lib/models/hobby.dart`, `lib/providers/user_provider.dart`, `lib/providers/subscription_provider.dart`, `lib/screens/session/session_screen.dart`, `lib/screens/home/home_screen.dart`, `lib/screens/detail/hobby_detail_screen.dart`, `server/prisma/schema.prisma`, `server/api/users/[path].ts`, `server/lib/mappers.ts`, `pubspec.yaml`
+- Prisma GitHub issues #8424, #5290, #7251 — enum migration transaction error (`55P04`) and documented workaround
+- RevenueCat official docs: Customer Info / `getCustomerInfo()` caching behavior
+- Apple App Store Review Guidelines §3.1.2(a) — subscription content restriction
+- RevenueCat official docs: Freemium Playbook, Hard vs Soft Paywall
 
 ### Secondary (MEDIUM confidence)
-- RevenueCat webhook message verification community (confirms no HMAC) — https://community.revenuecat.com/sdks-51/webhook-message-verification-7165
-- RevenueCat X-RevCat-Signature removal — https://community.revenuecat.com/dashboard-tools-52/is-x-revenuecat-signature-removed-and-where-is-webhook-secret-key-7110
-- Lefthook GitHub v2.1.4 — https://github.com/evilmartians/lefthook
-- Neon rate limiting with PostgreSQL — https://neon.com/guides/rate-limiting
-- Switzerland FADP overview (multiple sources) — https://usercentrics.com/knowledge-hub/switzerland-federal-data-protection-act-fadp/
-- App Store screenshot requirements 2025-2026 — multiple community guides agree on 6.9-inch mandate
-- JWT invalidation after deletion — https://www.descope.com/blog/post/jwt-logout-risks-mitigations
-- Promptfoo: model upgrade JSON format risks — https://www.promptfoo.dev/blog/model-upgrades-break-agent-safety/
+- Duolingo official blog: streak milestone design, home screen redesign (2024)
+- fline.dev: learnings from analyzing 20 mobile paywalls (independent research, 2025)
+- Blinkist trial conversion case study — growth.design (23% conversion lift from honest preview gate)
+- Strava auto-pause official support documentation (2025)
+- Headspace free vs paid features — independent review (2025)
+- RevenueCat / dev.to: top fitness app paywall UX patterns (2025)
+
+### Tertiary (LOW confidence)
+- RevenueCat Community forum: subscription expiry behavior when user is offline — behavior inferred, not guaranteed across all edge cases
 
 ---
-*Research completed: 2026-03-21*
+*Research completed: 2026-03-23*
 *Ready for roadmap: yes*
