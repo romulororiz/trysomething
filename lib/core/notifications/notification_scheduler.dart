@@ -99,7 +99,7 @@ class NotificationScheduler {
           break;
 
         case HobbyStatus.done:
-          // No reminders for completed hobbies
+        case HobbyStatus.paused: // No reminders while paused
           break;
       }
     }

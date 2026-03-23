@@ -70,6 +70,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       switch (uh.status) {
         case HobbyStatus.trying:
         case HobbyStatus.active:
+        case HobbyStatus.paused: // Phase 14 will add Paused filter tab
           activeEntries.add(meta);
         case HobbyStatus.saved:
           savedEntries.add(meta);

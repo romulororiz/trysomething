@@ -96,6 +96,7 @@ class _CoachLimitTracker {
         return 5;
       case HobbyStatus.trying:
       case HobbyStatus.active:
+      case HobbyStatus.paused:
         return 5;
       case HobbyStatus.done:
         return 2;
