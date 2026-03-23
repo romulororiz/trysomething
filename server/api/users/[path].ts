@@ -63,13 +63,17 @@ export async function toggleStepCompletion(
         tx.userCompletedStep.count({ where: { userId, hobbyId } }),
         tx.roadmapStep.count({ where: { hobbyId } }),
       ]);
+      console.log(`[Step] hobbyId=${hobbyId} stepId=${stepId} completedCount=${completedCount} totalSteps=${totalSteps}`);
       if (totalSteps > 0 && completedCount >= totalSteps) {
         await tx.userHobby.update({
           where: { userId_hobbyId: { userId, hobbyId } },
           data: { status: "done", completedAt: new Date() },
         });
         hobbyCompleted = true;
+        console.log(`[Step] Hobby ${hobbyId} marked DONE`);
       }
+    } else {
+      console.log(`[Step] Removing step ${stepId} from ${hobbyId} (was already completed)`);
     }
 
     const hobby = await tx.userHobby.findUnique({
