@@ -71,32 +71,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHM-01 | — | Pending |
-| SCHM-02 | — | Pending |
-| SCHM-03 | — | Pending |
-| COMP-01 | — | Pending |
-| COMP-02 | — | Pending |
-| COMP-03 | — | Pending |
-| COMP-04 | — | Pending |
-| LIFE-01 | — | Pending |
-| LIFE-02 | — | Pending |
-| LIFE-03 | — | Pending |
-| LIFE-04 | — | Pending |
-| LIFE-05 | — | Pending |
-| LIFE-06 | — | Pending |
-| LIFE-07 | — | Pending |
-| GATE-01 | — | Pending |
-| GATE-02 | — | Pending |
-| GATE-03 | — | Pending |
-| GATE-04 | — | Pending |
-| GATE-05 | — | Pending |
-| GATE-06 | — | Pending |
+| SCHM-01 | Phase 11 | Pending |
+| SCHM-02 | Phase 11 | Pending |
+| SCHM-03 | Phase 11 | Pending |
+| COMP-01 | Phase 12 | Pending |
+| COMP-02 | Phase 12 | Pending |
+| COMP-03 | Phase 12 | Pending |
+| COMP-04 | Phase 12 | Pending |
+| LIFE-01 | Phase 12 | Pending |
+| GATE-01 | Phase 13 | Pending |
+| GATE-02 | Phase 13 | Pending |
+| GATE-03 | Phase 13 | Pending |
+| GATE-04 | Phase 13 | Pending |
+| GATE-05 | Phase 13 | Pending |
+| GATE-06 | Phase 13 | Pending |
+| LIFE-02 | Phase 14 | Pending |
+| LIFE-03 | Phase 14 | Pending |
+| LIFE-04 | Phase 14 | Pending |
+| LIFE-05 | Phase 14 | Pending |
+| LIFE-06 | Phase 14 | Pending |
+| LIFE-07 | Phase 14 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20 ⚠️
+- Mapped to phases: 20
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-23*
-*Last updated: 2026-03-23 after initial definition*
+*Last updated: 2026-03-23 after roadmap creation — traceability complete*
