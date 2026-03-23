@@ -12,7 +12,11 @@ import '../../components/glass_card.dart';
 import '../../components/starter_kit_card.dart';
 import '../../components/hobby_quick_links.dart';
 import '../../components/logo_loader.dart';
+import '../../components/plan_first_session_card.dart';
+import '../../components/pro_gate_section.dart';
+import '../../components/pro_upgrade_sheet.dart';
 import '../../components/share_card.dart';
+import '../../providers/subscription_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
@@ -155,6 +159,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     }
 
     final prefs = ref.watch(userPreferencesProvider);
+    final isPro = ref.watch(isProProvider);
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
@@ -189,23 +194,43 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     _staggeredCard(2, _buildWhatToExpect(hobby)),
                     const SizedBox(height: 16),
 
-                    // 3b. "Why people stop" — pitfalls / quitting reasons
+                    // 3b. "Why people stop" — pitfalls / quitting reasons (GATED)
                     if (hobby.pitfalls.isNotEmpty ||
                         hobby.quittingReasons.isNotEmpty) ...[
-                      _staggeredCard(3, _buildWhyPeopleStop(hobby)),
+                      _staggeredCard(3, ProGateSection(
+                        isLocked: !isPro,
+                        sectionTitle: 'Why people stop',
+                        teaserText: 'Know the common traps before you start',
+                        onLockTap: () => showProUpgrade(context, 'detail_gate_why_people_stop'),
+                        child: _buildWhyPeopleStop(hobby),
+                      )),
                       const SizedBox(height: 16),
                     ],
 
-                    // 4. Starter Kit glass card
-                    _staggeredCard(4, StarterKitCard(hobby: hobby)),
+                    // 4. Starter Kit glass card (GATED)
+                    _staggeredCard(4, ProGateSection(
+                      isLocked: !isPro,
+                      sectionTitle: 'Starter Kit',
+                      teaserText: 'Everything you need to get started',
+                      onLockTap: () => showProUpgrade(context, 'detail_gate_starter_kit'),
+                      child: StarterKitCard(hobby: hobby),
+                    )),
                     const SizedBox(height: 16),
 
-                    // 5. Coach teaser
-                    _staggeredCard(5, _buildCoachTeaser()),
+                    // 5. Plan first session (GATED)
+                    _staggeredCard(5, PlanFirstSessionCard(
+                      hobbyId: widget.hobbyId,
+                      isLocked: !isPro,
+                      onLockTap: () => showProUpgrade(context, 'detail_gate_plan_session'),
+                    )),
                     const SizedBox(height: 16),
 
-                    // 6. Quick links
-                    _staggeredCard(6, HobbyQuickLinks(hobbyId: widget.hobbyId)),
+                    // 6. Quick links (GATED)
+                    _staggeredCard(6, HobbyQuickLinks(
+                      hobbyId: widget.hobbyId,
+                      isLocked: !isPro,
+                      onLockTap: () => showProUpgrade(context, 'detail_gate_quick_links'),
+                    )),
                   ]),
                 ),
               ),
@@ -849,58 +874,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
               fontStyle: FontStyle.italic,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  5. COACH TEASER
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildCoachTeaser() {
-    final hobby = ref.watch(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
-    final hobbyTitle = hobby?.title ?? 'this hobby';
-    return GlassCard(
-      onTap: () => context.push('/coach/${widget.hobbyId}', extra: {
-        'message':
-            'Help me start $hobbyTitle tonight. What\'s the easiest first step?',
-        'mode': 'start',
-        'autoSend': false,
-      }),
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.coral.withValues(alpha: 0.12),
-            ),
-            child: const Icon(Icons.auto_awesome,
-                size: 20, color: AppColors.coral),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Plan your first session',
-                    style: AppTypography.sansLabel.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    )),
-                const SizedBox(height: 2),
-                Text('Get a tiny first-session plan, no experience needed.',
-                    style: AppTypography.sansTiny.copyWith(
-                      color: AppColors.textSecondary,
-                    )),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded,
-              size: 20, color: AppColors.textMuted),
         ],
       ),
     );
