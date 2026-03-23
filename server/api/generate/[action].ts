@@ -12,7 +12,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { PrismaClient } from "@prisma/client";
 import Anthropic from "@anthropic-ai/sdk";
-import { requireAuth } from "../../lib/auth";
+import { requireAuth, requirePro } from "../../lib/auth";
 import { handleCors, methodNotAllowed, errorResponse } from "../../lib/middleware";
 import { validateInput, validateOutput } from "../../lib/content_guard";
 import { fetchHobbyImage } from "../../lib/unsplash";
@@ -284,6 +284,10 @@ async function handleGenerateFaq(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(existing.map(mapFaqItem));
   }
 
+  // Gate NEW generation for free users only
+  const isPro = await requirePro(userId, res);
+  if (!isPro) return;
+
   const hobby = await prisma.hobby.findUnique({
     where: { id: hobbyId },
     select: { title: true, categoryId: true },
@@ -328,6 +332,10 @@ async function handleGenerateCost(req: VercelRequest, res: VercelResponse) {
   if (existing) {
     return res.status(200).json(mapCostBreakdown(existing));
   }
+
+  // Gate NEW generation for free users only
+  const isPro = await requirePro(userId, res);
+  if (!isPro) return;
 
   const hobby = await prisma.hobby.findUnique({
     where: { id: hobbyId },
@@ -375,6 +383,10 @@ async function handleGenerateBudget(req: VercelRequest, res: VercelResponse) {
   if (existing.length > 0) {
     return res.status(200).json(existing.map(mapBudgetAlternative));
   }
+
+  // Gate NEW generation for free users only
+  const isPro = await requirePro(userId, res);
+  if (!isPro) return;
 
   const hobby = await prisma.hobby.findUnique({
     where: { id: hobbyId },
