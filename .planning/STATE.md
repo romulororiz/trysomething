@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
 status: unknown
-last_updated: "2026-03-23T14:19:14.340Z"
+last_updated: "2026-03-23T14:32:00.000Z"
 progress:
   total_phases: 13
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — Phase 12 Plan 01 complete (hobby completion flow)*
+*Last updated: 2026-03-23 — Phase 12 complete (hobby completion flow + stop action)*
 
 ---
 
@@ -23,18 +23,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** v1.1 Phase 12 — Hobby Completion Flow + Stop
+**Current focus:** v1.1 Phase 13 — Detail Page Content Gating
 
 ---
 
 ## Current Position
 
-Phase: 12 of 14 (Hobby Completion Flow + Stop)
-Plan: 1 of 2 in Phase 12 (COMPLETE)
-Status: Phase 12 in progress
-Last activity: 2026-03-23 — Completed 12-01-PLAN.md (completion flow + celebration screen)
+Phase: 12 of 14 (Hobby Completion Flow + Stop) -- COMPLETE
+Plan: 2 of 2 in Phase 12 (COMPLETE)
+Status: Phase 12 complete
+Last activity: 2026-03-23 — Completed 12-02-PLAN.md (Home completed state, stop action, Tried tab, detail read-only)
 
-Progress: [######░░░░] 60% (v1.1) — 3 of 5 plans complete
+Progress: [########░░] 80% (v1.1) — 4 of 5 plans complete
 
 ---
 
@@ -54,11 +54,12 @@ Progress: [######░░░░] 60% (v1.1) — 3 of 5 plans complete
 | Phase | Plans Complete | Status |
 |-------|----------------|--------|
 | 11. Schema Migration | 2/2 | Complete |
-| 12. Completion Flow + Stop | 1/2 | In progress |
+| 12. Completion Flow + Stop | 2/2 | Complete |
 | 13. Content Gating | 0/? | Not started |
 | 14. Pause/Resume | 0/? | Not started |
 
 | Phase 12 P01 | 7min | 2 tasks | 5 files |
+| Phase 12 P02 | 15min | 3 tasks | 8 files |
 
 ---
 
@@ -80,6 +81,10 @@ Progress: [######░░░░] 60% (v1.1) — 3 of 5 plans complete
 - [12-01] Used Dart record (UserHobby, bool) for toggleStep return -- lightweight multi-value return without wrapper class
 - [12-01] stopHobby uses async IIFE for fire-and-forget API call to avoid catchError type mismatch
 - [12-01] HobbyCompletionScreen uses context.go('/discover') to replace entire nav stack back to shell
+- [12-02] Celebration screen uses rootNavigatorKey push so navbar is hidden during full-screen overlay
+- [12-02] Celebration transition is instant in (Duration.zero) with 300ms fade out for premium feel
+- [12-02] isHobbySavedProvider only returns true for saved status -- fixes incorrect bookmark state for done/active/trying hobbies
+- [12-02] isFullyCompleted heuristic: completedStepIds.length >= roadmapSteps.length for distinguishing completed vs stopped in Tried tab
 
 ### Blockers/Concerns
 
@@ -91,10 +96,10 @@ Progress: [######░░░░] 60% (v1.1) — 3 of 5 plans complete
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Completed 12-01-PLAN.md (hobby completion flow, celebration screen, session exit branching)
+Stopped at: Completed 12-02-PLAN.md (Home completed state, stop action, Tried tab, detail read-only)
 Resume file: None
 
-Next action: Phase 12 Plan 02 — Stop hobby confirmation flow
+Next action: Phase 13 — Detail Page Content Gating
 
 ---
 

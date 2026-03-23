@@ -47,7 +47,7 @@
 **Milestone Goal:** Fix broken hobby completion flow, add pause/stop lifecycle, and gate detail page content for Pro conversion.
 
 - [x] **Phase 11: Lifecycle Schema Migration** — Add `paused` enum value and pause tracking fields to Prisma schema and Dart model; run codegen before any downstream work (completed 2026-03-23)
-- [ ] **Phase 12: Hobby Completion Flow + Stop** — Server-side completion detection, celebration overlay, Home completed state, and free stop/abandon action
+- [x] **Phase 12: Hobby Completion Flow + Stop** — Server-side completion detection, celebration overlay, Home completed state, and free stop/abandon action (completed 2026-03-23)
 - [ ] **Phase 13: Detail Page Content Gating** — Free vs Pro content sections with `ProGateSection` widget and server-side endpoint guards
 - [ ] **Phase 14: Pause/Resume Lifecycle** — Pro-gated pause action, paused state display, resume, Pro-lapse auto-resume, and streak-safe pause duration tracking
 
@@ -78,10 +78,10 @@ Plans:
   2. After dismissing the celebration, the Home tab shows a "You finished — pick your next hobby" state with a coral CTA linking to Discover, not the normal active hobby dashboard
   3. The completed hobby appears in the You tab "Tried" section with its completion date visible
   4. Tapping the 3-dot menu on an active hobby card presents a "Stop hobby" option that, after a confirmation prompt, moves the hobby to Tried and frees the active hobby slot immediately — no waiting for a network response
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 12-01-PLAN.md — Surface hobbyCompleted flag through data layer + celebration screen
-- [ ] 12-02-PLAN.md — Home completed state + stop action + Tried tab cards + detail read-only
+- [x] 12-01-PLAN.md — Surface hobbyCompleted flag through data layer + celebration screen
+- [x] 12-02-PLAN.md — Home completed state + stop action + Tried tab cards + detail read-only
 
 ### Phase 13: Detail Page Content Gating
 **Goal:** Free users see a rich preview of a hobby's detail page and are clearly shown what Pro unlocks, without losing any content they already had access to
@@ -127,7 +127,7 @@ Plans:
 | 9.1. Session Screen Redesign | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 12. Hobby Completion Flow + Stop | 1/2 | In Progress|  | — |
+| 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 13. Detail Page Content Gating | v1.1 | 0/? | Not started | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
 

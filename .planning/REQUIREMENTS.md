@@ -11,12 +11,12 @@ Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phase
 
 - [x] **COMP-01**: Hobby auto-transitions to `done` status when all roadmap steps are completed (server-side detection in step completion endpoint, returns `hobbyCompleted` flag)
 - [x] **COMP-02**: Celebration screen displays when user completes the final step (distinct from regular step completion, hobby-specific copy with hobby title and step count)
-- [ ] **COMP-03**: Home shows completed state with "pick your next hobby" CTA linking to Discover when active hobby is done
-- [ ] **COMP-04**: Completed hobbies appear in You tab "Tried" section with completion date
+- [x] **COMP-03**: Home shows completed state with "pick your next hobby" CTA linking to Discover when active hobby is done
+- [x] **COMP-04**: Completed hobbies appear in You tab "Tried" section with completion date
 
 ### Lifecycle
 
-- [ ] **LIFE-01**: User can stop/abandon an active hobby (free) — moves to Tried with confirmation prompt, no progress preserved
+- [x] **LIFE-01**: User can stop/abandon an active hobby (free) — moves to Tried with confirmation prompt, no progress preserved
 - [ ] **LIFE-02**: User can pause an active hobby (Pro) — preserves progress, streaks, completed steps; requires active Pro entitlement
 - [ ] **LIFE-03**: User can resume a paused hobby (Pro) — picks up where they left off with streak continuity
 - [ ] **LIFE-04**: Home shows paused hobby with frosted glass card (opacity 0.7), "Paused" chip, coral "Resume" CTA, days-paused counter
@@ -76,9 +76,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHM-03 | Phase 11 | Complete |
 | COMP-01 | Phase 12 | Complete |
 | COMP-02 | Phase 12 | Complete |
-| COMP-03 | Phase 12 | Pending |
-| COMP-04 | Phase 12 | Pending |
-| LIFE-01 | Phase 12 | Pending |
+| COMP-03 | Phase 12 | Complete |
+| COMP-04 | Phase 12 | Complete |
+| LIFE-01 | Phase 12 | Complete |
 | GATE-01 | Phase 13 | Pending |
 | GATE-02 | Phase 13 | Pending |
 | GATE-03 | Phase 13 | Pending |
