@@ -2,25 +2,18 @@
 
 ## What This Is
 
-A mobile app for overwhelmed adults who want to pick up a hobby but don't know where to start. TrySomething matches users to one hobby based on their preferences, provides a structured 30-day guided start with step-by-step roadmaps, and offers AI coaching to keep them going. Built with Flutter (frontend) and Node.js/TypeScript on Vercel (backend), backed by Neon PostgreSQL and Claude AI.
+A mobile app for overwhelmed adults who want to pick up a hobby but don't know where to start. TrySomething matches users to one hobby based on their preferences, provides a structured 30-day guided start with step-by-step roadmaps, and offers AI coaching (Claude Sonnet) to keep them going. Built with Flutter (frontend) and Node.js/TypeScript on Vercel (backend), backed by Neon PostgreSQL. Session screen features a premium Apple Watch-style breathing ring.
 
 ## Core Value
 
 A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days through guided support and coaching.
 
-## Current Milestone: v1.0 Launch Readiness
+## Current State: v1.0 Shipped
 
-**Goal:** Prepare the app for App Store and Play Store submission by resolving all compliance blockers, security gaps, and production readiness issues.
+**Shipped:** 2026-03-23
+**Status:** App Store and Play Store submission-ready
 
-**Target scope:**
-- Account deletion + data export (app store compliance)
-- Apple OAuth fix (broken routing)
-- Terms & Privacy hosting + in-app linking
-- AI coach fixes (stale detection, rate limiting)
-- Sonnet AI model upgrade
-- RevenueCat webhook security
-- Pre-commit hooks (DX quality gate)
-- Dead code cleanup (7,000+ lines of removed features)
+All compliance, security, and production-readiness gaps resolved. 11 phases, 18 plans, 121 commits across 2 days.
 
 ## Requirements
 
@@ -38,84 +31,75 @@ A user can discover a hobby that fits them, start it with clear first steps, and
 - ✓ RevenueCat Pro subscription (CHF 4.99/mo, 7-day trial) — Sprint E
 - ✓ Paywall and Pro feature locks — Sprint E
 - ✓ Session screen with 4 phases (prepare/timer/reflect/complete) — Sprint D
-- ✓ Particle formation timer with category shapes — Sprint D
 - ✓ 150+ seed hobbies with AI generation for new ones — Sprint A
 - ✓ JWT auth with Google OAuth — Sprint A
 - ✓ PostHog analytics + Sentry error reporting — Sprint A
 - ✓ Firebase push notifications — Sprint B
 - ✓ Landing page (Next.js) — Sprint F
+- ✓ RevenueCat webhook fail-closed with timingSafeEqual — v1.0 Phase 1
+- ✓ Server-side coach rate limiting via GenerationLog — v1.0 Phase 1
+- ✓ Apple OAuth routing fixed — v1.0 Phase 2
+- ✓ Terms of Service hosted on Next.js site — v1.0 Phase 3
+- ✓ Privacy Policy hosted on Next.js site — v1.0 Phase 3
+- ✓ Settings links to hosted Terms and Privacy Policy — v1.0 Phase 3
+- ✓ Account deletion with cascading soft-delete + 30-day purge — v1.0 Phase 4
+- ✓ Data export endpoint with field allowlist — v1.0 Phase 4
+- ✓ Account deletion Flutter UI with email/OAuth flows — v1.0 Phase 5
+- ✓ Subscription cancellation warning in deletion flow — v1.0 Phase 5
+- ✓ Client-side storage wipe on account deletion — v1.0 Phase 5
+- ✓ Restore Purchases button in Settings — v1.0 Phase 6
+- ✓ Dead code cleanup: 7 hidden screens removed (~7,000 lines) — v1.0 Phase 7
+- ✓ AI upgraded to Claude Sonnet with extractJson() guard — v1.0 Phase 8
+- ✓ Coach stale detection uses lastActivityAt — v1.0 Phase 8
+- ✓ Apple Privacy Manifest (CA92.1) — v1.0 Phase 9
+- ✓ App Privacy Labels in App Store Connect — v1.0 Phase 9
+- ✓ Data Safety Form in Google Play Console — v1.0 Phase 9
+- ✓ Session screen breathing ring redesign — v1.0 Phase 9.1
+- ✓ Pre-commit hooks via Lefthook — v1.0 Phase 10
 
 ### Active
 
-- [ ] Account deletion endpoint with cascading deletes + client cleanup
-- [ ] Data export endpoint (FADP/GDPR portability)
-- [ ] Apple OAuth routing fix
-- [ ] Terms of Service & Privacy Policy hosting + in-app linking
-- [ ] Coach stale detection fix (use lastActivityAt)
-- [ ] Sonnet AI model upgrade (deploy prepared files)
-- [x] Server-side rate limiting for coach (move from Hive to GenerationLog) — Phase 1
-- [x] RevenueCat webhook signature verification — Phase 1
-- [ ] Pre-commit hooks (Husky: TypeScript lint + Flutter analyze)
-- [ ] Dead code cleanup (7 hidden feature screens, ~7,000 lines)
+(None — fresh requirements needed for next milestone via `/gsd:new-milestone`)
 
 ### Out of Scope
 
-- Mapper function co-location (#12) — architectural cleanup, not user-facing, defer to v1.1
-- Golden triangle tests for shared middleware (#13) — improves confidence but doesn't block launch
-- Oversized screen refactoring (#14) — cosmetic tech debt, no user impact
-- Dead mapper function cleanup (#11) — minor dead code, low priority vs screen cleanup
-- Buddy mode, community stories, local discovery features — routes already removed, screens deleted in this milestone
+- Mapper function co-location — architectural cleanup, not user-facing
+- Golden triangle tests for shared middleware — improves confidence but not user-facing
+- Oversized screen refactoring — cosmetic tech debt, no user impact
+- Buddy mode, community stories, local discovery — features deleted in v1.0
 - Real-time chat — not core to hobby guidance
-- Multi-language support — English-only for v1.0
+- Multi-language support — English-only for now
 
 ## Context
 
-**Codebase state:** 6 sprints completed (A through F.3). Flutter 3.6.0 + Riverpod + GoRouter frontend, Node.js/TypeScript Vercel serverless backend, Prisma ORM with 25 models on Neon PostgreSQL. AI generation via Claude Haiku (upgrade to Sonnet prepared but not deployed).
-
-**Codebase maps:** Full analysis in `.planning/codebase/` (STACK.md, ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, INTEGRATIONS.md, CONCERNS.md) — produced 2026-03-21.
-
-**Known issues from CONCERNS.md:** 5 critical, 10 high-priority items identified. This milestone addresses all critical and high items. Medium items deferred to v1.1.
-
-**Test device:** Nothing Phone 3a (Android). iOS testing needed for Apple OAuth and App Store submission.
-
-**Prepared but not deployed:**
-- `outputs/ai_generator.ts` — Sonnet-ready generation prompts
-- `outputs/action.ts` — Sonnet coach with single-mode injection
+**Shipped v1.0** with 50,138 LOC Dart + 18,312 LOC TypeScript.
+**Tech stack:** Flutter 3.6.0 + Riverpod + GoRouter, Node.js/TypeScript on Vercel, Prisma ORM with 25 models on Neon PostgreSQL, Claude Sonnet AI, RevenueCat subscriptions.
+**Test device:** Nothing Phone 3a (Android).
+**Landing page:** Next.js at trysomething.io with hosted Terms and Privacy Policy.
 
 ## Constraints
 
-- **App Store compliance:** Apple requires account deletion (mandatory since 2022). Google Play requires it for apps with accounts.
-- **FADP (Swiss data protection):** Art. 28 requires data portability — users must be able to export their data.
-- **RevenueCat:** Entitlement ID is `pro`. Webhook verification needed before production traffic.
-- **AI model:** Sonnet upgrade files ready — same API key, drop-in replacement for Haiku.
-- **Budget:** Solo developer, cost-conscious — Vercel free tier, Neon free tier.
-- **Tech stack:** Flutter + Node.js/Vercel — no stack changes in this milestone.
+- **Budget:** Solo developer, cost-conscious — Vercel free tier, Neon free tier
+- **Tech stack:** Flutter + Node.js/Vercel — no stack changes planned
+- **AI model:** Claude Sonnet deployed, same API key architecture
+- **RevenueCat:** Entitlement ID is `pro`, webhook verified
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Include all HIGH items in launch milestone | Security gaps (rate limiting, webhook verification) are exploitable in production | — Pending |
-| Dead code cleanup with GitNexus safety net | 7,000+ lines removed with impact analysis to prevent breakage | — Pending |
-| Defer mapper/screen refactoring to v1.1 | Internal quality, no user impact, doesn't block submission | — Pending |
-| Keep Haiku → Sonnet as in-place upgrade | Prepared files are drop-in, same API key, no architecture change | — Pending |
+| Include all HIGH items in launch milestone | Security gaps exploitable in production | ✓ Good — all resolved |
+| Dead code cleanup with impact analysis | 7,000+ lines safely removed | ✓ Good — zero breakage |
+| Defer mapper/screen refactoring to v1.1 | Internal quality, no user impact | ✓ Good — shipped faster |
+| Haiku → Sonnet as in-place upgrade | Drop-in, same API key | ✓ Good — seamless |
+| Soft-delete over hard-delete | JWT tokens remain valid up to 30 days | ✓ Good — safe approach |
+| Lefthook over Husky for pre-commit | No package.json at repo root | ✓ Good — language-agnostic |
+| Single CustomPainter for breathing ring | More efficient than stacked widgets | ✓ Good — smooth animation |
+| Film grain as static PNG overlay | Zero GPU cost vs dynamic noise | ✓ Good — indistinguishable |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd:transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd:complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
-
 ---
-*Last updated: 2026-03-21 after Phase 1 completion — webhook auth hardened, coach rate limiting deployed*
+*Last updated: 2026-03-23 after v1.0 milestone*
