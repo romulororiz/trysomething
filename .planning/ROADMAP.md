@@ -123,7 +123,7 @@ Plans:
 | 9. App Store Assets | v1.0 | 2/2 | Complete | 2026-03-22 |
 | 9.1. Session Screen Redesign | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
-| 11. Lifecycle Schema Migration | 2/2 | Complete   | 2026-03-23 | — |
+| 11. Lifecycle Schema Migration | 2/2 | Complete    | 2026-03-23 | — |
 | 12. Hobby Completion Flow + Stop | v1.1 | 0/? | Not started | — |
 | 13. Detail Page Content Gating | v1.1 | 0/? | Not started | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
