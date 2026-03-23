@@ -6,6 +6,7 @@ import {
   mapCostBreakdown,
   mapBudgetAlternative,
   mapCombo,
+  mapUserHobby,
   groupByField,
 } from "../lib/mappers";
 
@@ -194,6 +195,77 @@ describe("mapCombo", () => {
     }) as any;
     expect(result.hobbyId1).toBe("pottery");
     expect(result.id).toBeUndefined();
+  });
+});
+
+describe("mapUserHobby", () => {
+  const baseUserHobby = {
+    userId: "user-1",
+    hobbyId: "pottery",
+    status: "active",
+    startedAt: new Date("2026-03-01T10:00:00.000Z"),
+    completedAt: null as Date | null,
+    lastActivityAt: new Date("2026-03-20T15:30:00.000Z"),
+    streakDays: 5,
+    pausedAt: null as Date | null,
+    pausedDurationDays: 0,
+    completedSteps: [{ stepId: "step-1" }, { stepId: "step-2" }],
+  };
+
+  it("maps basic fields correctly", () => {
+    const result = mapUserHobby(baseUserHobby);
+    expect(result.hobbyId).toBe("pottery");
+    expect(result.status).toBe("active");
+    expect(result.startedAt).toBe("2026-03-01T10:00:00.000Z");
+    expect(result.streakDays).toBe(5);
+    expect(result.completedStepIds).toEqual(["step-1", "step-2"]);
+  });
+
+  it("includes pausedAt as ISO string when present, null when absent", () => {
+    const withPause = {
+      ...baseUserHobby,
+      pausedAt: new Date("2026-03-15T08:00:00.000Z"),
+    };
+    expect(mapUserHobby(withPause).pausedAt).toBe("2026-03-15T08:00:00.000Z");
+    expect(mapUserHobby(baseUserHobby).pausedAt).toBeNull();
+  });
+
+  it("includes pausedDurationDays as integer", () => {
+    const withDuration = { ...baseUserHobby, pausedDurationDays: 7 };
+    expect(mapUserHobby(withDuration).pausedDurationDays).toBe(7);
+    expect(mapUserHobby(baseUserHobby).pausedDurationDays).toBe(0);
+  });
+
+  it("includes completedAt as ISO string when present, null when absent", () => {
+    const withCompleted = {
+      ...baseUserHobby,
+      completedAt: new Date("2026-03-20T18:00:00.000Z"),
+    };
+    expect(mapUserHobby(withCompleted).completedAt).toBe(
+      "2026-03-20T18:00:00.000Z"
+    );
+    expect(mapUserHobby(baseUserHobby).completedAt).toBeNull();
+  });
+
+  it("maps completedStepIds from nested completedSteps array", () => {
+    const result = mapUserHobby(baseUserHobby);
+    expect(result.completedStepIds).toEqual(["step-1", "step-2"]);
+
+    const empty = { ...baseUserHobby, completedSteps: [] };
+    expect(mapUserHobby(empty).completedStepIds).toEqual([]);
+  });
+
+  it("handles paused status string correctly", () => {
+    const paused = {
+      ...baseUserHobby,
+      status: "paused",
+      pausedAt: new Date("2026-03-18T12:00:00.000Z"),
+      pausedDurationDays: 3,
+    };
+    const result = mapUserHobby(paused);
+    expect(result.status).toBe("paused");
+    expect(result.pausedAt).toBe("2026-03-18T12:00:00.000Z");
+    expect(result.pausedDurationDays).toBe(3);
   });
 });
 

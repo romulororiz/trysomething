@@ -256,6 +256,8 @@ type PrismaUserHobby = {
   completedAt: Date | null;
   lastActivityAt: Date | null;
   streakDays: number;
+  pausedAt: Date | null;
+  pausedDurationDays: number;
   completedSteps: { stepId: string }[];
 };
 
@@ -272,8 +274,11 @@ export function mapUserHobby(uh: PrismaUserHobby) {
     status: uh.status,
     completedStepIds: uh.completedSteps.map((s) => s.stepId),
     startedAt: uh.startedAt?.toISOString() ?? null,
+    completedAt: uh.completedAt?.toISOString() ?? null,
     lastActivityAt: uh.lastActivityAt?.toISOString() ?? null,
     streakDays: uh.streakDays,
+    pausedAt: uh.pausedAt?.toISOString() ?? null,
+    pausedDurationDays: uh.pausedDurationDays,
   };
 }
 
