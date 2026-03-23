@@ -28,6 +28,59 @@ import {
   checkChallengeProgress,
 } from "../../lib/gamification";
 
+// ── Step completion with transactional hobby-done detection ─
+
+type PrismaClient = typeof prisma;
+
+export async function toggleStepCompletion(
+  db: PrismaClient,
+  userId: string,
+  hobbyId: string,
+  stepId: string
+) {
+  return db.$transaction(async (tx) => {
+    // Ensure UserHobby exists (FK constraint on UserCompletedStep)
+    await tx.userHobby.upsert({
+      where: { userId_hobbyId: { userId, hobbyId } },
+      create: { userId, hobbyId, status: "trying", lastActivityAt: new Date() },
+      update: { lastActivityAt: new Date() },
+    });
+
+    const existing = await tx.userCompletedStep.findUnique({
+      where: { userId_hobbyId_stepId: { userId, hobbyId, stepId } },
+    });
+
+    if (existing) {
+      await tx.userCompletedStep.delete({ where: { id: existing.id } });
+    } else {
+      await tx.userCompletedStep.create({ data: { userId, hobbyId, stepId } });
+    }
+
+    // Completion detection: only when adding a step (not removing)
+    let hobbyCompleted = false;
+    if (!existing) {
+      const [completedCount, totalSteps] = await Promise.all([
+        tx.userCompletedStep.count({ where: { userId, hobbyId } }),
+        tx.roadmapStep.count({ where: { hobbyId } }),
+      ]);
+      if (totalSteps > 0 && completedCount >= totalSteps) {
+        await tx.userHobby.update({
+          where: { userId_hobbyId: { userId, hobbyId } },
+          data: { status: "done", completedAt: new Date() },
+        });
+        hobbyCompleted = true;
+      }
+    }
+
+    const hobby = await tx.userHobby.findUnique({
+      where: { userId_hobbyId: { userId, hobbyId } },
+      include: { completedSteps: { select: { stepId: true } } },
+    });
+
+    return { hobby: hobby!, hobbyCompleted, wasNew: !existing };
+  });
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -340,43 +393,21 @@ async function handleHobbyDetail(
     // POST /users/hobbies/:hobbyId/steps/:stepId — toggle step
     const stepId = req.query.stepId as string | undefined;
     if (req.method === "POST" && stepId) {
-      // Ensure hobby exists first (FK constraint on UserCompletedStep)
-      await prisma.userHobby.upsert({
-        where: { userId_hobbyId: { userId, hobbyId } },
-        create: { userId, hobbyId, status: "trying", lastActivityAt: new Date() },
-        update: { lastActivityAt: new Date() },
-      });
+      const result = await toggleStepCompletion(prisma, userId, hobbyId, stepId);
 
-      const existing = await prisma.userCompletedStep.findUnique({
-        where: { userId_hobbyId_stepId: { userId, hobbyId, stepId } },
-      });
-
-      if (existing) {
-        await prisma.userCompletedStep.delete({
-          where: { id: existing.id },
-        });
-      } else {
-        await prisma.userCompletedStep.create({
-          data: { userId, hobbyId, stepId },
-        });
-      }
-
+      // Activity log and challenge progress are non-critical — kept outside transaction
       await prisma.userActivityLog.create({
         data: {
           userId,
           hobbyId,
-          action: existing ? "step_uncomplete" : "step_complete",
+          action: result.wasNew ? "step_complete" : "step_uncomplete",
         },
       });
-      if (!existing) {
+      if (result.wasNew) {
         await checkChallengeProgress(userId, "step_complete");
       }
 
-      const hobby = await prisma.userHobby.findUnique({
-        where: { userId_hobbyId: { userId, hobbyId } },
-        include: { completedSteps: { select: { stepId: true } } },
-      });
-      res.status(200).json(mapUserHobby(hobby!));
+      res.status(200).json({ ...mapUserHobby(result.hobby), hobbyCompleted: result.hobbyCompleted });
       return;
     }
 
