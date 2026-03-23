@@ -337,7 +337,9 @@ final canStartHobbyProvider = Provider.family<bool, String>((ref, hobbyId) {
 
   final hobbies = ref.watch(userHobbiesProvider);
   final activeEntries = hobbies.entries.where(
-    (e) => e.value.status == HobbyStatus.trying || e.value.status == HobbyStatus.active,
+    (e) => e.value.status == HobbyStatus.trying ||
+           e.value.status == HobbyStatus.active ||
+           e.value.status == HobbyStatus.paused,
   );
 
   // Allow if this hobby is already the active one
