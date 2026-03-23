@@ -1,20 +1,20 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Launch Readiness
-status: complete
-last_updated: "2026-03-23T07:04:55.099Z"
+milestone: v1.1
+milestone_name: Hobby Lifecycle & Monetization
+status: defining_requirements
+last_updated: "2026-03-23T08:00:00.000Z"
 progress:
-  total_phases: 11
-  completed_phases: 11
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — v1.0 milestone completed*
+*Last updated: 2026-03-23 — v1.1 milestone started*
 
 ---
 
@@ -23,14 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** Planning next milestone
+**Current focus:** v1.1 Hobby Lifecycle & Monetization — defining requirements
 
 ---
 
 ## Current Position
 
-Milestone v1.0 Launch Readiness: COMPLETE (shipped 2026-03-23)
-Next: `/gsd:new-milestone` to plan v1.1
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-23 — Milestone v1.1 started
 
 ## Performance Metrics
 

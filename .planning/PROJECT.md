@@ -8,12 +8,18 @@ A mobile app for overwhelmed adults who want to pick up a hobby but don't know w
 
 A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days through guided support and coaching.
 
-## Current State: v1.0 Shipped
+## Current Milestone: v1.1 Hobby Lifecycle & Monetization
 
-**Shipped:** 2026-03-23
-**Status:** App Store and Play Store submission-ready
+**Goal:** Fix the broken hobby completion flow, add pause/stop lifecycle, and gate detail page content for Pro conversion.
 
-All compliance, security, and production-readiness gaps resolved. 11 phases, 18 plans, 121 commits across 2 days.
+**Target features:**
+- Hobby completion flow (auto-transition when all steps done, celebration, move to Tried)
+- Home completed state ("You finished! Pick your next one")
+- Stop/abandon hobby (free) → moves to Tried
+- Pause hobby (Pro) → preserves progress, resume later
+- Detail page content gating (free: hero + Stage 1, Pro: full FAQ + cost + budget)
+
+**Previous:** v1.0 shipped 2026-03-23 — App Store and Play Store submission-ready.
 
 ## Requirements
 
@@ -59,7 +65,15 @@ All compliance, security, and production-readiness gaps resolved. 11 phases, 18 
 
 ### Active
 
-(None — fresh requirements needed for next milestone via `/gsd:new-milestone`)
+- [ ] Hobby auto-completes to `done` when all roadmap steps are finished
+- [ ] Celebration screen when completing final step (distinct from regular step completion)
+- [ ] Home shows completed state with "pick your next hobby" CTA
+- [ ] Completed hobbies appear in You tab "Tried" section
+- [ ] Stop/abandon hobby action (free) — moves to Tried with no progress preserved
+- [ ] Pause hobby action (Pro) — preserves progress, shows in paused state
+- [ ] Resume paused hobby (Pro)
+- [ ] Detail page: free users see hero + spec + Stage 1 only
+- [ ] Detail page: Pro users see full FAQ, cost breakdown, budget alternatives
 
 ### Out of Scope
 
@@ -102,4 +116,4 @@ All compliance, security, and production-readiness gaps resolved. 11 phases, 18 
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-03-23 after v1.0 milestone*
+*Last updated: 2026-03-23 after v1.1 milestone start*
