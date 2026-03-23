@@ -108,7 +108,10 @@ Plans:
   3. The You tab shows a distinct "Paused" filter state so the user can find their paused hobby alongside Active / Saved / Tried
   4. Tapping "Resume" from Home or You restores the hobby to active status with all completed steps intact and the correct streak — the pause gap is not counted as inactivity
   5. If a Pro subscription lapses while a hobby is paused, the hobby automatically transitions to active (not stuck in paused), and the user sees it normally on their next app open
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 14-01-PLAN.md — Repository + provider pause/resume methods + server PUT extension + webhook auto-resume
+- [ ] 14-02-PLAN.md — Home paused state + pause menu + confirmation sheet + You tab Paused filter
 
 ---
 
@@ -131,8 +134,8 @@ Plans:
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 13. Detail Page Content Gating | 2/2 | Complete    | 2026-03-23 | — |
-| 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
+| 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
+| 14. Pause/Resume Lifecycle | v1.1 | 0/2 | Not started | — |
 
 ---
 
@@ -186,4 +189,4 @@ Phase 11 (Schema Migration)
 
 *Roadmap created: 2026-03-21 (v1.0)*
 *v1.1 phases added: 2026-03-23*
-*Last updated: 2026-03-23 after Phase 13 planning*
+*Last updated: 2026-03-23 after Phase 14 planning*
