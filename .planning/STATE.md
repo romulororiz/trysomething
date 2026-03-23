@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Hobby Lifecycle & Monetization
 status: unknown
-last_updated: "2026-03-23T12:03:37.828Z"
+last_updated: "2026-03-23T14:19:14.340Z"
 progress:
-  total_phases: 12
+  total_phases: 13
   completed_phases: 12
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 22
+  completed_plans: 21
 ---
 
 # STATE.md — TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-23 — Phase 11 complete (schema migration)*
+*Last updated: 2026-03-23 — Phase 12 Plan 01 complete (hobby completion flow)*
 
 ---
 
@@ -23,18 +23,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** v1.1 Phase 11 — Lifecycle Schema Migration
+**Current focus:** v1.1 Phase 12 — Hobby Completion Flow + Stop
 
 ---
 
 ## Current Position
 
-Phase: 11 of 14 (Lifecycle Schema Migration)
-Plan: 2 of 2 in Phase 11 (COMPLETE)
-Status: Phase 11 complete
-Last activity: 2026-03-23 — Completed 11-02-PLAN.md (Dart model migration)
+Phase: 12 of 14 (Hobby Completion Flow + Stop)
+Plan: 1 of 2 in Phase 12 (COMPLETE)
+Status: Phase 12 in progress
+Last activity: 2026-03-23 — Completed 12-01-PLAN.md (completion flow + celebration screen)
 
-Progress: [#####░░░░░] 50% (v1.1) — 2 of 4 plans complete
+Progress: [######░░░░] 60% (v1.1) — 3 of 5 plans complete
 
 ---
 
@@ -54,9 +54,11 @@ Progress: [#####░░░░░] 50% (v1.1) — 2 of 4 plans complete
 | Phase | Plans Complete | Status |
 |-------|----------------|--------|
 | 11. Schema Migration | 2/2 | Complete |
-| 12. Completion Flow + Stop | 0/? | Not started |
+| 12. Completion Flow + Stop | 1/2 | In progress |
 | 13. Content Gating | 0/? | Not started |
 | 14. Pause/Resume | 0/? | Not started |
+
+| Phase 12 P01 | 7min | 2 tasks | 5 files |
 
 ---
 
@@ -75,6 +77,9 @@ Progress: [#####░░░░░] 50% (v1.1) — 2 of 4 plans complete
 - [11-02] Paused hobbies appear in Active tab temporarily until Phase 14 adds Paused filter
 - [11-02] Paused hobbies occupy Free-tier active slot to prevent bypass
 - [11-02] No default cases in exhaustive switches -- Dart 3 exhaustiveness is the safety net
+- [12-01] Used Dart record (UserHobby, bool) for toggleStep return -- lightweight multi-value return without wrapper class
+- [12-01] stopHobby uses async IIFE for fire-and-forget API call to avoid catchError type mismatch
+- [12-01] HobbyCompletionScreen uses context.go('/discover') to replace entire nav stack back to shell
 
 ### Blockers/Concerns
 
@@ -86,10 +91,10 @@ Progress: [#####░░░░░] 50% (v1.1) — 2 of 4 plans complete
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Completed 11-02-PLAN.md (Dart model migration, enum update, switch stubs, slot guard)
+Stopped at: Completed 12-01-PLAN.md (hobby completion flow, celebration screen, session exit branching)
 Resume file: None
 
-Next action: Phase 12 — Completion Flow + Stop
+Next action: Phase 12 Plan 02 — Stop hobby confirmation flow
 
 ---
 

@@ -9,8 +9,8 @@ Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phase
 
 ### Completion Flow
 
-- [ ] **COMP-01**: Hobby auto-transitions to `done` status when all roadmap steps are completed (server-side detection in step completion endpoint, returns `hobbyCompleted` flag)
-- [ ] **COMP-02**: Celebration screen displays when user completes the final step (distinct from regular step completion, hobby-specific copy with hobby title and step count)
+- [x] **COMP-01**: Hobby auto-transitions to `done` status when all roadmap steps are completed (server-side detection in step completion endpoint, returns `hobbyCompleted` flag)
+- [x] **COMP-02**: Celebration screen displays when user completes the final step (distinct from regular step completion, hobby-specific copy with hobby title and step count)
 - [ ] **COMP-03**: Home shows completed state with "pick your next hobby" CTA linking to Discover when active hobby is done
 - [ ] **COMP-04**: Completed hobbies appear in You tab "Tried" section with completion date
 
@@ -74,8 +74,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHM-01 | Phase 11 | Complete |
 | SCHM-02 | Phase 11 | Complete |
 | SCHM-03 | Phase 11 | Complete |
-| COMP-01 | Phase 12 | Pending |
-| COMP-02 | Phase 12 | Pending |
+| COMP-01 | Phase 12 | Complete |
+| COMP-02 | Phase 12 | Complete |
 | COMP-03 | Phase 12 | Pending |
 | COMP-04 | Phase 12 | Pending |
 | LIFE-01 | Phase 12 | Pending |

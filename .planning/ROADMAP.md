@@ -78,7 +78,7 @@ Plans:
   2. After dismissing the celebration, the Home tab shows a "You finished — pick your next hobby" state with a coral CTA linking to Discover, not the normal active hobby dashboard
   3. The completed hobby appears in the You tab "Tried" section with its completion date visible
   4. Tapping the 3-dot menu on an active hobby card presents a "Stop hobby" option that, after a confirmation prompt, moves the hobby to Tried and frees the active hobby slot immediately — no waiting for a network response
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 12-01-PLAN.md — Surface hobbyCompleted flag through data layer + celebration screen
 - [ ] 12-02-PLAN.md — Home completed state + stop action + Tried tab cards + detail read-only
@@ -127,7 +127,7 @@ Plans:
 | 9.1. Session Screen Redesign | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 10. Pre-Commit Hooks | v1.0 | 1/1 | Complete | 2026-03-22 |
 | 11. Lifecycle Schema Migration | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 12. Hobby Completion Flow + Stop | v1.1 | 0/2 | Planned | — |
+| 12. Hobby Completion Flow + Stop | 1/2 | In Progress|  | — |
 | 13. Detail Page Content Gating | v1.1 | 0/? | Not started | — |
 | 14. Pause/Resume Lifecycle | v1.1 | 0/? | Not started | — |
 
