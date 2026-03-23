@@ -109,9 +109,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return bTime.compareTo(aTime);
       });
 
+    // Check for completed hobbies to show completed state when no active hobbies
+    final doneEntries = userHobbies.entries
+        .where((e) => e.value.status == HobbyStatus.done)
+        .toList()
+      ..sort((a, b) {
+        final aTime = a.value.completedAt ?? DateTime(0);
+        final bTime = b.value.completedAt ?? DateTime(0);
+        return bTime.compareTo(aTime);
+      });
+
     if (activeEntries.isEmpty) {
       Future.microtask(
           () => ref.read(shellLoadingProvider.notifier).state = false);
+      if (doneEntries.isNotEmpty) {
+        return _CompletedHomeState(
+          hobbyId: doneEntries.first.key,
+          userHobby: doneEntries.first.value,
+        );
+      }
       return _EmptyHomeState();
     }
 
@@ -295,6 +311,53 @@ class _HobbyPageContent extends ConsumerStatefulWidget {
 class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
   bool _restartDismissed = false;
 
+  /// Confirmation sheet before stopping/abandoning a hobby.
+  void _showStopConfirmation(
+      BuildContext context, WidgetRef ref, Hobby hobby) {
+    showAppSheet(
+      context: context,
+      title: 'Stop ${hobby.title}?',
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your progress won\'t be saved. ${hobby.title} will move to your Tried tab.',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  ref
+                      .read(userHobbiesProvider.notifier)
+                      .stopHobby(hobby.id);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: Text('Stop hobby', style: AppTypography.button),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hobby = widget.hobby;
@@ -414,25 +477,66 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 4),
-              Builder(builder: (_) {
-                final words = hobby.title.split(' ');
-                if (words.length <= 1) {
-                  return Text(hobby.title, style: AppTypography.hero);
-                }
-                return Text.rich(
-                  TextSpan(children: [
-                    TextSpan(
-                      text: words.first,
-                      style:
-                          AppTypography.hero.copyWith(color: AppColors.coral),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Builder(builder: (_) {
+                      final words = hobby.title.split(' ');
+                      if (words.length <= 1) {
+                        return Text(hobby.title, style: AppTypography.hero);
+                      }
+                      return Text.rich(
+                        TextSpan(children: [
+                          TextSpan(
+                            text: words.first,
+                            style: AppTypography.hero
+                                .copyWith(color: AppColors.coral),
+                          ),
+                          TextSpan(
+                            text: ' ${words.skip(1).join(' ')}',
+                            style: AppTypography.hero,
+                          ),
+                        ]),
+                      );
+                    }),
+                  ),
+                  // 3-dot menu for hobby actions
+                  // Phase 14 will add a "Pause hobby" item to this menu
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert_rounded,
+                        color: AppColors.textMuted, size: 20),
+                    color: AppColors.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                          color: AppColors.glassBorder, width: 0.5),
                     ),
-                    TextSpan(
-                      text: ' ${words.skip(1).join(' ')}',
-                      style: AppTypography.hero,
-                    ),
-                  ]),
-                );
-              }),
+                    onSelected: (value) {
+                      if (value == 'stop') {
+                        _showStopConfirmation(context, ref, hobby);
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'stop',
+                        child: Row(
+                          children: [
+                            Icon(Icons.stop_circle_outlined,
+                                size: 16,
+                                color: AppColors.textSecondary),
+                            const SizedBox(width: 10),
+                            Text('Stop hobby',
+                                style: AppTypography.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
 
               // Restart prompt (stalled 3+ days)
@@ -760,6 +864,171 @@ class _JournalPreviewCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  COMPLETED HOME STATE
+// ═══════════════════════════════════════════════════════
+
+class _CompletedHomeState extends ConsumerWidget {
+  final String hobbyId;
+  final UserHobby userHobby;
+
+  const _CompletedHomeState({
+    required this.hobbyId,
+    required this.userHobby,
+  });
+
+  String _greetingText() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hobbyAsync = ref.watch(hobbyByIdProvider(hobbyId));
+    final hobby = hobbyAsync.valueOrNull;
+
+    final completedSteps = userHobby.completedStepIds.length;
+    final daysActive = userHobby.startedAt != null
+        ? DateTime.now().difference(userHobby.startedAt!).inDays
+        : 0;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _greetingText(),
+                  style: AppTypography.body
+                      .copyWith(color: AppColors.textMuted, fontSize: 14),
+                ),
+                const SizedBox(height: 32),
+
+                // Completed hobby glass card
+                GlassCard(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Animated checkmark
+                      Icon(Icons.check_circle_rounded,
+                              size: 48, color: AppColors.success)
+                          .animate()
+                          .scale(
+                            begin: const Offset(0.8, 0.8),
+                            duration: 500.ms,
+                            curve: Curves.elasticOut,
+                          )
+                          .fadeIn(duration: 300.ms),
+                      const SizedBox(height: 16),
+
+                      // Hobby title
+                      Text(
+                        hobby?.title ?? 'Hobby',
+                        style: AppTypography.title
+                            .copyWith(color: AppColors.textPrimary),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+
+                      // "Completed" label
+                      Text(
+                        'Completed',
+                        style: AppTypography.caption
+                            .copyWith(color: AppColors.success),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Stats row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _CompletedStat(
+                            value: '$completedSteps',
+                            label: 'steps',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 24,
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            color: AppColors.glassBorder,
+                          ),
+                          _CompletedStat(
+                            value: '${daysActive}d',
+                            label: 'active',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 24,
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            color: AppColors.glassBorder,
+                          ),
+                          _CompletedStat(
+                            value: '${userHobby.streakDays}d',
+                            label: 'streak',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Coral CTA — discover next hobby
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/discover'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.coral,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: Text('Find your next hobby',
+                        style: AppTypography.button),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompletedStat extends StatelessWidget {
+  final String value;
+  final String label;
+  const _CompletedStat({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value,
+            style: AppTypography.title
+                .copyWith(color: AppColors.textPrimary, fontSize: 18)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: AppTypography.caption
+                .copyWith(color: AppColors.textMuted)),
+      ],
     );
   }
 }
