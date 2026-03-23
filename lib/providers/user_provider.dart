@@ -264,7 +264,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       _repo.updateStatus(hobbyId, HobbyStatus.done, completedAt: DateTime.now()));
   }
 
-  void toggleStep(String hobbyId, String stepId) {
+  Future<bool> toggleStep(String hobbyId, String stepId) async {
     final existing = state[hobbyId] ?? UserHobby(hobbyId: hobbyId, status: HobbyStatus.trying);
     final steps = Set<String>.from(existing.completedStepIds);
     final wasCompleted = steps.contains(stepId);
@@ -287,7 +287,15 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
     _save();
     // Targeted rollback: only undo THIS specific step toggle on failure,
     // so concurrent toggles don't cascade-wipe each other's changes.
-    _repo.toggleStep(hobbyId, stepId).then((_) {}).catchError((e) {
+    try {
+      final (updatedHobby, hobbyCompleted) = await _repo.toggleStep(hobbyId, stepId);
+      state = {
+        ...state,
+        hobbyId: updatedHobby,
+      };
+      _save();
+      return hobbyCompleted;
+    } catch (e) {
       debugPrint('[UserHobbies] toggleStep failed, reverting step $stepId: $e');
       final current = state[hobbyId];
       if (current != null) {
@@ -303,7 +311,31 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
         };
         _save();
       }
-    });
+      return false;
+    }
+  }
+
+  /// Mark a hobby as done (completed). Optimistic, no rollback on API failure.
+  /// Separate from setDone() for analytics clarity (hobby_stopped vs generic done).
+  void stopHobby(String hobbyId) {
+    final existing = state[hobbyId];
+    if (existing == null) return;
+    state = {
+      ...state,
+      hobbyId: existing.copyWith(
+        status: HobbyStatus.done,
+        completedAt: DateTime.now(),
+      ),
+    };
+    _save();
+    _analytics.trackEvent('hobby_stopped', {'hobby_id': hobbyId});
+    () async {
+      try {
+        await _repo.updateStatus(hobbyId, HobbyStatus.done, completedAt: DateTime.now());
+      } catch (e) {
+        debugPrint('[UserHobbies] stopHobby API call failed: $e');
+      }
+    }();
   }
 
   bool isStepCompleted(String hobbyId, String stepId) {

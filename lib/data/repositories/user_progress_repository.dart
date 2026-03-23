@@ -20,7 +20,8 @@ abstract class UserProgressRepository {
   });
 
   /// Toggle a roadmap step completion.
-  Future<UserHobby> toggleStep(String hobbyId, String stepId);
+  /// Returns a record of (updated UserHobby, hobbyCompleted flag).
+  Future<(UserHobby, bool)> toggleStep(String hobbyId, String stepId);
 
   /// Bulk sync local hobbies to server (first-login migration).
   Future<List<UserHobby>> syncHobbies(List<UserHobby> hobbies);

@@ -50,11 +50,13 @@ class UserProgressRepositoryApi implements UserProgressRepository {
   }
 
   @override
-  Future<UserHobby> toggleStep(String hobbyId, String stepId) async {
+  Future<(UserHobby, bool)> toggleStep(String hobbyId, String stepId) async {
     final response = await _dio.post(
       ApiConstants.userHobbyStep(hobbyId, stepId),
     );
-    return UserHobby.fromJson(response.data as Map<String, dynamic>);
+    final data = response.data as Map<String, dynamic>;
+    final hobbyCompleted = (data['hobbyCompleted'] as bool?) ?? false;
+    return (UserHobby.fromJson(data), hobbyCompleted);
   }
 
   @override
