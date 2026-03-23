@@ -65,8 +65,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  /// Find the index of [hobbyId] in the sorted active entries list.
-  /// Uses the same sort order as build() — most recently active first.
+  /// Find the index of [hobbyId] in the sorted display entries list.
+  /// Uses the same sort order as build() — active first, then paused.
   int _findHobbyIndex(String? hobbyId) {
     if (hobbyId == null) return 0;
     final userHobbies = ref.read(userHobbiesProvider);
@@ -83,7 +83,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         if (bTime == null) return -1;
         return bTime.compareTo(aTime);
       });
-    final idx = activeEntries.indexWhere((e) => e.key == hobbyId);
+    final pausedEntries = userHobbies.entries
+        .where((e) => e.value.status == HobbyStatus.paused)
+        .toList()
+      ..sort((a, b) {
+        final aTime = a.value.pausedAt ?? DateTime(0);
+        final bTime = b.value.pausedAt ?? DateTime(0);
+        return bTime.compareTo(aTime);
+      });
+    final allDisplayEntries = [...activeEntries, ...pausedEntries];
+    final idx = allDisplayEntries.indexWhere((e) => e.key == hobbyId);
     return idx >= 0 ? idx : 0;
   }
 
@@ -117,6 +126,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return bTime.compareTo(aTime);
       });
 
+    final pausedEntries = userHobbies.entries
+        .where((e) => e.value.status == HobbyStatus.paused)
+        .toList()
+      ..sort((a, b) {
+        final aTime = a.value.pausedAt ?? DateTime(0);
+        final bTime = b.value.pausedAt ?? DateTime(0);
+        return bTime.compareTo(aTime);
+      });
+
+    final allDisplayEntries = [...activeEntries, ...pausedEntries];
+
     // Check for completed hobbies to show completed state when no active hobbies
     final doneEntries = userHobbies.entries
         .where((e) => e.value.status == HobbyStatus.done)
@@ -127,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return bTime.compareTo(aTime);
       });
 
-    if (activeEntries.isEmpty) {
+    if (allDisplayEntries.isEmpty) {
       Future.microtask(
           () => ref.read(shellLoadingProvider.notifier).state = false);
       // No completed home state — celebration is a one-time overlay.
@@ -135,7 +155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return _EmptyHomeState();
     }
 
-    final anyLoading = activeEntries.any(
+    final anyLoading = allDisplayEntries.any(
       (e) => ref.watch(hobbyByIdProvider(e.value.hobbyId)).isLoading,
     );
     if (anyLoading) {
@@ -162,11 +182,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 controller: _pageController,
                 physics: const ClampingScrollPhysics(),
                 itemCount: isPro
-                    ? activeEntries.length
-                    : activeEntries.length.clamp(0, 2),
+                    ? allDisplayEntries.length
+                    : allDisplayEntries.length.clamp(0, 2),
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, i) {
-                  final userHobby = activeEntries[i].value;
+                  final entry = allDisplayEntries[i];
+                  final userHobby = entry.value;
+                  if (userHobby.status == HobbyStatus.paused) {
+                    return _PausedHobbyPage(
+                      key: ValueKey('paused_${userHobby.hobbyId}'),
+                      userHobby: userHobby,
+                    );
+                  }
                   final isLocked = !isPro && i > 0;
                   final page = _HobbyPage(
                     key: ValueKey(userHobby.hobbyId),
@@ -176,13 +203,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   return _ProLockedOverlay(child: page);
                 },
               ),
-              if (activeEntries.length > 1)
+              if (allDisplayEntries.length > 1)
                 Positioned(
                   top: 8,
                   left: 0,
                   right: 0,
                   child: PageDots(
-                    count: activeEntries.length,
+                    count: allDisplayEntries.length,
                     current: _currentPage,
                   ),
                 ),
@@ -302,6 +329,127 @@ class _HobbyPage extends ConsumerWidget {
   }
 }
 
+// ===============================================
+//  PAUSED HOBBY PAGE
+// ===============================================
+
+class _PausedHobbyPage extends ConsumerWidget {
+  final UserHobby userHobby;
+  const _PausedHobbyPage({super.key, required this.userHobby});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hobbyAsync = ref.watch(hobbyByIdProvider(userHobby.hobbyId));
+    return hobbyAsync.when(
+      data: (hobby) {
+        if (hobby == null) return const SizedBox.shrink();
+        final daysPaused = userHobby.pausedAt != null
+            ? DateTime.now().difference(userHobby.pausedAt!).inDays
+            : 0;
+        return Opacity(
+          opacity: 0.7,
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(
+                0, 0, 0, Spacing.scrollBottom(context)),
+            children: [
+              // Hero image (tappable to detail)
+              GestureDetector(
+                onTap: () => context.push('/hobby/${hobby.id}'),
+                child: SizedBox(
+                  height: 250,
+                  width: double.infinity,
+                  child: ShaderMask(
+                    shaderCallback: (rect) => const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.25, 1.0],
+                    ).createShader(rect),
+                    blendMode: BlendMode.dstIn,
+                    child: CachedNetworkImage(
+                      imageUrl: hobby.imageUrl,
+                      fit: BoxFit.cover,
+                      memCacheWidth: 800,
+                      placeholder: (_, __) =>
+                          Container(color: AppColors.surfaceElevated),
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.surfaceElevated,
+                        child: Icon(AppIcons.categoryIcon(hobby.category),
+                            size: 48, color: AppColors.textMuted),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    // Hobby title (same style as active, no menu)
+                    Text(hobby.title, style: AppTypography.hero),
+                    const SizedBox(height: 12),
+                    // "PAUSED" chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: AppColors.glassBorder, width: 0.5),
+                      ),
+                      child: Text('PAUSED',
+                          style: AppTypography.overline
+                              .copyWith(color: AppColors.textMuted)),
+                    ),
+                    const SizedBox(height: 8),
+                    // Days counter
+                    Text(
+                      daysPaused == 0
+                          ? 'Paused today'
+                          : 'Paused for $daysPaused ${daysPaused == 1 ? "day" : "days"}',
+                      style: AppTypography.caption
+                          .copyWith(color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 24),
+                    // Coral "Resume" CTA -- no confirmation needed
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () => ref
+                            .read(userHobbiesProvider.notifier)
+                            .resumeHobby(hobby.id),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
+                        ),
+                        child:
+                            Text('Resume', style: AppTypography.button),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(child: LogoLoader()),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
 class _HobbyPageContent extends ConsumerStatefulWidget {
   final Hobby hobby;
   final UserHobby userHobby;
@@ -357,6 +505,69 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   elevation: 0,
                 ),
                 child: Text('Stop hobby', style: AppTypography.button),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Confirmation sheet before pausing a hobby (Pro only).
+  void _showPauseConfirmation(
+      BuildContext context, WidgetRef ref, Hobby hobby) {
+    showAppSheet(
+      context: context,
+      title: 'Pause ${hobby.title}?',
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your progress will be saved. Resume anytime.',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  ref
+                      .read(userHobbiesProvider.notifier)
+                      .pauseHobby(hobby.id);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+                  foregroundColor: AppColors.accent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: Text('Pause hobby', style: AppTypography.button),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                child: Text('Cancel',
+                    style: AppTypography.button
+                        .copyWith(color: AppColors.textSecondary)),
               ),
             ),
           ],
@@ -509,39 +720,59 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                     }),
                   ),
                   // 3-dot menu for hobby actions
-                  // Phase 14 will add a "Pause hobby" item to this menu
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert_rounded,
-                        color: AppColors.textMuted, size: 20),
-                    color: AppColors.surface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                          color: AppColors.glassBorder, width: 0.5),
-                    ),
-                    onSelected: (value) {
-                      if (value == 'stop') {
-                        _showStopConfirmation(context, ref, hobby);
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      PopupMenuItem(
-                        value: 'stop',
-                        child: Row(
-                          children: [
-                            Icon(Icons.stop_circle_outlined,
-                                size: 16,
-                                color: AppColors.textSecondary),
-                            const SizedBox(width: 10),
-                            Text('Stop hobby',
-                                style: AppTypography.body.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 14)),
-                          ],
-                        ),
+                  Builder(builder: (context) {
+                    final isPro = ref.watch(isProProvider);
+                    return PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert_rounded,
+                          color: AppColors.textMuted, size: 20),
+                      color: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                            color: AppColors.glassBorder, width: 0.5),
                       ),
-                    ],
-                  ),
+                      onSelected: (value) {
+                        if (value == 'pause') {
+                          _showPauseConfirmation(context, ref, hobby);
+                        } else if (value == 'stop') {
+                          _showStopConfirmation(context, ref, hobby);
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        if (isPro)
+                          PopupMenuItem(
+                            value: 'pause',
+                            child: Row(
+                              children: [
+                                Icon(Icons.pause_circle_outline,
+                                    size: 16,
+                                    color: AppColors.textSecondary),
+                                const SizedBox(width: 10),
+                                Text('Pause hobby',
+                                    style: AppTypography.body.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                        PopupMenuItem(
+                          value: 'stop',
+                          child: Row(
+                            children: [
+                              Icon(Icons.stop_circle_outlined,
+                                  size: 16,
+                                  color: AppColors.textSecondary),
+                              const SizedBox(width: 10),
+                              Text('Stop hobby',
+                                  style: AppTypography.body.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                 ],
               ),
               const SizedBox(height: 24),
