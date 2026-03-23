@@ -76,3 +76,28 @@ export async function requireAuth(
     return null;
   }
 }
+
+// ── Pro tier guard ──────────────────────────────
+
+const PAID_TIERS = ["pro", "trial", "lifetime"];
+
+/**
+ * Checks that the user has a paid subscription tier (pro, trial, or lifetime).
+ * Returns true if the user is on a paid tier, or false after sending a 403 response.
+ */
+export async function requirePro(
+  userId: string,
+  res: VercelResponse
+): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { subscriptionTier: true },
+  });
+
+  if (!user || !PAID_TIERS.includes(user.subscriptionTier)) {
+    errorResponse(res, 403, "Pro subscription required");
+    return false;
+  }
+
+  return true;
+}
