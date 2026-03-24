@@ -1322,14 +1322,21 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       );
       if (picked == null) return;
       setState(() => _saving = true);
-      final url = await ImageUpload.uploadImage(File(picked.path));
-      if (!mounted) return;
-      setState(() => _saving = false);
-      if (url != null) {
-        setState(() => _pendingAvatarUrl = url);
-      } else {
+      try {
+        final url = await ImageUpload.moderateAndUpload(File(picked.path));
+        if (!mounted) return;
+        setState(() => _saving = false);
+        if (url != null) {
+          setState(() => _pendingAvatarUrl = url);
+        } else {
+          showAppSnackbar(context,
+              message: 'Failed to upload photo', type: AppSnackbarType.error);
+        }
+      } on ImageModerationException catch (e) {
+        if (!mounted) return;
+        setState(() => _saving = false);
         showAppSnackbar(context,
-            message: 'Failed to upload photo', type: AppSnackbarType.error);
+            message: e.reason, type: AppSnackbarType.error);
       }
     } finally {
       _picking = false;

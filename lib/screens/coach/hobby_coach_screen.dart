@@ -159,7 +159,15 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
 
   String? _focusEntryId;
 
-  void setFocusEntryId(String? id) => _focusEntryId = id;
+  void setFocusEntryId(String? id) {
+    if (id != null) {
+      // Starting a focused conversation — clear stale history so
+      // the coach opens fresh for this specific journal entry.
+      state = [];
+      _saveToHive();
+    }
+    _focusEntryId = id;
+  }
 
   Future<void> send(String message) async {
     if (_sending || message.trim().isEmpty) return;
@@ -210,6 +218,10 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
       final reply = response.data['response'] as String? ?? '';
       final assistantMsg = ChatMessage(role: 'assistant', content: reply);
       state = [...state, assistantMsg];
+
+      // Clear focus entry after first use — subsequent messages are
+      // regular conversation, no need to re-send the image.
+      _focusEntryId = null;
 
       ref.read(analyticsProvider).trackEvent('coach_message_sent', {
         'hobby_id': hobbyId,

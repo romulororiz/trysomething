@@ -16,6 +16,7 @@ import '../../theme/spacing.dart';
 import '../../providers/subscription_provider.dart';
 import '../../components/glass_card.dart';
 import '../../components/app_background.dart';
+import '../../components/app_overlays.dart';
 
 /// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
 class HobbyJournalScreen extends ConsumerStatefulWidget {
@@ -440,12 +441,22 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                               if (text.isEmpty) return;
                               setSheetState(() => saving = true);
 
-                              // Upload photo if selected
+                              // Moderate + upload photo if selected
                               String? uploadedUrl;
                               if (photoUrl != null) {
-                                uploadedUrl =
-                                    await ImageUpload.uploadImage(
-                                        File(photoUrl!));
+                                try {
+                                  uploadedUrl =
+                                      await ImageUpload.moderateAndUpload(
+                                          File(photoUrl!));
+                                } on ImageModerationException catch (e) {
+                                  if (context.mounted) {
+                                    setSheetState(() => saving = false);
+                                    showAppSnackbar(context,
+                                        message: e.reason,
+                                        type: AppSnackbarType.error);
+                                  }
+                                  return;
+                                }
                               }
 
                               final entry = JournalEntry(

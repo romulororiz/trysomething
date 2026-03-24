@@ -72,4 +72,7 @@ class ApiConstants {
 
   // AI Coach
   static const coachChat = '/generate/coach';
+
+  // Moderation
+  static const moderateImage = '/moderate/image';
 }

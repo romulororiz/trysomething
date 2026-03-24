@@ -1384,16 +1384,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (picked == null) return;
 
     setState(() => _uploading = true);
-    final url = await ImageUpload.uploadImage(File(picked.path));
-    if (!mounted) return;
-    setState(() => _uploading = false);
-
-    if (url != null) {
-      ref.read(profileProvider.notifier).updateAvatar(url);
-    } else {
+    try {
+      final url = await ImageUpload.moderateAndUpload(File(picked.path));
+      if (!mounted) return;
+      setState(() => _uploading = false);
+      if (url != null) {
+        ref.read(profileProvider.notifier).updateAvatar(url);
+      } else {
+        showAppSnackbar(context,
+            message: 'Failed to upload photo',
+            type: AppSnackbarType.error);
+      }
+    } on ImageModerationException catch (e) {
+      if (!mounted) return;
+      setState(() => _uploading = false);
       showAppSnackbar(context,
-          message: 'Failed to upload photo',
-          type: AppSnackbarType.error);
+          message: e.reason, type: AppSnackbarType.error);
     }
   }
 
