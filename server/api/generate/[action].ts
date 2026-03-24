@@ -433,7 +433,7 @@ type CoachMode = "START" | "MOMENTUM" | "RESCUE";
 
 interface CoachChatMessage {
   role: "user" | "assistant";
-  content: string;
+  content: string | Array<{ type: "text"; text: string } | { type: "image"; source: { type: "url"; url: string } }>;
 }
 
 async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
@@ -520,14 +520,20 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
         ? (modeOverride as CoachMode)
         : detectCoachMode(userState, daysSinceLastSession);
 
+    // Find the focused entry's photoUrl (if any) for vision
+    let focusedPhotoUrl: string | null = null;
+
     const journalEntries = recentJournal.map(
       (j: any) => {
         const dateStr = new Date(j.createdAt).toLocaleDateString();
         const text = (j.text ?? "").slice(0, 150);
+        const hasPhoto = !!j.photoUrl;
         const isFocused = focusEntryId && j.id === focusEntryId;
+        if (isFocused && hasPhoto) focusedPhotoUrl = j.photoUrl;
+        const photoTag = hasPhoto ? " [Photo attached]" : "";
         return isFocused
-          ? `>>> [${dateStr}] ${text} <<< (THE USER IS ASKING ABOUT THIS ENTRY — reference it naturally without quoting it back verbatim)`
-          : `[${dateStr}] ${text}`;
+          ? `>>> [${dateStr}] ${text}${photoTag} <<< (THE USER IS ASKING ABOUT THIS ENTRY — reference it naturally without quoting it back verbatim${hasPhoto ? ". THE PHOTO IS INCLUDED BELOW — describe what you see and give specific feedback on it." : ""})`
+          : `[${dateStr}] ${text}${photoTag}`;
       }
     );
 
@@ -565,7 +571,20 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
         }
       }
     }
-    messages.push({ role: "user", content: message });
+
+    // If the focused journal entry has a photo, include it as a vision
+    // content block alongside the user's text message.
+    if (focusedPhotoUrl) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "image", source: { type: "url", url: focusedPhotoUrl } },
+          { type: "text", text: message },
+        ],
+      });
+    } else {
+      messages.push({ role: "user", content: message });
+    }
 
     // ── Call Sonnet ──
 
@@ -708,7 +727,7 @@ ${journalBlock}
 4. NEVER invent facts about ${hobby.title}. If you're unsure about a specific technique or product, say so.
 5. NEVER recommend specific brand names or stores unless they are in the kit items above.
 6. All costs in CHF. This user is in Switzerland.
-7. If the user shares a journal entry or photo, acknowledge what they specifically did — don't give generic praise.
+7. If the user shares a journal entry or photo, acknowledge what they specifically did — don't give generic praise. If an image is included, describe what you see and give concrete, specific feedback about their work.
 8. Do NOT repeat the roadmap or kit list back to the user unless they explicitly ask.
 9. Do NOT start responses with "Great question!" or similar filler. Get straight to the useful content.
 10. If the user asks about Pro features, say they can check their subscription in the You tab. Don't upsell.

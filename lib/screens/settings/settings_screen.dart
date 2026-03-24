@@ -1282,13 +1282,40 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     super.dispose();
   }
 
-  Future<void> _pickPhoto() async {
+  void _pickPhoto() {
+    if (_picking) return;
+    _showPhotoPickerMenu(context);
+  }
+
+  void _showPhotoPickerMenu(BuildContext ctx) {
+    final renderBox = ctx.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final overlay = Overlay.of(ctx);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _SettingsPhotoPickerOverlay(
+        onCamera: () {
+          entry.remove();
+          _pickAndUpload(ImageSource.camera);
+        },
+        onGallery: () {
+          entry.remove();
+          _pickAndUpload(ImageSource.gallery);
+        },
+        onDismiss: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
+  }
+
+  Future<void> _pickAndUpload(ImageSource source) async {
     if (_picking) return;
     _picking = true;
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 85,
@@ -1931,6 +1958,116 @@ class _DebugProToggle extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Photo picker overlay for settings edit profile ──
+class _SettingsPhotoPickerOverlay extends StatelessWidget {
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+  final VoidCallback onDismiss;
+
+  const _SettingsPhotoPickerOverlay({
+    required this.onCamera,
+    required this.onGallery,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Dismiss layer
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: onDismiss,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox.expand(),
+          ),
+        ),
+        // Centered menu
+        Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 220,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.glassBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _SettingsPickerOption(
+                    icon: Icons.camera_alt_rounded,
+                    label: 'Take photo',
+                    onTap: onCamera,
+                    isFirst: true,
+                  ),
+                  Container(height: 0.5, color: AppColors.glassBorder),
+                  _SettingsPickerOption(
+                    icon: Icons.photo_library_rounded,
+                    label: 'Choose from gallery',
+                    onTap: onGallery,
+                    isLast: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsPickerOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isFirst;
+  final bool isLast;
+
+  const _SettingsPickerOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isFirst = false,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.vertical(
+            top: isFirst ? const Radius.circular(12) : Radius.zero,
+            bottom: isLast ? const Radius.circular(12) : Radius.zero,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.textSecondary),
+            const SizedBox(width: 10),
+            Text(label,
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.textPrimary)),
+          ],
+        ),
       ),
     );
   }

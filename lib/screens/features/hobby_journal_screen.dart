@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../core/media/image_upload.dart';
 import '../../models/social.dart';
 import '../../providers/feature_providers.dart';
 import '../../providers/hobby_provider.dart';
@@ -65,7 +68,8 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     return GestureDetector(
                       onTap: () => setState(() => _filterIndex = i),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
                           color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
                           borderRadius: BorderRadius.circular(Spacing.radiusBadge),
@@ -220,15 +224,27 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
     // null = general entry (no hobby attached)
     String? selectedHobbyId;
 
-    // Only show hobbies the user is actively trying or has active
+    // Show active/trying hobbies (selectable) + paused (grayed out).
+    // Exclude stopped/completed entirely.
     final userHobbies = ref.read(userHobbiesProvider);
-    final activeUserHobbies = userHobbies.entries.where(
-      (e) => e.value.status == HobbyStatus.trying || e.value.status == HobbyStatus.active,
+    final visibleUserHobbies = userHobbies.entries.where(
+      (e) =>
+          e.value.status == HobbyStatus.trying ||
+          e.value.status == HobbyStatus.active ||
+          e.value.status == HobbyStatus.paused,
     ).toList();
     final allHobbies = ref.read(hobbyListProvider).valueOrNull ?? [];
     final hobbies = allHobbies.where(
-      (h) => activeUserHobbies.any((uh) => uh.key == h.id),
+      (h) => visibleUserHobbies.any((uh) => uh.key == h.id),
     ).toList();
+    // Track which hobby IDs are paused (shown grayed out, not selectable)
+    final pausedIds = userHobbies.entries
+        .where((e) => e.value.status == HobbyStatus.paused)
+        .map((e) => e.key)
+        .toSet();
+
+    String? photoUrl;
+    bool saving = false;
 
     showModalBottomSheet(
       context: context,
@@ -286,7 +302,8 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                           return GestureDetector(
                             onTap: () => setSheetState(() => selectedHobbyId = null),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
                               decoration: BoxDecoration(
                                 color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
                                 borderRadius: BorderRadius.circular(Spacing.radiusBadge),
@@ -302,20 +319,27 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                           );
                         }
                         final hobby = hobbies[index - 1];
+                        final isPaused = pausedIds.contains(hobby.id);
                         final isSelected = hobby.id == selectedHobbyId;
                         return GestureDetector(
-                          onTap: () => setSheetState(() => selectedHobbyId = hobby.id),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
-                              borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                            ),
-                            child: Text(
-                              hobby.title,
-                              style: AppTypography.caption.copyWith(
-                                color: isSelected ? Colors.white : AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
+                          onTap: isPaused
+                              ? null
+                              : () => setSheetState(() => selectedHobbyId = hobby.id),
+                          child: Opacity(
+                            opacity: isPaused ? 0.35 : 1.0,
+                            child: Container(
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.coral : AppColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                              ),
+                              child: Text(
+                                hobby.title,
+                                style: AppTypography.caption.copyWith(
+                                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -364,57 +388,43 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
 
                   const SizedBox(height: 12),
 
-                  // Photo button — locked for free users
-                  GestureDetector(
-                    onTap: () {
-                      final isPro = ref.read(isProProvider);
-                      if (!isPro) {
-                        context.push('/pro');
-                      }
-                      // TODO: implement photo picker for Pro users
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(Spacing.radiusInput),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            children: [
-                              const Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.textSecondary),
-                              if (!ref.read(isProProvider))
-                                Positioned(
-                                  right: -2,
-                                  bottom: -2,
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppColors.coral,
-                                      border: Border.all(color: AppColors.surface, width: 1),
-                                    ),
-                                    child: const Icon(Icons.lock, size: 7, color: Colors.white),
-                                  ),
-                                ),
-                            ],
+                  // Photo button — locked for free, picker for Pro
+                  if (photoUrl != null)
+                    // Photo preview with remove
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(Spacing.radiusInput),
+                          child: Image.file(
+                            File(photoUrl!),
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Add photo',
-                            style: AppTypography.caption.copyWith(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w600,
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () => setSheetState(() => photoUrl = null),
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, size: 14, color: Colors.white),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    )
+                  else
+                    _PhotoPickerButton(
+                      isPro: ref.read(isProProvider),
+                      onPicked: (path) => setSheetState(() => photoUrl = path),
                     ),
-                  ),
 
                   const SizedBox(height: 16),
 
@@ -423,21 +433,38 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                     width: double.infinity,
                     height: Spacing.buttonPrimaryHeight,
                     child: ElevatedButton(
-                      onPressed: () {
-                        final text = textController.text.trim();
-                        if (text.isEmpty) return;
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              final text = textController.text.trim();
+                              if (text.isEmpty) return;
+                              setSheetState(() => saving = true);
 
-                        final entry = JournalEntry(
-                          id: 'j_${DateTime.now().millisecondsSinceEpoch}',
-                          hobbyId: selectedHobbyId,
-                          text: text,
-                          createdAt: DateTime.now(),
-                        );
-                        ref.read(journalProvider.notifier).addEntry(entry);
-                        Navigator.of(context).pop();
-                      },
+                              // Upload photo if selected
+                              String? uploadedUrl;
+                              if (photoUrl != null) {
+                                uploadedUrl =
+                                    await ImageUpload.uploadImage(
+                                        File(photoUrl!));
+                              }
+
+                              final entry = JournalEntry(
+                                id: 'j_${DateTime.now().millisecondsSinceEpoch}',
+                                hobbyId: selectedHobbyId,
+                                text: text,
+                                photoUrl: uploadedUrl,
+                                createdAt: DateTime.now(),
+                              );
+                              ref
+                                  .read(journalProvider.notifier)
+                                  .addEntry(entry);
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.coral,
+                        backgroundColor:
+                            saving ? AppColors.textMuted : AppColors.coral,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -445,7 +472,17 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                               BorderRadius.circular(Spacing.radiusButton),
                         ),
                       ),
-                      child: Text('Save Entry', style: AppTypography.sansCta),
+                      child: saving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text('Save Entry',
+                              style: AppTypography.sansCta),
                     ),
                   ),
                 ],
@@ -454,6 +491,226 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
           },
         );
       },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PHOTO PICKER BUTTON (camera / gallery dropdown)
+// ═══════════════════════════════════════════════════════
+
+class _PhotoPickerButton extends StatelessWidget {
+  final bool isPro;
+  final ValueChanged<String> onPicked;
+  const _PhotoPickerButton({required this.isPro, required this.onPicked});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        if (!isPro) {
+          context.push('/pro');
+          return;
+        }
+        _showPickerMenu(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(Spacing.radiusInput),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                const Icon(Icons.camera_alt_outlined,
+                    size: 18, color: AppColors.textSecondary),
+                if (!isPro)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.coral,
+                        border:
+                            Border.all(color: AppColors.surface, width: 1),
+                      ),
+                      child:
+                          const Icon(Icons.lock, size: 7, color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Add photo',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPickerMenu(BuildContext context) {
+    final overlay = Overlay.of(context);
+    final renderBox = context.findRenderObject() as RenderBox;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (ctx) => _PhotoPickerOverlay(
+        anchor: offset,
+        anchorSize: renderBox.size,
+        onCamera: () async {
+          entry.remove();
+          final picked = await ImagePicker().pickImage(
+            source: ImageSource.camera,
+            maxWidth: 1024,
+            maxHeight: 1024,
+            imageQuality: 85,
+          );
+          if (picked != null) onPicked(picked.path);
+        },
+        onGallery: () async {
+          entry.remove();
+          final picked = await ImagePicker().pickImage(
+            source: ImageSource.gallery,
+            maxWidth: 1024,
+            maxHeight: 1024,
+            imageQuality: 85,
+          );
+          if (picked != null) onPicked(picked.path);
+        },
+        onDismiss: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
+  }
+}
+
+/// Dropdown overlay for camera/gallery selection.
+class _PhotoPickerOverlay extends StatelessWidget {
+  final Offset anchor;
+  final Size anchorSize;
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+  final VoidCallback onDismiss;
+
+  const _PhotoPickerOverlay({
+    required this.anchor,
+    required this.anchorSize,
+    required this.onCamera,
+    required this.onGallery,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Dismiss layer
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: onDismiss,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox.expand(),
+          ),
+        ),
+        // Menu positioned above the button
+        Positioned(
+          left: anchor.dx,
+          top: anchor.dy - 100,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 200,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.glassBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _PickerOption(
+                    icon: Icons.camera_alt_rounded,
+                    label: 'Take photo',
+                    onTap: onCamera,
+                    isFirst: true,
+                  ),
+                  Container(
+                      height: 0.5, color: AppColors.glassBorder),
+                  _PickerOption(
+                    icon: Icons.photo_library_rounded,
+                    label: 'Choose from gallery',
+                    onTap: onGallery,
+                    isLast: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PickerOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isFirst;
+  final bool isLast;
+
+  const _PickerOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isFirst = false,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.vertical(
+            top: isFirst ? const Radius.circular(12) : Radius.zero,
+            bottom: isLast ? const Radius.circular(12) : Radius.zero,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.textSecondary),
+            const SizedBox(width: 10),
+            Text(label,
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.textPrimary)),
+          ],
+        ),
+      ),
     );
   }
 }

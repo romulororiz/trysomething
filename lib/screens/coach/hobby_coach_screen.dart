@@ -973,8 +973,9 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
             child: GestureDetector(
               onTap: () => _sendChip(chip),
               child: Container(
+                alignment: Alignment.center,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: AppColors.glassBackground,
                   borderRadius: BorderRadius.circular(Spacing.radiusBadge),

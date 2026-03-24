@@ -287,7 +287,8 @@ class PlanScreen extends ConsumerWidget {
                         return GestureDetector(
                           onTap: () => setSheetState(() => selectedHobbyId = hobby.id),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
                               color: isSelected ? AppColors.coral : AppColors.sand,
                               borderRadius: BorderRadius.circular(Spacing.radiusBadge),
