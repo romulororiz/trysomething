@@ -74,5 +74,5 @@ class ApiConstants {
   static const coachChat = '/generate/coach';
 
   // Moderation
-  static const moderateImage = '/moderate/image';
+  static const moderateImage = '/generate/moderate-image';
 }

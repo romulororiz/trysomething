@@ -67,6 +67,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleGenerateBudget(req, res);
     case "coach":
       return handleCoachChat(req, res);
+    case "moderate-image":
+      return handleModerateImage(req, res);
     default:
       return errorResponse(res, 404, `Unknown action: ${action}`);
   }
@@ -782,6 +784,121 @@ Use these sections:
 - Normalize the gap, no guilt
 
 For ALL other messages, use the regular text-message style (no headers, no bullets).`;
+}
+
+// ═══════════════════════════════════════════════════
+//  Image Moderation — Pre-upload safety gate
+// ═══════════════════════════════════════════════════
+
+const MODERATION_MODEL = "claude-haiku-4-5-20251001";
+
+const MODERATION_PROMPT = `You are an image content safety classifier for a hobby discovery app (TrySomething). Your ONLY job is to determine if an uploaded image is safe for a general-audience mobile app.
+
+REJECT (unsafe = true) if the image contains ANY of the following:
+- Nudity or partial nudity (including lingerie, suggestive poses)
+- Sexual or sexually suggestive content of any kind
+- Pornographic content
+- Violence, gore, blood, wounds, or graphic injury
+- Weapons (guns, knives used threateningly, explosives)
+- Drug use, drug paraphernalia, or substance abuse
+- Self-harm or suicide imagery
+- Hate symbols, extremist imagery, or discriminatory content
+- Graphic medical/surgical imagery
+- Child exploitation or endangerment of any kind
+- Illegal activity being depicted
+- Disturbing, grotesque, or shock content
+- Text overlays containing hate speech, slurs, or threats
+
+ALLOW (unsafe = false) for:
+- Hobby activities (painting, cooking, gardening, crafts, sports, music, etc.)
+- Nature, landscapes, animals, pets
+- Food, recipes, ingredients
+- Tools, materials, equipment for hobbies
+- Selfies and portraits (clothed, appropriate)
+- Progress photos of creative work
+- Indoor/outdoor scenes
+- Screenshots of hobby-related content
+
+You MUST err on the side of caution. If you are even slightly uncertain, REJECT.
+
+Respond with EXACTLY this JSON format, nothing else:
+{"unsafe": false}
+or
+{"unsafe": true, "reason": "brief explanation"}`;
+
+async function handleModerateImage(req: VercelRequest, res: VercelResponse) {
+  const userId = await requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const { image, mediaType } = req.body ?? {};
+
+    if (!image || typeof image !== "string") {
+      return errorResponse(res, 400, "Missing image (base64 string)");
+    }
+
+    // 2MB max (base64 string ~1.37× raw bytes)
+    if (image.length > 2 * 1024 * 1024 * 1.4) {
+      return errorResponse(res, 413, "Image too large (max 2MB)");
+    }
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const resolvedType = validTypes.includes(mediaType) ? mediaType : "image/jpeg";
+
+    const client = getAnthropicClient();
+    const response = await client.messages.create({
+      model: MODERATION_MODEL,
+      max_tokens: 100,
+      temperature: 0,
+      system: MODERATION_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: resolvedType,
+                data: image,
+              },
+            },
+            { type: "text", text: "Classify this image. Respond with JSON only." },
+          ],
+        },
+      ],
+    });
+
+    const text =
+      response.content[0]?.type === "text" ? response.content[0].text : "";
+
+    let result: { unsafe: boolean; reason?: string };
+    try {
+      const jsonMatch = text.match(/\{[^}]+\}/);
+      result = jsonMatch
+        ? JSON.parse(jsonMatch[0])
+        : { unsafe: true, reason: "Failed to parse moderation response" };
+    } catch {
+      // Fail closed
+      result = { unsafe: true, reason: "Moderation check inconclusive — rejected for safety" };
+    }
+
+    if (typeof result.unsafe !== "boolean") {
+      result = { unsafe: true, reason: "Invalid moderation response" };
+    }
+
+    return res.status(200).json({
+      safe: !result.unsafe,
+      reason: result.unsafe ? (result.reason || "Content policy violation") : undefined,
+    });
+  } catch (err: unknown) {
+    console.error("[Moderate] Error:", err);
+    // Fail closed — reject if moderation itself errors
+    return res.status(200).json({
+      safe: false,
+      reason: "Moderation service unavailable — please try again",
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════
