@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/session.dart';
 
@@ -21,6 +22,14 @@ class SessionNotifier extends StateNotifier<SessionState?> {
   DateTime? _pauseStartTime;
   bool _halfwayHapticFired = false;
   bool _oneMinuteHapticFired = false;
+
+  /// Haptic feedback gated by user preference.
+  Future<void> _haptic(void Function() feedback) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('session_vibration') ?? true) {
+      feedback();
+    }
+  }
 
   // ───────────────────────────────────────────────
   //  Session lifecycle
@@ -111,11 +120,11 @@ class SessionNotifier extends StateNotifier<SessionState?> {
     // Milestone haptics
     if (!_halfwayHapticFired && elapsedSec >= totalSec ~/ 2) {
       _halfwayHapticFired = true;
-      HapticFeedback.lightImpact();
+      _haptic(HapticFeedback.lightImpact);
     }
     if (!_oneMinuteHapticFired && elapsedSec >= totalSec - 60) {
       _oneMinuteHapticFired = true;
-      HapticFeedback.lightImpact();
+      _haptic(HapticFeedback.lightImpact);
     }
   }
 
@@ -152,14 +161,14 @@ class SessionNotifier extends StateNotifier<SessionState?> {
       elapsedSeconds: totalSec,
       phase: SessionPhase.completing,
     );
-    // Enhanced haptic alarm pattern
-    HapticFeedback.mediumImpact();
+    // Enhanced haptic alarm pattern (gated by preference)
+    _haptic(HapticFeedback.mediumImpact);
     Future.delayed(
-        const Duration(milliseconds: 200), () => HapticFeedback.lightImpact());
+        const Duration(milliseconds: 200), () => _haptic(HapticFeedback.lightImpact));
     Future.delayed(
-        const Duration(milliseconds: 400), () => HapticFeedback.lightImpact());
+        const Duration(milliseconds: 400), () => _haptic(HapticFeedback.lightImpact));
     Future.delayed(
-        const Duration(milliseconds: 600), () => HapticFeedback.mediumImpact());
+        const Duration(milliseconds: 600), () => _haptic(HapticFeedback.mediumImpact));
     debugPrint('[Session] Timer complete — entering completion moment');
 
     // Hold on the completion moment for 2 seconds, then advance.

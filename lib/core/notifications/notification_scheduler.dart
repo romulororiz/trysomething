@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../../models/hobby.dart';
@@ -64,6 +65,13 @@ class NotificationScheduler {
   }) async {
     if (!_initialized) return;
 
+    // Respect the notifications toggle in Settings
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('notifications_enabled') ?? true)) {
+      await _plugin.cancelAll();
+      return;
+    }
+
     // Cancel all existing re-engagement notifications first
     await _plugin.cancelAll();
 
@@ -112,6 +120,8 @@ class NotificationScheduler {
     required String hobbyTitle,
   }) async {
     if (!_initialized) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('notifications_enabled') ?? true)) return;
 
     await _plugin.show(
       _notifId(hobbyId, _kStepOffset),

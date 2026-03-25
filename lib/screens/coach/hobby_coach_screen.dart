@@ -160,13 +160,16 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
   String? _focusEntryId;
 
   void setFocusEntryId(String? id) {
+    _focusEntryId = id;
     if (id != null) {
       // Starting a focused conversation — clear stale history so
       // the coach opens fresh for this specific journal entry.
-      state = [];
-      _saveToHive();
+      // Deferred to avoid modifying state during widget tree build.
+      Future.microtask(() {
+        state = [];
+        _saveToHive();
+      });
     }
-    _focusEntryId = id;
   }
 
   Future<void> send(String message) async {
@@ -525,26 +528,31 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
               // Premium header
               _buildHeader(hobbyTitle),
 
-              // Context hero + mode selector (only when no messages)
-              if (messages.isEmpty) ...[
-                _buildContextHero(hobby),
-                const SizedBox(height: 16),
-                _buildModeSelector(),
-                const SizedBox(height: 12),
-              ],
-
-              // Remaining messages banner
-              _buildRemainingBanner(),
-
-              // Messages or empty state
+              // Scrollable content area
               Expanded(
                 child: messages.isEmpty
-                    ? _buildEmptyOrLockedState()
-                    : _buildMessageList(messages, notifier),
+                    ? SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildContextHero(hobby),
+                            const SizedBox(height: 16),
+                            _buildModeSelector(),
+                            const SizedBox(height: 12),
+                            _buildRemainingBanner(),
+                            _buildEmptyOrLockedState(),
+                          ],
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          _buildRemainingBanner(),
+                          Expanded(
+                            child: _buildMessageList(messages, notifier),
+                          ),
+                          _buildQuickActionsStrip(),
+                        ],
+                      ),
               ),
-
-              // Compact quick actions (when conversation active)
-              if (messages.isNotEmpty) _buildQuickActionsStrip(),
 
               // Input bar
               _buildComposer(bottomInset, bottomPad),

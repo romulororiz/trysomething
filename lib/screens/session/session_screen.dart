@@ -1,6 +1,8 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/breathing_ring.dart';
 import '../../models/hobby.dart';
 import '../../models/session.dart';
@@ -113,6 +115,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   /// Tracks whether the halfway milestone pulse has been fired (D-23).
   bool _halfwayPulseFired = false;
 
+  /// Tracks whether the completion sound has been played.
+  bool _completionSoundPlayed = false;
+  AudioPlayer? _audioPlayer;
+
   /// Ticker for smooth 60fps progress interpolation (Issue 4).
   late final Ticker _progressTicker;
 
@@ -155,7 +161,22 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   @override
   void dispose() {
     _progressTicker.dispose();
+    _audioPlayer?.dispose();
     super.dispose();
+  }
+
+  /// Play completion chime if sound setting is enabled.
+  Future<void> _playCompletionSound() async {
+    if (_completionSoundPlayed) return;
+    _completionSoundPlayed = true;
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('session_sound') ?? false)) return;
+    try {
+      _audioPlayer = AudioPlayer();
+      await _audioPlayer!.play(AssetSource('audio/session_complete.wav'));
+    } catch (e) {
+      debugPrint('[Session] Sound error: $e');
+    }
   }
 
   /// Called every frame by the Ticker for smooth progress interpolation.
@@ -258,10 +279,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       debugPrint('[Session] _exitSession: hobbyId=${session.hobbyId}, stepId=${session.stepId}, alreadyCompleted=$alreadyCompleted, completedSteps=${hobby?.completedStepIds.length ?? 0}');
       if (!alreadyCompleted) {
         try {
-          hobbyCompleted = await ref
+          // Don't await — toggleStep is optimistic (state updates instantly,
+          // API call runs in background). Awaiting blocks the exit.
+          ref
               .read(userHobbiesProvider.notifier)
-              .toggleStep(session.hobbyId, session.stepId);
-          debugPrint('[Session] toggleStep returned hobbyCompleted=$hobbyCompleted');
+              .toggleStep(session.hobbyId, session.stepId)
+              .then((completed) {
+            if (completed && mounted) {
+              debugPrint('[Session] Server confirmed hobby completed');
+            }
+          });
+          debugPrint('[Session] toggleStep fired (optimistic)');
         } catch (e) {
           debugPrint('[Session] toggleStep FAILED: $e');
         }
@@ -480,6 +508,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
       case SessionPhase.timer:
       case SessionPhase.completing:
+        // Play completion chime when timer finishes
+        if (session.phase == SessionPhase.completing) {
+          _playCompletionSound();
+        }
         return SessionTimerPhase(
           key: const ValueKey('timer'),
           session: session,

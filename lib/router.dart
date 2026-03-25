@@ -419,7 +419,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/journal',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) => CustomTransitionPage(
-          child: const HobbyJournalScreen(),
+          child: HobbyJournalScreen(
+            initialHobbyId: state.uri.queryParameters['hobby'],
+          ),
           transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
           transitionDuration: Motion.navForward,
           reverseTransitionDuration: Motion.navBack,

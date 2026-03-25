@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/glass_card.dart';
 import '../../models/session.dart';
 import '../../theme/app_colors.dart';
@@ -41,8 +42,11 @@ class _SessionReflectPhaseState extends State<SessionReflectPhase> {
     super.dispose();
   }
 
-  void _onSelect(ReflectionChoice choice) {
-    HapticFeedback.selectionClick();
+  void _onSelect(ReflectionChoice choice) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('session_vibration') ?? true) {
+      HapticFeedback.selectionClick();
+    }
     setState(() => _selected = choice);
   }
 

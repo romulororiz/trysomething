@@ -1467,63 +1467,6 @@ class _EmptyActivePrompt extends StatelessWidget {
   }
 }
 
-// ── Generic empty tab prompt ──
-class _EmptyTabPrompt extends StatelessWidget {
-  final String message;
-  final String detail;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _EmptyTabPrompt({
-    required this.message,
-    required this.detail,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Text(message, style: AppTypography.title.copyWith(fontSize: 16)),
-          const SizedBox(height: 6),
-          Text(
-            detail,
-            textAlign: TextAlign.center,
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-          ),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 14),
-            GestureDetector(
-              onTap: onAction,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(actionLabel!,
-                      style: AppTypography.button
-                          .copyWith(color: Colors.white)),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 // ── Saved hobby swipe card — matches CollectorCard dimensions exactly ──
 class _SavedHobbySwipeCard extends ConsumerWidget {
   final _HobbyWithMeta meta;

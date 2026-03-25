@@ -973,37 +973,47 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
               HobbyQuickLinks(hobbyId: hobby.id),
               const SizedBox(height: 16),
 
-              // ── Recent progress ──
-              Text('RECENT PROGRESS',
-                  style: AppTypography.overline
-                      .copyWith(color: AppColors.textMuted)),
+              // ── Journal ──
+              Row(
+                children: [
+                  Text('JOURNAL',
+                      style: AppTypography.overline
+                          .copyWith(color: AppColors.textMuted)),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => context.push('/journal'),
+                    child: const Icon(Icons.add_circle_outline_rounded,
+                        size: 18, color: AppColors.coral),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => context.push(
+                        '/journal?hobby=${hobby.id}'),
+                    child: Text('View all',
+                        style: AppTypography.caption.copyWith(
+                            color: AppColors.textSecondary)),
+                  ),
+                ],
+              ),
               const SizedBox(height: 10),
+
+              // Recent entries (up to 3)
               if (hobbyJournal.isNotEmpty)
-                _JournalPreviewCard(
-                  entry: hobbyJournal.first,
-                  onTap: () => context.push('/journal'),
-                )
+                ...hobbyJournal.take(3).map((entry) =>
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _JournalEntryTile(
+                        entry: entry,
+                        onTap: () => context.push(
+                            '/journal?hobby=${hobby.id}'),
+                      ),
+                    ))
               else
-                SizedBox(
-                  width: double.infinity,
-                  child: GlassCard(
-                    child: Column(
-                      children: [
-                        Icon(MdiIcons.noteEditOutline,
-                            size: 28, color: AppColors.textMuted),
-                        const SizedBox(height: 10),
-                        Text('No journal entries yet',
-                            style: AppTypography.body
-                                .copyWith(color: AppColors.textSecondary)),
-                        const SizedBox(height: 4),
-                        Text(
-                          'After your first session, write down how it went.',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.caption
-                              .copyWith(color: AppColors.textMuted),
-                        ),
-                      ],
-                    ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text('No entries yet',
+                        style: TextStyle(color: AppColors.textMuted)),
                   ),
                 ),
             ],
@@ -1097,11 +1107,11 @@ class _RestartCard extends StatelessWidget {
 //  JOURNAL PREVIEW CARD
 // ═══════════════════════════════════════════════════════
 
-class _JournalPreviewCard extends StatelessWidget {
+class _JournalEntryTile extends StatelessWidget {
   final dynamic entry;
   final VoidCallback onTap;
 
-  const _JournalPreviewCard({required this.entry, required this.onTap});
+  const _JournalEntryTile({required this.entry, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1110,32 +1120,58 @@ class _JournalPreviewCard extends StatelessWidget {
     final dateLabel = daysAgo == 0
         ? 'Today'
         : (daysAgo == 1 ? 'Yesterday' : '$daysAgo days ago');
+    final hasPhoto = (entry.photoUrl as String?) != null &&
+        (entry.photoUrl as String).isNotEmpty;
 
     return GlassCard(
       onTap: onTap,
-      child: Column(
+      padding: const EdgeInsets.all(12),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(MdiIcons.bookOpenPageVariantOutline,
-                  size: 14, color: AppColors.textMuted),
-              const SizedBox(width: 6),
-              Text('Journal',
+          // Photo thumbnail or icon
+          if (hasPhoto)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: entry.photoUrl as String,
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+                memCacheWidth: 88,
+              ),
+            )
+          else
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(MdiIcons.noteEditOutline,
+                  size: 18, color: AppColors.textMuted),
+            ),
+          const SizedBox(width: 12),
+
+          // Text content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.text as String,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption
-                      .copyWith(color: AppColors.textMuted)),
-              const Spacer(),
-              Text(dateLabel,
-                  style: AppTypography.caption
-                      .copyWith(color: AppColors.textMuted)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            entry.text as String,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 4),
+                Text(dateLabel,
+                    style: AppTypography.caption.copyWith(
+                        color: AppColors.textMuted, fontSize: 10)),
+              ],
+            ),
           ),
         ],
       ),

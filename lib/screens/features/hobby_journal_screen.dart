@@ -20,7 +20,8 @@ import '../../components/app_overlays.dart';
 
 /// Hobby Journal — timestamped entries with photos, filter tabs, and timeline.
 class HobbyJournalScreen extends ConsumerStatefulWidget {
-  const HobbyJournalScreen({super.key});
+  final String? initialHobbyId;
+  const HobbyJournalScreen({super.key, this.initialHobbyId});
 
   @override
   ConsumerState<HobbyJournalScreen> createState() => _HobbyJournalScreenState();
@@ -28,20 +29,22 @@ class HobbyJournalScreen extends ConsumerStatefulWidget {
 
 class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
   int _filterIndex = 0;
-  static const _filters = ['All Entries', 'Photos', 'Notes', 'Milestones'];
+  static const _filters = ['All Entries', 'Photos'];
 
   List<JournalEntry> _applyFilter(List<JournalEntry> entries) {
     switch (_filterIndex) {
       case 1: return entries.where((e) => e.photoUrl != null).toList();
-      case 2: return entries.where((e) => e.photoUrl == null).toList();
-      case 3: return entries.where((e) => e.text.length > 100).toList();
       default: return entries;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final entries = ref.watch(journalProvider);
+    final allEntries = ref.watch(journalProvider);
+    // If opened from a specific hobby, show only that hobby's entries
+    final entries = widget.initialHobbyId != null
+        ? allEntries.where((e) => e.hobbyId == widget.initialHobbyId).toList()
+        : allEntries;
     final sortedEntries = List<JournalEntry>.from(entries)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final filtered = _applyFilter(sortedEntries);
@@ -101,6 +104,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                         final entry = filtered[index];
                         return _DismissibleJournalCard(
                           entry: entry,
+                          hideHobbyPill: widget.initialHobbyId != null,
                           onDismissed: () {
                             ref.read(journalProvider.notifier).removeEntry(entry.id);
                             final messenger = ScaffoldMessenger.of(context);
@@ -767,10 +771,12 @@ String _stripReflectionPrefix(String text) {
 class _DismissibleJournalCard extends ConsumerStatefulWidget {
   final JournalEntry entry;
   final VoidCallback onDismissed;
+  final bool hideHobbyPill;
 
   const _DismissibleJournalCard({
     required this.entry,
     required this.onDismissed,
+    this.hideHobbyPill = false,
   });
 
   @override
@@ -956,6 +962,7 @@ class _DismissibleJournalCardState
                     context,
                     ref,
                     widget.entry,
+                    hideHobbyPill: widget.hideHobbyPill,
                   ),
                 ),
               ),
@@ -995,8 +1002,9 @@ class _JournalEntryCard extends ConsumerWidget {
   static Widget buildContent(
     BuildContext context,
     WidgetRef ref,
-    JournalEntry entry,
-  ) {
+    JournalEntry entry, {
+    bool hideHobbyPill = false,
+  }) {
     final hobbyName = entry.hobbyId != null
         ? (ref.watch(hobbyByIdProvider(entry.hobbyId!)).valueOrNull?.title ?? entry.hobbyId!)
         : 'General';
@@ -1022,21 +1030,23 @@ class _JournalEntryCard extends ConsumerWidget {
                 color: AppColors.textMuted,
               ),
             ),
-            const SizedBox(width: Spacing.sm),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated,
-                borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-              ),
-              child: Text(
-                hobbyName,
-                style: AppTypography.sansTiny.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+            if (!hideHobbyPill) ...[
+              const SizedBox(width: Spacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                ),
+                child: Text(
+                  hobbyName,
+                  style: AppTypography.sansTiny.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
+            ],
             const Spacer(),
             // Session reflection badge
             if (isSessionEntry)
