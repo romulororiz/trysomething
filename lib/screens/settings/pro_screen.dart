@@ -674,54 +674,6 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     return 'FREE PLAN';
   }
 
-  Widget _buildDebugTierBar() {
-    final notifier = ref.read(proStatusProvider.notifier);
-    final currentTier = notifier.debugTier;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.bug_report, size: 16, color: Colors.amber),
-          const SizedBox(width: 8),
-          Text('DEBUG', style: AppTypography.monoBadge.copyWith(color: Colors.amber)),
-          const Spacer(),
-          for (final tier in DebugTier.values)
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: GestureDetector(
-                onTap: () {
-                  ref.read(proStatusProvider.notifier).setDebugTier(tier);
-                  setState(() {});
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: currentTier == tier
-                        ? Colors.amber.withValues(alpha: 0.3)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    tier.name,
-                    style: AppTypography.sansTiny.copyWith(
-                      color: currentTier == tier ? Colors.amber : AppColors.textMuted,
-                      fontWeight: currentTier == tier ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handlePurchase() async {
     // On web in debug mode, simulate purchase via debug tier
     if (kIsWeb && kDebugMode) {

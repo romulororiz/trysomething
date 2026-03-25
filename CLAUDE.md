@@ -43,16 +43,12 @@ Nothing Phone 3a (Android)
 | C: Visual Overhaul | ✅ DONE | Warm cinematic palette, glass cards, floating dock, hero layout |
 | D: Detail Page | ✅ DONE | Hobby detail redesign, commitment flow, 4-stage roadmap, quit reasons |
 | E: Coach + Monetization | ✅ DONE | Coach modes, RevenueCat, paywall, Pro locks, trial screen |
-| F: Polish & Launch | 🔶 IN PROGRESS | F.1-F.3 done. F.4 (E2E testing), F.5 (app store prep), F.6 (beta) remain |
+| F: Polish & Launch | ✅ DONE | All code complete. E2E testing, app store prep remain (non-code) |
 
-### Pending Work
-- **F.4** — End-to-end testing (manual, physical device required)
+### Pending Work (non-code)
+- **F.4** — End-to-end testing (manual, physical device — in progress)
 - **F.5** — App store prep (screenshots, descriptions, metadata)
 - **F.6** — Beta launch
-- **AI prompt upgrade** — Rewritten prompts for Sonnet ready (see Pending Upgrade section), not yet deployed to codebase
-- **Account deletion endpoint** — Required for app store compliance, not yet built. Needs `DELETE /api/users/me`
-- **Data export endpoint** — FADP requires data portability. Needs `GET /api/users/me/export` returning JSON
-- **Terms of Service + Privacy Policy** — Generated as .docx, need to be hosted and linked in app settings + app store listing
 
 ---
 
@@ -369,12 +365,23 @@ Unlimited AI coach. Photo journal. Multi-hobby. 30-day guided support + rescue m
 
 ## Known Issues & Missing Pieces
 
-1. **No account deletion endpoint** — App store requirement. Need `DELETE /api/users/me` with cascading deletes.
-2. **No data export endpoint** — FADP Art. 28 requires portability. Need `GET /api/users/me/export` → JSON.
-3. **AI still on Haiku** — Sonnet upgrade files ready, not deployed.
-4. **Coach stale detection** — Current code uses `startedAt` for days-since. Should use `lastActivityAt` (fixed in upgrade files).
-5. **Terms & Privacy** — .docx files generated, need hosting + in-app linking.
-6. **No Apple auth in vercel.json** — Route exists for `google` but `apple` not in the regex: `(register|login|refresh|google)`. Add `|apple`.
+All v1.0 + v1.1 blockers resolved. Remaining items are app store admin, not code:
+
+1. ~~No account deletion endpoint~~ — **DONE** (Phase 4: soft-delete + 30-day purge cron)
+2. ~~No data export endpoint~~ — **DONE** (Phase 4: `GET /api/users/me/export`)
+3. ~~AI still on Haiku~~ — **DONE** (Phase 8: Sonnet deployed, coach + all generation)
+4. ~~Coach stale detection~~ — **DONE** (Phase 8: uses `lastActivityAt`)
+5. ~~Terms & Privacy~~ — **DONE** (Phase 3: hosted on Next.js site, linked in Settings)
+6. ~~No Apple auth in vercel.json~~ — **DONE** (Phase 2: `apple|apple-callback` in regex)
+
+### v1.1 Additions (March 2026)
+- Image moderation gate (Haiku vision pre-upload screening)
+- AI coach image awareness (journal photo → Claude vision)
+- Photo upload for journal + profile (Cloudinary + camera/gallery picker)
+- Hobby lifecycle: pause/resume, completion, stop
+- Detail page content gating (Pro blur overlay)
+- Session sound on complete, vibration + notification settings wired
+- ~7,000 lines dead code removed
 
 ---
 

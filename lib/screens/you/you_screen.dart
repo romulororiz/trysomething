@@ -1288,59 +1288,6 @@ class _Chip extends StatelessWidget {
   }
 }
 
-// ── Nav rows ──
-class _NavRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconBg;
-  final Color iconBorder;
-  final Color iconColor;
-  final String title;
-  final TextStyle titleStyle;
-  final Color chevronColor;
-  final VoidCallback onTap;
-
-  const _NavRow({
-    required this.icon,
-    required this.iconBg,
-    required this.iconBorder,
-    required this.iconColor,
-    required this.title,
-    required this.titleStyle,
-    required this.chevronColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: iconBg,
-                border: iconBorder != Colors.transparent
-                    ? Border.all(color: iconBorder)
-                    : null,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Icon(icon, size: 15, color: iconColor),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(title, style: titleStyle)),
-            Icon(MdiIcons.chevronRight, size: 18, color: chevronColor),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ProNavRow extends ConsumerWidget {
   const _ProNavRow();
 
@@ -1414,18 +1361,6 @@ class _ProNavRow extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _HairlineDivider extends StatelessWidget {
-  const _HairlineDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 1,
-      color: const Color(0xFF0E0E13),
     );
   }
 }
