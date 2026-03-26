@@ -457,7 +457,7 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 429, 'Rate limit exceeded');
   }
 
-  const { hobbyId, message, conversationHistory, modeOverride, focusEntryId } = req.body ?? {};
+  const { hobbyId, message, conversationHistory, modeOverride, focusEntryId, imageUrl } = req.body ?? {};
 
   if (!hobbyId || typeof hobbyId !== "string") {
     return errorResponse(res, 400, "hobbyId is required");
@@ -574,13 +574,16 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // If the focused journal entry has a photo, include it as a vision
-    // content block alongside the user's text message.
-    if (focusedPhotoUrl) {
+    // Include image as a vision content block if provided:
+    // - focusedPhotoUrl: from a journal entry with photo
+    // - imageUrl: directly attached by the user in chat
+    const photoUrl = focusedPhotoUrl || (typeof imageUrl === "string" ? imageUrl : null);
+    console.log(`[Coach] photoUrl=${photoUrl ? photoUrl.slice(0, 60) + '...' : 'none'}, focusedPhotoUrl=${!!focusedPhotoUrl}, imageUrl=${typeof imageUrl === 'string' ? 'present' : 'absent'}`);
+    if (photoUrl) {
       messages.push({
         role: "user",
         content: [
-          { type: "image", source: { type: "url", url: focusedPhotoUrl } },
+          { type: "image", source: { type: "url", url: photoUrl } },
           { type: "text", text: message },
         ],
       });

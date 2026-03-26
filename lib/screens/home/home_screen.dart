@@ -941,14 +941,50 @@ class _HobbyPageContentState extends ConsumerState<_HobbyPageContent> {
                   autoSend = true;
                 }
 
-                return PlanFirstSessionCard(
-                  hobbyId: hobby.id,
-                  isLocked: false,
-                  title: coachTitle,
-                  subtitle: coachSubtitle,
-                  coachMessage: coachMessage,
-                  coachMode: coachMode,
-                  autoSend: autoSend,
+                return Column(
+                  children: [
+                    PlanFirstSessionCard(
+                      hobbyId: hobby.id,
+                      isLocked: false,
+                      title: coachTitle,
+                      subtitle: coachSubtitle,
+                      coachMessage: coachMessage,
+                      coachMode: coachMode,
+                      autoSend: autoSend,
+                    ),
+                    const SizedBox(height: 8),
+                    // Open coach freely — no pre-filled message
+                    GestureDetector(
+                      onTap: () => context.push('/coach/${hobby.id}'),
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.glassBackground,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                              color: AppColors.glassBorder, width: 0.5),
+                        ),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 16),
+                            Icon(Icons.auto_awesome,
+                                size: 14,
+                                color: AppColors.textMuted),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Ask anything about ${hobby.title}...',
+                              style: AppTypography.caption.copyWith(
+                                  color: AppColors.textMuted),
+                            ),
+                            const Spacer(),
+                            Icon(Icons.arrow_forward_rounded,
+                                size: 14, color: AppColors.textWhisper),
+                            const SizedBox(width: 14),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               }),
               const SizedBox(height: 16),

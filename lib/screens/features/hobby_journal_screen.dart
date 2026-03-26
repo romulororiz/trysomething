@@ -400,12 +400,8 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(Spacing.radiusInput),
-                          child: Image.file(
-                            File(photoUrl!),
-                            height: 100,
-                            width: 100,
-                            fit: BoxFit.cover,
-                          ),
+                          child: Image.file(File(photoUrl!),
+                              height: 100, width: 100, fit: BoxFit.cover),
                         ),
                         Positioned(
                           top: 4,

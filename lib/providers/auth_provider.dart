@@ -361,13 +361,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   String _extractError(dynamic e) {
+    debugPrint('[Auth] Error: $e');
     if (e is DioException) {
+      debugPrint('[Auth] DioException: type=${e.type}, status=${e.response?.statusCode}, data=${e.response?.data}, message=${e.message}');
       final data = e.response?.data;
       if (data is Map && data.containsKey('error')) {
         return data['error'] as String;
       }
       if (e.response?.statusCode == 409) return 'Email already registered';
       if (e.response?.statusCode == 401) return 'Invalid email or password';
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout) {
+        return 'Cannot reach server. Check your connection.';
+      }
     }
     // Surface Google Sign-In plugin errors
     final msg = e.toString();
