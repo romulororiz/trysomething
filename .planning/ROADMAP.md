@@ -181,7 +181,7 @@ Plans:
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 17. You Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 18. Coach Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
+| 18. Coach Screen Refactor | 2/2 | Complete    | 2026-03-26 | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 20. Remaining Screens Refactor | v1.2 | 0/TBD | Not started | - |
 
