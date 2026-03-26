@@ -34,12 +34,14 @@ class ChatMessage {
   final String role; // 'user' or 'assistant'
   final String content;
   final String? imageUrl; // Cloudinary URL for attached photo
+  final bool imageUploading; // True while image is being uploaded
   final DateTime timestamp;
 
   ChatMessage({
     required this.role,
     required this.content,
     this.imageUrl,
+    this.imageUploading = false,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
@@ -258,6 +260,23 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     }
   }
 
+  /// Show user message immediately while image uploads.
+  void addPendingMessage(String text, {bool hasImage = false}) {
+    _sending = true;
+    state = [
+      ...state,
+      ChatMessage(role: 'user', content: text, imageUploading: hasImage),
+    ];
+  }
+
+  /// Remove the last user message (upload failed).
+  void removePendingMessage() {
+    _sending = false;
+    if (state.isNotEmpty && state.last.role == 'user') {
+      state = state.sublist(0, state.length - 1);
+    }
+  }
+
   void clearConversation() {
     state = [];
     _saveToHive();
@@ -376,50 +395,51 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     ref.read(coachProvider(widget.hobbyId).notifier).setMode(mode.name.toUpperCase());
   }
 
-  bool _uploading = false;
-
   void _send() async {
     final text = _textController.text.trim();
-    if (text.isEmpty && _pendingImagePath == null) return;
+    final imagePath = _pendingImagePath;
+    if (text.isEmpty && imagePath == null) return;
     HapticFeedback.lightImpact();
     _textController.clear();
+    setState(() => _pendingImagePath = null);
 
-    // If there's a pending image, moderate + upload with loading state
+    final messageText = imagePath != null && text.isEmpty
+        ? 'What do you think of this photo?'
+        : text.isEmpty
+            ? 'What do you think?'
+            : text;
+
+    // If there's an image, upload first (notifier handles the typing indicator)
     String? imageUrl;
-    if (_pendingImagePath != null) {
-      final path = _pendingImagePath!;
-      setState(() {
-        _pendingImagePath = null;
-        _uploading = true;
-      });
+    if (imagePath != null) {
+      // Show the message + typing indicator immediately
+      final notifier = ref.read(coachProvider(widget.hobbyId).notifier);
+      notifier.addPendingMessage(messageText, hasImage: true);
+      _scrollToBottom();
+
       try {
-        imageUrl = await ImageUpload.moderateAndUpload(File(path));
+        imageUrl = await ImageUpload.moderateAndUpload(File(imagePath));
         debugPrint('[Coach] Image uploaded: $imageUrl');
       } on ImageModerationException catch (e) {
         if (mounted) {
-          setState(() => _uploading = false);
+          notifier.removePendingMessage();
           showAppSnackbar(context,
               message: e.reason, type: AppSnackbarType.error);
         }
         return;
       }
-      if (mounted) setState(() => _uploading = false);
-
       if (imageUrl == null) {
         if (mounted) {
+          notifier.removePendingMessage();
           showAppSnackbar(context,
               message: 'Failed to upload photo',
               type: AppSnackbarType.error);
         }
         return;
       }
+      // Replace pending message with the real one (includes imageUrl)
+      notifier.removePendingMessage();
     }
-
-    final messageText = imageUrl != null && text.isEmpty
-        ? 'What do you think of this photo?'
-        : text.isEmpty
-            ? 'What do you think?'
-            : text;
 
     ref
         .read(coachProvider(widget.hobbyId).notifier)
@@ -1305,28 +1325,6 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
           : Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Uploading indicator
-                if (_uploading)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('Uploading photo...',
-                            style: AppTypography.caption
-                                .copyWith(color: AppColors.textMuted)),
-                      ],
-                    ),
-                  ),
                 // Image preview (if attached)
                 if (_pendingImagePath != null)
                   Container(
@@ -1512,7 +1510,8 @@ class _CoachBubble extends StatelessWidget {
     final isUser = message.role == 'user';
 
     if (isUser) {
-      final hasImage = message.imageUrl != null && message.imageUrl!.isNotEmpty;
+      final hasImage = (message.imageUrl != null && message.imageUrl!.isNotEmpty) ||
+          message.imageUploading;
       return Align(
         alignment: Alignment.centerRight,
         child: Container(
@@ -1538,26 +1537,15 @@ class _CoachBubble extends StatelessWidget {
               if (hasImage)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: CachedNetworkImage(
-                    imageUrl: message.imageUrl!,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    memCacheWidth: 500,
-                    placeholder: (_, __) => Container(
-                      height: 160,
-                      color: Colors.white.withValues(alpha: 0.15),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white54,
-                          ),
+                  child: message.imageUploading
+                      ? _ImageSkeleton()
+                      : CachedNetworkImage(
+                          imageUrl: message.imageUrl!,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 500,
+                          placeholder: (_, __) => _ImageSkeleton(),
                         ),
-                      ),
-                    ),
-                  ),
                 ),
               // Text
               if (message.content.isNotEmpty)
@@ -1626,6 +1614,60 @@ class _CoachBubble extends StatelessWidget {
 // ═══════════════════════════════════════════════════════
 //  TYPING INDICATOR
 // ═══════════════════════════════════════════════════════
+
+/// Shimmer skeleton placeholder for image while uploading.
+class _ImageSkeleton extends StatefulWidget {
+  @override
+  State<_ImageSkeleton> createState() => _ImageSkeletonState();
+}
+
+class _ImageSkeletonState extends State<_ImageSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Container(
+          width: double.infinity,
+          height: 160,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment(-1.0 + 2.0 * _controller.value, 0),
+              end: Alignment(-0.5 + 2.0 * _controller.value, 0),
+              colors: [
+                Colors.white.withValues(alpha: 0.08),
+                Colors.white.withValues(alpha: 0.18),
+                Colors.white.withValues(alpha: 0.08),
+              ],
+            ),
+          ),
+          child: Center(
+            child: Icon(Icons.photo_rounded,
+                size: 28, color: Colors.white.withValues(alpha: 0.25)),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class _TypingIndicator extends StatefulWidget {
   const _TypingIndicator();
