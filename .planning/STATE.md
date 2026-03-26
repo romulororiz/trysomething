@@ -8,13 +8,13 @@ progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 6
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # STATE.md -- TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-26 -- Phase 17 complete (Plan 17-02 done)*
+*Last updated: 2026-03-26 -- Phase 18 in progress (Plan 18-01 done)*
 
 ---
 
@@ -23,27 +23,27 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** v1.2 Separation of Concerns Refactor -- Phase 17 complete, Phase 18 next
+**Current focus:** v1.2 Separation of Concerns Refactor -- Phase 18 in progress (Plan 01 complete)
 
 ---
 
 ## Current Position
 
-Phase: 17 of 20 (You Screen Refactor) -- third of 6 phases in v1.2
-Plan: 2 of 2 complete in current phase
-Status: Phase 17 complete
-Last activity: 2026-03-26 -- Plan 17-02 complete (extract helper widgets)
+Phase: 18 of 20 (Coach Screen Refactor) -- fourth of 6 phases in v1.2
+Plan: 1 of 2 complete in current phase
+Status: Executing Phase 18
+Last activity: 2026-03-26 -- Plan 18-01 complete (extract provider and bubble widgets)
 
-Progress: [██████████] 100% (2/2 plans in phase 17)
+Progress: [█████░░░░░] 50% (1/2 plans in phase 18)
 
 ---
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6 (v1.2)
-- Average duration: 6min
-- Total execution time: 37min
+- Total plans completed: 7 (v1.2)
+- Average duration: 7min
+- Total execution time: 47min
 
 **By Phase:**
 
@@ -52,6 +52,7 @@ Progress: [██████████] 100% (2/2 plans in phase 17)
 | 15 - Home Screen Refactor | 2/2 | 8min | 4min |
 | 16 - Settings Screen Refactor | 2/2 | 13min | 7min |
 | 17 - You Screen Refactor | 2/2 | 16min | 8min |
+| 18 - Coach Screen Refactor | 1/2 | 10min | 10min |
 
 *Updated after each plan completion*
 
@@ -78,12 +79,14 @@ Progress: [██████████] 100% (2/2 plans in phase 17)
 - _EmptyActivePrompt moved to active_tab_content.dart as private widget (17-01)
 - feature_providers.dart import kept in you_screen.dart -- profileProvider defined there (17-02)
 - You Screen 7-file decomposition: thin shell + cards + helpers + 4 tab content files (17-02)
+- Re-export pattern: screen file exports provider file so external importers (router.dart) need no import changes (18-01)
+- _CoachLimitTracker renamed to CoachLimitTracker (public) for same-file access by coachRemainingProvider (18-01)
 
 ### Current File Sizes (baseline)
 - home_screen.dart: 393 lines after 15-02 (was 2,375, target ~400) -- DONE
 - settings_screen.dart: 1,157 lines after 16-02 (was 2,082, target ~300) -- Phase 16 DONE (3-file split: settings_screen + edit_profile_sheet + settings_widgets)
 - you_screen.dart: 336 lines after 17-02 (was 1,654, target ~300) -- Phase 17 DONE (7-file split: you_screen + you_hobby_cards + you_helpers + 4 tab content files)
-- hobby_coach_screen.dart: 1,741 lines (target ~400)
+- hobby_coach_screen.dart: 1,203 lines after 18-01 (was 1,741, target ~400) -- provider + bubbles extracted
 - onboarding_screen.dart: 1,456 lines (target ~200)
 - hobby_journal_screen.dart: 1,170 lines (target ~500)
 - search_screen.dart: 1,128 lines (target ~500)
@@ -98,5 +101,5 @@ Progress: [██████████] 100% (2/2 plans in phase 17)
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Completed 17-02-PLAN.md (Phase 17 complete)
-Resume file: Phase 18 next
+Stopped at: Completed 18-01-PLAN.md
+Resume file: 18-02-PLAN.md next

@@ -128,7 +128,7 @@ Plans:
   3. The message bubble widget is a standalone `coach_bubble.dart` file that renders user and assistant bubbles identically to the current inline version -- same glass styling, same text layout
   4. The composer widget (text input, mic button, attach button, voice recording overlay) is a standalone file that handles input, recording state, and submission identically to the current inline version
   5. `dart analyze lib/screens/coach/` passes with 0 errors, 0 warnings; sending messages, switching modes, voice input, and photo attach all behave identically to before
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 18-01-PLAN.md -- Extract CoachNotifier/ChatMessage to coach_provider.dart and bubble widgets to coach_bubble.dart
 - [ ] 18-02-PLAN.md -- Extract composer to coach_composer.dart and mode/UI widgets to coach_widgets.dart, finalize under 500 lines
@@ -181,7 +181,7 @@ Plans:
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 17. You Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 18. Coach Screen Refactor | v1.2 | 0/2 | Not started | - |
+| 18. Coach Screen Refactor | 1/2 | In Progress|  | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 20. Remaining Screens Refactor | v1.2 | 0/TBD | Not started | - |
 

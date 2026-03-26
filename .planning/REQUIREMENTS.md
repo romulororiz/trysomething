@@ -32,8 +32,8 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 ### Coach Screen
 
 - [ ] **COACH-01**: hobby_coach_screen.dart is under 500 lines
-- [ ] **COACH-02**: CoachNotifier + ChatMessage model extracted to coach_provider.dart
-- [ ] **COACH-03**: Message bubble widget extracted to coach_bubble.dart
+- [x] **COACH-02**: CoachNotifier + ChatMessage model extracted to coach_provider.dart
+- [x] **COACH-03**: Message bubble widget extracted to coach_bubble.dart
 - [ ] **COACH-04**: Composer widget (input + mic + attach + voice overlay) extracted
 - [ ] **COACH-05**: Mode selector and quick actions strip extracted
 
@@ -78,8 +78,8 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 | YOU-03 | Phase 17 | Complete |
 | YOU-04 | Phase 17 | Complete |
 | COACH-01 | Phase 18 | Pending |
-| COACH-02 | Phase 18 | Pending |
-| COACH-03 | Phase 18 | Pending |
+| COACH-02 | Phase 18 | Complete |
+| COACH-03 | Phase 18 | Complete |
 | COACH-04 | Phase 18 | Pending |
 | COACH-05 | Phase 18 | Pending |
 | ONBD-01 | Phase 19 | Pending |
