@@ -3,6 +3,7 @@ reference/
 
 # Claude Code project instructions (local only)
 CLAUDE.md
+HUMAN_LAUNCH_CHECKLIST.md
 
 # Miscellaneous
 *.class
