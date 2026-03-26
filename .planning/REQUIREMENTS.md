@@ -25,8 +25,8 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 ### You Screen
 
 - [ ] **YOU-01**: you_screen.dart is under 500 lines
-- [ ] **YOU-02**: Each tab content (Active/Paused/Saved/Tried) is a standalone file
-- [ ] **YOU-03**: Hobby card variants (collector, paused, saved, tried) are standalone files
+- [x] **YOU-02**: Each tab content (Active/Paused/Saved/Tried) is a standalone file
+- [x] **YOU-03**: Hobby card variants (collector, paused, saved, tried) are standalone files
 - [ ] **YOU-04**: Stats widgets and helper widgets are extracted
 
 ### Coach Screen
@@ -74,8 +74,8 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 | SETT-03 | Phase 16 | Complete |
 | SETT-04 | Phase 16 | Complete |
 | YOU-01 | Phase 17 | Pending |
-| YOU-02 | Phase 17 | Pending |
-| YOU-03 | Phase 17 | Pending |
+| YOU-02 | Phase 17 | Complete |
+| YOU-03 | Phase 17 | Complete |
 | YOU-04 | Phase 17 | Pending |
 | COACH-01 | Phase 18 | Pending |
 | COACH-02 | Phase 18 | Pending |

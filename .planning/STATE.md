@@ -8,7 +8,7 @@ progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 3
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # STATE.md -- TrySomething
@@ -29,21 +29,21 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 16 of 20 (Settings Screen Refactor) -- second of 6 phases in v1.2
-Plan: 2 of 2 complete in current phase
-Status: Phase 16 complete
-Last activity: 2026-03-26 -- Plan 16-02 complete (extract settings helper widgets)
+Phase: 17 of 20 (You Screen Refactor) -- third of 6 phases in v1.2
+Plan: 1 of 2 complete in current phase
+Status: Executing phase 17
+Last activity: 2026-03-26 -- Plan 17-01 complete (extract hobby cards and tab content)
 
-Progress: [██████████] 100% (2/2 plans in phase 16)
+Progress: [█████░░░░░] 50% (1/2 plans in phase 17)
 
 ---
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4 (v1.2)
-- Average duration: 5min
-- Total execution time: 21min
+- Total plans completed: 5 (v1.2)
+- Average duration: 7min
+- Total execution time: 33min
 
 **By Phase:**
 
@@ -51,6 +51,7 @@ Progress: [██████████] 100% (2/2 plans in phase 16)
 |-------|-------|-------|----------|
 | 15 - Home Screen Refactor | 2/2 | 8min | 4min |
 | 16 - Settings Screen Refactor | 2/2 | 13min | 7min |
+| 17 - You Screen Refactor | 1/2 | 12min | 12min |
 
 *Updated after each plan completion*
 
@@ -73,11 +74,13 @@ Progress: [██████████] 100% (2/2 plans in phase 16)
 - dart:io kept in settings_screen.dart -- Platform.isIOS used by _openSubscriptionManagement (16-01)
 - settings_screen.dart at 1,157 lines after 16-02 -- plan target of 500 was based on incorrect estimation; all 7 specified widgets extracted correctly (16-02)
 - cached_network_image import removed from settings_screen.dart since only ProfileSection used it (16-02)
+- glass_card.dart not used by any card widget in you_hobby_cards.dart -- removed (17-01)
+- _EmptyActivePrompt moved to active_tab_content.dart as private widget (17-01)
 
 ### Current File Sizes (baseline)
 - home_screen.dart: 393 lines after 15-02 (was 2,375, target ~400) -- DONE
 - settings_screen.dart: 1,157 lines after 16-02 (was 2,082, target ~300) -- Phase 16 DONE (3-file split: settings_screen + edit_profile_sheet + settings_widgets)
-- you_screen.dart: 1,654 lines (target ~300)
+- you_screen.dart: 709 lines after 17-01 (was 1,654, target ~300) -- Plan 17-02 needed for remaining helpers
 - hobby_coach_screen.dart: 1,741 lines (target ~400)
 - onboarding_screen.dart: 1,456 lines (target ~200)
 - hobby_journal_screen.dart: 1,170 lines (target ~500)
@@ -93,5 +96,5 @@ Progress: [██████████] 100% (2/2 plans in phase 16)
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Completed 16-02-PLAN.md (Phase 16 complete)
-Resume file: Phase 17 next
+Stopped at: Completed 17-01-PLAN.md
+Resume file: 17-02-PLAN.md next
