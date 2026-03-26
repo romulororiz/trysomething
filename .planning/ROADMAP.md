@@ -99,7 +99,7 @@ Plans:
   2. The edit profile bottom sheet is a standalone widget file that opens, validates, and saves profile changes identically to the current inline implementation
   3. The photo picker overlay is a standalone reusable component in `lib/components/` (not screen-specific) that can be imported by any screen needing image selection
   4. `dart analyze lib/screens/settings/` passes with 0 errors, 0 warnings; every Settings interaction (edit profile, toggle, link tap, delete account) behaves identically to before
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 16-01-PLAN.md -- Extract EditProfileSheet and PhotoPickerOverlay into standalone files
 - [ ] 16-02-PLAN.md -- Extract settings section builder widgets, finalize under 500 lines
@@ -173,7 +173,7 @@ Plans:
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 16. Settings Screen Refactor | v1.2 | 0/2 | Not started | - |
+| 16. Settings Screen Refactor | 1/2 | In Progress|  | - |
 | 17. You Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |

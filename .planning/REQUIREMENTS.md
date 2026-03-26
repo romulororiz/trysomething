@@ -18,8 +18,8 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 ### Settings Screen
 
 - [ ] **SETT-01**: settings_screen.dart is under 500 lines
-- [ ] **SETT-02**: Edit profile sheet is a standalone widget file
-- [ ] **SETT-03**: Photo picker overlay is a shared reusable component
+- [x] **SETT-02**: Edit profile sheet is a standalone widget file
+- [x] **SETT-03**: Photo picker overlay is a shared reusable component
 - [ ] **SETT-04**: Settings section builders are extracted into helper widgets
 
 ### You Screen
@@ -70,8 +70,8 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 | HOME-04 | Phase 15 | Complete |
 | HOME-05 | Phase 15 | Complete |
 | SETT-01 | Phase 16 | Pending |
-| SETT-02 | Phase 16 | Pending |
-| SETT-03 | Phase 16 | Pending |
+| SETT-02 | Phase 16 | Complete |
+| SETT-03 | Phase 16 | Complete |
 | SETT-04 | Phase 16 | Pending |
 | YOU-01 | Phase 17 | Pending |
 | YOU-02 | Phase 17 | Pending |
