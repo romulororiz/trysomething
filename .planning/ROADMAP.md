@@ -113,7 +113,10 @@ Plans:
   2. Each tab content (Active, Paused, Saved, Tried) is a standalone file in `lib/screens/you/` that renders its list and empty state identically to the current inline version
   3. Hobby card variants (collector card, paused card, saved card, tried card) are standalone widget files that produce identical visual output to the current inline builders
   4. `dart analyze lib/screens/you/` passes with 0 errors, 0 warnings; all four tab filters, card taps, and empty states behave identically to before
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 17-01-PLAN.md -- Extract hobby card variants and tab content widgets into standalone files
+- [ ] 17-02-PLAN.md -- Extract helper/stats widgets, finalize you_screen.dart under 500 lines
 
 ### Phase 18: Coach Screen Refactor
 **Goal:** hobby_coach_screen.dart is a slim conversation UI that composes extracted provider, bubble, composer, and mode widgets
@@ -174,7 +177,7 @@ Plans:
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 17. You Screen Refactor | v1.2 | 0/TBD | Not started | - |
+| 17. You Screen Refactor | v1.2 | 0/2 | Not started | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 20. Remaining Screens Refactor | v1.2 | 0/TBD | Not started | - |
@@ -232,4 +235,4 @@ Phase 20 (Remaining Screens) ---- depends on Phase 16 (shared photo picker from 
 *Roadmap created: 2026-03-21 (v1.0)*
 *v1.1 phases added: 2026-03-23*
 *v1.2 phases added: 2026-03-26*
-*Last updated: 2026-03-26 after Phase 16 planning*
+*Last updated: 2026-03-26 after Phase 17 planning*
