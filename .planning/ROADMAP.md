@@ -60,7 +60,7 @@
 
 ---
 
-### 🚧 v1.2 Separation of Concerns Refactor (In Progress)
+### v1.2 Separation of Concerns Refactor (In Progress)
 
 **Milestone Goal:** Reduce every oversized screen file to under 500 lines by extracting stateful widgets, providers, and reusable components into their own files. Pure refactor -- zero UI/UX changes. The app must look and behave identically after every phase.
 
@@ -85,7 +85,10 @@
   3. The active hobby page content (greeting, hobby card, next step, weekly plan, coach entry, progress) is a standalone file that renders identically to the current inline version
   4. Journal entry tiles and their empty states are standalone widget files that produce pixel-identical output in both Home and any other screen that uses them
   5. `dart analyze lib/screens/home/` passes with 0 errors, 0 warnings; the Home tab navigates and behaves identically to before the refactor
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 15-01-PLAN.md -- Extract PausedHobbyPage and RoadmapJourney into standalone files
+- [ ] 15-02-PLAN.md -- Extract JournalEntryTile and ActiveHobbyPage, finalize under 500 lines
 
 ### Phase 16: Settings Screen Refactor
 **Goal:** settings_screen.dart is a lean scrollable list that delegates every sheet, picker, and section group to extracted files
@@ -166,7 +169,7 @@
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 15. Home Screen Refactor | v1.2 | 0/TBD | Not started | - |
+| 15. Home Screen Refactor | v1.2 | 0/2 | In progress | - |
 | 16. Settings Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 17. You Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
@@ -212,13 +215,13 @@
 ## Dependency Graph (v1.2)
 
 ```
-Phase 15 (Home Screen)        ─┐
-Phase 16 (Settings Screen)     ├── all independent except Phase 20
-Phase 17 (You Screen)          │
-Phase 18 (Coach Screen)        │
-Phase 19 (Onboarding Screen)  ─┘
-                                │
-Phase 20 (Remaining Screens) ──── depends on Phase 16 (shared photo picker from SETT-03)
+Phase 15 (Home Screen)        -+
+Phase 16 (Settings Screen)     +-- all independent except Phase 20
+Phase 17 (You Screen)          |
+Phase 18 (Coach Screen)        |
+Phase 19 (Onboarding Screen)  -+
+                                |
+Phase 20 (Remaining Screens) ---- depends on Phase 16 (shared photo picker from SETT-03)
 ```
 
 ---
@@ -226,4 +229,4 @@ Phase 20 (Remaining Screens) ──── depends on Phase 16 (shared photo pick
 *Roadmap created: 2026-03-21 (v1.0)*
 *v1.1 phases added: 2026-03-23*
 *v1.2 phases added: 2026-03-26*
-*Last updated: 2026-03-26 after v1.2 roadmap creation*
+*Last updated: 2026-03-26 after Phase 15 planning*
