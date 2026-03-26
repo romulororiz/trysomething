@@ -1,102 +1,100 @@
 # Requirements: TrySomething
 
-**Defined:** 2026-03-23
-**Core Value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it through guided support.
+**Defined:** 2026-03-26
+**Core Value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
 
-## v1.1 Requirements
+## v1.2 Requirements
 
-Requirements for v1.1 Hobby Lifecycle & Monetization. Each maps to roadmap phases.
+Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 
-### Completion Flow
+### Home Screen
 
-- [x] **COMP-01**: Hobby auto-transitions to `done` status when all roadmap steps are completed (server-side detection in step completion endpoint, returns `hobbyCompleted` flag)
-- [x] **COMP-02**: Celebration screen displays when user completes the final step (distinct from regular step completion, hobby-specific copy with hobby title and step count)
-- [x] **COMP-03**: Home shows completed state with "pick your next hobby" CTA linking to Discover when active hobby is done
-- [x] **COMP-04**: Completed hobbies appear in You tab "Tried" section with completion date
+- [ ] **HOME-01**: home_screen.dart is under 500 lines with all page variants extracted
+- [ ] **HOME-02**: Paused hobby page is a standalone widget file
+- [ ] **HOME-03**: Active hobby page content is a standalone widget file
+- [ ] **HOME-04**: Journal entry tiles and empty states are standalone widget files
+- [ ] **HOME-05**: Roadmap step tile is a standalone widget file
 
-### Lifecycle
+### Settings Screen
 
-- [x] **LIFE-01**: User can stop/abandon an active hobby (free) — moves to Tried with confirmation prompt, no progress preserved
-- [x] **LIFE-02**: User can pause an active hobby (Pro) — preserves progress, streaks, completed steps; requires active Pro entitlement
-- [x] **LIFE-03**: User can resume a paused hobby (Pro) — picks up where they left off with streak continuity
-- [x] **LIFE-04**: Home shows paused hobby with frosted glass card (opacity 0.7), "Paused" chip, coral "Resume" CTA, days-paused counter
-- [x] **LIFE-05**: You tab shows Paused as a distinct filter state alongside Active/Saved/Tried with pause icon on card
-- [x] **LIFE-06**: Pro subscription lapse auto-resumes paused hobbies as active (no data lost, removes pause state gracefully)
-- [x] **LIFE-07**: Pause duration excluded from streak calculation (pausedDurationDays subtracted from gap)
+- [ ] **SETT-01**: settings_screen.dart is under 500 lines
+- [ ] **SETT-02**: Edit profile sheet is a standalone widget file
+- [ ] **SETT-03**: Photo picker overlay is a shared reusable component
+- [ ] **SETT-04**: Settings section builders are extracted into helper widgets
 
-### Content Gating
+### You Screen
 
-- [x] **GATE-01**: Detail page shows for free users: hero image, spec badge, "why it fits you", "start in 20 minutes", what to expect, full 4-stage roadmap overview, "Start Hobby" CTA
-- [x] **GATE-02**: Detail page Pro-locked sections: why people stop, starter kit list, plan first session, cost breakdown, FAQ, budget alternatives
-- [x] **GATE-03**: Locked sections render as glass card with lock icon, section title, one-line teaser text, "Unlock with Pro" pill
-- [x] **GATE-04**: Tapping any locked section triggers existing `showProUpgrade()` bottom sheet
-- [x] **GATE-05**: Server-side gate on `/api/generate/faq`, `/api/generate/cost`, `/api/generate/budget` endpoints — return 403 for non-Pro users
-- [x] **GATE-06**: Plan First Session card on Home (for active hobby) uses same component as detail page version, ungated for active hobby
+- [ ] **YOU-01**: you_screen.dart is under 500 lines
+- [ ] **YOU-02**: Each tab content (Active/Paused/Saved/Tried) is a standalone file
+- [ ] **YOU-03**: Hobby card variants (collector, paused, saved, tried) are standalone files
+- [ ] **YOU-04**: Stats widgets and helper widgets are extracted
 
-### Schema
+### Coach Screen
 
-- [x] **SCHM-01**: Add `paused` to `HobbyStatus` enum in Prisma schema and Flutter model via two-step migration (add enum value first, then use it)
-- [x] **SCHM-02**: Add `pausedAt DateTime?` and `pausedDurationDays Int @default(0)` fields to UserHobby model
-- [x] **SCHM-03**: Server-side step completion endpoint sets `status = done` and `completedAt = now()` when all steps are complete (single transaction)
+- [ ] **COACH-01**: hobby_coach_screen.dart is under 500 lines
+- [ ] **COACH-02**: CoachNotifier + ChatMessage model extracted to coach_provider.dart
+- [ ] **COACH-03**: Message bubble widget extracted to coach_bubble.dart
+- [ ] **COACH-04**: Composer widget (input + mic + attach + voice overlay) extracted
+- [ ] **COACH-05**: Mode selector and quick actions strip extracted
 
-## v2 Requirements
+### Onboarding Screen
 
-Deferred to future release. Tracked but not in current roadmap.
+- [ ] **ONBD-01**: onboarding_screen.dart is under 300 lines
+- [ ] **ONBD-02**: Each onboarding step/page is a standalone widget file
 
-### Enhanced Lifecycle
+### Remaining Screens
 
-- **LIFE-08**: Multiple pause/resume cycles tracked with PauseLog join table
-- **LIFE-09**: "Restart hobby" action — reset all progress and start fresh
-- **LIFE-10**: Hobby archive — hide from all views but preserve data
-
-### Enhanced Gating
-
-- **GATE-07**: Progressive unlock — completing Stage 1 unlocks Stage 2 preview for free users
-- **GATE-08**: Time-limited Pro trial on specific hobby (try Pro features for one hobby only)
+- [ ] **MISC-01**: hobby_journal_screen.dart under 500 lines — add entry sheet, cards extracted
+- [ ] **MISC-02**: search_screen.dart under 500 lines — results, suggestions extracted
+- [ ] **MISC-03**: hobby_detail_screen.dart under 500 lines — kit, roadmap, FAQ sections extracted
+- [ ] **MISC-04**: discover_screen.dart under 500 lines — feed card, list card, hero card extracted
+- [ ] **MISC-05**: Photo picker overlays unified into one shared component (journal + settings + coach)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Gating the roadmap overview | Roadmap visibility drives engagement and conversion — hiding it hurts free users |
-| Removing free coach messages | 3 msg/month demonstrates value and drives upgrades; zero messages = no trial |
-| 30-day timer enforcement | Steps are the real progression; 30 days is marketing, not a constraint |
-| Blur overlay on locked content | Research shows lock icon + clear CTA outperforms blur (cleaner, more intentional) |
-| Hard-deleting stopped hobbies | Keep data for analytics and potential "restart" in v2 |
-| Gating active hobby features on Home | Free users who started a hobby should succeed — frustrated users don't convert |
+| New features | v1.2 is pure refactor — no behavioral changes |
+| Server refactor | Server files are already well-structured |
+| Model refactor | Freezed models are auto-generated, no action needed |
+| Test refactor | Tests can be updated after screens are split |
+| Provider restructuring (except CoachNotifier) | Providers are already in separate files |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHM-01 | Phase 11 | Complete |
-| SCHM-02 | Phase 11 | Complete |
-| SCHM-03 | Phase 11 | Complete |
-| COMP-01 | Phase 12 | Complete |
-| COMP-02 | Phase 12 | Complete |
-| COMP-03 | Phase 12 | Complete |
-| COMP-04 | Phase 12 | Complete |
-| LIFE-01 | Phase 12 | Complete |
-| GATE-01 | Phase 13 | Complete |
-| GATE-02 | Phase 13 | Complete |
-| GATE-03 | Phase 13 | Complete |
-| GATE-04 | Phase 13 | Complete |
-| GATE-05 | Phase 13 | Complete |
-| GATE-06 | Phase 13 | Complete |
-| LIFE-02 | Phase 14 | Complete |
-| LIFE-03 | Phase 14 | Complete |
-| LIFE-04 | Phase 14 | Complete |
-| LIFE-05 | Phase 14 | Complete |
-| LIFE-06 | Phase 14 | Pending |
-| LIFE-07 | Phase 14 | Pending |
+| HOME-01 | Phase 15 | Pending |
+| HOME-02 | Phase 15 | Pending |
+| HOME-03 | Phase 15 | Pending |
+| HOME-04 | Phase 15 | Pending |
+| HOME-05 | Phase 15 | Pending |
+| SETT-01 | Phase 16 | Pending |
+| SETT-02 | Phase 16 | Pending |
+| SETT-03 | Phase 16 | Pending |
+| SETT-04 | Phase 16 | Pending |
+| YOU-01 | Phase 17 | Pending |
+| YOU-02 | Phase 17 | Pending |
+| YOU-03 | Phase 17 | Pending |
+| YOU-04 | Phase 17 | Pending |
+| COACH-01 | Phase 18 | Pending |
+| COACH-02 | Phase 18 | Pending |
+| COACH-03 | Phase 18 | Pending |
+| COACH-04 | Phase 18 | Pending |
+| COACH-05 | Phase 18 | Pending |
+| ONBD-01 | Phase 19 | Pending |
+| ONBD-02 | Phase 19 | Pending |
+| MISC-01 | Phase 20 | Pending |
+| MISC-02 | Phase 20 | Pending |
+| MISC-03 | Phase 20 | Pending |
+| MISC-04 | Phase 20 | Pending |
+| MISC-05 | Phase 20 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 20 total
-- Mapped to phases: 20
-- Unmapped: 0
+- v1.2 requirements: 25 total
+- Mapped to phases: 25
+- Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-03-23*
-*Last updated: 2026-03-23 after roadmap creation — traceability complete*
+*Requirements defined: 2026-03-26*
+*Last updated: 2026-03-26 after initial definition*
