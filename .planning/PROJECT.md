@@ -8,18 +8,19 @@ A mobile app for overwhelmed adults who want to pick up a hobby but don't know w
 
 A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days through guided support and coaching.
 
-## Current Milestone: v1.1 Hobby Lifecycle & Monetization
+## Current Milestone: v1.2 Separation of Concerns Refactor
 
-**Goal:** Fix the broken hobby completion flow, add pause/stop lifecycle, and gate detail page content for Pro conversion.
+**Goal:** Reduce every screen file to <500 lines by extracting stateful widgets, providers, and reusable components into their own files. Pure code quality — no new features.
 
-**Target features:**
-- Hobby completion flow (auto-transition when all steps done, celebration, move to Tried)
-- Home completed state ("You finished! Pick your next one")
-- Stop/abandon hobby (free) → moves to Tried
-- Pause hobby (Pro) → preserves progress, resume later
-- Detail page content gating (free: hero + Stage 1, Pro: full FAQ + cost + budget)
+**Target files:**
+- `home_screen.dart` (2,375 → ~400) — extract page variants, journal tiles, roadmap
+- `settings_screen.dart` (2,082 → ~300) — extract edit profile sheet, photo picker
+- `you_screen.dart` (1,654 → ~300) — extract 4 tab contents + card types
+- `hobby_coach_screen.dart` (1,613 → ~400) — extract CoachNotifier, bubbles, composer
+- `onboarding_screen.dart` (1,456 → ~200) — extract each onboarding step
+- Remaining: journal, search, detail, discover screens
 
-**Previous:** v1.0 shipped 2026-03-23 — App Store and Play Store submission-ready.
+**Previous:** v1.1 shipped 2026-03-25 — Hobby lifecycle, monetization, AI image moderation, coach photo/voice input.
 
 ## Requirements
 
