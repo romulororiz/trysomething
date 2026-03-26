@@ -58,6 +58,18 @@ class MockAuthRepository implements AuthRepository {
       throw UnimplementedError();
 
   @override
+  Future<AuthResponse> loginWithApple({
+    String? authorizationCode,
+    String? identityToken,
+    Map<String, String?>? fullName,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deleteAccount({String? password}) async =>
+      throw UnimplementedError();
+
+  @override
   Future<Map<String, dynamic>> refreshToken({
     required String refreshToken,
   }) async =>

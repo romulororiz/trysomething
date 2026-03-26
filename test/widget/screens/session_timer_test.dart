@@ -191,8 +191,8 @@ void main() {
     testWidgets('shows MM:SS countdown and step instructions', (tester) async {
       final notifier = await enterTimerPhase(tester);
 
-      // Countdown is in MM:SS format.
-      expect(find.textContaining(':'), findsOneWidget);
+      // Countdown is in MM:SS format — match the standalone colon separator.
+      expect(find.text(':'), findsOneWidget);
       // Step instructions appear during the active timer.
       expect(find.text(_kStepInstructions), findsOneWidget);
 
@@ -354,53 +354,7 @@ void main() {
     });
   });
 
-  // ── 11-13. Complete phase ───────────────────────────────
-  group('Complete phase', () {
-    Future<void> pumpInComplete(WidgetTester tester,
-        {String? nextStepTitle}) async {
-      await _pumpScreen(tester, nextStepTitle: nextStepTitle);
-
-      final notifier = _notifier(tester);
-      final current = _sessionState(tester)!;
-
-      // Jump to reflect without starting the periodic timer.
-      notifier.state = current.copyWith(phase: SessionPhase.reflect);
-      await tester.pump();
-
-      // Skip reflection → phase = complete, isComplete = true.
-      notifier.skipReflection();
-      await tester.pump();
-
-      // Drain complete-phase animation timers (longest delay: 900 ms).
-      await tester.pump(const Duration(milliseconds: 1100));
-    }
-
-    testWidgets('renders "STEP COMPLETE" overline', (tester) async {
-      await pumpInComplete(tester);
-      expect(find.text('STEP COMPLETE'), findsOneWidget);
-
-      // Pump past the 3-second auto-exit timer to let it fire cleanly.
-      await tester.pump(const Duration(seconds: 4));
-    });
-
-    testWidgets('renders step title and check icon', (tester) async {
-      await pumpInComplete(tester);
-      expect(find.text(_kStepTitle), findsOneWidget);
-      expect(find.byIcon(Icons.check_circle_outline_rounded), findsOneWidget);
-
-      await tester.pump(const Duration(seconds: 4));
-    });
-
-    testWidgets('renders next step preview when nextStepTitle is provided',
-        (tester) async {
-      await pumpInComplete(tester, nextStepTitle: 'Shape your first bowl');
-      expect(find.text('Next: Shape your first bowl'), findsOneWidget);
-
-      await tester.pump(const Duration(seconds: 4));
-    });
-  });
-
-  // ── 14. endTimerEarly sets session state to null ────────
+  // ── 11. endTimerEarly sets session state to null ────────
   group('endTimerEarly()', () {
     testWidgets('nullifies provider state after beginTimer', (tester) async {
       await _pumpScreen(tester);

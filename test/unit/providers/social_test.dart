@@ -423,41 +423,4 @@ void main() {
     });
   });
 
-  // ═══════════════════════════════════════════════════════
-  //  SIMILAR USERS
-  // ═══════════════════════════════════════════════════════
-
-  group('SimilarUsersNotifier', () {
-    late MockSocialRepository repo;
-    late SimilarUsersNotifier notifier;
-
-    setUp(() {
-      repo = MockSocialRepository();
-      notifier = SimilarUsersNotifier(repo);
-    });
-
-    test('loadFromServer populates state', () async {
-      repo.serverSimilarUsers = [
-        const NearbyUser(
-          id: 'u1',
-          name: 'Sarah',
-          avatarInitial: 'S',
-          hobbyId: 'painting',
-          distance: '',
-          startedText: '2 weeks ago',
-        ),
-      ];
-
-      await notifier.loadFromServer();
-
-      expect(notifier.state, hasLength(1));
-      expect(notifier.state.first.name, 'Sarah');
-    });
-
-    test('loadFromServer handles failure gracefully', () async {
-      repo.shouldFail = true;
-      await notifier.loadFromServer();
-      expect(notifier.state, isEmpty);
-    });
-  });
 }

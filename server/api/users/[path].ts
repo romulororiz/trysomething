@@ -1473,7 +1473,7 @@ async function handleExport(
 
 // ── /cron/purge-deleted-users (merged to stay within 12-function limit) ──
 
-async function handlePurgeDeletedUsers(
+export async function handlePurgeDeletedUsers(
   req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {

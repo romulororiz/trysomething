@@ -119,11 +119,14 @@ class _StubUserProgressRepository implements UserProgressRepository {
     HobbyStatus status, {
     DateTime? startedAt,
     DateTime? completedAt,
+    DateTime? pausedAt,
+    int? pausedDurationDays,
+    DateTime? lastActivityAt,
   }) async =>
       _stub;
 
   @override
-  Future<UserHobby> toggleStep(String hobbyId, String stepId) async => _stub;
+  Future<(UserHobby, bool)> toggleStep(String hobbyId, String stepId) async => (_stub, false);
 
   @override
   Future<List<UserHobby>> syncHobbies(List<UserHobby> hobbies) async => hobbies;
@@ -153,6 +156,18 @@ class _StubAuthRepository implements AuthRepository {
     String? idToken,
     String? accessToken,
   }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<auth_models.AuthResponse> loginWithApple({
+    String? authorizationCode,
+    String? identityToken,
+    Map<String, String?>? fullName,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deleteAccount({String? password}) async =>
       throw UnimplementedError();
 
   @override

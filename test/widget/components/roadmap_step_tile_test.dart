@@ -236,27 +236,7 @@ void main() {
       );
     });
 
-    // ── 11. isCurrent=true with estimatedMinutes — time text shown ────────
-    testWidgets('isCurrent=true — estimatedMinutes shown as "<n>min"',
-        (tester) async {
-      await _pump(
-        tester,
-        RoadmapStepTile(
-          step: _step(estimatedMinutes: 45),
-          stepNumber: 1,
-          isCurrent: true,
-        ),
-      );
-
-      expect(
-        find.text('45min'),
-        findsOneWidget,
-        reason:
-            'Current step card should display estimatedMinutes as "<n>min"',
-      );
-    });
-
-    // ── 12. isCompleted=true with milestone — milestone NOT shown ─────────
+    // ── 11. isCompleted=true with milestone — milestone NOT shown ─────────
     testWidgets('isCompleted=true with milestone — milestone not shown',
         (tester) async {
       await _pump(

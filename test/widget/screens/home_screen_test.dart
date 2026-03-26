@@ -115,11 +115,14 @@ class _StubUserProgressRepository implements UserProgressRepository {
     HobbyStatus status, {
     DateTime? startedAt,
     DateTime? completedAt,
+    DateTime? pausedAt,
+    int? pausedDurationDays,
+    DateTime? lastActivityAt,
   }) async =>
       _stub;
 
   @override
-  Future<UserHobby> toggleStep(String hobbyId, String stepId) async => _stub;
+  Future<(UserHobby, bool)> toggleStep(String hobbyId, String stepId) async => (_stub, false);
 
   @override
   Future<List<UserHobby>> syncHobbies(List<UserHobby> hobbies) async => hobbies;

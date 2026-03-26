@@ -57,6 +57,27 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthResponse> loginWithApple({
+    String? authorizationCode,
+    String? identityToken,
+    Map<String, String?>? fullName,
+  }) async {
+    calls.add('loginWithApple');
+    if (shouldFail) throw Exception(failMessage);
+    return AuthResponse(
+      user: mockUser,
+      accessToken: 'access_token',
+      refreshToken: 'refresh_token',
+    );
+  }
+
+  @override
+  Future<void> deleteAccount({String? password}) async {
+    calls.add('deleteAccount');
+    if (shouldFail) throw Exception(failMessage);
+  }
+
+  @override
   Future<Map<String, dynamic>> refreshToken({required String refreshToken}) async {
     calls.add('refreshToken');
     if (shouldFail) throw Exception(failMessage);
