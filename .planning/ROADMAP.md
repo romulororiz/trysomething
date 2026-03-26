@@ -65,7 +65,7 @@
 **Milestone Goal:** Reduce every oversized screen file to under 500 lines by extracting stateful widgets, providers, and reusable components into their own files. Pure refactor -- zero UI/UX changes. The app must look and behave identically after every phase.
 
 - [x] **Phase 15: Home Screen Refactor** — Extract page variants, journal tiles, and roadmap widgets from home_screen.dart (2,375 -> ~400 lines) (completed 2026-03-26)
-- [ ] **Phase 16: Settings Screen Refactor** — Extract edit profile sheet, photo picker, and section builders from settings_screen.dart (2,082 -> ~300 lines)
+- [x] **Phase 16: Settings Screen Refactor** — Extract edit profile sheet, photo picker, and section builders from settings_screen.dart (2,082 -> ~300 lines) (completed 2026-03-26)
 - [ ] **Phase 17: You Screen Refactor** — Extract tab contents and hobby card variants from you_screen.dart (1,654 -> ~300 lines)
 - [ ] **Phase 18: Coach Screen Refactor** — Extract CoachNotifier, message bubbles, composer, and mode selector from hobby_coach_screen.dart (1,741 -> ~400 lines)
 - [ ] **Phase 19: Onboarding Screen Refactor** — Extract each onboarding step into standalone widget files from onboarding_screen.dart (1,456 -> ~200 lines)
@@ -99,7 +99,7 @@ Plans:
   2. The edit profile bottom sheet is a standalone widget file that opens, validates, and saves profile changes identically to the current inline implementation
   3. The photo picker overlay is a standalone reusable component in `lib/components/` (not screen-specific) that can be imported by any screen needing image selection
   4. `dart analyze lib/screens/settings/` passes with 0 errors, 0 warnings; every Settings interaction (edit profile, toggle, link tap, delete account) behaves identically to before
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 16-01-PLAN.md -- Extract EditProfileSheet and PhotoPickerOverlay into standalone files
 - [ ] 16-02-PLAN.md -- Extract settings section builder widgets, finalize under 500 lines
@@ -173,7 +173,7 @@ Plans:
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 16. Settings Screen Refactor | 1/2 | In Progress|  | - |
+| 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 17. You Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |

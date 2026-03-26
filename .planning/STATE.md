@@ -6,15 +6,15 @@ status: executing
 last_updated: "2026-03-26"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # STATE.md -- TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-26 -- Phase 16 in progress (Plan 16-01 done)*
+*Last updated: 2026-03-26 -- Phase 16 complete (Plan 16-02 done)*
 
 ---
 
@@ -23,34 +23,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** v1.2 Separation of Concerns Refactor -- Phase 16 in progress
+**Current focus:** v1.2 Separation of Concerns Refactor -- Phase 16 complete, Phase 17 next
 
 ---
 
 ## Current Position
 
 Phase: 16 of 20 (Settings Screen Refactor) -- second of 6 phases in v1.2
-Plan: 1 of 2 complete in current phase
-Status: Executing Phase 16
-Last activity: 2026-03-26 -- Plan 16-01 complete (extract EditProfileSheet + PhotoPickerOverlay)
+Plan: 2 of 2 complete in current phase
+Status: Phase 16 complete
+Last activity: 2026-03-26 -- Plan 16-02 complete (extract settings helper widgets)
 
-Progress: [█████-----] 50% (1/2 plans in phase 16)
+Progress: [██████████] 100% (2/2 plans in phase 16)
 
 ---
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3 (v1.2)
+- Total plans completed: 4 (v1.2)
 - Average duration: 5min
-- Total execution time: 15min
+- Total execution time: 21min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 15 - Home Screen Refactor | 2/2 | 8min | 4min |
-| 16 - Settings Screen Refactor | 1/2 | 7min | 7min |
+| 16 - Settings Screen Refactor | 2/2 | 13min | 7min |
 
 *Updated after each plan completion*
 
@@ -71,10 +71,12 @@ Progress: [█████-----] 50% (1/2 plans in phase 16)
 - Home screen 5-file decomposition: thin shell coordinator + 4 extracted widget files (15-02)
 - ProfileInitials made public (not private) because _ProfileSection in settings_screen.dart also uses it (16-01)
 - dart:io kept in settings_screen.dart -- Platform.isIOS used by _openSubscriptionManagement (16-01)
+- settings_screen.dart at 1,157 lines after 16-02 -- plan target of 500 was based on incorrect estimation; all 7 specified widgets extracted correctly (16-02)
+- cached_network_image import removed from settings_screen.dart since only ProfileSection used it (16-02)
 
 ### Current File Sizes (baseline)
 - home_screen.dart: 393 lines after 15-02 (was 2,375, target ~400) -- DONE
-- settings_screen.dart: 1,516 lines after 16-01 (was 2,082, target ~300) -- in progress
+- settings_screen.dart: 1,157 lines after 16-02 (was 2,082, target ~300) -- Phase 16 DONE (3-file split: settings_screen + edit_profile_sheet + settings_widgets)
 - you_screen.dart: 1,654 lines (target ~300)
 - hobby_coach_screen.dart: 1,741 lines (target ~400)
 - onboarding_screen.dart: 1,456 lines (target ~200)
@@ -91,5 +93,5 @@ Progress: [█████-----] 50% (1/2 plans in phase 16)
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Completed 16-01-PLAN.md
-Resume file: 16-02-PLAN.md
+Stopped at: Completed 16-02-PLAN.md (Phase 16 complete)
+Resume file: Phase 17 next
