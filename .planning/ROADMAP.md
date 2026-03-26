@@ -85,7 +85,7 @@
   3. The active hobby page content (greeting, hobby card, next step, weekly plan, coach entry, progress) is a standalone file that renders identically to the current inline version
   4. Journal entry tiles and their empty states are standalone widget files that produce pixel-identical output in both Home and any other screen that uses them
   5. `dart analyze lib/screens/home/` passes with 0 errors, 0 warnings; the Home tab navigates and behaves identically to before the refactor
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 15-01-PLAN.md -- Extract PausedHobbyPage and RoadmapJourney into standalone files
 - [ ] 15-02-PLAN.md -- Extract JournalEntryTile and ActiveHobbyPage, finalize under 500 lines
@@ -169,7 +169,7 @@ Plans:
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 15. Home Screen Refactor | v1.2 | 0/2 | In progress | - |
+| 15. Home Screen Refactor | 1/2 | In Progress|  | - |
 | 16. Settings Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 17. You Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
