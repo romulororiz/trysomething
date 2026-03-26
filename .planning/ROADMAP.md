@@ -67,7 +67,7 @@
 - [x] **Phase 15: Home Screen Refactor** — Extract page variants, journal tiles, and roadmap widgets from home_screen.dart (2,375 -> ~400 lines) (completed 2026-03-26)
 - [x] **Phase 16: Settings Screen Refactor** — Extract edit profile sheet, photo picker, and section builders from settings_screen.dart (2,082 -> ~300 lines) (completed 2026-03-26)
 - [x] **Phase 17: You Screen Refactor** — Extract tab contents and hobby card variants from you_screen.dart (1,654 -> ~300 lines) (completed 2026-03-26)
-- [ ] **Phase 18: Coach Screen Refactor** — Extract CoachNotifier, message bubbles, composer, and mode selector from hobby_coach_screen.dart (1,741 -> ~400 lines)
+- [x] **Phase 18: Coach Screen Refactor** — Extract CoachNotifier, message bubbles, composer, and mode selector from hobby_coach_screen.dart (1,741 -> ~400 lines) (completed 2026-03-26)
 - [ ] **Phase 19: Onboarding Screen Refactor** — Extract each onboarding step into standalone widget files from onboarding_screen.dart (1,456 -> ~200 lines)
 - [ ] **Phase 20: Remaining Screens Refactor** — Extract sub-widgets from journal, search, detail, and discover screens; unify photo picker into one shared component
 
@@ -128,7 +128,7 @@ Plans:
   3. The message bubble widget is a standalone `coach_bubble.dart` file that renders user and assistant bubbles identically to the current inline version -- same glass styling, same text layout
   4. The composer widget (text input, mic button, attach button, voice recording overlay) is a standalone file that handles input, recording state, and submission identically to the current inline version
   5. `dart analyze lib/screens/coach/` passes with 0 errors, 0 warnings; sending messages, switching modes, voice input, and photo attach all behave identically to before
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 18-01-PLAN.md -- Extract CoachNotifier/ChatMessage to coach_provider.dart and bubble widgets to coach_bubble.dart
 - [ ] 18-02-PLAN.md -- Extract composer to coach_composer.dart and mode/UI widgets to coach_widgets.dart, finalize under 500 lines
@@ -181,7 +181,7 @@ Plans:
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 17. You Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 18. Coach Screen Refactor | 1/2 | In Progress|  | - |
+| 18. Coach Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 20. Remaining Screens Refactor | v1.2 | 0/TBD | Not started | - |
 
