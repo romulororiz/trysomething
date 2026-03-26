@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Separation of Concerns Refactor
-status: unknown
-last_updated: "2026-03-26T17:28:56.806Z"
+milestone: null
+milestone_name: null
+status: between_milestones
+last_updated: "2026-03-26"
 progress:
-  total_phases: 19
-  completed_phases: 19
+  total_phases: 18
+  completed_phases: 18
   total_plans: 34
   completed_plans: 34
 ---
@@ -14,7 +14,7 @@ progress:
 # STATE.md -- TrySomething
 
 *Project memory. Updated at every phase transition and plan completion.*
-*Last updated: 2026-03-26 -- Phase 18 complete (2/2 plans done)*
+*Last updated: 2026-03-26 -- v1.2 milestone completed*
 
 ---
 
@@ -23,77 +23,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days.
-**Current focus:** v1.2 Separation of Concerns Refactor -- Phase 18 complete, Phase 19 next
+**Current focus:** Planning next milestone
 
 ---
 
 ## Current Position
 
-Phase: 18 of 20 (Coach Screen Refactor) -- fourth of 6 phases in v1.2 -- COMPLETE
-Plan: 2 of 2 complete in current phase
-Status: Phase 18 complete
-Last activity: 2026-03-26 -- Plan 18-02 complete (extract composer and UI widgets)
+Between milestones. v1.2 shipped 2026-03-26.
 
-Progress: [██████████] 100% (2/2 plans in phase 18)
-
----
-
-## Performance Metrics
-
-**Velocity:**
-- Total plans completed: 8 (v1.2)
-- Average duration: 7min
-- Total execution time: 53min
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 15 - Home Screen Refactor | 2/2 | 8min | 4min |
-| 16 - Settings Screen Refactor | 2/2 | 13min | 7min |
-| 17 - You Screen Refactor | 2/2 | 16min | 8min |
-| 18 - Coach Screen Refactor | 2/2 | 16min | 8min |
-
-*Updated after each plan completion*
+Milestones completed: v1.0 (11 phases), v1.1 (4 phases), v1.2 (4 phases)
+Total: 18 phases, 34 plans across 3 milestones
 
 ---
 
 ## Accumulated Context
 
 ### Decisions
-- Extract widgets 100+ lines OR with own state (controllers, timers, providers)
-- Target <500 lines per screen file (<300 for onboarding)
-- CoachNotifier must move to its own provider file
-- No new features -- pure refactor, zero UI/UX changes
-- Photo picker becomes shared component in Phase 16, consumed by Phase 20
-- `dart analyze` must pass with 0 errors, 0 warnings after every phase
-- Widget extraction pattern: public class in new file, state class stays private, imports copied explicitly (15-01)
-- _StepItem kept private in home_roadmap_section.dart since only used by RoadmapJourney (15-01)
-- _RestartCard kept private in active_hobby_page.dart since only used by ActiveHobbyPage (15-02)
-- Home screen 5-file decomposition: thin shell coordinator + 4 extracted widget files (15-02)
-- ProfileInitials made public (not private) because _ProfileSection in settings_screen.dart also uses it (16-01)
-- dart:io kept in settings_screen.dart -- Platform.isIOS used by _openSubscriptionManagement (16-01)
-- settings_screen.dart at 1,157 lines after 16-02 -- plan target of 500 was based on incorrect estimation; all 7 specified widgets extracted correctly (16-02)
-- cached_network_image import removed from settings_screen.dart since only ProfileSection used it (16-02)
-- glass_card.dart not used by any card widget in you_hobby_cards.dart -- removed (17-01)
-- _EmptyActivePrompt moved to active_tab_content.dart as private widget (17-01)
-- feature_providers.dart import kept in you_screen.dart -- profileProvider defined there (17-02)
-- You Screen 7-file decomposition: thin shell + cards + helpers + 4 tab content files (17-02)
-- Re-export pattern: screen file exports provider file so external importers (router.dart) need no import changes (18-01)
-- _CoachLimitTracker renamed to CoachLimitTracker (public) for same-file access by coachRemainingProvider (18-01)
-- getActionsForMode extracted as shared top-level function in coach_widgets.dart (18-02)
-- CoachComposer receives prefillText param; autoSend handled in parent initState (18-02)
-
-### Current File Sizes (baseline)
-- home_screen.dart: 393 lines after 15-02 (was 2,375, target ~400) -- DONE
-- settings_screen.dart: 1,157 lines after 16-02 (was 2,082, target ~300) -- Phase 16 DONE (3-file split: settings_screen + edit_profile_sheet + settings_widgets)
-- you_screen.dart: 336 lines after 17-02 (was 1,654, target ~300) -- Phase 17 DONE (7-file split: you_screen + you_hobby_cards + you_helpers + 4 tab content files)
-- hobby_coach_screen.dart: 367 lines after 18-02 (was 1,741, target ~400) -- Phase 18 DONE (5-file split: screen + provider + bubble + composer + widgets)
-- onboarding_screen.dart: 1,456 lines (target ~200)
-- hobby_journal_screen.dart: 1,170 lines (target ~500)
-- search_screen.dart: 1,128 lines (target ~500)
-- hobby_detail_screen.dart: 1,070 lines (target ~500)
-- discover_screen.dart: 970 lines (target ~500)
+(Cleared for next milestone — full history in .planning/milestones/v1.2-ROADMAP.md and RETROSPECTIVE.md)
 
 ### Blockers
 (none)
@@ -103,5 +49,5 @@ Progress: [██████████] 100% (2/2 plans in phase 18)
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Completed 18-02-PLAN.md (Phase 18 complete)
-Resume file: Phase 19 next
+Stopped at: v1.2 milestone completed
+Resume: /gsd:new-milestone to plan next version

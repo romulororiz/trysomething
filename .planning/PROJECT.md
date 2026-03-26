@@ -8,19 +8,14 @@ A mobile app for overwhelmed adults who want to pick up a hobby but don't know w
 
 A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days through guided support and coaching.
 
-## Current Milestone: v1.2 Separation of Concerns Refactor
+## Current State
 
-**Goal:** Reduce every screen file to <500 lines by extracting stateful widgets, providers, and reusable components into their own files. Pure code quality — no new features.
+**Latest shipped:** v1.2 Separation of Concerns Refactor (2026-03-26)
+**Previous:** v1.1 Hobby Lifecycle & Monetization (2026-03-23), v1.0 Launch Readiness (2026-03-23)
 
-**Target files:**
-- `home_screen.dart` (2,375 → ~400) — extract page variants, journal tiles, roadmap
-- `settings_screen.dart` (2,082 → ~300) — extract edit profile sheet, photo picker
-- `you_screen.dart` (1,654 → ~300) — extract 4 tab contents + card types
-- `hobby_coach_screen.dart` (1,613 → ~400) — extract CoachNotifier, bubbles, composer
-- `onboarding_screen.dart` (1,456 → ~200) — extract each onboarding step
-- Remaining: journal, search, detail, discover screens
+**What shipped in v1.2:** Decomposed the 4 largest screen files (home, settings, you, coach) from monoliths (1,600-2,400 lines) into focused single-responsibility modules (300-400 line shells + extracted widgets). Net -988 lines. Zero UI/UX changes.
 
-**Previous:** v1.1 shipped 2026-03-25 — Hobby lifecycle, monetization, AI image moderation, coach photo/voice input.
+**Deferred from v1.2:** Onboarding screen refactor (1,456 lines) and remaining screens refactor (journal 1,170, search 1,128, detail 1,070). Pure tech debt — no user impact.
 
 ## Requirements
 
@@ -63,34 +58,39 @@ A user can discover a hobby that fits them, start it with clear first steps, and
 - ✓ Data Safety Form in Google Play Console — v1.0 Phase 9
 - ✓ Session screen breathing ring redesign — v1.0 Phase 9.1
 - ✓ Pre-commit hooks via Lefthook — v1.0 Phase 10
+- ✓ Hobby auto-completes to `done` when all roadmap steps are finished — v1.1 Phase 12
+- ✓ Celebration screen when completing final step — v1.1 Phase 12
+- ✓ Home shows completed state with "pick your next hobby" CTA — v1.1 Phase 12
+- ✓ Stop/abandon hobby action (free) — v1.1 Phase 12
+- ✓ Detail page content gating (free vs Pro sections) — v1.1 Phase 13
+- ✓ Pause/resume hobby lifecycle (Pro) — v1.1 Phase 14
+- ✓ Home screen refactored: 2,375 → 393 lines — v1.2 Phase 15
+- ✓ Settings screen refactored: 2,082 → 831 lines — v1.2 Phase 16
+- ✓ You screen refactored: 1,654 → 336 lines — v1.2 Phase 17
+- ✓ Coach screen refactored: 1,741 → 367 lines — v1.2 Phase 18
+- ✓ Shared PhotoPickerOverlay component — v1.2 Phase 16
 
 ### Active
 
-- [ ] Hobby auto-completes to `done` when all roadmap steps are finished
-- [ ] Celebration screen when completing final step (distinct from regular step completion)
-- [ ] Home shows completed state with "pick your next hobby" CTA
-- [ ] Completed hobbies appear in You tab "Tried" section
-- [ ] Stop/abandon hobby action (free) — moves to Tried with no progress preserved
-- [ ] Pause hobby action (Pro) — preserves progress, shows in paused state
-- [ ] Resume paused hobby (Pro)
-- [ ] Detail page: free users see hero + spec + Stage 1 only
-- [ ] Detail page: Pro users see full FAQ, cost breakdown, budget alternatives
+(No active requirements — next milestone not yet defined)
 
 ### Out of Scope
 
+- Onboarding screen refactoring (1,456 lines) — deferred from v1.2, no user impact
+- Remaining screen refactoring (journal, search, detail, discover) — deferred from v1.2
 - Mapper function co-location — architectural cleanup, not user-facing
 - Golden triangle tests for shared middleware — improves confidence but not user-facing
-- Oversized screen refactoring — cosmetic tech debt, no user impact
 - Buddy mode, community stories, local discovery — features deleted in v1.0
 - Real-time chat — not core to hobby guidance
 - Multi-language support — English-only for now
 
 ## Context
 
-**Shipped v1.0** with 50,138 LOC Dart + 18,312 LOC TypeScript.
+**Shipped v1.2** — 3 milestones completed (v1.0 → v1.1 → v1.2) across 18 phases, 34 plans.
 **Tech stack:** Flutter 3.6.0 + Riverpod + GoRouter, Node.js/TypeScript on Vercel, Prisma ORM with 25 models on Neon PostgreSQL, Claude Sonnet AI, RevenueCat subscriptions.
 **Test device:** Nothing Phone 3a (Android).
 **Landing page:** Next.js at trysomething.io with hosted Terms and Privacy Policy.
+**Code health:** 4 largest screens decomposed (home 393, you 336, coach 367, settings 831 lines). Still oversized: onboarding (1,456), journal (1,170), search (1,128), detail (1,070).
 
 ## Constraints
 
@@ -111,10 +111,12 @@ A user can discover a hobby that fits them, start it with clear first steps, and
 | Lefthook over Husky for pre-commit | No package.json at repo root | ✓ Good — language-agnostic |
 | Single CustomPainter for breathing ring | More efficient than stacked widgets | ✓ Good — smooth animation |
 | Film grain as static PNG overlay | Zero GPU cost vs dynamic noise | ✓ Good — indistinguishable |
+| Ship v1.2 with 4/6 phases | Phases 19-20 are pure tech debt, no user impact | ✓ Good — shipped what matters |
+| Extract-then-compose pattern | Each screen → shell + focused widget files | ✓ Good — consistent across all 4 screens |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-03-23 after v1.1 milestone start*
+*Last updated: 2026-03-26 after v1.2 milestone*
