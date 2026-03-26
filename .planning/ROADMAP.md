@@ -128,7 +128,10 @@ Plans:
   3. The message bubble widget is a standalone `coach_bubble.dart` file that renders user and assistant bubbles identically to the current inline version -- same glass styling, same text layout
   4. The composer widget (text input, mic button, attach button, voice recording overlay) is a standalone file that handles input, recording state, and submission identically to the current inline version
   5. `dart analyze lib/screens/coach/` passes with 0 errors, 0 warnings; sending messages, switching modes, voice input, and photo attach all behave identically to before
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 18-01-PLAN.md -- Extract CoachNotifier/ChatMessage to coach_provider.dart and bubble widgets to coach_bubble.dart
+- [ ] 18-02-PLAN.md -- Extract composer to coach_composer.dart and mode/UI widgets to coach_widgets.dart, finalize under 500 lines
 
 ### Phase 19: Onboarding Screen Refactor
 **Goal:** onboarding_screen.dart is a PageView coordinator that delegates each step's content to standalone widget files
@@ -178,7 +181,7 @@ Plans:
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 17. You Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
+| 18. Coach Screen Refactor | v1.2 | 0/2 | Not started | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 20. Remaining Screens Refactor | v1.2 | 0/TBD | Not started | - |
 
@@ -235,4 +238,4 @@ Phase 20 (Remaining Screens) ---- depends on Phase 16 (shared photo picker from 
 *Roadmap created: 2026-03-21 (v1.0)*
 *v1.1 phases added: 2026-03-23*
 *v1.2 phases added: 2026-03-26*
-*Last updated: 2026-03-26 after Phase 17 planning*
+*Last updated: 2026-03-26 after Phase 18 planning*
