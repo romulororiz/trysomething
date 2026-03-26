@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'settings_widgets.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/feature_providers.dart';
@@ -218,7 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         email: email,
                         avatarUrl: avatarUrl,
                       ),
-                      child: _ProfileSection(
+                      child: ProfileSection(
                         displayName: displayName,
                         email: email,
                         avatarUrl: avatarUrl,
@@ -226,7 +226,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     if (!ref.watch(proStatusProvider).isPro) ...[
                       const SizedBox(height: 12),
-                      _SettingsTile(
+                      SettingsTile(
                         icon: Icons.restore_outlined,
                         title: 'Restore Purchases',
                         subtitle: 'Recover a previous subscription',
@@ -236,18 +236,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 20),
 
                     // ── Preferences section ──
-                    const _SectionLabel(text: 'PREFERENCES'),
+                    const SectionLabel(text: 'PREFERENCES'),
                     const SizedBox(height: 12),
 
                     // Hours per week
-                    _SettingsTile(
+                    SettingsTile(
                       icon: AppIcons.badgeTime,
                       title: 'Weekly time',
                       subtitle: '${prefs.hoursPerWeek}h per week',
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _StepperButton(
+                          StepperButton(
                             icon: Icons.remove,
                             onTap: prefs.hoursPerWeek > 1
                                 ? () => ref
@@ -263,7 +263,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   .copyWith(color: AppColors.textSecondary),
                             ),
                           ),
-                          _StepperButton(
+                          StepperButton(
                             icon: Icons.add,
                             onTap: prefs.hoursPerWeek < 40
                                 ? () => ref
@@ -276,11 +276,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
 
                     // Budget level
-                    _SettingsTile(
+                    SettingsTile(
                       icon: AppIcons.badgeCost,
                       title: 'Budget level',
                       subtitle: _budgetLabel(prefs.budgetLevel),
-                      trailing: _BudgetSelector(
+                      trailing: BudgetSelector(
                         current: prefs.budgetLevel,
                         onChanged: (level) => ref
                             .read(userPreferencesProvider.notifier)
@@ -289,13 +289,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
 
                     // Social preference
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.people_outline_rounded,
                       title: 'Style',
                       subtitle: prefs.preferSocial
                           ? 'Prefer social activities'
                           : 'Prefer solo activities',
-                      trailing: _ToggleChip(
+                      trailing: ToggleChip(
                         isOn: prefs.preferSocial,
                         onLabel: 'Social',
                         offLabel: 'Solo',
@@ -308,7 +308,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 8),
 
                     // Vibes
-                    _SectionLabel(text: 'YOUR VIBES'),
+                    const SectionLabel(text: 'YOUR VIBES'),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -399,10 +399,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 28),
 
                     // ── App section ──
-                    _SectionLabel(text: 'APP'),
+                    const SectionLabel(text: 'APP'),
                     const SizedBox(height: 12),
 
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.notifications_none_rounded,
                       title: 'Notifications',
                       subtitle: _notificationsEnabled
@@ -420,7 +420,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.info_outline_rounded,
                       title: 'About',
                       subtitle: 'TrySomething v1.0.0',
@@ -429,10 +429,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                     // ── Session ──
                     const SizedBox(height: 20),
-                    const _SectionLabel(text: 'SESSION'),
+                    const SectionLabel(text: 'SESSION'),
                     const SizedBox(height: 12),
 
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.vibration,
                       title: 'Vibration on complete',
                       subtitle: 'Haptic feedback when session ends',
@@ -448,7 +448,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    _SettingsTile(
+                    SettingsTile(
                       icon: Icons.notifications_active_outlined,
                       title: 'Sound on complete',
                       subtitle: 'Play a gentle chime',
@@ -467,9 +467,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     // ── Debug Pro Toggle (debug builds only) ──
                     if (kDebugMode) ...[
                       const SizedBox(height: 8),
-                      _SectionLabel(text: 'DEBUG'),
+                      const SectionLabel(text: 'DEBUG'),
                       const SizedBox(height: 12),
-                      _DebugProToggle(),
+                      const DebugProToggle(),
                       const SizedBox(height: 10),
                       GestureDetector(
                         onTap: () => _showResetHobbiesDialog(context, ref),
@@ -1151,366 +1151,7 @@ class _DeleteAccountDialogContentState
   }
 }
 
-// ═══════════════════════════════════════════════════════
-//  PROFILE SECTION
-// ═══════════════════════════════════════════════════════
-
-class _ProfileSection extends StatelessWidget {
-  final String displayName;
-  final String email;
-  final String? avatarUrl;
-
-  const _ProfileSection({
-    required this.displayName,
-    required this.email,
-    required this.avatarUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.glassBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.glassBorder, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 74,
-            height: 74,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1A1520), Color(0xFF151A25)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 2,
-              ),
-            ),
-            child: ClipOval(
-              child: avatarUrl != null && avatarUrl!.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: avatarUrl!,
-                      fit: BoxFit.cover,
-                      memCacheWidth: 128,
-                      placeholder: (_, __) => const SizedBox.shrink(),
-                      errorWidget: (_, __, ___) =>
-                          ProfileInitials(name: displayName),
-                    )
-                  : ProfileInitials(name: displayName),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  style: AppTypography.sansLabel.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                  ),
-                ),
-                if (email.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    email,
-                    style: AppTypography.sansTiny
-                        .copyWith(color: AppColors.textMuted, fontSize: 13),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // Tap hint
-          Icon(Icons.edit_outlined,
-              size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
-        ],
-      ),
-    );
-  }
-}
-
-// EditProfileSheet extracted to edit_profile_sheet.dart
-// (ProfileInitials also lives there, imported above)
-
-// ═══════════════════════════════════════════════════════
-//  SECTION LABEL
-// ═══════════════════════════════════════════════════════
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTypography.overline.copyWith(
-        color: AppColors.textMuted,
-        letterSpacing: 2,
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  SETTINGS TILE
-// ═══════════════════════════════════════════════════════
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
-        onTap: onTap,
-        padding: const EdgeInsets.all(14),
-        borderRadius: 14,
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Icon(icon, size: 16, color: AppColors.textSecondary),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: AppTypography.sansLabel
-                          .copyWith(color: AppColors.textSecondary)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: AppTypography.sansTiny
-                          .copyWith(color: AppColors.textMuted)),
-                ],
-              ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  STEPPER BUTTON
-// ═══════════════════════════════════════════════════════
-
-class _StepperButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const _StepperButton({required this.icon, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: onTap != null
-              ? AppColors.surfaceElevated
-              : AppColors.surfaceElevated.withAlpha(120),
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            size: 14,
-            color:
-                onTap != null ? AppColors.textSecondary : AppColors.textMuted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  BUDGET SELECTOR
-// ═══════════════════════════════════════════════════════
-
-class _BudgetSelector extends StatelessWidget {
-  final int current;
-  final ValueChanged<int> onChanged;
-
-  const _BudgetSelector({required this.current, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    const labels = ['\$', '\$\$', '\$\$\$'];
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (i) {
-        final isActive = i == current;
-        return GestureDetector(
-          onTap: () => onChanged(i),
-          child: AnimatedContainer(
-            duration: Motion.fast,
-            margin: EdgeInsets.only(left: i > 0 ? 6 : 0),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: isActive ? AppColors.coral : AppColors.surfaceElevated,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              labels[i],
-              style: AppTypography.monoBadge.copyWith(
-                color: isActive ? Colors.white : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  TOGGLE CHIP
-// ═══════════════════════════════════════════════════════
-
-class _ToggleChip extends StatelessWidget {
-  final bool isOn;
-  final String onLabel;
-  final String offLabel;
-  final VoidCallback onTap;
-
-  const _ToggleChip({
-    required this.isOn,
-    required this.onLabel,
-    required this.offLabel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: Motion.fast,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isOn ? AppColors.coral : AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(100),
-        ),
-        child: Text(
-          isOn ? onLabel : offLabel,
-          style: AppTypography.sansCaption.copyWith(
-            color: isOn ? Colors.white : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  DEBUG PRO TOGGLE (debug builds only)
-// ═══════════════════════════════════════════════════════
-
-class _DebugProToggle extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(proStatusProvider.notifier);
-    final current = notifier.debugTier;
-
-    return GlassCard(
-      padding: const EdgeInsets.all(14),
-      borderRadius: 14,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.bug_report_rounded,
-                  size: 16, color: AppColors.textMuted),
-              const SizedBox(width: 8),
-              Text(
-                'Subscription Override',
-                style: AppTypography.sansLabel
-                    .copyWith(color: AppColors.textMuted),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              for (final tier in DebugTier.values)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () =>
-                        ref.read(proStatusProvider.notifier).setDebugTier(tier),
-                    child: AnimatedContainer(
-                      duration: Motion.fast,
-                      margin: EdgeInsets.only(left: tier.index > 0 ? 6 : 0),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: current == tier
-                            ? AppColors.coral
-                            : AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        tier == DebugTier.none
-                            ? 'Auto'
-                            : tier.name[0].toUpperCase() +
-                                tier.name.substring(1),
-                        style: AppTypography.sansCaption.copyWith(
-                          color: current == tier
-                              ? Colors.white
-                              : AppColors.textSecondary,
-                          fontWeight: current == tier
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Settings helper widgets extracted to settings_widgets.dart
+// (ProfileSection, SectionLabel, SettingsTile, StepperButton, BudgetSelector, ToggleChip, DebugProToggle)
 
 
