@@ -66,7 +66,7 @@
 
 - [x] **Phase 15: Home Screen Refactor** — Extract page variants, journal tiles, and roadmap widgets from home_screen.dart (2,375 -> ~400 lines) (completed 2026-03-26)
 - [x] **Phase 16: Settings Screen Refactor** — Extract edit profile sheet, photo picker, and section builders from settings_screen.dart (2,082 -> ~300 lines) (completed 2026-03-26)
-- [ ] **Phase 17: You Screen Refactor** — Extract tab contents and hobby card variants from you_screen.dart (1,654 -> ~300 lines)
+- [x] **Phase 17: You Screen Refactor** — Extract tab contents and hobby card variants from you_screen.dart (1,654 -> ~300 lines) (completed 2026-03-26)
 - [ ] **Phase 18: Coach Screen Refactor** — Extract CoachNotifier, message bubbles, composer, and mode selector from hobby_coach_screen.dart (1,741 -> ~400 lines)
 - [ ] **Phase 19: Onboarding Screen Refactor** — Extract each onboarding step into standalone widget files from onboarding_screen.dart (1,456 -> ~200 lines)
 - [ ] **Phase 20: Remaining Screens Refactor** — Extract sub-widgets from journal, search, detail, and discover screens; unify photo picker into one shared component
@@ -113,7 +113,7 @@ Plans:
   2. Each tab content (Active, Paused, Saved, Tried) is a standalone file in `lib/screens/you/` that renders its list and empty state identically to the current inline version
   3. Hobby card variants (collector card, paused card, saved card, tried card) are standalone widget files that produce identical visual output to the current inline builders
   4. `dart analyze lib/screens/you/` passes with 0 errors, 0 warnings; all four tab filters, card taps, and empty states behave identically to before
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 17-01-PLAN.md -- Extract hobby card variants and tab content widgets into standalone files
 - [ ] 17-02-PLAN.md -- Extract helper/stats widgets, finalize you_screen.dart under 500 lines
@@ -177,7 +177,7 @@ Plans:
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
-| 17. You Screen Refactor | 1/2 | In Progress|  | - |
+| 17. You Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 19. Onboarding Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 20. Remaining Screens Refactor | v1.2 | 0/TBD | Not started | - |
