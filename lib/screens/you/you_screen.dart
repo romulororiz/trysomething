@@ -6,7 +6,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:google_fonts/google_fonts.dart';
 import '../../components/app_background.dart';
 import '../../components/glass_card.dart';
-import '../../components/page_dots.dart';
 import '../../models/hobby.dart';
 import '../../providers/hobby_provider.dart';
 import '../../providers/user_provider.dart';
@@ -16,6 +15,10 @@ import '../../providers/subscription_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
+import 'active_tab_content.dart';
+import 'paused_tab_content.dart';
+import 'saved_tab_content.dart';
+import 'tried_tab_content.dart';
 import 'you_hobby_cards.dart';
 
 /// You tab — profile header + tab pills (Active / Saved / Tried).
@@ -296,7 +299,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
   }) {
     switch (tab) {
       case 0:
-        return _ActiveTabContent(
+        return ActiveTabContent(
           key: const ValueKey('active'),
           entries: activeEntries,
           visibleMeta: visibleMeta,
@@ -305,7 +308,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
           onPageChanged: (i) => setState(() => _currentHobbyPage = i),
         );
       case 1:
-        return _PausedTabContent(
+        return PausedTabContent(
           key: const ValueKey('paused'),
           entries: pausedEntries,
           pausedPage: _pausedPage,
@@ -313,7 +316,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
           onPageChanged: (i) => setState(() => _pausedPage = i),
         );
       case 2:
-        return _SavedTabContent(
+        return SavedTabContent(
           key: const ValueKey('saved'),
           entries: savedEntries,
           savedPage: _savedPage,
@@ -321,7 +324,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
           onPageChanged: (i) => setState(() => _savedPage = i),
         );
       case 3:
-        return _TriedTabContent(
+        return TriedTabContent(
           key: const ValueKey('tried'),
           entries: triedEntries,
           triedPage: _triedPage,
@@ -516,272 +519,6 @@ class _TabPills extends StatelessWidget {
   }
 }
 
-// ── Active tab content ──
-class _ActiveTabContent extends ConsumerWidget {
-  final List<HobbyWithMeta> entries;
-  final HobbyWithMeta? visibleMeta;
-  final PageController hobbyPageController;
-  final int currentPage;
-  final ValueChanged<int> onPageChanged;
-
-  const _ActiveTabContent({
-    super.key,
-    required this.entries,
-    required this.visibleMeta,
-    required this.hobbyPageController,
-    required this.currentPage,
-    required this.onPageChanged,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (entries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: _EmptyActivePrompt(),
-      );
-    }
-
-    final isPro = ref.watch(isProProvider);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (entries.length == 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: CollectorCard(meta: entries.first),
-          )
-        else ...[
-          SizedBox(
-            height: 130,
-            child: PageView.builder(
-              controller: hobbyPageController,
-              // Free users: show active card + 1 locked card only
-              itemCount: isPro ? entries.length : entries.length.clamp(0, 2),
-              onPageChanged: onPageChanged,
-              itemBuilder: (context, i) {
-                final card = Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: CollectorCard(meta: entries[i]),
-                );
-                if (isPro || i == 0) return card;
-                return LockedCardOverlay(
-                  lockedCount: entries.length - 1,
-                  child: card,
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          PageDots(
-            count: entries.length,
-            current: currentPage,
-          ),
-        ],
-        const SizedBox(height: 10),
-        if (visibleMeta != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: StatsChipRow(meta: visibleMeta!),
-          ),
-      ],
-    );
-  }
-}
-
-// ── Paused tab content ──
-class _PausedTabContent extends ConsumerWidget {
-  final List<HobbyWithMeta> entries;
-  final int pausedPage;
-  final PageController pausedPageController;
-  final ValueChanged<int> onPageChanged;
-
-  const _PausedTabContent({
-    super.key,
-    required this.entries,
-    required this.pausedPage,
-    required this.pausedPageController,
-    required this.onPageChanged,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (entries.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-        child: Center(
-          child: Text('No paused hobbies',
-              style: TextStyle(color: AppColors.textMuted)),
-        ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (entries.length == 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: PausedHobbyCard(meta: entries.first),
-          )
-        else ...[
-          SizedBox(
-            height: 130,
-            child: PageView.builder(
-              controller: pausedPageController,
-              itemCount: entries.length,
-              onPageChanged: onPageChanged,
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: PausedHobbyCard(meta: entries[i]),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          PageDots(
-            count: entries.length,
-            current: pausedPage,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ── Saved tab content ──
-class _SavedTabContent extends StatelessWidget {
-  final List<HobbyWithMeta> entries;
-  final int savedPage;
-  final PageController savedPageController;
-  final ValueChanged<int> onPageChanged;
-
-  const _SavedTabContent({
-    super.key,
-    required this.entries,
-    required this.savedPage,
-    required this.savedPageController,
-    required this.onPageChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (entries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('No saved hobbies yet',
-                  style: TextStyle(color: AppColors.textMuted)),
-              const SizedBox(height: 14),
-              GestureDetector(
-                onTap: () => context.go('/discover'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: const LinearGradient(
-                      colors: [AppColors.coral, Color(0xFFFF5252)],
-                    ),
-                  ),
-                  child: Text('Browse hobbies',
-                      style: AppTypography.caption
-                          .copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          height: 130,
-          child: PageView.builder(
-            controller: savedPageController,
-            itemCount: entries.length,
-            onPageChanged: onPageChanged,
-            itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: SavedHobbySwipeCard(meta: entries[i]),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        PageDots(
-          count: entries.length,
-          current: savedPage,
-        ),
-      ],
-    );
-  }
-}
-
-// ── Tried tab content ──
-class _TriedTabContent extends StatelessWidget {
-  final List<HobbyWithMeta> entries;
-  final int triedPage;
-  final PageController triedPageController;
-  final ValueChanged<int> onPageChanged;
-
-  const _TriedTabContent({
-    super.key,
-    required this.entries,
-    required this.triedPage,
-    required this.triedPageController,
-    required this.onPageChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (entries.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-        child: Center(
-          child: Text('Nothing tried yet',
-              style: TextStyle(color: AppColors.textMuted)),
-        ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (entries.length == 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: TriedHobbyCard(meta: entries.first),
-          )
-        else ...[
-          SizedBox(
-            height: 130,
-            child: PageView.builder(
-              controller: triedPageController,
-              itemCount: entries.length,
-              onPageChanged: onPageChanged,
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: TriedHobbyCard(meta: entries[i]),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          PageDots(
-            count: entries.length,
-            current: triedPage,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
 // ── Mini info chip (used in header) ──
 class _MiniInfoChip extends StatelessWidget {
   final String label;
@@ -967,42 +704,6 @@ class _ProNavRow extends ConsumerWidget {
   }
 }
 
-// ── Empty active prompt ──
-class _EmptyActivePrompt extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('No active hobbies',
-                style: TextStyle(color: AppColors.textMuted)),
-            const SizedBox(height: 14),
-            GestureDetector(
-              onTap: () => context.go('/discover'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.coral, Color(0xFFFF5252)],
-                  ),
-                ),
-                child: Text('Discover hobbies',
-                    style: AppTypography.caption.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 
 
