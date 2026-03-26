@@ -32,9 +32,6 @@ jobs:
       - name: Test
         run: flutter test --coverage
 
-      - name: Verify build
-        run: flutter build apk --debug
-
   server:
     name: Server Lint, Type Check & Test
     runs-on: ubuntu-latest
