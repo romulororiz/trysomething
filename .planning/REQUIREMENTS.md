@@ -9,10 +9,10 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 
 ### Home Screen
 
-- [ ] **HOME-01**: home_screen.dart is under 500 lines with all page variants extracted
+- [x] **HOME-01**: home_screen.dart is under 500 lines with all page variants extracted
 - [x] **HOME-02**: Paused hobby page is a standalone widget file
-- [ ] **HOME-03**: Active hobby page content is a standalone widget file
-- [ ] **HOME-04**: Journal entry tiles and empty states are standalone widget files
+- [x] **HOME-03**: Active hobby page content is a standalone widget file
+- [x] **HOME-04**: Journal entry tiles and empty states are standalone widget files
 - [x] **HOME-05**: Roadmap step tile is a standalone widget file
 
 ### Settings Screen
@@ -64,10 +64,10 @@ Requirements for the Separation of Concerns Refactor. Each maps to one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HOME-01 | Phase 15 | Pending |
+| HOME-01 | Phase 15 | Complete |
 | HOME-02 | Phase 15 | Complete |
-| HOME-03 | Phase 15 | Pending |
-| HOME-04 | Phase 15 | Pending |
+| HOME-03 | Phase 15 | Complete |
+| HOME-04 | Phase 15 | Complete |
 | HOME-05 | Phase 15 | Complete |
 | SETT-01 | Phase 16 | Pending |
 | SETT-02 | Phase 16 | Pending |

@@ -64,7 +64,7 @@
 
 **Milestone Goal:** Reduce every oversized screen file to under 500 lines by extracting stateful widgets, providers, and reusable components into their own files. Pure refactor -- zero UI/UX changes. The app must look and behave identically after every phase.
 
-- [ ] **Phase 15: Home Screen Refactor** — Extract page variants, journal tiles, and roadmap widgets from home_screen.dart (2,375 -> ~400 lines)
+- [x] **Phase 15: Home Screen Refactor** — Extract page variants, journal tiles, and roadmap widgets from home_screen.dart (2,375 -> ~400 lines) (completed 2026-03-26)
 - [ ] **Phase 16: Settings Screen Refactor** — Extract edit profile sheet, photo picker, and section builders from settings_screen.dart (2,082 -> ~300 lines)
 - [ ] **Phase 17: You Screen Refactor** — Extract tab contents and hobby card variants from you_screen.dart (1,654 -> ~300 lines)
 - [ ] **Phase 18: Coach Screen Refactor** — Extract CoachNotifier, message bubbles, composer, and mode selector from hobby_coach_screen.dart (1,741 -> ~400 lines)
@@ -85,7 +85,7 @@
   3. The active hobby page content (greeting, hobby card, next step, weekly plan, coach entry, progress) is a standalone file that renders identically to the current inline version
   4. Journal entry tiles and their empty states are standalone widget files that produce pixel-identical output in both Home and any other screen that uses them
   5. `dart analyze lib/screens/home/` passes with 0 errors, 0 warnings; the Home tab navigates and behaves identically to before the refactor
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 15-01-PLAN.md -- Extract PausedHobbyPage and RoadmapJourney into standalone files
 - [ ] 15-02-PLAN.md -- Extract JournalEntryTile and ActiveHobbyPage, finalize under 500 lines
@@ -169,7 +169,7 @@ Plans:
 | 12. Hobby Completion Flow + Stop | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 13. Detail Page Content Gating | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 14. Pause/Resume Lifecycle | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 15. Home Screen Refactor | 1/2 | In Progress|  | - |
+| 15. Home Screen Refactor | 2/2 | Complete   | 2026-03-26 | - |
 | 16. Settings Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 17. You Screen Refactor | v1.2 | 0/TBD | Not started | - |
 | 18. Coach Screen Refactor | v1.2 | 0/TBD | Not started | - |
