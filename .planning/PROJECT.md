@@ -8,14 +8,20 @@ A mobile app for overwhelmed adults who want to pick up a hobby but don't know w
 
 A user can discover a hobby that fits them, start it with clear first steps, and stick with it for 30 days through guided support and coaching.
 
-## Current State
+## Current Milestone: v1.3 Google Play Launch
 
-**Latest shipped:** v1.2 Separation of Concerns Refactor (2026-03-26)
-**Previous:** v1.1 Hobby Lifecycle & Monetization (2026-03-23), v1.0 Launch Readiness (2026-03-23)
+**Goal:** Complete every operational, configuration, and store requirement to submit TrySomething to the Google Play Store. After this milestone, the app is on the store.
 
-**What shipped in v1.2:** Decomposed the 4 largest screen files (home, settings, you, coach) from monoliths (1,600-2,400 lines) into focused single-responsibility modules (300-400 line shells + extracted widgets). Net -988 lines. Zero UI/UX changes.
+**Target areas:**
+- Android release signing (keystore + gradle config)
+- Production API keys wired (RevenueCat, PostHog, Sentry, Google OAuth)
+- Firebase release fingerprints
+- Release build pipeline (AAB generation with --dart-define)
+- Store listing (descriptions, screenshots, feature graphic)
+- Play Console configuration (products, testing tracks)
+- End-to-end verification on internal testing track
 
-**Deferred from v1.2:** Onboarding screen refactor (1,456 lines) and remaining screens refactor (journal 1,170, search 1,128, detail 1,070). Pure tech debt — no user impact.
+**Previous:** v1.2 Separation of Concerns Refactor (2026-03-26)
 
 ## Requirements
 
@@ -72,7 +78,12 @@ A user can discover a hobby that fits them, start it with clear first steps, and
 
 ### Active
 
-(No active requirements — next milestone not yet defined)
+- [ ] Release signing configured and AAB builds successfully
+- [ ] All production API keys wired and tested
+- [ ] Store listing complete (copy, screenshots, feature graphic)
+- [ ] Play Console app created with subscription products
+- [ ] Internal testing track validated with real purchase flow
+- [ ] App submitted to Google Play for review
 
 ### Out of Scope
 
@@ -119,4 +130,4 @@ A user can discover a hobby that fits them, start it with clear first steps, and
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-03-26 after v1.2 milestone*
+*Last updated: 2026-03-27 after v1.3 milestone start*
