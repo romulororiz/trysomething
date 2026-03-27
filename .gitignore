@@ -33,6 +33,11 @@ lib/firebase_options.dart
 android/app/google-services.json
 ios/Runner/GoogleService-info.plist
 
+# Release signing (keystore contains private key, key.properties contains passwords)
+android/key.properties
+android/keystores/
+*.jks
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
