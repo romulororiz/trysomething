@@ -10,6 +10,7 @@ import '../../components/plan_first_session_card.dart';
 import '../../components/starter_kit_card.dart';
 import '../../models/hobby.dart';
 import '../../providers/feature_providers.dart';
+import '../features/hobby_journal_screen.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_colors.dart';
@@ -542,7 +543,7 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                           .copyWith(color: AppColors.textMuted)),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => context.push('/journal'),
+                    onTap: () => showAddJournalEntrySheet(context, ref, preselectedHobbyId: hobby.id),
                     child: const Icon(Icons.add_circle_outline_rounded,
                         size: 18, color: AppColors.coral),
                   ),

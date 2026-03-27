@@ -225,9 +225,16 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
   // ═══════════════════════════════════════════════════════
 
   void _showAddEntrySheet(BuildContext context, WidgetRef ref) {
+    showAddJournalEntrySheet(context, ref);
+  }
+}
+
+/// Reusable journal entry bottom sheet — can be called from any screen.
+/// Pass [preselectedHobbyId] to skip the hobby selector.
+void showAddJournalEntrySheet(BuildContext context, WidgetRef ref, {String? preselectedHobbyId}) {
     final textController = TextEditingController();
     // null = general entry (no hobby attached)
-    String? selectedHobbyId;
+    String? selectedHobbyId = preselectedHobbyId;
 
     // Show active/trying hobbies (selectable) + paused (grayed out).
     // Exclude stopped/completed entirely.
@@ -291,7 +298,8 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                   Text('New Entry', style: AppTypography.title),
                   const SizedBox(height: 16),
 
-                  // Hobby selector (General + active hobbies)
+                  // Hobby selector — hidden when preselected from Home
+                  if (preselectedHobbyId == null) ...[
                   Text('Hobby', style: AppTypography.sansLabel),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -352,6 +360,7 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                       },
                     ),
                   ),
+                  ], // end hobby selector if
 
                   const SizedBox(height: 16),
 
@@ -503,7 +512,6 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
         );
       },
     );
-  }
 }
 
 // ═══════════════════════════════════════════════════════
