@@ -206,10 +206,12 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
           'modeOverride': _selectedMode,
           if (_focusEntryId != null) 'focusEntryId': _focusEntryId,
           if (imageUrl != null) 'imageUrl': imageUrl,
-          'conversationHistory': state
-              .take(state.length - 1) // exclude the just-added user message
-              .map((m) => {'role': m.role, 'content': m.content})
-              .toList(),
+          'conversationHistory': state.length > 1
+              ? state
+                  .take(state.length - 1) // exclude the just-added user message
+                  .map((m) => {'role': m.role, 'content': m.content})
+                  .toList()
+              : <Map<String, String>>[],
         },
         options: Options(receiveTimeout: const Duration(seconds: 30)),
       );
