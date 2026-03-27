@@ -459,6 +459,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (auth.status == AuthStatus.unknown ||
           auth.status == AuthStatus.loading) {
+        // Stay on login while auth resolves — prevents flash of main content
+        if (!isAuthRoute && !isPublicRoute) return '/login';
         return null;
       }
 
