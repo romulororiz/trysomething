@@ -38,6 +38,9 @@ android/key.properties
 android/keystores/
 *.jks
 
+# Release build secrets
+scripts/build-release.env
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
