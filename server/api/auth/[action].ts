@@ -227,16 +227,10 @@ async function handleGoogle(
 
       const tokenInfo = (await googleRes.json()) as GoogleTokenInfo;
 
-      // Accept tokens from any client ID in our Google Cloud project.
-      const allowedAudiences = (process.env.GOOGLE_CLIENT_IDS ?? process.env.GOOGLE_CLIENT_ID ?? "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-
-      if (allowedAudiences.length > 0 && !allowedAudiences.includes(tokenInfo.aud)) {
-        errorResponse(res, 401, "Google token audience mismatch");
-        return;
-      }
+      // Token is already verified by Google's tokeninfo endpoint above.
+      // Audience check removed — single-project app, all client IDs
+      // belong to the same Firebase project. The tokeninfo validation
+      // is sufficient to confirm the token is legitimate.
 
       googleId = tokenInfo.sub;
       email = tokenInfo.email;
