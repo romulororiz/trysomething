@@ -101,9 +101,10 @@ CoachCardType _detectCardType(String header) {
       h.contains('update')) {
     return CoachCardType.weekPlan;
   }
-  // Instructional cards — "How to Do It", "What You Need", "Tips"
+  // Instructional cards — "How to Do It", "What You Need", "What to Skip", "Tips"
   if (h.contains('how to') || h.contains('what you need') || h.contains('tip') ||
-      h.contains('do it') || h.contains('guide') || h.contains('step')) {
+      h.contains('do it') || h.contains('guide') || h.contains('step') ||
+      h.contains('what to skip') || h.contains('what to avoid') || h.contains('skip')) {
     return CoachCardType.guide;
   }
   return CoachCardType.plain;
