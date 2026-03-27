@@ -45,48 +45,63 @@ class CoachBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Quoted reply (journal entry text — WhatsApp-style)
+              // Quoted reply (journal entry — compact inline reference)
               if (message.quotedText != null && message.quotedText!.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 2),
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border(
-                      left: BorderSide(
-                        color: Colors.white.withOpacity(0.6),
-                        width: 3,
+                  margin: const EdgeInsets.only(bottom: 4),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 3,
+                            height: 36,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Journal reflection',
+                                  style: AppTypography.caption.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 10,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  message.quotedText!.length > 80
+                                      ? '${message.quotedText!.substring(0, 80)}...'
+                                      : message.quotedText!,
+                                  style: AppTypography.body.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 12,
+                                    height: 1.3,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Journal entry',
-                        style: AppTypography.caption.copyWith(
-                          color: Colors.white.withOpacity(0.7),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        message.quotedText!.length > 120
-                            ? '${message.quotedText!.substring(0, 120)}...'
-                            : message.quotedText!,
-                        style: AppTypography.body.copyWith(
-                          color: Colors.white.withOpacity(0.85),
-                          fontSize: 13,
-                          height: 1.4,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
                   ),
                 ),
               // Photo (if attached) — rounded inside the bubble
