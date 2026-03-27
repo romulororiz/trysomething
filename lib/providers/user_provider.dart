@@ -99,6 +99,12 @@ class UserPreferencesNotifier extends StateNotifier<UserPreferences> {
     state = state.copyWith(vibes: vibes);
     _save();
   }
+
+  /// Replace all vibes at once (used by onboarding completion).
+  void setVibes(Set<String> vibes) {
+    state = state.copyWith(vibes: vibes);
+    _save();
+  }
 }
 
 // ═══════════════════════════════════════════════════════

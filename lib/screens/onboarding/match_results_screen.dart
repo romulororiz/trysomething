@@ -80,8 +80,8 @@ class _MatchResultsScreenState extends ConsumerState<MatchResultsScreen>
 
   int _maxPossibleScore() {
     final prefs = ref.read(userPreferencesProvider);
-    // budget(3) + time(3) + social(2) + vibes(userVibes.length)
-    return 8 + prefs.vibes.length;
+    // vibe(5 per vibe) + budget(2) + time(2) + solo(1)
+    return 5 * prefs.vibes.length + 5;
   }
 
   @override

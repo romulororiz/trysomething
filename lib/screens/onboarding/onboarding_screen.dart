@@ -156,9 +156,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     prefsNotifier.setHoursPerWeek(_hours.round());
     prefsNotifier.setBudgetLevel(_budget);
     prefsNotifier.setPreferSocial(_social);
-    for (final vibe in _vibes) {
-      prefsNotifier.toggleVibe(vibe);
-    }
+    prefsNotifier.setVibes(_vibes);
     ref.read(onboardingCompleteProvider.notifier).complete();
 
     // Track onboarding completion with quiz answers
@@ -1314,8 +1312,8 @@ class _ReadyPageState extends ConsumerState<_ReadyPage>
         ? topMatches[2].id
         : (topMatches.isNotEmpty ? topMatches.first.id : '');
     final score = widget.matchScores[topMatchId] ?? 0;
-    // Max: 3 (budget) + 3 (time) + 2 (social) + vibes count
-    final maxScore = 8 + widget.vibes.length;
+    // Max: 5 (per vibe) + 2 (budget) + 2 (time) + 1 (solo)
+    final maxScore = 5 * widget.vibes.length + 5;
     final pct =
         maxScore > 0 ? (score / maxScore * 100).round().clamp(0, 100) : 0;
 
