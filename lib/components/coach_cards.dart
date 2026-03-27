@@ -10,6 +10,7 @@ import 'glass_card.dart';
 
 enum CoachCardType {
   plan,       // "Tonight's plan" — session length, what to do, what to ignore
+  guide,      // "How to Do It" — instructional, no action buttons
   budget,     // "Cheaper way" — what to buy, what to skip
   recovery,   // "Restart gently" — tiny restart action
   reflection, // "Reflect" — post-session prompts
@@ -81,7 +82,7 @@ List<CoachCard>? parseCoachResponse(String text) {
 CoachCardType _detectCardType(String header) {
   final h = header.toLowerCase();
   if (h.contains('plan') || h.contains('session') || h.contains('tonight') ||
-      h.contains('next step')) {
+      h.contains('next step') || h.contains('your next')) {
     return CoachCardType.plan;
   }
   if (h.contains('cheap') || h.contains('budget') || h.contains('cost') ||
@@ -92,12 +93,18 @@ CoachCardType _detectCardType(String header) {
       h.contains('gentle') || h.contains('stuck')) {
     return CoachCardType.recovery;
   }
-  if (h.contains('reflect') || h.contains('journal') || h.contains('think')) {
+  if (h.contains('reflect') || h.contains('journal') || h.contains('think') ||
+      h.contains('good looks like') || h.contains('what good')) {
     return CoachCardType.reflection;
   }
   if (h.contains('week') || h.contains('adjust') || h.contains('change') ||
       h.contains('update')) {
     return CoachCardType.weekPlan;
+  }
+  // Instructional cards — "How to Do It", "What You Need", "Tips"
+  if (h.contains('how to') || h.contains('what you need') || h.contains('tip') ||
+      h.contains('do it') || h.contains('guide') || h.contains('step')) {
+    return CoachCardType.guide;
   }
   return CoachCardType.plain;
 }
@@ -256,6 +263,8 @@ class CoachCardList extends StatelessWidget {
     switch (type) {
       case CoachCardType.plan:
         return ['Start this session', 'Adjust it'];
+      case CoachCardType.guide:
+        return [];
       case CoachCardType.budget:
         return ['Show budget alternatives', 'Show starter kit'];
       case CoachCardType.recovery:
@@ -273,6 +282,8 @@ class CoachCardList extends StatelessWidget {
     switch (type) {
       case CoachCardType.plan:
         return (Icons.checklist_rounded, AppColors.accent);
+      case CoachCardType.guide:
+        return (Icons.lightbulb_outline_rounded, const Color(0xFFFFB347));
       case CoachCardType.budget:
         return (Icons.attach_money_rounded, const Color(0xFF06D6A0));
       case CoachCardType.recovery:

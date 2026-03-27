@@ -217,9 +217,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     switch (action) {
       // Plan card actions
       case 'Start this session':
-        // Navigate to hobby detail — the roadmap shows the current step
-        // with the "Start session" CTA that knows the correct stepId.
-        context.push('/hobby/${widget.hobbyId}');
+        _navigateToCurrentSession();
         return;
       case 'Adjust it':
         _sendChip('Adjust the plan — make it shorter or simpler');
@@ -257,6 +255,36 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
         _sendChip('I\'ll keep the original plan. What should I focus on next?');
         return;
     }
+  }
+
+  void _navigateToCurrentSession() {
+    final hobby = ref.read(hobbyByIdProvider(widget.hobbyId)).valueOrNull;
+    final userHobby = ref.read(userHobbiesProvider)[widget.hobbyId];
+    if (hobby == null || hobby.roadmapSteps.isEmpty) return;
+
+    // Find the first incomplete step
+    final completed = userHobby?.completedStepIds ?? <String>{};
+    final nextStep = hobby.roadmapSteps.firstWhere(
+      (s) => !completed.contains(s.id),
+      orElse: () => hobby.roadmapSteps.last,
+    );
+
+    final i = hobby.roadmapSteps.indexOf(nextStep);
+    final followingTitle = i + 1 < hobby.roadmapSteps.length
+        ? hobby.roadmapSteps[i + 1].title
+        : null;
+
+    context.push(
+      '/session/${widget.hobbyId}/${nextStep.id}',
+      extra: <String, dynamic>{
+        'hobbyTitle': hobby.title,
+        'hobbyCategory': hobby.category,
+        'stepTitle': nextStep.title,
+        'stepDescription': nextStep.description,
+        'estimatedMinutes': nextStep.estimatedMinutes,
+        'nextStepTitle': followingTitle,
+      },
+    );
   }
 
   void _scrollToBottom() {
