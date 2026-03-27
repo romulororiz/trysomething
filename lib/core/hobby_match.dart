@@ -48,8 +48,65 @@ int budgetThreshold(int budgetLevel) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  VIBE → CATEGORY + TAG MAPPING
+// ═══════════════════════════════════════════════════════
+
+/// Maps each onboarding vibe to the categories and expanded tags that should
+/// match it. This bridges the vocabulary gap between the 8 user-facing vibes
+/// and the 100+ domain-specific tags in the database.
+const _vibeCategories = <String, Set<String>>{
+  'creative': {'creative', 'maker'},
+  'relaxing': {'collecting'},
+  'social': {'social'},
+  'physical': {'fitness', 'outdoors'},
+  'intellectual': {'mind'},
+  'outdoors': {'outdoors'},
+  'technical': {'maker'},
+  'culinary': {'food'},
+};
+
+const _vibeExpandedTags = <String, Set<String>>{
+  'creative': {'creative', 'artistic', 'expressive', 'craft', 'paper-craft', 'textile', 'hands-on'},
+  'relaxing': {'relaxing', 'therapeutic', 'stress-relief', 'self-care', 'wellness', 'mindful', 'slow'},
+  'social': {'social', 'family', 'band-essential', 'performance'},
+  'physical': {'physical', 'cardio', 'full-body', 'energizing', 'high-energy', 'adrenaline', 'thrilling'},
+  'intellectual': {'intellectual', 'analytical', 'logical', 'problem-solving', 'literary', 'introspective', 'science'},
+  'outdoors': {'outdoors', 'outdoor', 'walking', 'water sports', 'water-based', 'aerial', 'aerial-views', 'urban exploration', 'seasonal'},
+  'technical': {'technical', 'tech', 'digital', 'electronic', 'electronics', 'arduino', 'stem', 'prototyping', 'mechanical', 'precision', 'fpv'},
+  'culinary': {'fermented', 'italian', 'japanese', 'spicy', 'flavourful', 'comforting', 'aromatic', 'home-based', 'morning-routine', 'daily-ritual', 'indulgent', 'hands-on', 'cultural'},
+  'meditative': {'meditative', 'mindful', 'therapeutic', 'introspective', 'patience', 'slow'},
+  'competitive': {'competitive', 'skill-building', 'challenging', 'adrenaline'},
+};
+
+// ═══════════════════════════════════════════════════════
 //  SCORING
 // ═══════════════════════════════════════════════════════
+
+/// Checks if a hobby matches a vibe through any of three signals:
+/// 1. Direct tag match (hobby.tags contains the vibe key)
+/// 2. Category match (hobby.category maps to the vibe)
+/// 3. Expanded tag match (hobby has domain-specific tags for that vibe)
+bool _hobbyMatchesVibe(Hobby hobby, String vibe) {
+  // 1. Direct tag match
+  if (hobby.tags.contains(vibe)) return true;
+
+  // 2. Category match (strongest signal — "food" category IS culinary)
+  final matchingCategories = _vibeCategories[vibe];
+  if (matchingCategories != null &&
+      matchingCategories.contains(hobby.category.toLowerCase())) {
+    return true;
+  }
+
+  // 3. Expanded tag match (hobby has domain tags that map to this vibe)
+  final expandedTags = _vibeExpandedTags[vibe];
+  if (expandedTags != null) {
+    for (final tag in hobby.tags) {
+      if (expandedTags.contains(tag)) return true;
+    }
+  }
+
+  return false;
+}
 
 /// Computes a composite match score for a hobby against user preferences.
 int computeMatchScore({
@@ -85,10 +142,10 @@ int computeMatchScore({
     score += 2;
   }
 
-  // Vibe match (+1 per matching tag)
+  // Vibe match (+2 per matching vibe via category/tag/expanded)
   for (final vibe in userVibes) {
-    if (hobby.tags.contains(vibe)) {
-      score += 1;
+    if (_hobbyMatchesVibe(hobby, vibe)) {
+      score += 2;
     }
   }
 
@@ -160,9 +217,9 @@ List<String> computeMatchReasons({
     reasons.add('Easy to do at home');
   }
 
-  // Vibe reason (first matching vibe)
+  // Vibe reason (first matching vibe — using expanded matching)
   for (final vibe in userVibes) {
-    if (hobby.tags.contains(vibe)) {
+    if (_hobbyMatchesVibe(hobby, vibe)) {
       final label = _vibeLabels[vibe] ?? vibe;
       reasons.add('Matches your $label vibe');
       break;
