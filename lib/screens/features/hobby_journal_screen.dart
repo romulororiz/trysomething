@@ -365,14 +365,15 @@ void showAddJournalEntrySheet(BuildContext context, WidgetRef ref, {String? pres
                   const SizedBox(height: 16),
 
                   // Text field
-                  Text('What happened?', style: AppTypography.sansLabel),
+                  Text('How did it go?', style: AppTypography.sansLabel),
                   const SizedBox(height: 8),
                   TextField(
                     controller: textController,
                     maxLines: 4,
+                    enabled: !saving,
                     style: AppTypography.sansBody,
                     decoration: InputDecoration(
-                      hintText: 'Describe your session...',
+                      hintText: 'Share your thoughts or experience...',
                       hintStyle: AppTypography.sansBodySmall.copyWith(
                         color: AppColors.textMuted,
                       ),
