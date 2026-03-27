@@ -63,7 +63,7 @@ See: `.planning/milestones/v1.2-ROADMAP.md` for full details
 - [x] **Phase 21: Server Deploy Fix + Signing Foundation** -- Fix Vercel root directory, generate release keystore, configure Gradle signing and Proguard keep rules (completed 2026-03-27)
 - [x] **Phase 22: Service Keys & Build Pipeline** -- Wire all production API keys, register Firebase release fingerprints, create build script with dart-define injection, produce first release AAB (completed 2026-03-27)
 - [x] **Phase 23: Play Console & Products** -- Create app in Play Console, set up subscription products, link to RevenueCat, configure license testers (completed 2026-03-27)
-- [ ] **Phase 24: Store Listing** -- Write store copy, create feature graphic, capture screenshots, complete content rating and declarations
+- [x] **Phase 24: Store Listing** -- Write store copy, create feature graphic, capture screenshots, complete content rating and declarations (completed 2026-03-27)
 - [ ] **Phase 25: Internal Testing & Verification** -- Upload AAB, install from test track, verify Google Sign-In, purchases, and all core flows
 - [ ] **Phase 26: Production Submission** -- Final server verification, submit to production track for Google Play review
 
@@ -170,7 +170,7 @@ Phases execute in numeric order: 21 -> 22 -> 23 -> 24 -> 25 -> 26
 | 21. Server Deploy Fix + Signing Foundation | 1/1 | Complete    | 2026-03-27 | - |
 | 22. Service Keys & Build Pipeline | 2/2 | Complete    | 2026-03-27 | - |
 | 23. Play Console & Products | v1.3 | Complete    | 2026-03-27 | - |
-| 24. Store Listing | v1.3 | 0/2 | Not started | - |
+| 24. Store Listing | v1.3 | Complete    | 2026-03-27 | - |
 | 25. Internal Testing & Verification | v1.3 | 0/1 | Not started | - |
 | 26. Production Submission | v1.3 | 0/1 | Not started | - |
 

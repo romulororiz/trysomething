@@ -1,7 +1,7 @@
 # TrySomething — Google Play Store Listing Copy
 
 ## Short Description (80 chars max)
-Pick a hobby that fits you. Get a 30-day plan. Start today, not tomorrow.
+Pick a hobby that fits you. Get a step-by-step roadmap. Start today.
 
 ## Full Description
 
@@ -10,14 +10,14 @@ You've been saying "I should try something new" for months. TrySomething turns t
 **How it works:**
 1. Answer a few quick questions about your time, budget, and vibe
 2. Get matched to a hobby that actually fits your life
-3. Follow a clear 30-day roadmap — one small step at a time
+3. Follow a clear step-by-step roadmap — one small step at a time
 
 No more endless scrolling through hobby lists. No more buying gear that collects dust. TrySomething gives you exactly one thing to focus on, with a simple plan to start.
 
 **What you get free:**
 • 150+ curated hobbies — from watercolor to sourdough to kayaking
 • Personalized matching based on your schedule, budget, and interests
-• Step-by-step 30-day roadmaps with clear first actions
+• Step-by-step step-by-step roadmaps with clear first actions
 • Session timer to keep your practice focused
 • Journal to track what you learn and how you feel
 
