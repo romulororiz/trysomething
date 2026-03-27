@@ -158,21 +158,31 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
 
   String? _focusEntryId;
 
+  bool _clearingForFocus = false;
+
   void setFocusEntryId(String? id) {
     _focusEntryId = id;
     if (id != null) {
       // Starting a focused conversation — clear stale history so
       // the coach opens fresh for this specific journal entry.
       // Deferred to avoid modifying state during widget tree build.
-      Future.microtask(() {
+      _clearingForFocus = true;
+      Future.microtask(() async {
         state = [];
-        _saveToHive();
+        await _saveToHive();
+        _clearingForFocus = false;
       });
     }
   }
 
   Future<void> send(String message, {String? imageUrl, String? quotedText}) async {
     if (_sending || (message.trim().isEmpty && imageUrl == null)) return;
+
+    // Wait for focus entry clear to finish (avoids Hive race)
+    while (_clearingForFocus) {
+      await Future.delayed(const Duration(milliseconds: 10));
+    }
+
     _limitHit = false;
 
     final isPro = ref.read(isProProvider);
@@ -239,7 +249,9 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     } on DioException catch (e) {
       final errMsg = e.response?.data?['error'] ?? 'Something went wrong';
       state = [...state, ChatMessage(role: 'assistant', content: 'Sorry, I couldn\'t respond: $errMsg')];
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[Coach] Unexpected error: $e');
+      debugPrint('[Coach] Stack: $st');
       state = [...state, ChatMessage(role: 'assistant', content: 'Something went wrong. Try again?')];
     } finally {
       _sending = false;
