@@ -18,6 +18,7 @@ class ChatMessage {
   final String content;
   final String? imageUrl; // Cloudinary URL for attached photo
   final bool imageUploading; // True while image is being uploaded
+  final String? quotedText; // Quoted journal entry (WhatsApp-style reply)
   final DateTime timestamp;
 
   ChatMessage({
@@ -25,6 +26,7 @@ class ChatMessage {
     required this.content,
     this.imageUrl,
     this.imageUploading = false,
+    this.quotedText,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
@@ -32,6 +34,7 @@ class ChatMessage {
         'role': role,
         'content': content,
         if (imageUrl != null) 'imageUrl': imageUrl,
+        if (quotedText != null) 'quotedText': quotedText,
         'timestamp': timestamp.toIso8601String(),
       };
 
@@ -39,6 +42,7 @@ class ChatMessage {
         role: json['role'] as String,
         content: json['content'] as String,
         imageUrl: json['imageUrl'] as String?,
+        quotedText: json['quotedText'] as String?,
         timestamp: DateTime.tryParse(json['timestamp'] as String? ?? '') ??
             DateTime.now(),
       );
@@ -167,7 +171,7 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     }
   }
 
-  Future<void> send(String message, {String? imageUrl}) async {
+  Future<void> send(String message, {String? imageUrl, String? quotedText}) async {
     if (_sending || (message.trim().isEmpty && imageUrl == null)) return;
     _limitHit = false;
 
@@ -193,7 +197,7 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     _sending = true;
 
     final userMsg = ChatMessage(
-        role: 'user', content: message.trim(), imageUrl: imageUrl);
+        role: 'user', content: message.trim(), imageUrl: imageUrl, quotedText: quotedText);
     state = [...state, userMsg];
     await _saveToHive();
 
@@ -290,10 +294,14 @@ class CoachEntryContext {
   /// so it knows which reflection the user is referring to.
   final String? focusEntryId;
 
+  /// Journal entry text shown as a quoted reply in the user bubble.
+  final String? quotedText;
+
   const CoachEntryContext({
     this.prefilledMessage,
     this.forceMode,
     this.autoSend = false,
     this.focusEntryId,
+    this.quotedText,
   });
 }

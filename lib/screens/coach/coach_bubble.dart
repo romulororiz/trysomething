@@ -45,6 +45,50 @@ class CoachBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Quoted reply (journal entry text — WhatsApp-style)
+              if (message.quotedText != null && message.quotedText!.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 2),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border(
+                      left: BorderSide(
+                        color: Colors.white.withOpacity(0.6),
+                        width: 3,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Journal entry',
+                        style: AppTypography.caption.copyWith(
+                          color: Colors.white.withOpacity(0.7),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        message.quotedText!.length > 120
+                            ? '${message.quotedText!.substring(0, 120)}...'
+                            : message.quotedText!,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 13,
+                          height: 1.4,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               // Photo (if attached) — rounded inside the bubble
               if (hasImage)
                 ClipRRect(

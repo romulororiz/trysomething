@@ -1123,6 +1123,7 @@ class _JournalEntryCard extends ConsumerWidget {
                 'mode': 'momentum',
                 'autoSend': true,
                 'focusEntryId': entry.id,
+                'quotedText': entry.text,
               });
             },
             child: Container(

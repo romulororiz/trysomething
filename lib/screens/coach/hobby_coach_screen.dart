@@ -52,7 +52,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
         if (mounted) {
           ref
               .read(coachProvider(widget.hobbyId).notifier)
-              .send(ctx.prefilledMessage!);
+              .send(ctx.prefilledMessage!, quotedText: ctx.quotedText);
           _scrollToBottom();
         }
       });

@@ -267,6 +267,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   : null,
               autoSend: (extra['autoSend'] as bool?) ?? false,
               focusEntryId: extra['focusEntryId'] as String?,
+              quotedText: extra['quotedText'] as String?,
             );
           }
           return CustomTransitionPage(
