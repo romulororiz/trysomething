@@ -72,44 +72,44 @@ Requirements for Google Play Store submission. After this milestone, the app is 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SIGN-01 | TBD | Pending |
-| SIGN-02 | TBD | Pending |
-| SIGN-03 | TBD | Pending |
-| SIGN-04 | TBD | Pending |
-| SIGN-05 | TBD | Pending |
-| SVC-01 | TBD | Pending |
-| SVC-02 | TBD | Pending |
-| SVC-03 | TBD | Pending |
-| SVC-04 | TBD | Pending |
-| SVC-05 | TBD | Pending |
-| SVC-06 | TBD | Pending |
-| PLAY-01 | TBD | Pending |
-| PLAY-02 | TBD | Pending |
-| PLAY-03 | TBD | Pending |
-| PLAY-04 | TBD | Pending |
-| PLAY-05 | TBD | Pending |
-| LIST-01 | TBD | Pending |
-| LIST-02 | TBD | Pending |
-| LIST-03 | TBD | Pending |
-| LIST-04 | TBD | Pending |
-| LIST-05 | TBD | Pending |
-| LIST-06 | TBD | Pending |
-| LIST-07 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
-| TEST-06 | TBD | Pending |
-| SRVR-01 | TBD | Pending |
-| SRVR-02 | TBD | Pending |
-| SRVR-03 | TBD | Pending |
+| SIGN-01 | Phase 21 | Pending |
+| SIGN-02 | Phase 21 | Pending |
+| SIGN-03 | Phase 22 | Pending |
+| SIGN-04 | Phase 22 | Pending |
+| SIGN-05 | Phase 21 | Pending |
+| SVC-01 | Phase 22 | Pending |
+| SVC-02 | Phase 22 | Pending |
+| SVC-03 | Phase 22 | Pending |
+| SVC-04 | Phase 22 | Pending |
+| SVC-05 | Phase 22 | Pending |
+| SVC-06 | Phase 22 | Pending |
+| PLAY-01 | Phase 23 | Pending |
+| PLAY-02 | Phase 23 | Pending |
+| PLAY-03 | Phase 23 | Pending |
+| PLAY-04 | Phase 23 | Pending |
+| PLAY-05 | Phase 23 | Pending |
+| LIST-01 | Phase 24 | Pending |
+| LIST-02 | Phase 24 | Pending |
+| LIST-03 | Phase 24 | Pending |
+| LIST-04 | Phase 24 | Pending |
+| LIST-05 | Phase 24 | Pending |
+| LIST-06 | Phase 24 | Pending |
+| LIST-07 | Phase 24 | Pending |
+| TEST-01 | Phase 25 | Pending |
+| TEST-02 | Phase 25 | Pending |
+| TEST-03 | Phase 25 | Pending |
+| TEST-04 | Phase 25 | Pending |
+| TEST-05 | Phase 25 | Pending |
+| TEST-06 | Phase 26 | Pending |
+| SRVR-01 | Phase 21 | Pending |
+| SRVR-02 | Phase 26 | Pending |
+| SRVR-03 | Phase 26 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 32 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 32
+- Mapped to phases: 32
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after initial definition*
+*Last updated: 2026-03-27 after roadmap creation -- all 32 requirements mapped*
