@@ -304,7 +304,6 @@ class ProNavRow extends ConsumerWidget {
   const ProNavRow({super.key});
 
   String _label(ProStatus s) {
-    if (s.isLifetime) return 'Lifetime';
     if (s.isPro && s.isTrialing) {
       return 'Trial (${s.trialDaysRemaining} days left)';
     }

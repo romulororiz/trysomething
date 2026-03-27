@@ -24,7 +24,7 @@ class ProScreen extends ConsumerStatefulWidget {
 }
 
 class _ProScreenState extends ConsumerState<ProScreen> {
-  int _selectedPlan = 1; // 0=monthly, 1=annual, 2=lifetime
+  int _selectedPlan = 1; // 0=monthly, 1=annual
   bool _purchasing = false;
 
   static const _benefits = [
@@ -189,30 +189,14 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                                       period: '/year',
                                       perMonthPrice: 'CHF 3.33/mo',
                                       savingsPercent: 33,
-                                      badge: 'MOST POPULAR',
+                                      badge: 'BEST VALUE',
                                     ),
                                     const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _buildCompactPlanTile(
-                                            index: 0,
-                                            label: 'Monthly',
-                                            price: 'CHF 4.99',
-                                            period: '/month',
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: _buildCompactPlanTile(
-                                            index: 2,
-                                            label: 'Lifetime',
-                                            price: 'CHF 99.99',
-                                            period: 'one-time',
-                                            badge: 'BEST VALUE',
-                                          ),
-                                        ),
-                                      ],
+                                    _buildPlanTile(
+                                      index: 0,
+                                      label: 'Monthly',
+                                      price: 'CHF 4.99',
+                                      period: '/month',
                                     ),
                                   ],
                                 ),
@@ -491,131 +475,6 @@ class _ProScreenState extends ConsumerState<ProScreen> {
   }
 
   // ═══════════════════════════════════════════════════════
-  //  COMPACT PLAN TILE (Monthly / Lifetime — half width)
-  // ═══════════════════════════════════════════════════════
-
-  Widget _buildCompactPlanTile({
-    required int index,
-    required String label,
-    required String price,
-    required String period,
-    String? badge,
-  }) {
-    final selected = _selectedPlan == index;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedPlan = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.coral.withValues(alpha: 0.06)
-              : AppColors.glassBackground,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: selected ? AppColors.coral : AppColors.glassBorder,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: selected
-                  ? AppColors.coral.withValues(alpha: 0.12)
-                  : Colors.transparent,
-              blurRadius: 24,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Badge
-            if (badge != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.sage.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    badge,
-                    style: AppTypography.monoBadge.copyWith(
-                      color: AppColors.sage,
-                      fontSize: 8,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ),
-              )
-            else
-              const SizedBox(height: 19),
-
-            // Radio
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeInOut,
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected ? AppColors.coral : AppColors.textWhisper,
-                  width: 1.5,
-                ),
-              ),
-              child: selected
-                  ? Center(
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.coral,
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 10),
-
-            // Label
-            Text(
-              label,
-              style: AppTypography.sansLabel.copyWith(
-                color:
-                    selected ? AppColors.textPrimary : AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 6),
-
-            // Price
-            Text(
-              price,
-              style: AppTypography.title.copyWith(
-                fontSize: 17,
-                color: selected ? AppColors.coral : AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 2),
-
-            // Period
-            Text(
-              period,
-              style:
-                  AppTypography.sansTiny.copyWith(color: AppColors.textMuted),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
   //  FEATURE CARD
   // ═══════════════════════════════════════════════════════
 
@@ -658,18 +517,12 @@ class _ProScreenState extends ConsumerState<ProScreen> {
   //  HELPERS
   // ═══════════════════════════════════════════════════════
 
-  String get _ctaLabel => switch (_selectedPlan) {
-        0 => 'Start Free Trial',
-        1 => 'Start Free Trial',
-        2 => 'Get Lifetime Access',
-        _ => 'Start Free Trial',
-      };
+  String get _ctaLabel => 'Start Free Trial';
 
   String _statusText(ProStatus status) {
     if (status.isTrialing) {
       return 'TRIAL · ${status.trialDaysRemaining} DAYS LEFT';
     }
-    if (status.isLifetime) return 'LIFETIME PRO';
     if (status.isPro) return 'PRO ACTIVE';
     return 'FREE PLAN';
   }
@@ -677,7 +530,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
   Future<void> _handlePurchase() async {
     // On web in debug mode, simulate purchase via debug tier
     if (kIsWeb && kDebugMode) {
-      final tier = _selectedPlan == 2 ? DebugTier.pro : DebugTier.trial;
+      const tier = DebugTier.trial;
       ref.read(proStatusProvider.notifier).setDebugTier(tier);
       if (mounted) {
         showAppSnackbar(context,
@@ -706,7 +559,6 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     final package = switch (_selectedPlan) {
       0 => offering.monthly,
       1 => offering.annual,
-      2 => offering.lifetime,
       _ => offering.annual,
     };
 
