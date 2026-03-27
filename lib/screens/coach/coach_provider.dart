@@ -131,6 +131,9 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
   bool _limitHit = false;
   bool get limitHit => _limitHit;
 
+  bool _hiveLoaded = false;
+  bool get hiveLoaded => _hiveLoaded;
+
   CoachNotifier(this.hobbyId, this.ref) : super([]) {
     _loadFromHive();
   }
@@ -142,6 +145,14 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
       state = (list as List)
           .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
           .toList();
+    }
+    _hiveLoaded = true;
+  }
+
+  /// Wait for Hive history to load before sending (prevents race condition).
+  Future<void> waitForLoad() async {
+    while (!_hiveLoaded) {
+      await Future.delayed(const Duration(milliseconds: 10));
     }
   }
 

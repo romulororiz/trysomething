@@ -48,13 +48,13 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
           .setFocusEntryId(ctx!.focusEntryId);
     }
     if (ctx?.prefilledMessage != null && ctx!.autoSend) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref
-              .read(coachProvider(widget.hobbyId).notifier)
-              .send(ctx.prefilledMessage!, quotedText: ctx.quotedText);
-          _scrollToBottom();
-        }
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final notifier = ref.read(coachProvider(widget.hobbyId).notifier);
+        await notifier.waitForLoad();
+        if (!mounted) return;
+        await notifier.send(ctx.prefilledMessage!, quotedText: ctx.quotedText);
+        _scrollToBottom();
       });
     }
   }
