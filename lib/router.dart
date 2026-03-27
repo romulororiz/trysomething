@@ -457,10 +457,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPublicRoute = path == '/terms-of-service' ||
           path == '/privacy-policy';
 
-      if (auth.status == AuthStatus.unknown ||
-          auth.status == AuthStatus.loading) {
-        // Stay on login while auth resolves — prevents flash of main content
+      if (auth.status == AuthStatus.unknown) {
+        // Cold start: redirect to login while initial auth check runs
         if (!isAuthRoute && !isPublicRoute) return '/login';
+        return null;
+      }
+
+      if (auth.status == AuthStatus.loading) {
+        // Active sign-in in progress — freeze navigation, let the current
+        // screen show its own loading state (no flash)
         return null;
       }
 
