@@ -228,7 +228,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     _staggeredCard(6, ProGateSection(
                       isLocked: !isPro,
                       sectionTitle: 'Deep Research',
-                      teaserText: 'Cost breakdown, FAQ, and budget alternatives',
+                      teaserText: 'Cost breakdown and beginner FAQ',
                       onLockTap: () => context.push('/pro'),
                       child: HobbyQuickLinks(
                         hobbyId: widget.hobbyId,

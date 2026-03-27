@@ -56,19 +56,6 @@ class HobbyQuickLinks extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-
-        // Row 2: Budget Alternatives (full-width)
-        _QuickLinkButton(
-          icon: Icons.savings_outlined,
-          iconColor: AppColors.textMuted,
-          title: 'Budget Alternatives',
-          subtitle: 'DIY & budget swaps',
-          isLocked: isLocked,
-          onTap: isLocked
-              ? () => onLockTap?.call()
-              : () => context.push('/budget/$hobbyId'),
-        ),
       ],
     );
   }
