@@ -373,7 +373,7 @@ void showAddJournalEntrySheet(BuildContext context, WidgetRef ref, {String? pres
                     enabled: !saving,
                     style: AppTypography.sansBody,
                     decoration: InputDecoration(
-                      hintText: 'Share your thoughts or experience...',
+                      hintText: 'What stood out today?',
                       hintStyle: AppTypography.sansBodySmall.copyWith(
                         color: AppColors.textMuted,
                       ),
