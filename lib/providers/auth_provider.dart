@@ -64,12 +64,6 @@ final _googleSignIn = GoogleSignIn(
       : null,
 );
 
-// Fallback GoogleSignIn — without serverClientId. Used when idToken flow
-// fails (ApiException 10 = SHA-1 mismatch or propagation delay). Gets an
-// accessToken instead, which the server verifies via Google userinfo endpoint.
-final _googleSignInFallback = GoogleSignIn(
-  scopes: ['email', 'profile'],
-);
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
@@ -156,20 +150,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> loginWithGoogle() async {
     state = state.copyWith(status: AuthStatus.loading, error: null, loadingMethod: AuthMethod.google);
     try {
-      // Try primary flow (idToken via serverClientId).
+      // Single sign-in flow — uses serverClientId if available (for idToken),
+      // falls back gracefully to accessToken if not.
       await _googleSignIn.signOut().catchError((_) => null);
-      debugPrint('[GoogleAuth] Attempting sign-in with serverClientId...');
-      GoogleSignInAccount? account;
-      try {
-        account = await _googleSignIn.signIn();
-      } catch (e) {
-        // ApiException 10 = DEVELOPER_ERROR (SHA-1 mismatch or propagation).
-        // Fall back to accessToken-only flow.
-        debugPrint('[GoogleAuth] Primary failed: $e');
-        debugPrint('[GoogleAuth] Falling back to accessToken-only flow...');
-        await _googleSignInFallback.signOut().catchError((_) => null);
-        account = await _googleSignInFallback.signIn();
-      }
+      debugPrint('[GoogleAuth] Attempting sign-in...');
+      final account = await _googleSignIn.signIn();
 
       if (account == null) {
         debugPrint('[GoogleAuth] User cancelled');
