@@ -101,10 +101,15 @@ CoachCardType _detectCardType(String header) {
       h.contains('update')) {
     return CoachCardType.weekPlan;
   }
-  // Instructional cards — "How to Do It", "What You Need", "What to Skip", "Tips"
+  // Avoidance cards — "What to Skip", "What to Avoid"
+  // Uses guide type (no CTAs) — icon differentiated below
+  if (h.contains('skip') || h.contains('avoid') || h.contains('don\'t') ||
+      h.contains('mistake') || h.contains('warning')) {
+    return CoachCardType.guide;
+  }
+  // Instructional cards — "How to Do It", "What You Need", "Tips"
   if (h.contains('how to') || h.contains('what you need') || h.contains('tip') ||
-      h.contains('do it') || h.contains('guide') || h.contains('step') ||
-      h.contains('what to skip') || h.contains('what to avoid') || h.contains('skip')) {
+      h.contains('do it') || h.contains('guide') || h.contains('step')) {
     return CoachCardType.guide;
   }
   return CoachCardType.plain;
@@ -134,7 +139,14 @@ class CoachCardList extends StatelessWidget {
   }
 
   Widget _buildCard(CoachCard card) {
-    final (icon, color) = _cardMeta(card.type);
+    var (icon, color) = _cardMeta(card.type);
+    // Override icon for avoidance cards within guide type
+    final h = card.title.toLowerCase();
+    if (card.type == CoachCardType.guide &&
+        (h.contains('skip') || h.contains('avoid') || h.contains('don\'t') || h.contains('warning'))) {
+      icon = Icons.block_rounded;
+      color = const Color(0xFFFF6B6B);
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
