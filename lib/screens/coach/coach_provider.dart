@@ -185,25 +185,10 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
 
     _limitHit = false;
 
-    final isPro = ref.read(isProProvider);
-    if (!isPro) {
-      final userHobbies = ref.read(userHobbiesProvider);
-      final userHobby = userHobbies[hobbyId];
-      final limit = CoachLimitTracker.limitForState(userHobby?.status);
-      if (limit != null) {
-        final count = await CoachLimitTracker.getCount(hobbyId);
-        if (count >= limit) {
-          _limitHit = true;
-          ref.read(analyticsProvider).trackEvent('coach_limit_reached', {
-            'hobby_id': hobbyId,
-            'limit': limit,
-          });
-          state = [...state];
-          return;
-        }
-      }
-    }
-
+    // Rate limiting is enforced server-side via GenerationLog.
+    // The server returns 429 if the user exceeds their limit.
+    // No client-side pre-check — avoids mismatch between
+    // client counter (per-hobby Hive) and server counter (global DB).
     _sending = true;
 
     final userMsg = ChatMessage(
@@ -242,13 +227,15 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
         'message_count': state.length,
       });
 
-      if (!isPro) {
-        await CoachLimitTracker.increment(hobbyId);
-        ref.invalidate(coachRemainingProvider(hobbyId));
-      }
+      // Server logs the message to GenerationLog — no client-side tracking needed
     } on DioException catch (e) {
-      final errMsg = e.response?.data?['error'] ?? 'Something went wrong';
-      state = [...state, ChatMessage(role: 'assistant', content: 'Sorry, I couldn\'t respond: $errMsg')];
+      if (e.response?.statusCode == 429) {
+        _limitHit = true;
+        state = [...state, ChatMessage(role: 'assistant', content: 'You\'ve reached your free message limit. Upgrade to Pro for unlimited coaching.')];
+      } else {
+        final errMsg = e.response?.data?['error'] ?? 'Something went wrong';
+        state = [...state, ChatMessage(role: 'assistant', content: 'Sorry, I couldn\'t respond: $errMsg')];
+      }
     } catch (e, st) {
       debugPrint('[Coach] Unexpected error: $e');
       debugPrint('[Coach] Stack: $st');
