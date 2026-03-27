@@ -1,3 +1,6 @@
+# Play Core (deferred components referenced by Flutter engine)
+-dontwarn com.google.android.play.core.**
+
 # RevenueCat
 -keep class com.revenuecat.purchases.** { *; }
 
