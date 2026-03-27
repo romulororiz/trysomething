@@ -140,12 +140,14 @@ class CoachCardList extends StatelessWidget {
 
   Widget _buildCard(CoachCard card) {
     var (icon, color) = _cardMeta(card.type);
-    // Override icon for avoidance cards within guide type
+    // Override icons for specific card titles within guide/reflection types
     final h = card.title.toLowerCase();
-    if (card.type == CoachCardType.guide &&
-        (h.contains('skip') || h.contains('avoid') || h.contains('don\'t') || h.contains('warning'))) {
+    if (h.contains('skip') || h.contains('avoid') || h.contains('don\'t') || h.contains('warning')) {
       icon = Icons.block_rounded;
       color = const Color(0xFFFF6B6B);
+    } else if (h.contains('good looks like') || h.contains('what good')) {
+      icon = Icons.thumb_up_rounded;
+      color = const Color(0xFF06D6A0);
     }
 
     return Padding(
