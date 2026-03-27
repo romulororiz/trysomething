@@ -80,15 +80,16 @@ List<CoachCard>? parseCoachResponse(String text) {
 
 CoachCardType _detectCardType(String header) {
   final h = header.toLowerCase();
-  if (h.contains('plan') || h.contains('session') || h.contains('tonight')) {
+  if (h.contains('plan') || h.contains('session') || h.contains('tonight') ||
+      h.contains('next step')) {
     return CoachCardType.plan;
   }
   if (h.contains('cheap') || h.contains('budget') || h.contains('cost') ||
-      h.contains('buy') || h.contains('skip')) {
+      h.contains('alternative') || h.contains('save money')) {
     return CoachCardType.budget;
   }
   if (h.contains('restart') || h.contains('back') || h.contains('recover') ||
-      h.contains('gentle')) {
+      h.contains('gentle') || h.contains('stuck')) {
     return CoachCardType.recovery;
   }
   if (h.contains('reflect') || h.contains('journal') || h.contains('think')) {
@@ -256,7 +257,7 @@ class CoachCardList extends StatelessWidget {
       case CoachCardType.plan:
         return ['Start this session', 'Adjust it'];
       case CoachCardType.budget:
-        return ['Use this version', 'Show starter kit'];
+        return ['Show budget alternatives', 'Show starter kit'];
       case CoachCardType.recovery:
         return ['Restart now', 'Maybe switch'];
       case CoachCardType.reflection:
@@ -271,9 +272,9 @@ class CoachCardList extends StatelessWidget {
   (IconData, Color) _cardMeta(CoachCardType type) {
     switch (type) {
       case CoachCardType.plan:
-        return (Icons.event_note_rounded, AppColors.accent);
+        return (Icons.checklist_rounded, AppColors.accent);
       case CoachCardType.budget:
-        return (Icons.savings_outlined, const Color(0xFF06D6A0));
+        return (Icons.attach_money_rounded, const Color(0xFF06D6A0));
       case CoachCardType.recovery:
         return (Icons.support_rounded, const Color(0xFFFFB347));
       case CoachCardType.reflection:

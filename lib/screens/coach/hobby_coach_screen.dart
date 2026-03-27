@@ -217,15 +217,17 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
     switch (action) {
       // Plan card actions
       case 'Start this session':
-        context.push('/session/${widget.hobbyId}');
+        // Navigate to hobby detail — the roadmap shows the current step
+        // with the "Start session" CTA that knows the correct stepId.
+        context.push('/hobby/${widget.hobbyId}');
         return;
       case 'Adjust it':
         _sendChip('Adjust the plan — make it shorter or simpler');
         return;
 
       // Budget card actions
-      case 'Use this version':
-        _sendChip('Great, I\'ll use the cheaper version. What\'s my first step?');
+      case 'Show budget alternatives':
+        _sendChip('Show me cheaper alternatives for this hobby');
         return;
       case 'Show starter kit':
         context.push('/hobby/${widget.hobbyId}');
@@ -241,7 +243,7 @@ class _HobbyCoachScreenState extends ConsumerState<HobbyCoachScreen> {
 
       // Reflection card actions
       case 'Open reflection':
-        context.push('/session/${widget.hobbyId}');
+        context.push('/journal');
         return;
       case 'Skip for now':
         _sendChip('What should I do next?');
