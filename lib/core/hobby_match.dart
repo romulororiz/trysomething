@@ -109,6 +109,15 @@ bool _hobbyMatchesVibe(Hobby hobby, String vibe) {
 }
 
 /// Computes a composite match score for a hobby against user preferences.
+///
+/// Scoring weights (vibe-dominant design):
+///   Vibe match:   +5 per matching vibe (the user's explicit intent)
+///   Budget fit:   +2 (within budget) or +1 (slightly over)
+///   Time fit:     +2 (fits schedule) or +1 (slightly over)
+///   Solo/social:  +1 (preference match)
+///
+/// This ensures a hobby matching the user's vibe always outranks a
+/// hobby that merely fits budget/time/solo but has no vibe affinity.
 int computeMatchScore({
   required Hobby hobby,
   required double userHours,
@@ -118,35 +127,35 @@ int computeMatchScore({
 }) {
   int score = 0;
 
-  // Budget fit (0–3 points)
+  // Vibe match — dominant signal (+5 per matching vibe)
+  for (final vibe in userVibes) {
+    if (_hobbyMatchesVibe(hobby, vibe)) {
+      score += 5;
+    }
+  }
+
+  // Budget fit (0–2 points)
   final (_, costMax) = parseCostRange(hobby.costText);
   final maxBudget = budgetThreshold(userBudgetLevel);
   if (costMax <= maxBudget) {
-    score += 3;
+    score += 2;
   } else if (costMax <= maxBudget * 1.5) {
     score += 1;
   }
 
-  // Time fit (0–3 points)
+  // Time fit (0–2 points)
   final hobbyHours = parseWeeklyHours(hobby.timeText);
   if (hobbyHours <= userHours) {
-    score += 3;
+    score += 2;
   } else if (hobbyHours <= userHours + 2) {
     score += 1;
   }
 
-  // Solo/social (0–2 points)
+  // Solo/social (0–1 point)
   if (userPrefersSocial && hobby.tags.contains('social')) {
-    score += 2;
+    score += 1;
   } else if (!userPrefersSocial && hobby.tags.contains('solo')) {
-    score += 2;
-  }
-
-  // Vibe match (+2 per matching vibe via category/tag/expanded)
-  for (final vibe in userVibes) {
-    if (_hobbyMatchesVibe(hobby, vibe)) {
-      score += 2;
-    }
+    score += 1;
   }
 
   return score;
