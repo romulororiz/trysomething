@@ -357,7 +357,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                         context.push('/pro');
                         return;
                       }
-                      context.push('/quickstart/${widget.hobbyId}');
+                      // Start hobby directly — skip quickstart (data wasn't persisted)
+                      ref.read(userHobbiesProvider.notifier).startTrying(widget.hobbyId);
+                      context.go('/home?hobby=${widget.hobbyId}');
                     },
                   ),
                 ),
