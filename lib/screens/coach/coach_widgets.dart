@@ -20,30 +20,57 @@ List<(String, IconData, String)> getActionsForMode(CoachMode mode) {
   switch (mode) {
     case CoachMode.start:
       return [
-        ('Help me start tonight', Icons.play_circle_outline_rounded,
-            'A 15-min plan you can start tonight'),
-        ('Make this cheaper', Icons.savings_outlined,
-            'Find the lowest-cost way to begin'),
-        ('What do I need to buy?', Icons.shopping_bag_outlined,
-            'Essential starter kit only'),
+        (
+          'Help me start tonight',
+          Icons.play_circle_outline_rounded,
+          'A 15-min plan you can start tonight'
+        ),
+        (
+          'Make this cheaper',
+          Icons.savings_outlined,
+          'Find the lowest-cost way to begin'
+        ),
+        (
+          'What do I need to buy?',
+          Icons.shopping_bag_outlined,
+          'Essential starter kit only'
+        ),
       ];
     case CoachMode.momentum:
       return [
-        ('What should I do next?', Icons.arrow_circle_right_outlined,
-            'Specific to where you are now'),
-        ('Make this easier', Icons.tune_rounded,
-            'Simplify your current approach'),
-        ('I\'m losing motivation', Icons.battery_2_bar_rounded,
-            'Small wins to rebuild momentum'),
+        (
+          'What should I do next?',
+          Icons.arrow_circle_right_outlined,
+          'Specific to where you are now'
+        ),
+        (
+          'Make this easier',
+          Icons.tune_rounded,
+          'Simplify your current approach'
+        ),
+        (
+          'I\'m losing motivation',
+          Icons.battery_2_bar_rounded,
+          'Small wins to rebuild momentum'
+        ),
       ];
     case CoachMode.rescue:
       return [
-        ('I skipped a few days', Icons.replay_rounded,
-            'One tiny action to break the gap'),
-        ('I\'m losing motivation', Icons.battery_2_bar_rounded,
-            'Find what made it fun at first'),
-        ('Maybe this hobby isn\'t for me', Icons.swap_horiz_rounded,
-            'Let\'s figure out what fits better'),
+        (
+          'I skipped a few days',
+          Icons.replay_rounded,
+          'One tiny action to break the gap'
+        ),
+        (
+          'I\'m losing motivation',
+          Icons.battery_2_bar_rounded,
+          'Find what made it fun at first'
+        ),
+        (
+          'Maybe this hobby isn\'t for me',
+          Icons.swap_horiz_rounded,
+          'Let\'s figure out what fits better'
+        ),
       ];
   }
 }
@@ -167,12 +194,12 @@ class CoachContextHero extends ConsumerWidget {
       contextLine = 'Ready to help you begin. No experience needed.';
     } else if (mode == CoachMode.rescue) {
       final lastActive = userHobby?.lastActivityAt ?? userHobby?.startedAt;
-      final days = lastActive != null
-          ? DateTime.now().difference(lastActive).inDays
-          : 0;
+      final days =
+          lastActive != null ? DateTime.now().difference(lastActive).inDays : 0;
       contextLine = 'It\'s been $days days. Let\'s find an easy way back in.';
     } else {
-      contextLine = '$stepsCompleted of $totalSteps steps complete. Keep going!';
+      contextLine =
+          '$stepsCompleted of $totalSteps steps complete. Keep going!';
     }
 
     return Padding(
@@ -278,9 +305,8 @@ class CoachModeSelector extends StatelessWidget {
                       Icon(
                         mode.icon,
                         size: 16,
-                        color: isActive
-                            ? AppColors.accent
-                            : AppColors.textMuted,
+                        color:
+                            isActive ? AppColors.accent : AppColors.textMuted,
                       ),
                       const SizedBox(height: 3),
                       Text(
@@ -295,7 +321,9 @@ class CoachModeSelector extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ).animate(key: ValueKey(currentMode)).fadeIn(duration: 200.ms),
+                  )
+                      .animate(key: ValueKey(currentMode))
+                      .fadeIn(duration: 200.ms),
                 ),
               ),
             ),
@@ -323,7 +351,7 @@ class CoachRemainingBanner extends ConsumerWidget {
         if (value == null) return const SizedBox.shrink();
         final isLow = value <= 1;
         return Container(
-          margin: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
             color: isLow
@@ -351,23 +379,6 @@ class CoachRemainingBanner extends ConsumerWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              if (isLow && value <= 1) ...[
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => context.push('/pro'),
-                  child: Text(
-                    'Upgrade to Pro',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.accent,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      decoration: TextDecoration.underline,
-                      decorationColor: AppColors.accent,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
             ],
           ),
         );
@@ -515,8 +526,8 @@ class CoachEmptyState extends ConsumerWidget {
                           color: AppColors.accent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(action.$2,
-                            size: 18, color: AppColors.accent),
+                        child:
+                            Icon(action.$2, size: 18, color: AppColors.accent),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -588,42 +599,41 @@ class CoachQuickActionsStrip extends StatelessWidget {
         child: ListView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: actions.map((action) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: GestureDetector(
-              onTap: () => onChipTap(action.$1),
-              child: Container(
-                alignment: Alignment.center,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.glassBackground,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                  border:
-                      Border.all(color: AppColors.glassBorder, width: 0.5),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(action.$2, size: 13, color: AppColors.accent),
-                    const SizedBox(width: 5),
-                    Text(
-                      action.$1,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+          children: actions.map((action) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: GestureDetector(
+                onTap: () => onChipTap(action.$1),
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.glassBackground,
+                    borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                    border:
+                        Border.all(color: AppColors.glassBorder, width: 0.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(action.$2, size: 13, color: AppColors.accent),
+                      const SizedBox(width: 5),
+                      Text(
+                        action.$1,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
-    ),
     );
   }
 }
