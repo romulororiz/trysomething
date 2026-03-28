@@ -60,13 +60,15 @@ export async function sendVerificationEmail(
     <tr><td align="center" style="padding:40px 16px 48px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:440px;">
 
-        <!-- Brand -->
+        <!-- Brand: icon centered on top, name below -->
         <tr><td align="center" style="padding:0 0 36px;">
           <table role="presentation" cellpadding="0" cellspacing="0">
-            <tr>
-              <td style="width:36px;height:36px;vertical-align:middle;"><img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774699533/jelwijieo87nvqs2isxb.png" width="36" height="36" alt="T" style="display:block;border:0;border-radius:8px;" /></td>
-              <td style="padding-left:10px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:17px;font-weight:700;color:#F5F0EB;letter-spacing:-0.3px;">TrySomething</td>
-            </tr>
+            <tr><td align="center" style="padding-bottom:14px;">
+              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774699533/jelwijieo87nvqs2isxb.png" width="56" height="56" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
+            </td></tr>
+            <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:19px;font-weight:700;color:#F5F0EB;letter-spacing:-0.3px;">
+              <span style="color:#FF6B6B;">Try</span>Something
+            </td></tr>
           </table>
         </td></tr>
 
