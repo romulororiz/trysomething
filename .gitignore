@@ -80,3 +80,11 @@ sentry.properties
 .vscode/mcp.json
 .superpowers/
 .gitnexus
+
+# Claude-generated planning, docs, and tooling (NEVER push to remote)
+.planning/
+.agents/
+.codex/
+docs/superpowers/
+devtools_options.yaml
+server/.planning/
