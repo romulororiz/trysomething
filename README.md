@@ -207,7 +207,7 @@ trysomething/
 
 ```bash
 # Clone
-git clone https://github.com/romulofreires1/trysomething.git
+git clone https://github.com/romulororiz/trysomething.git
 cd trysomething
 
 # Flutter app
