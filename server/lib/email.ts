@@ -68,7 +68,7 @@ export async function sendVerificationEmail(
         <tr><td align="center" style="padding:0 0 36px;">
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr><td align="center" style="padding-bottom:14px;">
-              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774699533/jelwijieo87nvqs2isxb.png" width="90" height="90" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
+              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774726818/trysomething/branding/app-icon-nobg.png" width="90" height="90" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
             </td></tr>
             <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:32px;font-weight:700;color:#F5F0EB;letter-spacing:-0.3px;">
               <span style="color:#FF6B6B;">Try</span>Something
@@ -164,7 +164,7 @@ export async function sendPasswordResetEmail(
         <tr><td align="center" style="padding:0 0 36px;">
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr><td align="center" style="padding-bottom:14px;">
-              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774699533/jelwijieo87nvqs2isxb.png" width="90" height="90" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
+              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774726818/trysomething/branding/app-icon-nobg.png" width="90" height="90" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
             </td></tr>
             <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:32px;font-weight:700;color:#F5F0EB;letter-spacing:-0.3px;">
               <span style="color:#FF6B6B;">Try</span>Something

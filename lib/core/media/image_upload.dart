@@ -99,6 +99,7 @@ class ImageUpload {
           filename: resolvedPath.split('/').last,
         ),
         'upload_preset': _uploadPreset,
+        'folder': 'trysomething/user-content',
       });
       final response = await dio.post(
         'https://api.cloudinary.com/v1_1/$_cloudName/image/upload',
