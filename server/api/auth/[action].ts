@@ -99,10 +99,14 @@ async function handleRegister(
       include: { preferences: true },
     });
 
-    // Send verification email (non-blocking — don't fail registration if email fails)
-    sendVerificationEmail(user.email, code, user.displayName).catch((err) => {
-      console.error("[Register] Failed to send verification email:", err);
-    });
+    // Send verification email — must await on Vercel serverless,
+    // otherwise the function terminates before the email is sent.
+    try {
+      await sendVerificationEmail(user.email, code, user.displayName);
+    } catch (emailErr) {
+      console.error("[Register] Failed to send verification email:", emailErr);
+      // Don't fail registration — user can resend from verification screen
+    }
 
     const tokens = generateTokenPair(user.id);
 
