@@ -173,7 +173,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                         'By downloading, installing, or using the TrySomething mobile application (the "App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App.',
                       ),
                       _buildBody(
-                        'TrySomething is operated by Romulo Freires ("we", "us", "our"), based in Zurich, Switzerland.',
+                        'TrySomething is operated by Romulo Roriz ("we", "us", "our"), based in Zurich, Switzerland.',
                       ),
                       _buildBody(
                         'These Terms are governed by Swiss law, specifically the Swiss Code of Obligations (OR) and the Swiss Federal Act on Data Protection (FADP/nDSG).',
