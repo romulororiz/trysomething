@@ -52,7 +52,7 @@ export async function sendVerificationEmail(
 		.join(`<td style="width:6px;"></td>`);
 
 	await resend.emails.send({
-		from: 'TrySomething <onboarding@resend.dev>',
+		from: 'TrySomething <support@trysomething.io>',
 		to: email,
 		subject: `${code} is your TrySomething verification code`,
 		html: `
