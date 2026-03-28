@@ -107,29 +107,15 @@ class _HobbyJournalScreenState extends ConsumerState<HobbyJournalScreen> {
                           hideHobbyPill: widget.initialHobbyId != null,
                           onDismissed: () {
                             ref.read(journalProvider.notifier).removeEntry(entry.id);
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.clearSnackBars();
-                            final controller = messenger.showSnackBar(
-                              SnackBar(
-                                content: const Text('Entry deleted',
-                                    style: TextStyle(color: Colors.white)),
-                                backgroundColor: AppColors.surfaceElevated,
-                                behavior: SnackBarBehavior.floating,
-                                dismissDirection: DismissDirection.down,
-                                duration: const Duration(days: 365), // managed manually
-                                action: SnackBarAction(
-                                  label: 'Undo',
-                                  textColor: AppColors.coral,
-                                  onPressed: () {
-                                    ref.read(journalProvider.notifier).addEntry(entry);
-                                  },
-                                ),
-                              ),
+                            showAppSnackbar(
+                              context,
+                              message: 'Entry deleted',
+                              type: AppSnackbarType.deleted,
+                              actionLabel: 'Undo',
+                              onAction: () {
+                                ref.read(journalProvider.notifier).addEntry(entry);
+                              },
                             );
-                            // Force dismiss after 2 seconds
-                            Future.delayed(const Duration(seconds: 2), () {
-                              controller.close();
-                            });
                           },
                         );
                       },

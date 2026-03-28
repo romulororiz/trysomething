@@ -327,64 +327,207 @@ class _AppConfirmDialogContent extends StatelessWidget {
 //  APP SNACKBAR — Premium transient messages
 // ═══════════════════════════════════════════════════════
 
-enum AppSnackbarType { success, info, error }
+enum AppSnackbarType { success, info, error, deleted }
 
-/// Shows a premium snackbar with consistent styling.
+/// Shows a premium toast notification anchored at the bottom of the screen.
+///
+/// Uses a custom overlay instead of Material SnackBar for full control
+/// over positioning, animation, and glass styling.
+///
+/// [actionLabel] and [onAction] add a tappable action button (e.g. "Undo").
 void showAppSnackbar(
   BuildContext context, {
   required String message,
   AppSnackbarType type = AppSnackbarType.info,
   Duration duration = const Duration(seconds: 3),
+  String? actionLabel,
+  VoidCallback? onAction,
 }) {
-  final messenger = ScaffoldMessenger.maybeOf(context);
-  if (messenger == null) return;
+  final overlay = Overlay.maybeOf(context);
+  if (overlay == null) return;
 
-  final (bgColor, iconData, iconColor) = switch (type) {
-    AppSnackbarType.success => (
-        const Color(0xFF0A1A14),
-        Icons.check_circle_rounded,
-        AppColors.success,
-      ),
-    AppSnackbarType.info => (
-        AppColors.surfaceElevated,
-        Icons.info_outline_rounded,
-        AppColors.textSecondary,
-      ),
-    AppSnackbarType.error => (
-        const Color(0xFF1A0A0A),
-        Icons.error_outline_rounded,
-        AppColors.accent,
-      ),
-  };
+  late OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (_) => _AppToast(
+      message: message,
+      type: type,
+      duration: duration,
+      actionLabel: actionLabel,
+      onAction: onAction,
+      onDismiss: () {
+        try { entry.remove(); } catch (_) {}
+      },
+    ),
+  );
+  overlay.insert(entry);
+}
 
-  messenger.hideCurrentSnackBar();
-  messenger.showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          Icon(iconData, size: 18, color: iconColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTypography.body.copyWith(
-                color: AppColors.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+class _AppToast extends StatefulWidget {
+  final String message;
+  final AppSnackbarType type;
+  final Duration duration;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final VoidCallback onDismiss;
+
+  const _AppToast({
+    required this.message,
+    required this.type,
+    required this.duration,
+    this.actionLabel,
+    this.onAction,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_AppToast> createState() => _AppToastState();
+}
+
+class _AppToastState extends State<_AppToast>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _slideAnimation;
+  late final Animation<double> _fadeAnimation;
+  bool _dismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+      reverseDuration: const Duration(milliseconds: 250),
+    );
+
+    _slideAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _controller.forward();
+    Future.delayed(widget.duration, _dismiss);
+  }
+
+  void _dismiss() {
+    if (_dismissed || !mounted) return;
+    _dismissed = true;
+    _controller.reverse().then((_) {
+      if (mounted) widget.onDismiss();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final (accentColor, iconData) = switch (widget.type) {
+      AppSnackbarType.success => (AppColors.success, Icons.check_circle_rounded),
+      AppSnackbarType.info => (AppColors.textSecondary, Icons.info_outline_rounded),
+      AppSnackbarType.error => (AppColors.accent, Icons.error_outline_rounded),
+      AppSnackbarType.deleted => (const Color(0xFFFF6B6B), Icons.delete_outline_rounded),
+    };
+
+    return Positioned(
+      left: 20,
+      right: 20,
+      bottom: bottomPadding + 24,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, 40 * _slideAnimation.value),
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: child,
+          ),
+        ),
+        child: GestureDetector(
+          onVerticalDragEnd: (details) {
+            if (details.velocity.pixelsPerSecond.dy > 100) _dismiss();
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xDD141418),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.15),
+                    width: 0.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Icon(iconData, size: 20, color: accentColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.message,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                    if (widget.actionLabel != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          widget.onAction?.call();
+                          _dismiss();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            widget.actionLabel!,
+                            style: AppTypography.caption.copyWith(
+                              color: accentColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
-        ],
+        ),
       ),
-      backgroundColor: bgColor,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.glassBorder, width: 0.5),
-      ),
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-      duration: duration,
-      dismissDirection: DismissDirection.horizontal,
-    ),
-  );
+    );
+  }
 }

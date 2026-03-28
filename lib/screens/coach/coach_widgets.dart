@@ -579,18 +579,18 @@ class CoachQuickActionsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chips = getActionsForMode(mode).map((a) => a.$1).toList();
+    final actions = getActionsForMode(mode);
 
     return SizedBox(
       height: 38,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: chips.map((chip) {
+        children: actions.map((action) {
           return Padding(
             padding: const EdgeInsets.only(right: 6),
             child: GestureDetector(
-              onTap: () => onChipTap(chip),
+              onTap: () => onChipTap(action.$1),
               child: Container(
                 alignment: Alignment.center,
                 padding:
@@ -601,13 +601,20 @@ class CoachQuickActionsStrip extends StatelessWidget {
                   border:
                       Border.all(color: AppColors.glassBorder, width: 0.5),
                 ),
-                child: Text(
-                  chip,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(action.$2, size: 13, color: AppColors.accent),
+                    const SizedBox(width: 5),
+                    Text(
+                      action.$1,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

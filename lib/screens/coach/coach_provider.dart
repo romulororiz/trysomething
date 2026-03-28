@@ -243,8 +243,18 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
       // Server logs the message to GenerationLog — no client-side tracking needed
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
-        _limitHit = true;
-        state = [...state, ChatMessage(role: 'assistant', content: 'You\'ve reached your free message limit. Upgrade to Pro for unlimited coaching.')];
+        // Check if client already thinks user is Pro (webhook race condition).
+        // RevenueCat SDK may confirm Pro before the server DB updates via webhook.
+        final isPro = ref.read(isProProvider);
+        if (isPro) {
+          // Subscription sync delay — don't show upgrade prompt.
+          // Refresh from RevenueCat to re-confirm, then suggest retry.
+          ref.read(proStatusProvider.notifier).refresh();
+          state = [...state, ChatMessage(role: 'assistant', content: 'Your subscription is still syncing with the server. Please wait a moment and try again.')];
+        } else {
+          _limitHit = true;
+          state = [...state, ChatMessage(role: 'assistant', content: 'You\'ve reached your free message limit. Upgrade to Pro for unlimited coaching.')];
+        }
       } else {
         final errMsg = e.response?.data?['error'] ?? 'Something went wrong';
         state = [...state, ChatMessage(role: 'assistant', content: 'Sorry, I couldn\'t respond: $errMsg')];

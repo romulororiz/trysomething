@@ -291,7 +291,9 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
     if (package != null) {
       final success = await service.purchase(package);
       if (success) {
-        ref.read(proStatusProvider.notifier).sync();
+        // Use refresh() to fetch latest from RevenueCat server, not just local sync.
+        // This ensures the client has verified subscription state before proceeding.
+        await ref.read(proStatusProvider.notifier).refresh();
       }
     }
 

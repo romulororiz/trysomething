@@ -573,7 +573,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     }
 
     final success = await service.purchase(package);
-    if (success) ref.read(proStatusProvider.notifier).sync();
+    if (success) await ref.read(proStatusProvider.notifier).refresh();
     setState(() => _purchasing = false);
     if (mounted && success) context.pop();
   }
@@ -582,7 +582,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     final service = ref.read(subscriptionProvider);
     final success = await service.restore();
     if (success) {
-      ref.read(proStatusProvider.notifier).sync();
+      await ref.read(proStatusProvider.notifier).refresh();
       if (mounted) context.pop();
     } else {
       if (mounted) {

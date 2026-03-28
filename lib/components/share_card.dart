@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/hobby.dart';
 import '../theme/app_colors.dart';
+import 'app_overlays.dart';
 
 // Module-level flag prevents parallel share pipelines from rapid taps.
 bool _sharing = false;
@@ -18,13 +19,12 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
   if (_sharing) return;
   _sharing = true;
   OverlayEntry? entry;
-  // Capture overlay and ScaffoldMessenger before any async gaps to avoid
+  // Capture overlay before any async gaps to avoid
   // using BuildContext across async boundaries.
   // NOTE: Use Overlay.maybeOf (nullable) not Overlay.of — in Flutter 3.6,
   // Overlay.of() is non-nullable and asserts rather than returning null.
   // maybeOf is the correct API for a safe null check.
   final overlay = Overlay.maybeOf(context);
-  final messenger = ScaffoldMessenger.maybeOf(context);
   try {
     if (overlay == null) throw Exception('No Overlay found in context');
 
@@ -90,9 +90,8 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
     // share_plus does NOT throw on user cancellation — only real errors land here.
     debugPrint('[shareHobby] ERROR: $e');
     debugPrint('[shareHobby] STACK: $st');
-    messenger?.showSnackBar(
-      const SnackBar(content: Text("Couldn't create share card")),
-    );
+    showAppSnackbar(context,
+        message: "Couldn't create share card", type: AppSnackbarType.error);
   } finally {
     // Always clean up the overlay entry and re-enable sharing.
     entry?.remove();
