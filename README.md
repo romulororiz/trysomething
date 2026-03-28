@@ -30,15 +30,15 @@ TrySomething fills that gap.
 ## How It Works
 
 ```
-Onboarding quiz → 3 personalized matches → Pick one → See the easiest way to start
-→ Commitment flow → Week 1 plan → Immersive session with timer
-→ Reflect → Return tomorrow → 30 days of AI-guided support
+Onboarding quiz → 4 personalized matches → Pick one → See the easiest way to start
+→ Commitment flow → personalized step-by-step Roadmap → Immersive session with timer
+→ Reflect → Return tomorrow → AI-guided support
 
 ```
 
 ### 1. Discover — _"What fits me?"_
 
-A 6-question quiz captures your budget, time, location, social preference, and emotional state. The matching algorithm filters 150+ hobbies and returns 3 personalized recommendations with honest cost estimates, time commitments, and a "why this fits you" explanation.
+A 4-question quiz captures your budget, time, location, social preference, and emotional state. The matching algorithm filters 150+ hobbies and returns 4 personalized recommendations with honest cost estimates, time commitments, and a "why this fits you" explanation.
 
 ### 2. Decide — _"Should I try this?"_
 
@@ -46,7 +46,7 @@ Every hobby has a conversion-focused detail page: the easiest way to start, comm
 
 ### 3. Do — _"Now what?"_
 
-An immersive session screen takes over the device. A particle-formation timer visualizes progress as 250 floating particles converge into a shape representing your hobby's category. After the timer: structured reflection prompts. An AI coach provides guidance through three modes — helping you start, maintain momentum, or recover after a gap.
+An immersive session screen takes over the device. After the timer: structured reflection prompts. An AI coach provides guidance through three modes — helping you start, maintain momentum, or recover after a gap.
 
 ----------
 
@@ -54,27 +54,24 @@ An immersive session screen takes over the device. A particle-formation timer vi
 
 ### Discovery & Matching
 
--   **Onboarding Quiz** — 6 questions: why, budget, time, where, solo/social, emotional state
--   **Smart Matching** — Ranks hobbies by budget fit, time fit, location, social preference, and vibe
+-   **Onboarding Quiz** — 4 questions: Which vibes you're into, time, budget and whether you are more of a solo/social person.
+-   **Smart Matching** — Ranks hobbies by budget fit, time fit, social preference, and vibe
 -   **Discover Feed** — 4 curated tabs: For You, Start Cheap, This Week, Different Vibe
 -   **Feed/List Toggle** — Switch between cinematic card feed and compact list view
 -   **Search** — Natural language: _"cheap creative hobby"_, _"indoor winter hobby"_, _"hobby for anxiety"_
 
 ### Hobby Detail
 
--   **Quick Start Snapshot** — Budget, time, difficulty, setup friction at a glance
 -   **"Why This Fits You"** — Personalized match explanation from onboarding data
 -   **Common Reasons People Quit** — Honest, trust-building section
 -   **Starter Kit** — Essential items with CHF prices, product images, and affiliate buy links
--   **Budget Alternatives** — DIY / Budget / Premium options per item
--   **4-Stage Roadmap** — Week 1 (Try) → Week 2 (Repeat) → Week 3 (Reduce friction) → Week 4 (Decide)
+-   **Step-by-step Roadmap** — Personalized to each and every hobby.
 -   **Beginner FAQ** — AI-generated, practical Q&A
 -   **Cost Calculator** — Starter / 3-month / 1-year projections with money-saving tips
 
 ### Session Experience
 
--   **Immersive Timer** — Full-screen, no distractions. 250 particles form your hobby's category shape as time progresses
--   **3 Completion Modes** — Timer (default), Photo Proof (Pro), Check-in (hold-to-complete)
+-   **Immersive Timer** — Full-screen, no distractions.
 -   **Structured Reflection** — "What did you try?" / "What felt good?" / "What was annoying?"
 -   **Session Glow** — Ambient visual feedback during active sessions
 
@@ -357,8 +354,6 @@ Text only
 
 Text + photo
 
-30-day guided support
-
 —
 
 ✓
@@ -383,7 +378,6 @@ MIT License — see [LICENSE](https://claude.ai/chat/LICENSE) for details.
 
 **TrySomething** — because the best hobby is the one you actually start.
 
-Built with ☕ and curiosity in Zürich 🇨🇭
 Built with ☕ and curiosity in Zürich 🇨🇭
 
 </div>
