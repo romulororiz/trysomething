@@ -37,4 +37,7 @@ abstract class AuthRepository {
 
   /// Delete the user's account. Sends optional [password] for email users.
   Future<void> deleteAccount({String? password});
+
+  Future<bool> verifyEmail({required String code});
+  Future<bool> resendVerification();
 }

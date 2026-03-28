@@ -336,6 +336,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Verify email with 6-digit code. Returns null on success, error string on failure.
+  Future<String?> verifyEmail(String code) async {
+    try {
+      final verified = await _repo.verifyEmail(code: code);
+      if (verified && state.user != null) {
+        state = state.copyWith(user: state.user!.copyWith(emailVerified: true));
+      }
+      return null;
+    } catch (e) {
+      return _extractError(e);
+    }
+  }
+
+  /// Resend verification email. Returns null on success, error string on failure.
+  Future<String?> resendVerification() async {
+    try {
+      await _repo.resendVerification();
+      return null;
+    } catch (e) {
+      return _extractError(e);
+    }
+  }
+
   Future<void> updateProfile({String? displayName, String? bio, String? avatarUrl, String? fcmToken}) async {
     try {
       final updated = await _repo.updateProfile(
@@ -392,4 +415,9 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 /// Convenience: whether the user is authenticated.
 final isAuthenticatedProvider = Provider<bool>((ref) {
   return ref.watch(authProvider).status == AuthStatus.authenticated;
+});
+
+/// Convenience: whether the user has verified their email.
+final emailVerifiedProvider = Provider<bool>((ref) {
+  return ref.watch(authProvider).user?.emailVerified ?? false;
 });

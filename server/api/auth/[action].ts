@@ -13,6 +13,13 @@ import {
   verifyRefreshToken,
 } from "../../lib/auth";
 import { mapUserWithPreferences } from "../../lib/mappers";
+import { requireAuth } from "../../lib/auth";
+import {
+  generateVerificationCode,
+  codeExpiresAt,
+  isWithinCooldown,
+  sendVerificationEmail,
+} from "../../lib/email";
 
 export default async function handler(
   req: VercelRequest,
@@ -36,6 +43,10 @@ export default async function handler(
       return handleApple(req, res);
     case "apple-callback":
       return handleAppleCallback(req, res);
+    case "verify-email":
+      return handleVerifyEmail(req, res);
+    case "resend-verification":
+      return handleResendVerification(req, res);
     default:
       errorResponse(res, 404, `Unknown auth action '${action}'`);
   }
@@ -73,14 +84,24 @@ async function handleRegister(
 
     const passwordHash = await hashPassword(password);
 
+    const code = generateVerificationCode();
+
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase().trim(),
         passwordHash,
         displayName: displayName.trim(),
+        emailVerified: false,
+        verificationCode: code,
+        verificationCodeExpiresAt: codeExpiresAt(),
         preferences: { create: {} },
       },
       include: { preferences: true },
+    });
+
+    // Send verification email (non-blocking — don't fail registration if email fails)
+    sendVerificationEmail(user.email, code, user.displayName).catch((err) => {
+      console.error("[Register] Failed to send verification email:", err);
     });
 
     const tokens = generateTokenPair(user.id);
@@ -273,10 +294,10 @@ async function handleGoogle(
         errorResponse(res, 401, "This account has been scheduled for deletion");
         return;
       }
-      if (!user.googleId) {
+      if (!user.googleId || !user.emailVerified) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: { googleId },
+          data: { googleId, emailVerified: true },
           include: { preferences: true },
         });
       }
@@ -288,6 +309,7 @@ async function handleGoogle(
           displayName: name || email.split("@")[0],
           avatarUrl: picture || null,
           googleId,
+          emailVerified: true,
           preferences: { create: {} },
         },
         include: { preferences: true },
@@ -418,10 +440,10 @@ async function handleApple(
         errorResponse(res, 401, "This account has been scheduled for deletion");
         return;
       }
-      if (!user.appleId) {
+      if (!user.appleId || !user.emailVerified) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: { appleId },
+          data: { appleId, emailVerified: true },
           include: { preferences: true },
         });
       }
@@ -432,6 +454,7 @@ async function handleApple(
           passwordHash: "",
           displayName: name || email?.split("@")[0] || "User",
           appleId,
+          emailVerified: true,
           preferences: { create: {} },
         },
         include: { preferences: true },
@@ -518,5 +541,121 @@ async function handleAppleCallback(
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.status(200).send(html);
+  }
+}
+
+// ── Verify Email ────────────────────────────────
+
+async function handleVerifyEmail(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  const userId = await requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const { code } = req.body ?? {};
+
+    if (!code || typeof code !== "string") {
+      return errorResponse(res, 400, "Verification code is required");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        emailVerified: true,
+        verificationCode: true,
+        verificationCodeExpiresAt: true,
+      },
+    });
+
+    if (!user) return errorResponse(res, 404, "User not found");
+
+    if (user.emailVerified) {
+      res.status(200).json({ emailVerified: true });
+      return;
+    }
+
+    if (!user.verificationCode || !user.verificationCodeExpiresAt) {
+      return errorResponse(res, 400, "No verification code found. Please request a new one.");
+    }
+
+    if (new Date() > user.verificationCodeExpiresAt) {
+      return errorResponse(res, 400, "Code expired. Please request a new one.");
+    }
+
+    if (code.trim() !== user.verificationCode) {
+      return errorResponse(res, 400, "Invalid verification code");
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        emailVerified: true,
+        verificationCode: null,
+        verificationCodeExpiresAt: null,
+      },
+    });
+
+    res.status(200).json({ emailVerified: true });
+  } catch (err) {
+    console.error("POST /api/auth/verify-email error:", err);
+    errorResponse(res, 500, "Verification failed");
+  }
+}
+
+// ── Resend Verification ─────────────────────────
+
+async function handleResendVerification(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  const userId = await requireAuth(req, res);
+  if (!userId) return;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        displayName: true,
+        emailVerified: true,
+        verificationCodeExpiresAt: true,
+      },
+    });
+
+    if (!user) return errorResponse(res, 404, "User not found");
+
+    if (user.emailVerified) {
+      res.status(200).json({ emailVerified: true });
+      return;
+    }
+
+    // Cooldown check — use the code expiry timestamp to derive when last code was sent
+    // (code was sent at expiresAt - 10 minutes)
+    const lastSentAt = user.verificationCodeExpiresAt
+      ? new Date(user.verificationCodeExpiresAt.getTime() - 10 * 60 * 1000)
+      : null;
+    const cooldown = isWithinCooldown(lastSentAt);
+    if (cooldown.blocked) {
+      return errorResponse(res, 429, `Please wait ${cooldown.retryAfter} seconds before requesting a new code`);
+    }
+
+    const code = generateVerificationCode();
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        verificationCode: code,
+        verificationCodeExpiresAt: codeExpiresAt(),
+      },
+    });
+
+    await sendVerificationEmail(user.email, code, user.displayName);
+
+    res.status(200).json({ sent: true });
+  } catch (err) {
+    console.error("POST /api/auth/resend-verification error:", err);
+    errorResponse(res, 500, "Failed to resend verification code");
   }
 }

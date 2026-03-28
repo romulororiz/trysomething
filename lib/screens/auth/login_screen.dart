@@ -44,13 +44,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (success && mounted) {
       final user = ref.read(authProvider).user;
       if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
-      ref.read(userHobbiesProvider.notifier).syncFromServer();
-      ref.read(journalProvider.notifier).loadFromServer();
-      ref.read(scheduleProvider.notifier).loadFromServer();
-      ref.read(storiesProvider.notifier).loadFromServer();
-      ref.read(buddyProvider.notifier).loadFromServer();
-      ref.read(challengeProvider.notifier).loadFromServer();
-      context.go('/home');
+      if (user != null && !user.emailVerified) {
+        context.go('/verify-email');
+      } else {
+        ref.read(userHobbiesProvider.notifier).syncFromServer();
+        ref.read(journalProvider.notifier).loadFromServer();
+        ref.read(scheduleProvider.notifier).loadFromServer();
+        ref.read(storiesProvider.notifier).loadFromServer();
+        ref.read(buddyProvider.notifier).loadFromServer();
+        ref.read(challengeProvider.notifier).loadFromServer();
+        context.go('/home');
+      }
     }
   }
 

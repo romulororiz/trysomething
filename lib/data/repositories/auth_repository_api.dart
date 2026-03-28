@@ -116,4 +116,20 @@ class AuthRepositoryApi implements AuthRepository {
       data: password != null ? {'password': password} : null,
     );
   }
+
+  @override
+  Future<bool> verifyEmail({required String code}) async {
+    final response = await _dio.post(
+      ApiConstants.authVerifyEmail,
+      data: {'code': code},
+    );
+    return (response.data as Map<String, dynamic>)['emailVerified'] == true;
+  }
+
+  @override
+  Future<bool> resendVerification() async {
+    final response = await _dio.post(ApiConstants.authResendVerification);
+    final data = response.data as Map<String, dynamic>;
+    return data['sent'] == true || data['emailVerified'] == true;
+  }
 }

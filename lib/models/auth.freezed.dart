@@ -27,6 +27,7 @@ mixin _$AuthUser {
   String? get avatarUrl => throw _privateConstructorUsedError;
   String? get createdAt => throw _privateConstructorUsedError;
   bool get hasPassword => throw _privateConstructorUsedError;
+  bool get emailVerified => throw _privateConstructorUsedError;
 
   /// Serializes this AuthUser to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -50,7 +51,8 @@ abstract class $AuthUserCopyWith<$Res> {
       String bio,
       String? avatarUrl,
       String? createdAt,
-      bool hasPassword});
+      bool hasPassword,
+      bool emailVerified});
 }
 
 /// @nodoc
@@ -75,6 +77,7 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
     Object? avatarUrl = freezed,
     Object? createdAt = freezed,
     Object? hasPassword = null,
+    Object? emailVerified = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -105,6 +108,10 @@ class _$AuthUserCopyWithImpl<$Res, $Val extends AuthUser>
           ? _value.hasPassword
           : hasPassword // ignore: cast_nullable_to_non_nullable
               as bool,
+      emailVerified: null == emailVerified
+          ? _value.emailVerified
+          : emailVerified // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -124,7 +131,8 @@ abstract class _$$AuthUserImplCopyWith<$Res>
       String bio,
       String? avatarUrl,
       String? createdAt,
-      bool hasPassword});
+      bool hasPassword,
+      bool emailVerified});
 }
 
 /// @nodoc
@@ -147,6 +155,7 @@ class __$$AuthUserImplCopyWithImpl<$Res>
     Object? avatarUrl = freezed,
     Object? createdAt = freezed,
     Object? hasPassword = null,
+    Object? emailVerified = null,
   }) {
     return _then(_$AuthUserImpl(
       id: null == id
@@ -177,6 +186,10 @@ class __$$AuthUserImplCopyWithImpl<$Res>
           ? _value.hasPassword
           : hasPassword // ignore: cast_nullable_to_non_nullable
               as bool,
+      emailVerified: null == emailVerified
+          ? _value.emailVerified
+          : emailVerified // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -191,7 +204,8 @@ class _$AuthUserImpl implements _AuthUser {
       this.bio = '',
       this.avatarUrl,
       this.createdAt,
-      this.hasPassword = true});
+      this.hasPassword = true,
+      this.emailVerified = false});
 
   factory _$AuthUserImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthUserImplFromJson(json);
@@ -212,10 +226,13 @@ class _$AuthUserImpl implements _AuthUser {
   @override
   @JsonKey()
   final bool hasPassword;
+  @override
+  @JsonKey()
+  final bool emailVerified;
 
   @override
   String toString() {
-    return 'AuthUser(id: $id, email: $email, displayName: $displayName, bio: $bio, avatarUrl: $avatarUrl, createdAt: $createdAt, hasPassword: $hasPassword)';
+    return 'AuthUser(id: $id, email: $email, displayName: $displayName, bio: $bio, avatarUrl: $avatarUrl, createdAt: $createdAt, hasPassword: $hasPassword, emailVerified: $emailVerified)';
   }
 
   @override
@@ -233,13 +250,15 @@ class _$AuthUserImpl implements _AuthUser {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.hasPassword, hasPassword) ||
-                other.hasPassword == hasPassword));
+                other.hasPassword == hasPassword) &&
+            (identical(other.emailVerified, emailVerified) ||
+                other.emailVerified == emailVerified));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, email, displayName, bio,
-      avatarUrl, createdAt, hasPassword);
+      avatarUrl, createdAt, hasPassword, emailVerified);
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.
@@ -265,7 +284,8 @@ abstract class _AuthUser implements AuthUser {
       final String bio,
       final String? avatarUrl,
       final String? createdAt,
-      final bool hasPassword}) = _$AuthUserImpl;
+      final bool hasPassword,
+      final bool emailVerified}) = _$AuthUserImpl;
 
   factory _AuthUser.fromJson(Map<String, dynamic> json) =
       _$AuthUserImpl.fromJson;
@@ -284,6 +304,8 @@ abstract class _AuthUser implements AuthUser {
   String? get createdAt;
   @override
   bool get hasPassword;
+  @override
+  bool get emailVerified;
 
   /// Create a copy of AuthUser
   /// with the given fields replaced by the non-null parameter values.

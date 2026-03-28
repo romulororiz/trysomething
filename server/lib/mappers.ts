@@ -204,6 +204,7 @@ type PrismaUser = {
   bio: string;
   avatarUrl: string | null;
   passwordHash?: string;
+  emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
   preferences?: PrismaUserPreference | null;
@@ -227,6 +228,7 @@ export function mapUser(u: PrismaUser) {
     avatarUrl: u.avatarUrl,
     createdAt: u.createdAt.toISOString(),
     hasPassword: !!u.passwordHash,
+    emailVerified: u.emailVerified,
   };
 }
 

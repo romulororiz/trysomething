@@ -6,6 +6,7 @@ import 'providers/user_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
+import 'screens/auth/verify_email_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/onboarding/match_results_screen.dart';
@@ -76,6 +77,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         pageBuilder: (context, state) => CustomTransitionPage(
           child: const RegisterScreen(),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: Motion.slow,
+        ),
+      ),
+
+      GoRoute(
+        path: '/verify-email',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const VerifyEmailScreen(),
           transitionsBuilder: (context, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -474,9 +486,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
+      final verified = auth.user?.emailVerified ?? false;
+      final isVerifyRoute = path == '/verify-email';
+
       if (isAuthRoute) {
+        if (!verified) return '/verify-email';
         return onboarded ? '/home' : '/onboarding';
       }
+
+      // Email verification guard — blocks everything until verified
+      if (!verified && !isVerifyRoute && !isPublicRoute) return '/verify-email';
+      if (verified && isVerifyRoute) return onboarded ? '/home' : '/onboarding';
 
       if (!onboarded && !isOnboarding) return '/onboarding';
       if (onboarded && isOnboarding) return '/match-results';

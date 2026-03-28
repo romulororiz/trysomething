@@ -48,16 +48,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
 
     if (success && mounted) {
-      // New user → go through onboarding (sync fires but will be empty)
       final user = ref.read(authProvider).user;
       if (user != null) ref.read(profileProvider.notifier).initFromAuth(user);
-      ref.read(userHobbiesProvider.notifier).syncFromServer();
-      ref.read(journalProvider.notifier).loadFromServer();
-      ref.read(scheduleProvider.notifier).loadFromServer();
-      ref.read(storiesProvider.notifier).loadFromServer();
-      ref.read(buddyProvider.notifier).loadFromServer();
-      ref.read(challengeProvider.notifier).loadFromServer();
-      context.go('/onboarding');
+      // Email users go to verification first; router guard handles the redirect
+      context.go('/verify-email');
     }
   }
 

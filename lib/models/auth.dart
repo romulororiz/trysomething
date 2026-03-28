@@ -13,6 +13,7 @@ class AuthUser with _$AuthUser {
     String? avatarUrl,
     String? createdAt,
     @Default(true) bool hasPassword,
+    @Default(false) bool emailVerified,
   }) = _AuthUser;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) =>
