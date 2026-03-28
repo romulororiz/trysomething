@@ -20,7 +20,7 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: "TrySomething — Find a Hobby You\u2019ll Actually Start",
   description:
-    "Stop scrolling. Start something. TrySomething matches you with one perfect hobby, gives you everything to begin today, and keeps you going for 30 days.",
+    "Stop scrolling. Start something. TrySomething matches you with one perfect hobby, gives you everything to begin today.",
   keywords: [
     "hobby app",
     "start a hobby",
