@@ -52,7 +52,7 @@ export async function sendVerificationEmail(
 		.join(`<td style="width:6px;"></td>`);
 
 	await resend.emails.send({
-		from: 'TrySomething <support@trysomething.io>',
+		from: 'TrySomething <no-reply@trysomething.io>',
 		to: email,
 		subject: `${code} is your TrySomething verification code`,
 		html: `
@@ -148,7 +148,7 @@ export async function sendPasswordResetEmail(
 		.join(`<td style="width:6px;"></td>`);
 
 	await resend.emails.send({
-		from: 'TrySomething <support@trysomething.io>',
+		from: 'TrySomething <no-reply@trysomething.io>',
 		to: email,
 		subject: `${code} is your TrySomething password reset code`,
 		html: `
