@@ -12,6 +12,8 @@ class ApiConstants {
   static const authApple = '/auth/apple';
   static const authVerifyEmail = '/auth/verify-email';
   static const authResendVerification = '/auth/resend-verification';
+  static const authForgotPassword = '/auth/forgot-password';
+  static const authResetPassword = '/auth/reset-password';
 
   // Users
   static const usersMe = '/users/me';

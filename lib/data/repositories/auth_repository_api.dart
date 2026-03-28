@@ -132,4 +132,26 @@ class AuthRepositoryApi implements AuthRepository {
     final data = response.data as Map<String, dynamic>;
     return data['sent'] == true || data['emailVerified'] == true;
   }
+
+  @override
+  Future<bool> forgotPassword({required String email}) async {
+    final response = await _dio.post(
+      ApiConstants.authForgotPassword,
+      data: {'email': email},
+    );
+    return (response.data as Map<String, dynamic>)['sent'] == true;
+  }
+
+  @override
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.authResetPassword,
+      data: {'email': email, 'code': code, 'newPassword': newPassword},
+    );
+    return (response.data as Map<String, dynamic>)['success'] == true;
+  }
 }

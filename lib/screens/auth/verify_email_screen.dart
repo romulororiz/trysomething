@@ -162,12 +162,39 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen>
       resizeToAvoidBottomInset: false,
       body: AppBackground(
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+          child: Column(
+            children: [
+              // Back / logout button
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 0, 0),
+                  child: GestureDetector(
+                    onTap: () async {
+                      await ref.read(authProvider.notifier).logout();
+                    },
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: AppColors.glassBackground,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: AppColors.glassBorder, width: 0.5),
+                      ),
+                      child: const Icon(Icons.arrow_back_rounded,
+                          size: 18, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                   // Mail icon
                   Container(
                     width: 64,
@@ -388,6 +415,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen>
                 ],
               ),
             ),
+          ),
+        ),
+            ],
           ),
         ),
       ),

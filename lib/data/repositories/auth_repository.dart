@@ -40,4 +40,6 @@ abstract class AuthRepository {
 
   Future<bool> verifyEmail({required String code});
   Future<bool> resendVerification();
+  Future<bool> forgotPassword({required String email});
+  Future<bool> resetPassword({required String email, required String code, required String newPassword});
 }

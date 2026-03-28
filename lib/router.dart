@@ -7,6 +7,7 @@ import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/verify_email_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/onboarding/match_results_screen.dart';
@@ -84,6 +85,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      GoRoute(
+        path: '/forgot-password',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const ForgotPasswordScreen(),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: Motion.slow,
+        ),
+      ),
       GoRoute(
         path: '/verify-email',
         pageBuilder: (context, state) => CustomTransitionPage(
@@ -467,7 +478,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = path == '/login' || path == '/register';
       final isOnboarding = path == '/onboarding';
       final isPublicRoute = path == '/terms-of-service' ||
-          path == '/privacy-policy';
+          path == '/privacy-policy' ||
+          path == '/forgot-password';
 
       if (auth.status == AuthStatus.unknown) {
         // Cold start: redirect to login while initial auth check runs

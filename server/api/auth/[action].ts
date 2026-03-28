@@ -19,6 +19,8 @@ import {
   codeExpiresAt,
   isWithinCooldown,
   sendVerificationEmail,
+  sendPasswordResetEmail,
+  CODE_EXPIRY_MS,
 } from "../../lib/email";
 
 export default async function handler(
@@ -47,6 +49,10 @@ export default async function handler(
       return handleVerifyEmail(req, res);
     case "resend-verification":
       return handleResendVerification(req, res);
+    case "forgot-password":
+      return handleForgotPassword(req, res);
+    case "reset-password":
+      return handleResetPassword(req, res);
     default:
       errorResponse(res, 404, `Unknown auth action '${action}'`);
   }
@@ -661,5 +667,122 @@ async function handleResendVerification(
   } catch (err) {
     console.error("POST /api/auth/resend-verification error:", err);
     errorResponse(res, 500, "Failed to resend verification code");
+  }
+}
+
+// ── Forgot Password ─────────────────────────────
+
+async function handleForgotPassword(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  try {
+    const { email } = req.body ?? {};
+
+    if (!email || typeof email !== "string") {
+      return errorResponse(res, 400, "Email is required");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        passwordHash: true,
+        resetCodeExpiresAt: true,
+      },
+    });
+
+    // Always return 200 to avoid email enumeration
+    if (!user || !user.passwordHash) {
+      res.status(200).json({ sent: true });
+      return;
+    }
+
+    // Cooldown check
+    const lastSentAt = user.resetCodeExpiresAt
+      ? new Date(user.resetCodeExpiresAt.getTime() - CODE_EXPIRY_MS)
+      : null;
+    const cooldown = isWithinCooldown(lastSentAt);
+    if (cooldown.blocked) {
+      return errorResponse(res, 429, `Please wait ${cooldown.retryAfter} seconds`);
+    }
+
+    const code = generateVerificationCode();
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetCode: code,
+        resetCodeExpiresAt: codeExpiresAt(),
+      },
+    });
+
+    await sendPasswordResetEmail(user.email, code, user.displayName);
+
+    res.status(200).json({ sent: true });
+  } catch (err) {
+    console.error("POST /api/auth/forgot-password error:", err);
+    errorResponse(res, 500, "Failed to send reset code");
+  }
+}
+
+// ── Reset Password ──────────────────────────────
+
+async function handleResetPassword(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  try {
+    const { email, code, newPassword } = req.body ?? {};
+
+    if (!email || !code || !newPassword) {
+      return errorResponse(res, 400, "email, code, and newPassword are required");
+    }
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      return errorResponse(res, 400, "Password must be at least 8 characters");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+      select: {
+        id: true,
+        resetCode: true,
+        resetCodeExpiresAt: true,
+      },
+    });
+
+    if (!user) {
+      return errorResponse(res, 400, "Invalid reset code");
+    }
+
+    if (!user.resetCode || !user.resetCodeExpiresAt) {
+      return errorResponse(res, 400, "No reset code found. Please request a new one.");
+    }
+
+    if (new Date() > user.resetCodeExpiresAt) {
+      return errorResponse(res, 400, "Code expired. Please request a new one.");
+    }
+
+    if (code.trim() !== user.resetCode) {
+      return errorResponse(res, 400, "Invalid reset code");
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetCode: null,
+        resetCodeExpiresAt: null,
+      },
+    });
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("POST /api/auth/reset-password error:", err);
+    errorResponse(res, 500, "Password reset failed");
   }
 }
