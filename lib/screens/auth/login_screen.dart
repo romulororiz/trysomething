@@ -251,10 +251,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // ── Forgot password ──
                         Align(
                           alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 10),
-                            child: GestureDetector(
-                              onTap: () => context.push('/forgot-password'),
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => context.push('/forgot-password'),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 'Forgot Password?',
                                 style: AppTypography.sansCaption
