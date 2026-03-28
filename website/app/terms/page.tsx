@@ -36,7 +36,7 @@ export default function TermsPage() {
           Terms, do not use the App.
         </p>
         <p className="text-text-secondary leading-relaxed mb-4">
-          TrySomething is operated by Romulo Freires (&ldquo;we&rdquo;,
+          TrySomething is operated by Romulo Roriz (&ldquo;we&rdquo;,
           &ldquo;us&rdquo;, &ldquo;our&rdquo;), based in Zurich, Switzerland.
         </p>
         <p className="text-text-secondary leading-relaxed mb-4">
