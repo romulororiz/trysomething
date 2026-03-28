@@ -107,12 +107,16 @@ CoachCardType _detectCardType(String header) {
       h.contains('mistake') || h.contains('warning')) {
     return CoachCardType.guide;
   }
-  // Instructional cards — "How to Do It", "What You Need", "Tips"
+  // Instructional cards — "How to Do It", "What You Need", "Tips", "Easier"
   if (h.contains('how to') || h.contains('what you need') || h.contains('tip') ||
-      h.contains('do it') || h.contains('guide') || h.contains('step')) {
+      h.contains('do it') || h.contains('guide') || h.contains('step') ||
+      h.contains('easier') || h.contains('simplif') || h.contains('technique') ||
+      h.contains('try this') || h.contains('here\'s') || h.contains('focus') ||
+      h.contains('practice') || h.contains('start with') || h.contains('instead')) {
     return CoachCardType.guide;
   }
-  return CoachCardType.plain;
+  // Catch-all: anything with a header is at least a guide, not "plain"
+  return CoachCardType.guide;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -308,7 +312,7 @@ class CoachCardList extends StatelessWidget {
       case CoachCardType.weekPlan:
         return (Icons.calendar_today_rounded, const Color(0xFF87CEEB));
       case CoachCardType.plain:
-        return (Icons.chat_bubble_outline_rounded, AppColors.textMuted);
+        return (Icons.auto_awesome_rounded, AppColors.accent);
     }
   }
 }

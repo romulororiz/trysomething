@@ -69,7 +69,7 @@ class CoachHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Row(
         children: [
           GestureDetector(
@@ -581,11 +581,13 @@ class CoachQuickActionsStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = getActionsForMode(mode);
 
-    return SizedBox(
-      height: 38,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: SizedBox(
+        height: 38,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         children: actions.map((action) {
           return Padding(
             padding: const EdgeInsets.only(right: 6),
@@ -621,6 +623,7 @@ class CoachQuickActionsStrip extends StatelessWidget {
           );
         }).toList(),
       ),
+    ),
     );
   }
 }
