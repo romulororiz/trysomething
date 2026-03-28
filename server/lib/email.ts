@@ -1,57 +1,61 @@
-import crypto from "crypto";
-import { Resend } from "resend";
+import crypto from 'crypto';
+import { Resend } from 'resend';
 
 const CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
-  if (!_resend) {
-    _resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return _resend;
+	if (!_resend) {
+		_resend = new Resend(process.env.RESEND_API_KEY);
+	}
+	return _resend;
 }
 
 export function generateVerificationCode(): string {
-  return crypto.randomInt(100000, 999999).toString();
+	return crypto.randomInt(100000, 999999).toString();
 }
 
 export function codeExpiresAt(): Date {
-  return new Date(Date.now() + CODE_EXPIRY_MS);
+	return new Date(Date.now() + CODE_EXPIRY_MS);
 }
 
 export function isWithinCooldown(lastCodeSentAt: Date | null): {
-  blocked: boolean;
-  retryAfter: number;
+	blocked: boolean;
+	retryAfter: number;
 } {
-  if (!lastCodeSentAt) return { blocked: false, retryAfter: 0 };
-  const elapsed = Date.now() - lastCodeSentAt.getTime();
-  if (elapsed < RESEND_COOLDOWN_MS) {
-    return {
-      blocked: true,
-      retryAfter: Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000),
-    };
-  }
-  return { blocked: false, retryAfter: 0 };
+	if (!lastCodeSentAt) return { blocked: false, retryAfter: 0 };
+	const elapsed = Date.now() - lastCodeSentAt.getTime();
+	if (elapsed < RESEND_COOLDOWN_MS) {
+		return {
+			blocked: true,
+			retryAfter: Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000),
+		};
+	}
+	return { blocked: false, retryAfter: 0 };
 }
 
 export async function sendVerificationEmail(
-  email: string,
-  code: string,
-  displayName: string
+	email: string,
+	code: string,
+	displayName: string,
 ): Promise<void> {
-  const resend = getResend();
+	const resend = getResend();
 
-  // Split code into individual digits for the card-style display
-  const digits = code.split("").map(
-    (d) => `<td style="width:44px;height:52px;background:#111116;border:1px solid #222228;border-radius:10px;text-align:center;vertical-align:middle;font-family:'SF Mono','IBM Plex Mono','Fira Code',monospace;font-size:28px;font-weight:700;color:#F5F0EB;letter-spacing:0;">${d}</td>`
-  ).join(`<td style="width:6px;"></td>`);
+	// Split code into individual digits for the card-style display
+	const digits = code
+		.split('')
+		.map(
+			d =>
+				`<td style="width:44px;height:52px;background:#111116;border:1px solid #222228;border-radius:10px;text-align:center;vertical-align:middle;font-family:'SF Mono','IBM Plex Mono','Fira Code',monospace;font-size:28px;font-weight:700;color:#F5F0EB;letter-spacing:0;">${d}</td>`,
+		)
+		.join(`<td style="width:6px;"></td>`);
 
-  await resend.emails.send({
-    from: "TrySomething <onboarding@resend.dev>",
-    to: email,
-    subject: `${code} is your TrySomething verification code`,
-    html: `
+	await resend.emails.send({
+		from: 'TrySomething <onboarding@resend.dev>',
+		to: email,
+		subject: `${code} is your TrySomething verification code`,
+		html: `
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -64,9 +68,9 @@ export async function sendVerificationEmail(
         <tr><td align="center" style="padding:0 0 36px;">
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr><td align="center" style="padding-bottom:14px;">
-              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774699533/jelwijieo87nvqs2isxb.png" width="56" height="56" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
+              <img src="https://res.cloudinary.com/dduhb4jtj/image/upload/v1774699533/jelwijieo87nvqs2isxb.png" width="90" height="90" alt="TrySomething" style="display:block;border:0;border-radius:14px;" />
             </td></tr>
-            <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:19px;font-weight:700;color:#F5F0EB;letter-spacing:-0.3px;">
+            <tr><td align="center" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:32px;font-weight:700;color:#F5F0EB;letter-spacing:-0.3px;">
               <span style="color:#FF6B6B;">Try</span>Something
             </td></tr>
           </table>
@@ -125,5 +129,5 @@ export async function sendVerificationEmail(
 </body>
 </html>
     `,
-  });
+	});
 }
