@@ -5,7 +5,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/analytics/analytics_provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
-import '../../providers/user_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../models/hobby.dart';
 
@@ -88,19 +87,7 @@ class CoachLimitTracker {
     await box.put(key, current + 1);
   }
 
-  static int? limitForState(HobbyStatus? status) {
-    if (status == null) return 3;
-    switch (status) {
-      case HobbyStatus.saved:
-        return 5;
-      case HobbyStatus.trying:
-      case HobbyStatus.active:
-      case HobbyStatus.paused:
-        return 5;
-      case HobbyStatus.done:
-        return 2;
-    }
-  }
+  static int limitForState(HobbyStatus? status) => 5;
 }
 
 /// Exposes remaining messages for a hobby this month.
@@ -109,11 +96,7 @@ final coachRemainingProvider =
   final isPro = ref.watch(isProProvider);
   if (isPro) return null;
 
-  final userHobbies = ref.watch(userHobbiesProvider);
-  final userHobby = userHobbies[hobbyId];
-  final limit = CoachLimitTracker.limitForState(userHobby?.status);
-  if (limit == null) return null;
-
+  final limit = CoachLimitTracker.limitForState(null);
   final count = await CoachLimitTracker.getCount(hobbyId);
   return (limit - count).clamp(0, limit);
 });

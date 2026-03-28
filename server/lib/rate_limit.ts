@@ -1,6 +1,6 @@
 import { prisma } from './db';
 
-const COACH_FREE_LIMIT = 3;
+const COACH_FREE_LIMIT = 5;
 const COACH_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days rolling
 
 export async function checkCoachRateLimit(

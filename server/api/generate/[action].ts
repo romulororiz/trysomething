@@ -44,8 +44,8 @@ function getAnthropicClient(): Anthropic {
   return _anthropic;
 }
 
-// Rate limit: 20 generations per user per 24 hours
-const RATE_LIMIT = 20;
+// Rate limit: hobby generation (includes FAQ, cost, budget) — Pro only, 10 per 24 hours
+const GENERATION_LIMIT_PRO = 10;
 
 // Vercel function config — AI generation needs more time than default 10s
 export const config = { maxDuration: 60 };
@@ -96,18 +96,22 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 400, inputCheck.reason);
   }
 
-  // Rate limit check
+  // Hobby generation is Pro-only
+  if (!(await requirePro(userId, res))) return;
+
+  // Rate limit: 10 generations per day for Pro users
   const recentCount = await prisma.generationLog.count({
     where: {
       userId,
       createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
       status: "success",
+      query: { not: "coach" },
     },
   });
 
-  if (recentCount >= RATE_LIMIT) {
+  if (recentCount >= GENERATION_LIMIT_PRO) {
     await logGeneration(userId, trimmed, "rejected", "Rate limit exceeded");
-    return errorResponse(res, 429, "Generation limit reached (5 per day). Try again tomorrow.");
+    return errorResponse(res, 429, "Generation limit reached (10 per day). Try again tomorrow.");
   }
 
   // Duplicate check — case-insensitive title match
