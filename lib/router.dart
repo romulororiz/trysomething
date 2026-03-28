@@ -498,7 +498,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!verified && !isVerifyRoute && !isPublicRoute) return '/verify-email';
       if (verified && isVerifyRoute) return onboarded ? '/home' : '/onboarding';
 
-      if (!onboarded && !isOnboarding) return '/onboarding';
+      if (!onboarded && !isOnboarding && !isVerifyRoute) return '/onboarding';
       if (onboarded && isOnboarding) return '/match-results';
 
       // Match results guard — show once after onboarding
