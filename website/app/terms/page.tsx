@@ -18,7 +18,7 @@ export default function TermsPage() {
         </a>
       </nav>
       <main className="max-w-3xl mx-auto px-6 py-12 pb-24">
-        <h1 className="text-3xl font-bold text-text-primary mb-2 font-serif">
+        <h1 className="text-3xl font-bold text-text-primary mb-2">
           Terms of Service
         </h1>
         <p className="text-sm text-text-muted mb-10">
