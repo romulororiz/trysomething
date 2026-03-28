@@ -115,40 +115,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    // Reset generation state when leaving the screen
+    ref.read(generationProvider.notifier).reset();
     super.dispose();
   }
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      if (mounted) setState(() => _query = value);
+      if (mounted) {
+        // Clear stale error when user types a new query
+        final gen = ref.read(generationProvider);
+        if (gen.status == GenerationStatus.error) {
+          ref.read(generationProvider.notifier).reset();
+        }
+        setState(() => _query = value);
+      }
     });
   }
 
   void _onSearchSubmitted(String value) {
     _debounce?.cancel();
     setState(() => _query = value);
-    if (value.trim().isEmpty) return;
-    // On explicit submit with few results, trigger AI generation for Pro users
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeGenerateOnSubmit();
-    });
-  }
-
-  void _maybeGenerateOnSubmit() {
-    if (!mounted) return;
-    final allHobbiesAsync = ref.read(hobbyListProvider);
-    final allHobbies = allHobbiesAsync.valueOrNull ?? [];
-    final results = _filterHobbies(allHobbies);
-    if (results.length < 3) {
-      final isPro = ref.read(isProProvider);
-      final genState = ref.read(generationProvider);
-      if (isPro &&
-          genState.status != GenerationStatus.generating &&
-          genState.status != GenerationStatus.success) {
-        ref.read(generationProvider.notifier).generate(_query);
-      }
-    }
   }
 
   List<Hobby> _filterHobbies(List<Hobby> allHobbies) {
@@ -251,197 +239,212 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
       body: AppBackground(
         child: allHobbiesAsync.when(
-      loading: () =>
-          const SafeArea(child: Center(child: CircularProgressIndicator())),
-      error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
-      data: (allHobbies) {
-        final results = _filterHobbies(allHobbies);
+          loading: () =>
+              const SafeArea(child: Center(child: CircularProgressIndicator())),
+          error: (err, _) => SafeArea(child: Center(child: Text('$err'))),
+          data: (allHobbies) {
+            final results = _filterHobbies(allHobbies);
 
-        // "You might also like" — random hobbies not in results
-        final resultIds = results.map((h) => h.id).toSet();
-        final suggestions =
-            allHobbies.where((h) => !resultIds.contains(h.id)).take(6).toList();
+            // "You might also like" — random hobbies not in results
+            final resultIds = results.map((h) => h.id).toSet();
+            final suggestions = allHobbies
+                .where((h) => !resultIds.contains(h.id))
+                .take(6)
+                .toList();
 
-        return SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header — title left, X close right
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Text('Search', style: AppTypography.title.copyWith(
-                      fontSize: 18,
-                      color: AppColors.textPrimary,
-                    )),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.glassBackground,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.glassBorder, width: 0.5),
-                        ),
-                        child: const Icon(Icons.close_rounded,
-                            size: 18, color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Search input
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Container(
-                  height: 46,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Opacity(
-                        opacity: 0.35,
-                        child: Icon(Icons.search,
-                            size: 15, color: AppColors.textMuted),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          autofocus: true,
-                          onChanged: _onSearchChanged,
-                          onSubmitted: _onSearchSubmitted,
-                          textInputAction: TextInputAction.search,
-                          style: AppTypography.sansBodySmall,
-                          decoration: InputDecoration(
-                            hintText: 'Search hobbies, categories...',
-                            hintStyle: AppTypography.sansBodySmall
-                                .copyWith(color: AppColors.textMuted),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      if (_query.isNotEmpty)
+            return SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header — title left, X close right
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 12, 16, 0),
+                    child: Row(
+                      children: [
+                        Text('Search',
+                            style: AppTypography.title.copyWith(
+                              fontSize: 18,
+                              color: AppColors.textPrimary,
+                            )),
+                        const Spacer(),
                         GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            _debounce?.cancel();
-                            setState(() => _query = '');
-                          },
-                          child: Icon(AppIcons.close,
-                              size: 16, color: AppColors.textMuted),
+                          onTap: () => context.pop(),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.glassBackground,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: AppColors.glassBorder, width: 0.5),
+                            ),
+                            child: const Icon(Icons.close_rounded,
+                                size: 18, color: AppColors.textSecondary),
+                          ),
                         ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Category filter chips
-              SizedBox(
-                height: 32,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  children: [
-                    _FilterChip(
-                      label: 'All',
-                      isSelected: _selectedCategory == null,
-                      onTap: () => setState(() => _selectedCategory = null),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    ...categories.map((cat) => Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: _FilterChip(
-                            label: cat.name,
-                            isSelected: _selectedCategory == cat.id,
-                            onTap: () => setState(
-                              () => _selectedCategory =
-                                  _selectedCategory == cat.id ? null : cat.id,
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Search input
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      height: 46,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Opacity(
+                            opacity: 0.35,
+                            child: Icon(Icons.search,
+                                size: 15, color: AppColors.textMuted),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              onChanged: _onSearchChanged,
+                              onSubmitted: _onSearchSubmitted,
+                              textInputAction: TextInputAction.search,
+                              style: AppTypography.sansBodySmall,
+                              decoration: InputDecoration(
+                                hintText: 'Search hobbies, categories...',
+                                hintStyle: AppTypography.sansBodySmall
+                                    .copyWith(color: AppColors.textMuted),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
                             ),
                           ),
-                        )),
+                          if (_query.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                _debounce?.cancel();
+                                setState(() => _query = '');
+                              },
+                              child: Icon(AppIcons.close,
+                                  size: 16, color: AppColors.textMuted),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Category filter chips
+                  SizedBox(
+                    height: 32,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      children: [
+                        _FilterChip(
+                          label: 'All',
+                          isSelected: _selectedCategory == null,
+                          onTap: () => setState(() => _selectedCategory = null),
+                        ),
+                        const SizedBox(width: 6),
+                        ...categories.map((cat) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: _FilterChip(
+                                label: cat.name,
+                                isSelected: _selectedCategory == cat.id,
+                                onTap: () => setState(
+                                  () => _selectedCategory =
+                                      _selectedCategory == cat.id
+                                          ? null
+                                          : cat.id,
+                                ),
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Results or popular searches
+                  if (_query.isNotEmpty &&
+                      ref.watch(generationProvider).status ==
+                          GenerationStatus.generating &&
+                      results.isEmpty)
+                    Expanded(
+                      child: Center(child: _AiGeneratingHero(query: _query)),
+                    )
+                  else if (_query.isNotEmpty && results.isNotEmpty)
+                    Expanded(
+                      child:
+                          _buildResultsList(context, ref, results, suggestions),
+                    )
+                  else if (_query.isNotEmpty && results.isEmpty)
+                    Expanded(
+                      child: Center(child: _buildGenerateCta()),
+                    )
+                  else ...[
+                    // Natural language search suggestions
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Try searching for...',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _nlpSuggestions.map((suggestion) {
+                          return GestureDetector(
+                            onTap: () {
+                              _searchController.text = suggestion;
+                              setState(() => _query = suggestion);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius:
+                                    BorderRadius.circular(Spacing.radiusBadge),
+                                border: Border.all(
+                                    color: AppColors.border, width: 0.5),
+                              ),
+                              child: Text(
+                                suggestion,
+                                style: AppTypography.caption.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-
-              // Results or popular searches
-              if (_query.isNotEmpty && results.isNotEmpty)
-                Expanded(
-                  child: _buildResultsList(context, ref, results, suggestions),
-                )
-              else if (_query.isNotEmpty && results.isEmpty)
-                Expanded(
-                  child: Center(child: _buildGenerateCta()),
-                )
-              else ...[
-                // Natural language search suggestions
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    'Try searching for...',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textMuted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _nlpSuggestions.map((suggestion) {
-                      return GestureDetector(
-                        onTap: () {
-                          _searchController.text = suggestion;
-                          setState(() => _query = suggestion);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius:
-                                BorderRadius.circular(Spacing.radiusBadge),
-                            border: Border.all(
-                                color: AppColors.border, width: 0.5),
-                          ),
-                          child: Text(
-                            suggestion,
-                            style: AppTypography.caption.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    ),
-    ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -464,7 +467,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
           child: Row(
             children: [
-              Text('Top Results', style: AppTypography.title.copyWith(fontSize: 17)),
+              Text('Top Results',
+                  style: AppTypography.title.copyWith(fontSize: 17)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -490,55 +494,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onTap: () => context.push('/hobby/${hobby.id}'),
             )),
 
-        // Pro: explicit "Find more with AI" button (when <3 results, not yet generating)
-        if (isPro &&
-            fewResults &&
-            !isGenerating &&
-            genState.status != GenerationStatus.error)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-            child: GestureDetector(
-              onTap: () =>
-                  ref.read(generationProvider.notifier).generate(_query),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border:
-                      Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(MdiIcons.creationOutline,
-                        size: 16, color: AppColors.coral),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Find more with AI',
-                      style: AppTypography.sansLabel.copyWith(
-                        color: AppColors.coral,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-        // Pro: AI shimmer / generating indicator (when <3 results)
+        // Pro: AI generating indicator (when <3 results)
         if (isPro && fewResults && isGenerating)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
             child: _AiSearchingTile(),
-          ),
-
-        // Free users: blurred "unlock AI search" card when few results
-        if (!isPro && fewResults)
-          _AiSearchLockedTile(
-            onTap: () => context.push('/pro'),
           ),
 
         // Pro: AI generation error with retry
@@ -558,7 +518,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.refresh_rounded,
+                    const Icon(Icons.refresh_rounded,
                         size: 18, color: AppColors.coral),
                     const SizedBox(width: 10),
                     Expanded(
@@ -591,57 +551,36 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildGenerateCta() {
     final genState = ref.watch(generationProvider);
-    final isGenerating = genState.status == GenerationStatus.generating;
+    final hasError = genState.status == GenerationStatus.error;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Opacity(
-          opacity: 0.3,
-          child: Icon(Icons.search, size: 44, color: AppColors.textMuted),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'No results for "$_query"',
-          style: AppTypography.body.copyWith(color: AppColors.textMuted),
-        ),
-        const SizedBox(height: 20),
-        if (isGenerating)
-          Column(
-            children: [
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.coral,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Generating hobby...',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          )
-        else if (genState.status == GenerationStatus.error)
-          Column(
-            children: [
-              Text(
-                'Something went wrong. Try again?',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _generateButton(),
-            ],
-          )
-        else
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Opacity(
+            opacity: 0.3,
+            child: Icon(
+              hasError ? Icons.error_outline_rounded : Icons.search,
+              size: 44,
+              color: AppColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            hasError
+                ? (genState.error ?? 'Something went wrong')
+                : 'No results for "$_query"',
+            style: AppTypography.body.copyWith(
+              color: AppColors.textMuted,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
           _generateButton(),
-      ],
+        ],
+      ),
     );
   }
 
@@ -658,11 +597,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 return;
               }
               ref.read(generationProvider.notifier).generate(_query);
+              // ref.read(generationProvider.notifier).debugFakeGenerating();
             },
       child: Opacity(
         opacity: isGenerating ? 0.5 : 1.0,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: AppColors.coral,
             borderRadius: BorderRadius.circular(Spacing.radiusButton),
@@ -755,7 +695,7 @@ class _SearchResultCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Icon(Icons.star_rounded,
+                      const Icon(Icons.star_rounded,
                           size: 12, color: AppColors.amber),
                       const SizedBox(width: 2),
                       Text(
@@ -952,176 +892,211 @@ class _AiSearchingTile extends StatefulWidget {
 
 class _AiSearchingTileState extends State<_AiSearchingTile>
     with SingleTickerProviderStateMixin {
-  late AnimationController _shimmerController;
+  late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _shimmerController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
+      duration: const Duration(seconds: 12),
+    )..forward();
   }
 
   @override
   void dispose() {
-    _shimmerController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _shimmerController,
-      builder: (context, child) {
-        final opacity = 0.4 +
-            0.3 *
-                (0.5 + 0.5 * math.sin(_shimmerController.value * 2 * math.pi));
-        return Opacity(opacity: opacity, child: child);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Icon(MdiIcons.creationOutline,
-                    size: 22, color: AppColors.coral),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      animation: _controller,
+      builder: (context, _) {
+        // Eased progress: fast start, slow finish (never reaches 1.0)
+        final t = _controller.value;
+        final progress = 1.0 - math.pow(1.0 - t * 0.95, 3);
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.coral.withValues(alpha: 0.15)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
+                  Icon(MdiIcons.creationOutline,
+                      size: 16, color: AppColors.coral),
+                  const SizedBox(width: 8),
                   Text(
-                    'Finding more for you...',
+                    'Generating with AI...',
                     style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'AI is generating a custom hobby',
-                    style: AppTypography.sansTiny.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
                 ],
               ),
-            ),
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.coral,
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 3,
+                  backgroundColor: AppColors.surfaceElevated,
+                  valueColor: const AlwaysStoppedAnimation(AppColors.coral),
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════
-//  AI SEARCH LOCKED TILE — shown to free users
+//  AI GENERATING HERO — full-screen premium generation state
 // ═══════════════════════════════════════════════════════
 
-class _AiSearchLockedTile extends StatelessWidget {
-  final VoidCallback onTap;
+class _AiGeneratingHero extends ConsumerStatefulWidget {
+  final String query;
+  const _AiGeneratingHero({required this.query});
 
-  const _AiSearchLockedTile({required this.onTap});
+  @override
+  ConsumerState<_AiGeneratingHero> createState() => _AiGeneratingHeroState();
+}
+
+class _AiGeneratingHeroState extends ConsumerState<_AiGeneratingHero> {
+  int _elapsed = 0;
+  late Timer _timer;
+
+  static const _phases = [
+    'Understanding your interest...',
+    'Researching the best approach...',
+    'Crafting your roadmap...',
+    'Building your hobby guide...',
+    'Polishing the details...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _elapsed++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  String get _phaseText {
+    // Cycle through phases, spending ~4s on each
+    final idx = (_elapsed ~/ 4).clamp(0, _phases.length - 1);
+    return _phases[idx];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Stack(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                              width: 120,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                  color: AppColors.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(4))),
-                          const SizedBox(height: 8),
-                          Container(
-                              width: 80,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                  color: AppColors.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(4))),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 120, 24, 0),
+      child: Column(
+        children: [
+          // Animated icon
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 600),
+            builder: (_, v, child) => Opacity(
+              opacity: v,
+              child: Transform.scale(scale: 0.8 + 0.2 * v, child: child),
+            ),
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.coral.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.75),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.lock_rounded,
-                          size: 14, color: AppColors.coral),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Unlock AI search',
-                        style: AppTypography.sansLabel.copyWith(
-                            color: AppColors.coral,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              child: Icon(MdiIcons.creationOutline,
+                  size: 28, color: AppColors.coral),
+            ),
           ),
-        ),
+          const SizedBox(height: 24),
+
+          // Query title
+          Text(
+            '"${widget.query}"',
+            style: AppTypography.title.copyWith(fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+
+          // Phase text — animated crossfade
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Text(
+              _phaseText,
+              key: ValueKey(_phaseText),
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Indeterminate pulsing progress bar (honest — no fake percentage)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: const LinearProgressIndicator(
+              minHeight: 5,
+              backgroundColor: AppColors.surfaceElevated,
+              valueColor: AlwaysStoppedAnimation(AppColors.coral),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Elapsed time
+          Text(
+            '${_elapsed}s elapsed',
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textMuted,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Cancel button
+          GestureDetector(
+            onTap: () => ref.read(generationProvider.notifier).cancel(),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.glassBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.glassBorder, width: 0.5),
+              ),
+              child: Text(
+                'Cancel',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

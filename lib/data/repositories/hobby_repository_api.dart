@@ -136,12 +136,13 @@ class HobbyRepositoryApi implements HobbyRepository {
   }
 
   @override
-  Future<Hobby> generateHobby(String query) async {
+  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) async {
     debugPrint('[GenerateHobby] POST ${ApiConstants.generateHobby} query="$query"');
     try {
       final response = await _dio.post(
         ApiConstants.generateHobby,
         data: {'query': query},
+        cancelToken: cancelToken,
         options: Options(
           receiveTimeout: const Duration(seconds: 60),
           validateStatus: (status) => status != null && status < 500 && status != 401,

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/hobby_match.dart';
@@ -76,15 +77,18 @@ class GenerationNotifier extends StateNotifier<GenerationState> {
   GenerationNotifier(this._ref) : super(const GenerationState());
 
   final Ref _ref;
+  CancelToken? _cancelToken;
 
   Future<void> generate(String query) async {
     // Guard against double-taps / concurrent calls
     if (state.status == GenerationStatus.generating) return;
     debugPrint('[Generation] Starting generation for: "$query"');
+    _cancelToken = CancelToken();
     state = const GenerationState(status: GenerationStatus.generating);
     try {
-      final hobby =
-          await _ref.read(hobbyRepositoryProvider).generateHobby(query);
+      final hobby = await _ref
+          .read(hobbyRepositoryProvider)
+          .generateHobby(query, cancelToken: _cancelToken);
       debugPrint('[Generation] Success! Hobby: ${hobby.title} (${hobby.id})');
       // Invalidate hobby list so feed picks up the new hobby
       _ref.invalidate(hobbyListProvider);
@@ -92,17 +96,65 @@ class GenerationNotifier extends StateNotifier<GenerationState> {
         status: GenerationStatus.success,
         hobby: hobby,
       );
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
+        debugPrint('[Generation] Cancelled by user');
+        state = const GenerationState();
+        return;
+      }
+      debugPrint('[Generation] Error: $e');
+      state = GenerationState(
+        status: GenerationStatus.error,
+        error: _friendlyError(e),
+      );
     } catch (e) {
       debugPrint('[Generation] Error: $e');
       state = GenerationState(
         status: GenerationStatus.error,
-        error: e.toString(),
+        error: _friendlyError(e),
       );
+    } finally {
+      _cancelToken = null;
     }
+  }
+
+  void cancel() {
+    _cancelToken?.cancel();
+    _cancelToken = null;
+    state = const GenerationState();
   }
 
   void reset() {
     state = const GenerationState();
+  }
+
+  /// Debug only: fake generating state for UI testing. Remove before release.
+  void debugFakeGenerating() {
+    assert(() {
+      state = const GenerationState(status: GenerationStatus.generating);
+      return true;
+    }());
+  }
+
+  String _friendlyError(dynamic e) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map && data.containsKey('error')) {
+        return data['error'] as String;
+      }
+      if (e.response?.statusCode == 403) return 'Pro subscription required';
+      if (e.response?.statusCode == 429) return 'Generation limit reached. Try again tomorrow.';
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout) {
+        return 'No internet connection. Check your network.';
+      }
+    }
+    if (e is Exception) {
+      final msg = e.toString();
+      // Strip "Exception: " prefix
+      if (msg.startsWith('Exception: ')) return msg.substring(11);
+    }
+    return 'Something went wrong. Try again.';
   }
 }
 
