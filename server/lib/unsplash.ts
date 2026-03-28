@@ -1,32 +1,62 @@
 // ═══════════════════════════════════════════════════
-//  Unsplash image search for hobby images
+//  Unsplash image search → Cloudinary upload for hobby covers
 // ═══════════════════════════════════════════════════
+
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dduhb4jtj",
+  api_key: process.env.CLOUDINARY_API_KEY || "741933161127774",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "Vg4dYgdZvleSoeUhNsX_kqNmAyg",
+});
 
 const UNSPLASH_API = "https://api.unsplash.com/search/photos";
 
-// Fallback images per category (Unsplash URLs matching existing seed pattern)
+// Fallback images per category (already on Cloudinary)
 const CATEGORY_FALLBACKS: Record<string, string> = {
-  creative: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=800&fit=crop",
-  outdoors: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=800&fit=crop",
-  fitness: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=800&fit=crop",
-  maker: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=600&h=800&fit=crop",
-  music: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=800&fit=crop",
-  food: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=800&fit=crop",
-  collecting: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=800&fit=crop",
-  mind: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&h=800&fit=crop",
-  social: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=800&fit=crop",
+  creative: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/sketching.jpg",
+  outdoors: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/hiking.jpg",
+  fitness: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/yoga.jpg",
+  maker: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/woodworking.jpg",
+  music: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/guitar.jpg",
+  food: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/cooking-classes.jpg",
+  collecting: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/vinyl-records.jpg",
+  mind: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/meditation.jpg",
+  social: "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/board-game-nights.jpg",
 };
 
-const DEFAULT_FALLBACK = "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=800&fit=crop";
+const DEFAULT_FALLBACK = "https://res.cloudinary.com/dduhb4jtj/image/upload/trysomething/hobbies/photography.jpg";
+
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+async function uploadToCloudinary(url: string, slug: string): Promise<string | null> {
+  try {
+    const result = await cloudinary.uploader.upload(url, {
+      folder: "trysomething/hobbies",
+      public_id: slug,
+      overwrite: true,
+      resource_type: "image",
+      transformation: [{ width: 600, height: 800, crop: "fill", gravity: "auto" }],
+    });
+    return result.secure_url;
+  } catch {
+    return null;
+  }
+}
 
 export async function fetchHobbyImage(
   query: string,
   categoryId?: string
 ): Promise<string> {
   const accessKey = process.env.UNSPLASH_ACCESS_KEY;
-  if (!accessKey) {
-    return CATEGORY_FALLBACKS[categoryId ?? ""] ?? DEFAULT_FALLBACK;
-  }
+  const fallback = CATEGORY_FALLBACKS[categoryId ?? ""] ?? DEFAULT_FALLBACK;
+
+  if (!accessKey) return fallback;
 
   try {
     const params = new URLSearchParams({
@@ -39,25 +69,24 @@ export async function fetchHobbyImage(
       headers: { Authorization: `Client-ID ${accessKey}` },
     });
 
-    if (!response.ok) {
-      return CATEGORY_FALLBACKS[categoryId ?? ""] ?? DEFAULT_FALLBACK;
-    }
+    if (!response.ok) return fallback;
 
     const data = (await response.json()) as { results?: { urls?: { raw?: string } }[] };
     const results = data.results;
 
-    if (!results || results.length === 0) {
-      return CATEGORY_FALLBACKS[categoryId ?? ""] ?? DEFAULT_FALLBACK;
-    }
+    if (!results || results.length === 0) return fallback;
 
-    // Use raw URL with crop params to match existing seed data pattern
     const rawUrl = results[0].urls?.raw;
-    if (!rawUrl) {
-      return CATEGORY_FALLBACKS[categoryId ?? ""] ?? DEFAULT_FALLBACK;
-    }
+    if (!rawUrl) return fallback;
 
-    return `${rawUrl}&w=600&h=800&fit=crop`;
+    const unsplashUrl = `${rawUrl}&w=600&h=800&fit=crop`;
+
+    // Upload to Cloudinary instead of hotlinking Unsplash
+    const slug = slugify(query);
+    const cloudinaryUrl = await uploadToCloudinary(unsplashUrl, slug);
+
+    return cloudinaryUrl ?? fallback;
   } catch {
-    return CATEGORY_FALLBACKS[categoryId ?? ""] ?? DEFAULT_FALLBACK;
+    return fallback;
   }
 }
