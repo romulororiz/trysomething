@@ -218,12 +218,14 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
       // regular conversation, no need to re-send the image.
       _focusEntryId = null;
 
+      // Increment local counter so the remaining UI updates immediately
+      await CoachLimitTracker.increment(hobbyId);
+      ref.invalidate(coachRemainingProvider(hobbyId));
+
       ref.read(analyticsProvider).trackEvent('coach_message_sent', {
         'hobby_id': hobbyId,
         'message_count': state.length,
       });
-
-      // Server logs the message to GenerationLog — no client-side tracking needed
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         // Check if client already thinks user is Pro (webhook race condition).
