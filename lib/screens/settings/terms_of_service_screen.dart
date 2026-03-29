@@ -235,7 +235,7 @@ class TermsOfServiceScreen extends StatelessWidget {
 
                       _buildSubsectionTitle('5.1 Free Tier'),
                       _buildBody(
-                        'The free tier includes access to the full hobby catalog, roadmaps, starter kits, one active hobby at a time, limited AI coach messages (3 per month), and text-based journal entries.',
+                        'The free tier includes access to the full hobby catalog, roadmaps, one active hobby at a time, limited AI coach messages, and text-based journal entries.',
                       ),
 
                       _buildSubsectionTitle('5.2 TrySomething Pro'),
@@ -243,9 +243,14 @@ class TermsOfServiceScreen extends StatelessWidget {
                         'TrySomething Pro is available as a monthly (CHF 4.99) or annual (CHF 39.99) subscription. Pro features include:',
                       ),
                       _buildBulletPoint('Unlimited AI coach conversations.'),
+                      _buildBulletPoint('Speech-to-text input and image recognition for AI coaching.'),
+                      _buildBulletPoint('AI hobby generation to discover new hobbies.'),
                       _buildBulletPoint('Photo journal entries.'),
                       _buildBulletPoint('Multi-hobby tracking.'),
-                      _buildBulletPoint('30-day guided support with rescue mode.'),
+                      _buildBulletPoint('Pause hobbies and resume without losing progress.'),
+                      _buildBulletPoint('Cost breakdowns for hobby materials.'),
+                      _buildBulletPoint('Exclusive starter kits tailored to each hobby.'),
+                      _buildBulletPoint('Early access to new features and content.'),
 
                       _buildSubsectionTitle('5.3 Billing'),
                       _buildBody(

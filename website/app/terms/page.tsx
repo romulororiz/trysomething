@@ -130,8 +130,7 @@ export default function TermsPage() {
         </h3>
         <p className="text-text-secondary leading-relaxed mb-4">
           The free tier includes access to the full hobby catalog, roadmaps,
-          starter kits, one active hobby at a time, limited AI coach messages (3
-          per month), and text-based journal entries.
+          one active hobby at a time, limited AI coach messages, and text-based journal entries.
         </p>
 
         <h3 className="text-base font-bold text-text-primary mt-6 mb-3">
@@ -142,14 +141,15 @@ export default function TermsPage() {
           39.99) subscription. Pro features include:
         </p>
         <ul className="list-disc list-outside ml-5 space-y-2 text-text-secondary leading-relaxed mb-4">
-          <li className="marker:text-coral">
-            Unlimited AI coach conversations.
-          </li>
+          <li className="marker:text-coral">Unlimited AI coach conversations.</li>
+          <li className="marker:text-coral">Speech-to-text input and image recognition for AI coaching.</li>
+          <li className="marker:text-coral">AI hobby generation to discover new hobbies.</li>
           <li className="marker:text-coral">Photo journal entries.</li>
           <li className="marker:text-coral">Multi-hobby tracking.</li>
-          <li className="marker:text-coral">
-            30-day guided support with rescue mode.
-          </li>
+          <li className="marker:text-coral">Pause hobbies and resume without losing progress.</li>
+          <li className="marker:text-coral">Cost breakdowns for hobby materials.</li>
+          <li className="marker:text-coral">Exclusive starter kits tailored to each hobby.</li>
+          <li className="marker:text-coral">Early access to new features and content.</li>
         </ul>
 
         <h3 className="text-base font-bold text-text-primary mt-6 mb-3">
