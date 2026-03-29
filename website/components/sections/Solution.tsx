@@ -235,7 +235,7 @@ export function Solution() {
             />
             <ValueAnchor
               title="A coach that stays with you"
-              description="Encouragement, adjustments, momentum — for 30 days."
+              description="Encouragement, adjustments, momentum."
               delay={0.35}
             />
           </div>

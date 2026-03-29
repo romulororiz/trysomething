@@ -7,7 +7,7 @@ import { StaggeredText } from "@/components/ui/StaggeredText";
 
 /* ── Stats ── */
 const stats = [
-  { value: "2,400+", label: "hobbies matched", accent: "rgba(218,165,32,0.6)" },
+  { value: "1000+", label: "hobbies matched", accent: "rgba(218,165,32,0.6)" },
   { value: "87%", label: "still going at week 4", accent: "rgba(255,107,107,0.6)" },
   { value: "48h", label: "average time to first session", accent: "rgba(125,189,171,0.6)" },
 ];
@@ -144,19 +144,16 @@ export function Testimonials() {
             Real people, real starts
           </motion.p>
 
-          <StaggeredText
-            text="They kept saying someday."
-            as="h2"
-            className="text-[clamp(1.75rem,4vw,3.25rem)] font-bold leading-tight tracking-tight"
-            highlightWords={["someday."]}
-            stagger={0.07}
-          />
+          <h2 className="inline-block text-[clamp(1.75rem,4vw,3.25rem)] font-bold leading-tight tracking-tight">
+            They kept saying             
+            <span className="font-serif italic text-coral"> someday.</span>
+          </h2>
 
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-5 text-lg text-text-secondary max-w-md mx-auto"
+            className="mt-5 text-lg text-text-secondary max-w-md mx-auto italic"
           >
             Then someday arrived.
           </motion.p>

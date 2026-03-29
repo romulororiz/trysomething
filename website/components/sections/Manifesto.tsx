@@ -96,7 +96,7 @@ export function Manifesto() {
   return (
     <section
       ref={containerRef}
-      className="relative py-20 md:py-0 md:min-h-[200vh]"
+      className="relative py-20 md:py-0 md:min-h-[100vh]"
       aria-label="Manifesto"
     >
       {/* Sticky centered container */}

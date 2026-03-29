@@ -14,15 +14,15 @@ const features = [
     number: "01",
     claim: "AI matching that actually knows you",
     detail:
-      'Not a quiz that spits out "try yoga." Our AI cross-references your personality, schedule, budget, location, and energy levels to find hobbies with real compatibility scores.',
+      'Not a quiz that spits out "try yoga." Our AI cross-references your vibe, schedule, budget, and social preferences to find hobbies with real compatibility scores.',
     accent: "knows you",
   },
   {
     number: "02",
-    claim: "A roadmap for your first 30 days",
+    claim: "A step-by-step roadmap tailored to the hobby you choose",
     detail:
       'Day 1: what to buy (with exact prices). Day 3: your first session. Week 2: your first milestone. No googling "how to start [hobby] for beginners" ever again.',
-    accent: "first 30 days",
+    accent: "tailored to the hobby",
   },
   {
     number: "03",
@@ -35,18 +35,11 @@ const features = [
     number: "04",
     claim: "Zero overwhelm, by design",
     detail:
-      "Three hobby matches, not three hundred. One step at a time, not a wall of content. We removed every excuse between you and starting.",
+      "Four hobby matches, not three hundred. One step at a time, not a wall of content. We removed every excuse between you and starting.",
     accent: "by design",
   },
   {
     number: "05",
-    claim: "Real progress you can feel",
-    detail:
-      'Milestone tracking, streak counts, and a visual journey map. When your brain says "I never stick with anything," your progress page says otherwise.',
-    accent: "you can feel",
-  },
-  {
-    number: "06",
     claim: "Built for people who are tired of planning",
     detail:
       "No research phase. No comparison spreadsheets. No \"I'll start Monday.\" Open the app, answer a few questions, and you're doing something new today.",

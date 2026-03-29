@@ -131,7 +131,7 @@ export const howItWorksSteps = [
     title: "Match",
     headline: "Find what fits your life",
     description:
-      "Answer a few honest questions about your time, budget, and energy. We match you with one hobby that actually fits\u2014not 500 options to scroll through.",
+      "Answer a few questions about your time, budget, and energy. We match you with one hobby that actually fits\u2014not 500 options to scroll through.",
     accent: "burgundy",
   },
   {
@@ -145,9 +145,9 @@ export const howItWorksSteps = [
   {
     step: "03",
     title: "Stay",
-    headline: "Keep going for 30 days",
+    headline: "Keep going without quitting",
     description:
-      "A weekly plan that adapts. An AI coach that notices when you stall. Reflection prompts that make progress visible. The quitting point never arrives.",
+      "A step-by-step roadmap that adapts. An AI coach that notices when you stall. Reflection prompts that make progress visible. The quitting point never arrives.",
     accent: "burgundy",
   },
   {
@@ -155,7 +155,7 @@ export const howItWorksSteps = [
     title: "Grow",
     headline: "Make it part of your life",
     description:
-      "Advanced roadmaps, community connections, and new challenges. What started as \u201Cmaybe\u201D becomes \u201Cthis is my thing.\u201D",
+      "What started as \u201Cmaybe\u201D can very much become \u201Cthis is my thing.\u201D",
     accent: "coral",
   },
 ];
