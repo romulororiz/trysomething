@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -105,6 +105,8 @@ void main() async {
     await SentryFlutter.init(
       (options) {
         options.dsn = sentryDsn;
+        options.environment = kDebugMode ? 'development' : 'production';
+        options.release = '1.0.0+15';
         options.tracesSampleRate = 0.2;
         options.replay.sessionSampleRate = 0.1;
         options.replay.onErrorSampleRate = 1.0;

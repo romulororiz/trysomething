@@ -1,15 +1,26 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// CORS headers for Flutter client
-export function setCorsHeaders(res: VercelResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+// Allowed origins — mobile apps bypass CORS, but restrict for web clients.
+const ALLOWED_ORIGINS = [
+  "https://trysomething.io",
+  "https://www.trysomething.io",
+  "http://localhost:3000", // local Next.js dev
+];
+
+// CORS headers for Flutter client + web
+export function setCorsHeaders(
+  res: VercelResponse,
+  origin?: string
+): void {
+  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  res.setHeader("Access-Control-Allow-Origin", allowed);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
 // Handle CORS preflight
 export function handleCors(req: VercelRequest, res: VercelResponse): boolean {
-  setCorsHeaders(res);
+  setCorsHeaders(res, req.headers.origin);
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return true;

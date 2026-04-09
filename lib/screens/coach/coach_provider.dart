@@ -253,6 +253,9 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
     } finally {
       _sending = false;
       await _saveToHive();
+      // Force rebuild so TypingIndicator disappears — _sending is not
+      // part of the reactive state, so we need a state reassignment.
+      state = List.of(state);
     }
   }
 

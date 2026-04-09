@@ -209,7 +209,7 @@ async function handleMe(
       }
       res.status(200).json(mapUserWithPreferences(user));
     } else {
-      const { displayName, avatarUrl, bio } = req.body ?? {};
+      const { displayName, avatarUrl, bio, fcmToken } = req.body ?? {};
       const user = await prisma.user.update({
         where: { id: userId },
         data: {
@@ -218,6 +218,7 @@ async function handleMe(
           }),
           ...(avatarUrl !== undefined && { avatarUrl }),
           ...(bio !== undefined && { bio: String(bio).trim() }),
+          ...(fcmToken !== undefined && { fcmToken: String(fcmToken) }),
         },
         include: { preferences: true },
       });

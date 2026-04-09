@@ -16,7 +16,7 @@ class SubscriptionService {
   );
   static const _googleKey = String.fromEnvironment(
     'REVENUECAT_GOOGLE_KEY',
-    defaultValue: '', // TODO: add after Google Play setup
+    defaultValue: 'goog_RgtnXfbwBvAPtNmHXtgLGHrkvqs',
   );
 
   /// Initialize RevenueCat SDK.

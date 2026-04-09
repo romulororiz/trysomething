@@ -75,7 +75,10 @@ async function handleRegister(
       errorResponse(res, 400, "Password must be at least 8 characters");
       return;
     }
-    if (typeof email !== "string" || !email.includes("@")) {
+    if (
+      typeof email !== "string" ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    ) {
       errorResponse(res, 400, "Invalid email address");
       return;
     }

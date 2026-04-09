@@ -5,9 +5,9 @@
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dduhb4jtj",
-  api_key: process.env.CLOUDINARY_API_KEY || "741933161127774",
-  api_secret: process.env.CLOUDINARY_API_SECRET || "Vg4dYgdZvleSoeUhNsX_kqNmAyg",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const UNSPLASH_API = "https://api.unsplash.com/search/photos";

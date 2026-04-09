@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../core/auth/token_storage.dart';
 import '../core/storage/cache_manager.dart';
 import '../core/analytics/analytics_provider.dart';
@@ -73,6 +74,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._repo, [this._analytics, this._subscriptions])
       : super(const AuthState());
 
+  /// Sync user identity to Sentry for crash attribution.
+  void _setSentryUser(String? userId) {
+    Sentry.configureScope((scope) {
+      scope.setUser(userId != null ? SentryUser(id: userId) : null);
+    });
+  }
+
   /// Check for stored token on app startup.
   Future<void> tryRestoreSession() async {
     final hasToken = await TokenStorage.hasTokens();
@@ -85,6 +93,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await _repo.getMe();
       state = AuthState(status: AuthStatus.authenticated, user: user);
       _analytics?.setUserId(user.id);
+      _setSentryUser(user.id);
       _subscriptions?.setUserId(user.id);
     } catch (_) {
       await TokenStorage.clearTokens();
@@ -110,6 +119,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
       _analytics?.setUserId(response.user.id);
+      _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
       _analytics?.trackEvent('register');
       return true;
@@ -135,6 +145,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
       _analytics?.setUserId(response.user.id);
+      _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
       _analytics?.trackEvent('login');
       return true;
@@ -192,6 +203,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('[GoogleAuth] Success!');
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
       _analytics?.setUserId(response.user.id);
+      _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
       _analytics?.trackEvent('login_google');
       return true;
@@ -273,6 +285,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('[AppleAuth] Success!');
       state = AuthState(status: AuthStatus.authenticated, user: response.user);
       _analytics?.setUserId(response.user.id);
+      _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
       _analytics?.trackEvent('login_apple');
       return true;
@@ -302,6 +315,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     _analytics?.trackEvent('logout');
     _analytics?.setUserId(null);
+    _setSentryUser(null);
     _subscriptions?.clearUser();
     await TokenStorage.clearTokens();
     // Fire-and-forget — signOut hangs on unsupported platforms (Windows/Linux).
@@ -318,6 +332,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Cleanup AFTER successful API call only
       _analytics?.trackEvent('account_deleted');
       _analytics?.setUserId(null);
+      _setSentryUser(null);
       _subscriptions?.clearUser();
       await TokenStorage.clearTokens();
       await CacheManager.clearAll();
