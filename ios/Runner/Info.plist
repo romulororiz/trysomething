@@ -18,7 +18,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Trysomething</string>
+	<string>TrySomething</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -35,6 +35,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>TrySomething uses your camera to capture photos of your hobby progress</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>TrySomething accesses your photos to add images to your journal</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TrySomething uses the microphone for voice messages to your coach</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
