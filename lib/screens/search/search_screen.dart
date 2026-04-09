@@ -535,6 +535,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
+        // Inline generate CTA — when no exact title match and query >= 3 chars
+        if (!results.any((h) =>
+                h.title.toLowerCase() == _query.toLowerCase().trim()) &&
+            _query.trim().length >= 3)
+          _buildInlineGenerateCta(isPro: isPro, isGenerating: isGenerating),
+
         // "You might also like" — vertical premium cards
         if (suggestions.isNotEmpty) ...[
           Padding(
@@ -546,6 +552,73 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(height: 20),
         ],
       ],
+    );
+  }
+
+  Widget _buildInlineGenerateCta({
+    required bool isPro,
+    required bool isGenerating,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+      child: GestureDetector(
+        onTap: isGenerating
+            ? null
+            : () {
+                if (!mounted) return;
+                if (!isPro) {
+                  context.push('/pro');
+                  return;
+                }
+                ref.read(generationProvider.notifier).generate(_query);
+              },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.glassBorder, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isGenerating
+                    ? Icons.hourglass_top_rounded
+                    : Icons.auto_awesome,
+                size: 20,
+                color: AppColors.coral,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isGenerating ? 'Generating...' : 'Can\'t find "$_query"?',
+                      style: AppTypography.sansLabel.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isGenerating
+                          ? 'Creating a personalized hobby profile'
+                          : 'Generate a custom hobby profile with AI',
+                      style: AppTypography.sansTiny.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isGenerating)
+                const Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -29,6 +29,7 @@ import {
   mapBudgetAlternative,
 } from "../../lib/mappers";
 import { checkCoachRateLimit } from "../../lib/rate_limit";
+import { GENERATION_LIMIT_PRO } from "../../lib/entitlement_constants";
 
 const prisma = new PrismaClient();
 
@@ -43,9 +44,6 @@ function getAnthropicClient(): Anthropic {
   }
   return _anthropic;
 }
-
-// Rate limit: hobby generation (includes FAQ, cost, budget) — Pro only, 10 per 24 hours
-const GENERATION_LIMIT_PRO = 10;
 
 // Vercel function config — AI generation needs more time than default 10s
 export const config = { maxDuration: 60 };

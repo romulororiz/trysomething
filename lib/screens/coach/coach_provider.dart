@@ -6,6 +6,7 @@ import '../../core/analytics/analytics_provider.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
 import '../../providers/subscription_provider.dart';
+import '../../core/subscription/entitlement_constants.dart';
 import '../../models/hobby.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -87,7 +88,8 @@ class CoachLimitTracker {
     await box.put(key, current + 1);
   }
 
-  static int limitForState(HobbyStatus? status) => 5;
+  static int limitForState(HobbyStatus? status) =>
+      EntitlementConstants.freeCoachMessagesPerMonth;
 }
 
 /// Exposes remaining messages for a hobby this month.

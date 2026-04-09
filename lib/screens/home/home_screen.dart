@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -115,9 +116,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userHobbies = ref.watch(userHobbiesProvider);
     final isPro = ref.watch(isProProvider);
 
-    // DEBUG: log all hobby statuses on every rebuild
-    for (final e in userHobbies.entries) {
-      debugPrint('[Home] hobby=${e.key} status=${e.value.status} completedAt=${e.value.completedAt}');
+    // Debug-only: log hobby statuses on rebuild
+    if (kDebugMode) {
+      for (final e in userHobbies.entries) {
+        debugPrint('[Home] hobby=${e.key} status=${e.value.status} completedAt=${e.value.completedAt}');
+      }
     }
 
     final activeEntries = userHobbies.entries

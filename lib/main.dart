@@ -210,7 +210,7 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
     for (final entry in hobbies.entries) {
       final h = entry.value;
       if (h.status != HobbyStatus.trying && h.status != HobbyStatus.active) continue;
-      final lastActive = h.startedAt;
+      final lastActive = h.lastActivityAt ?? h.startedAt;
       if (lastActive == null) continue;
       if (now.difference(lastActive).inDays >= 14) {
         analytics.trackEvent('hobby_abandoned', {'hobby_id': entry.key});

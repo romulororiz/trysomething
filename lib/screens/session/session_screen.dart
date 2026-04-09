@@ -4,12 +4,10 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/breathing_ring.dart';
-import '../../models/hobby.dart';
 import '../../models/session.dart';
-import '../../models/social.dart';
-import '../../providers/feature_providers.dart';
 import '../../providers/session_provider.dart';
-import '../../providers/user_provider.dart';
+import '../../providers/subscription_provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import 'hobby_completion_screen.dart';
 import 'session_prepare_phase.dart';
@@ -227,104 +225,52 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     return (session.elapsedSeconds / total).clamp(0.0, 1.0);
   }
 
-  /// Persist a session reflection as a journal entry (fire and forget).
-  ///
-  /// Prefixes the text with a reflection emoji so the journal UI can
-  /// identify session-sourced entries later.
-  void _saveSessionJournal({
-    required String hobbyId,
-    required ReflectionChoice choice,
-    required String journalText,
-  }) {
-    final emoji = switch (choice) {
-      ReflectionChoice.lovedIt => '\u2764\uFE0F',   // ❤️
-      ReflectionChoice.okay    => '\uD83D\uDC4C',   // 👌
-      ReflectionChoice.struggled => '\u2601\uFE0F',  // ☁️
-    };
-    final label = switch (choice) {
-      ReflectionChoice.lovedIt   => 'Loved it',
-      ReflectionChoice.okay      => 'It was okay',
-      ReflectionChoice.struggled => 'Struggled',
-    };
-    final prefixedText = '$emoji $label — $journalText';
-
-    final entry = JournalEntry(
-      id: 'j_${DateTime.now().millisecondsSinceEpoch}',
-      hobbyId: hobbyId,
-      text: prefixedText,
-      createdAt: DateTime.now(),
-    );
-
-    // Optimistic add via the journal notifier (also calls API)
-    ref.read(journalProvider.notifier).addEntry(entry);
-    debugPrint('[Session] Journal entry saved for hobby $hobbyId');
-  }
-
   bool _isExiting = false;
 
   Future<void> _exitSession() async {
-    // Guard against double-calls (reflect onSubmit + complete phase both trigger this)
     if (_isExiting) return;
     _isExiting = true;
 
     final session = ref.read(sessionProvider);
-    // Mark step complete in user state if session finished successfully
-    if (session != null && session.isComplete) {
-      // Only toggle if step is NOT already completed (prevents un-toggling)
-      final userHobbies = ref.read(userHobbiesProvider);
-      final hobby = userHobbies[session.hobbyId];
-      final alreadyCompleted = hobby?.completedStepIds.contains(session.stepId) ?? false;
+    if (session == null) return;
 
-      bool hobbyCompleted = false;
-      debugPrint('[Session] _exitSession: hobbyId=${session.hobbyId}, stepId=${session.stepId}, alreadyCompleted=$alreadyCompleted, completedSteps=${hobby?.completedStepIds.length ?? 0}');
-      if (!alreadyCompleted) {
-        try {
-          // Don't await — toggleStep is optimistic (state updates instantly,
-          // API call runs in background). Awaiting blocks the exit.
-          ref
-              .read(userHobbiesProvider.notifier)
-              .toggleStep(session.hobbyId, session.stepId)
-              .then((completed) {
-            if (completed && mounted) {
-              debugPrint('[Session] Server confirmed hobby completed');
-            }
-          });
-          debugPrint('[Session] toggleStep fired (optimistic)');
-        } catch (e) {
-          debugPrint('[Session] toggleStep FAILED: $e');
-        }
-      } else {
-        // Step was already completed before this session.
-        // The server already transitioned the hobby to done when the step was
-        // toggled earlier (from Home checkboxes). Check local status.
-        final refreshedHobby = ref.read(userHobbiesProvider)[session.hobbyId];
-        if (refreshedHobby?.status == HobbyStatus.done) {
-          hobbyCompleted = true;
-          debugPrint('[Session] Step already completed, hobby is done — showing celebration');
-        } else {
-          // Hobby not done yet — this step was completed but others remain.
-          // Trigger setDone check: maybe server marked it done but local state
-          // hasn't caught up. Force a status check.
-          debugPrint('[Session] Step already completed, hobby status: ${refreshedHobby?.status}');
-        }
-      }
+    // Capture hobbyId/title before finishSession clears state
+    final hobbyId = session.hobbyId;
+    final hobbyTitle = session.hobbyTitle;
 
-      ref.read(sessionProvider.notifier).completeSession();
-      if (mounted) {
-        if (hobbyCompleted) {
-          Navigator.of(context).pushReplacement(
-            HobbyCompletionScreen.route(
-              hobbyId: session.hobbyId,
-              hobbyTitle: session.hobbyTitle,
-            ),
-          );
-        } else {
-          Navigator.of(context).maybePop();
-        }
-      }
+    // Provider owns all completion logic (step toggle, journal, analytics)
+    final hobbyCompleted =
+        await ref.read(sessionProvider.notifier).finishSession();
+
+    if (!mounted) return;
+
+    // Show trial offer after first session if not yet shown and not Pro
+    await _maybeShowTrialOffer();
+    if (!mounted) return;
+
+    if (hobbyCompleted) {
+      Navigator.of(context).pushReplacement(
+        HobbyCompletionScreen.route(
+          hobbyId: hobbyId,
+          hobbyTitle: hobbyTitle,
+        ),
+      );
     } else {
-      ref.read(sessionProvider.notifier).completeSession();
-      if (mounted) Navigator.of(context).maybePop();
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  /// Show trial offer once after the user's first completed session.
+  Future<void> _maybeShowTrialOffer() async {
+    final isPro = ref.read(isProProvider);
+    if (isPro) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final trialShown = prefs.getBool('trialOfferShown') ?? false;
+    if (trialShown) return;
+
+    if (mounted) {
+      context.push('/trial-offer');
     }
   }
 
@@ -534,16 +480,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               journalText: journalText,
               photoPath: photoPath,
             );
-
-            // Save journal entry via API (fire and forget)
-            if (journalText != null && journalText.trim().isNotEmpty) {
-              _saveSessionJournal(
-                hobbyId: session.hobbyId,
-                choice: choice,
-                journalText: journalText.trim(),
-              );
-            }
-
+            // Journal saving now handled by finishSession()
             _exitSession();
           },
           onSkip: () {

@@ -4,7 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import '../core/analytics/analytics_provider.dart';
+import '../models/hobby.dart';
 import '../models/session.dart';
+import '../models/social.dart';
+import 'feature_providers.dart';
+import 'user_provider.dart';
 
 /// Manages the full lifecycle of an active hobby session.
 ///
@@ -13,7 +18,9 @@ import '../models/session.dart';
 ///
 /// Auto-disposes when no widget is listening (session screen popped).
 class SessionNotifier extends StateNotifier<SessionState?> {
-  SessionNotifier() : super(null);
+  SessionNotifier(this._ref) : super(null);
+
+  final Ref _ref;
 
   Timer? _timer;
   Timer? _completionDelayTimer;
@@ -204,11 +211,6 @@ class SessionNotifier extends StateNotifier<SessionState?> {
       isComplete: true,
     );
     debugPrint('[Session] Reflection submitted: ${choice.name}');
-
-    // TODO(integration): Save journal entry via API
-    // TODO(integration): POST step completion
-    // TODO(integration): Update streak
-    // TODO(integration): Fire analytics events
   }
 
   /// Skip reflection — still mark complete, just no journal data.
@@ -220,11 +222,74 @@ class SessionNotifier extends StateNotifier<SessionState?> {
     debugPrint('[Session] Reflection skipped');
   }
 
-  /// Called when the complete-phase auto-exit finishes.
-  void completeSession() {
+  /// Single owner for all session completion side-effects.
+  ///
+  /// Handles: step toggling, journal save, analytics, streak update,
+  /// wakelock release, and state cleanup.
+  ///
+  /// Returns `true` if the hobby is now fully completed (all steps done).
+  Future<bool> finishSession() async {
+    if (state == null || !state!.isComplete) return false;
+    final s = state!;
+    bool hobbyCompleted = false;
+
+    // 1. Mark step complete (optimistic)
+    final hobby = _ref.read(userHobbiesProvider)[s.hobbyId];
+    final alreadyCompleted =
+        hobby?.completedStepIds.contains(s.stepId) ?? false;
+
+    if (!alreadyCompleted) {
+      try {
+        hobbyCompleted = await _ref
+            .read(userHobbiesProvider.notifier)
+            .toggleStep(s.hobbyId, s.stepId);
+        debugPrint('[Session] toggleStep fired (optimistic)');
+      } catch (e) {
+        debugPrint('[Session] toggleStep FAILED: $e');
+      }
+    } else {
+      hobbyCompleted = hobby?.status == HobbyStatus.done;
+      debugPrint('[Session] Step already completed, hobby done=$hobbyCompleted');
+    }
+
+    // 2. Save journal entry if reflection was submitted with text
+    if (s.journalText != null &&
+        s.journalText!.trim().isNotEmpty &&
+        s.reflection != null) {
+      final emoji = switch (s.reflection!) {
+        ReflectionChoice.lovedIt => '\u2764\uFE0F',
+        ReflectionChoice.okay => '\uD83D\uDC4C',
+        ReflectionChoice.struggled => '\u2601\uFE0F',
+      };
+      final label = switch (s.reflection!) {
+        ReflectionChoice.lovedIt => 'Loved it',
+        ReflectionChoice.okay => 'It was okay',
+        ReflectionChoice.struggled => 'Struggled',
+      };
+      final entry = JournalEntry(
+        id: 'j_${DateTime.now().millisecondsSinceEpoch}',
+        hobbyId: s.hobbyId,
+        text: '$emoji $label — ${s.journalText!.trim()}',
+        createdAt: DateTime.now(),
+      );
+      _ref.read(journalProvider.notifier).addEntry(entry);
+      debugPrint('[Session] Journal entry saved for hobby ${s.hobbyId}');
+    }
+
+    // 3. Fire analytics
+    _ref.read(analyticsProvider).trackEvent('session_completed', {
+      'hobby_id': s.hobbyId,
+      'step_id': s.stepId,
+      'reflection': s.reflection?.name,
+      'duration_seconds': s.elapsedSeconds,
+    });
+
+    // 4. Cleanup and clear state
     debugPrint('[Session] Session fully complete');
     _cleanup();
     state = null;
+
+    return hobbyCompleted;
   }
 
   // ───────────────────────────────────────────────
@@ -252,7 +317,7 @@ class SessionNotifier extends StateNotifier<SessionState?> {
 /// session screen is removed from the widget tree.
 final sessionProvider =
     StateNotifierProvider.autoDispose<SessionNotifier, SessionState?>((ref) {
-  final notifier = SessionNotifier();
+  final notifier = SessionNotifier(ref);
   ref.onDispose(notifier.dispose);
   return notifier;
 });

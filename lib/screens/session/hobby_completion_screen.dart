@@ -48,8 +48,9 @@ class HobbyCompletionScreen extends ConsumerWidget {
     final userHobby = hobbies[hobbyId];
 
     final stepsCompleted = userHobby?.completedStepIds.length ?? 0;
-    final daysActive = userHobby?.startedAt != null
-        ? DateTime.now().difference(userHobby!.startedAt!).inDays
+    final activeStart = userHobby?.startedAt;
+    final daysActive = activeStart != null
+        ? DateTime.now().difference(activeStart).inDays
         : 0;
     final streakDays = userHobby?.streakDays ?? 0;
 

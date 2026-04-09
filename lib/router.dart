@@ -522,17 +522,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       if (isMatchResults) return null;
 
-      // Trial offer guard — show once (AFTER match results)
-      // Only intercept shell destinations (home/discover/you), not content
-      // pages like /hobby/:id that the user intentionally navigated to.
+      // Trial offer is now triggered after first session completion,
+      // not as a router guard. Keep the route accessible for debug nav.
       final isTrialOffer = path == '/trial-offer';
-      final isShellRoute = path == '/home' || path == '/discover' || path == '/you';
-      final trialOfferShown = ref.read(sharedPreferencesProvider).getBool('trialOfferShown') ?? false;
-      if (onboarded && matchResultsSeen && !trialOfferShown && !isTrialOffer
-          && isShellRoute) {
-        return '/trial-offer';
-      }
       final isDebugNav = state.uri.queryParameters.containsKey('debug');
+      final trialOfferShown = ref.read(sharedPreferencesProvider).getBool('trialOfferShown') ?? false;
       if (trialOfferShown && isTrialOffer && !isDebugNav) return '/home';
 
       return null;

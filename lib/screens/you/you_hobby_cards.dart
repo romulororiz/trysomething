@@ -33,9 +33,9 @@ class CollectorCard extends StatelessWidget {
     final totalSteps = hobby.roadmapSteps.length;
     final progress = totalSteps > 0 ? completedValid.length / totalSteps : 0.0;
 
-    final startedAt = uh.startedAt ?? DateTime.now();
+    final activeDate = uh.lastActivityAt ?? uh.startedAt ?? DateTime.now();
     final weekNum =
-        (DateTime.now().difference(startedAt).inDays / 7).floor() + 1;
+        (DateTime.now().difference(activeDate).inDays / 7).floor() + 1;
 
     return GestureDetector(
       onTap: () => context.go('/home?hobby=${hobby.id}'),

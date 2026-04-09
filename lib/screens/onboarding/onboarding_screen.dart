@@ -147,8 +147,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
     ref.read(analyticsProvider).trackEvent('onboarding_skipped');
 
-    // Navigate to trial offer (router guard will redirect to /home after)
-    context.go('/trial-offer');
+    // Skip users go straight to home — trial offer triggers after first session
+    context.go('/home');
   }
 
   void _completeOnboarding() {
