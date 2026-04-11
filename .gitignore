@@ -88,3 +88,4 @@ sentry.properties
 docs/superpowers/
 devtools_options.yaml
 server/.planning/
+.vercel

@@ -79,10 +79,10 @@ export async function requireAuth(
 
 // ── Pro tier guard ──────────────────────────────
 
-const PAID_TIERS = ["pro", "trial", "lifetime"];
+const PAID_TIERS = ["pro", "trial"];
 
 /**
- * Checks that the user has a paid subscription tier (pro, trial, or lifetime).
+ * Checks that the user has a paid subscription tier (pro or trial).
  * Returns true if the user is on a paid tier, or false after sending a 403 response.
  */
 export async function requirePro(

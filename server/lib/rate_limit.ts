@@ -6,7 +6,7 @@ export async function checkCoachRateLimit(
   userId: string,
   subscriptionTier: string
 ): Promise<{ allowed: boolean; count: number }> {
-  // D-05: Pro/lifetime users are unlimited
+  // D-05: Pro users are unlimited
   if (subscriptionTier !== 'free') {
     return { allowed: true, count: 0 };
   }

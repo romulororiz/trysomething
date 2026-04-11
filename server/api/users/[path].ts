@@ -1244,7 +1244,6 @@ async function handleRevenueCatWebhook(
 
     const userId = user.id;
     const expiresAt = expirationAtMs ? new Date(expirationAtMs) : undefined;
-    const isLifetimeProduct = productId?.includes("lifetime") ?? false;
 
     switch (eventType) {
       case "INITIAL_PURCHASE":
@@ -1254,33 +1253,19 @@ async function handleRevenueCatWebhook(
         await prisma.user.update({
           where: { id: userId },
           data: {
-            subscriptionTier: isLifetimeProduct ? "lifetime" : "pro",
+            subscriptionTier: "pro",
             proSince: user.proSince ?? new Date(),
-            proExpiresAt: isLifetimeProduct ? null : expiresAt,
-            isLifetime: isLifetimeProduct,
-            revenuecatId: appUserId,
-          },
-        });
-        break;
-      case "NON_RENEWING_PURCHASE":
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            subscriptionTier: "lifetime",
-            proSince: user.proSince ?? new Date(),
-            proExpiresAt: null,
-            isLifetime: true,
+            proExpiresAt: expiresAt,
             revenuecatId: appUserId,
           },
         });
         break;
       case "CANCELLATION":
       case "EXPIRATION":
-        if (!user.isLifetime) {
-          await prisma.user.update({
-            where: { id: userId },
-            data: { subscriptionTier: "free", proExpiresAt: expiresAt },
-          });
+        await prisma.user.update({
+          where: { id: userId },
+          data: { subscriptionTier: "free", proExpiresAt: expiresAt },
+        });
 
           // LIFE-06: auto-resume paused hobbies on Pro lapse
           const pausedHobbies = await prisma.userHobby.findMany({
@@ -1364,7 +1349,6 @@ async function handleExport(
         subscriptionTier: user.subscriptionTier,
         proSince: user.proSince?.toISOString() ?? null,
         proExpiresAt: user.proExpiresAt?.toISOString() ?? null,
-        isLifetime: user.isLifetime,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       },

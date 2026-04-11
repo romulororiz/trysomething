@@ -65,7 +65,7 @@ export function Footer() {
               {[
                 { label: "Privacy Policy", href: "/privacy" },
                 { label: "Terms of Service", href: "/terms" },
-                { label: "Contact", href: "mailto:hello@trysomething.app" },
+                { label: "Contact", href: "mailto:support@trysomething.io" },
               ].map((link) => (
                 <li key={link.label}>
                   <a

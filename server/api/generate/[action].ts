@@ -266,6 +266,10 @@ async function handleGenerateHobby(req: VercelRequest, res: VercelResponse) {
     const message = err instanceof Error ? err.message : "Unknown error";
     await logGeneration(userId, trimmed, "error", message).catch(() => {});
     console.error("Generation error:", message);
+
+    if (message.includes("invalid or unsafe")) {
+      return errorResponse(res, 400, "This hobby can't be generated — it doesn't match our content policy. Try something different.");
+    }
     return errorResponse(res, 500, "Failed to generate hobby. Please try again.");
   }
 }

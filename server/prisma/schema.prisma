@@ -179,10 +179,9 @@ model User {
   fcmToken     String?
 
   // Subscription
-  subscriptionTier   String    @default("free") // "free", "trial", "pro", "lifetime"
+  subscriptionTier   String    @default("free") // "free", "trial", "pro"
   proSince           DateTime?
   proExpiresAt       DateTime?
-  isLifetime         Boolean   @default(false)
   revenuecatId       String?   @unique
 
   preferences    UserPreference?

@@ -94,7 +94,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(status: AuthStatus.authenticated, user: user);
       _analytics?.setUserId(user.id);
       _setSentryUser(user.id);
-      _subscriptions?.setUserId(user.id);
+      // RevenueCat setUserId is handled in main.dart (awaited) — not here
     } catch (_) {
       await TokenStorage.clearTokens();
       state = const AuthState(status: AuthStatus.unauthenticated);

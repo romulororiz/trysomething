@@ -56,7 +56,6 @@ const FULL_USER = {
   subscriptionTier: "free",
   proSince: null,
   proExpiresAt: null,
-  isLifetime: false,
   createdAt: new Date("2025-01-01"),
   updatedAt: new Date("2025-06-01"),
   preferences: {

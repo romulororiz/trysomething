@@ -26,12 +26,6 @@ describe("checkCoachRateLimit", () => {
     expect(mockCount).not.toHaveBeenCalled();
   });
 
-  it("allows lifetime users without querying the database", async () => {
-    const result = await checkCoachRateLimit("user-1", "lifetime");
-    expect(result).toEqual({ allowed: true, count: 0 });
-    expect(mockCount).not.toHaveBeenCalled();
-  });
-
   it("allows free user with fewer than 3 messages in 30 days", async () => {
     mockCount.mockResolvedValue(2);
     const result = await checkCoachRateLimit("user-1", "free");

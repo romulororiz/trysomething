@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { LetterSwap } from "@/components/ui/LetterSwap";
 import { useSmoothScroll } from "@/components/layout/SmoothScroll";
@@ -64,13 +65,19 @@ export function Navbar() {
           onClick={scrollToTop}
           className="flex items-center gap-0.5 cursor-pointer"
         >
-          <span className="text-xl font-bold text-text-primary tracking-tight">
+          <span className="text-xl font-bold text-coral tracking-tight">
             Try
           </span>
-          <span className="text-xl font-bold text-coral tracking-tight">
+          <span className="text-xl font-bold text-text tracking-tight">
             Something
           </span>
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-coral ml-0.5 mb-3" />
+          <Image
+            src="/logo-mark.png"
+            alt=""
+            width={40}
+            height={40}
+            className="-mt-1"
+          />
         </button>
 
         {/* Desktop nav */}

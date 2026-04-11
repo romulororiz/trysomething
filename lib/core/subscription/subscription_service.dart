@@ -62,14 +62,6 @@ class SubscriptionService {
     return _customerInfo?.entitlements.active.containsKey(_entitlement) ?? false;
   }
 
-  /// Whether the user has a lifetime (non-expiring) purchase.
-  bool get isLifetime {
-    final entitlement = _customerInfo?.entitlements.active[_entitlement];
-    if (entitlement == null) return false;
-    // Lifetime purchases have no expiration date
-    return entitlement.expirationDate == null;
-  }
-
   /// Whether the user is in a free trial period.
   bool get isTrialing {
     final entitlement = _customerInfo?.entitlements.active[_entitlement];
@@ -99,7 +91,7 @@ class SubscriptionService {
     }
   }
 
-  /// Purchase a package (monthly, annual, or lifetime).
+  /// Purchase a package (monthly or annual).
   Future<bool> purchase(Package package) async {
     try {
       final result = await Purchases.purchase(PurchaseParams.package(package));

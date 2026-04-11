@@ -190,7 +190,6 @@ describe("RevenueCat webhook auth guard", () => {
       user: {
         findUnique: vi.fn().mockResolvedValue({
           id: "user-1",
-          isLifetime: false,
           proSince: null,
           revenuecatId: null,
         }),

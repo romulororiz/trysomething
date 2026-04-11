@@ -229,11 +229,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final allHobbiesAsync = ref.watch(hobbyListProvider);
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
 
-    // Auto-navigate on successful generation
+    // Auto-navigate on successful generation (delay lets progress card hit 100%)
     ref.listen<GenerationState>(generationProvider, (prev, next) {
       if (next.status == GenerationStatus.success && next.hobby != null) {
-        ref.read(generationProvider.notifier).reset();
-        context.push('/hobby/${next.hobby!.id}');
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (!mounted) return;
+          ref.read(generationProvider.notifier).reset();
+          context.push('/hobby/${next.hobby!.id}');
+        });
       }
     });
 
@@ -376,11 +379,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
                   // Results or popular searches
                   if (_query.isNotEmpty &&
-                      ref.watch(generationProvider).status ==
-                          GenerationStatus.generating &&
+                      (ref.watch(generationProvider).status ==
+                              GenerationStatus.generating ||
+                          ref.watch(generationProvider).status ==
+                              GenerationStatus.success) &&
                       results.isEmpty)
                     Expanded(
-                      child: Center(child: _AiGeneratingHero(query: _query)),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                          child: _AiProgressCard(
+                            query: _query,
+                            onCancel: () =>
+                                ref.read(generationProvider.notifier).cancel(),
+                          ),
+                        ),
+                      ),
                     )
                   else if (_query.isNotEmpty && results.isNotEmpty)
                     Expanded(
@@ -456,12 +470,72 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   ) {
     final genState = ref.watch(generationProvider);
     final isGenerating = genState.status == GenerationStatus.generating;
-    final fewResults = results.length < 3;
     final isPro = ref.watch(isProProvider);
+    final showGenerateCta = !results
+            .any((h) => h.title.toLowerCase() == _query.toLowerCase().trim()) &&
+        _query.trim().length >= 3;
 
     return ListView(
       padding: EdgeInsets.only(bottom: Spacing.scrollBottom(context)),
       children: [
+        // Generate CTA or AI progress card — TOP POSITION
+        if (showGenerateCta &&
+            (isGenerating || genState.status == GenerationStatus.success))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: _AiProgressCard(
+              query: _query,
+              onCancel: () => ref.read(generationProvider.notifier).cancel(),
+            ),
+          )
+        else if (showGenerateCta)
+          _buildInlineGenerateCta(isPro: isPro, isGenerating: false),
+
+        // Error retry
+        if (genState.status == GenerationStatus.error)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: GestureDetector(
+              onTap: () =>
+                  ref.read(generationProvider.notifier).generate(_query),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.refresh_rounded,
+                        size: 18, color: AppColors.coral),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            genState.error ?? 'Something went wrong',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Tap to retry',
+                            style: AppTypography.sansTiny.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         // Top Results header
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
@@ -494,53 +568,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onTap: () => context.push('/hobby/${hobby.id}'),
             )),
 
-        // Pro: AI generating indicator (when <3 results)
-        if (isPro && fewResults && isGenerating)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-            child: _AiSearchingTile(),
-          ),
-
-        // Pro: AI generation error with retry
-        if (isPro && fewResults && genState.status == GenerationStatus.error)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-            child: GestureDetector(
-              onTap: () {
-                ref.read(generationProvider.notifier).generate(_query);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.refresh_rounded,
-                        size: 18, color: AppColors.coral),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'AI suggestion failed. Tap to retry.',
-                        style: AppTypography.caption.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-        // Inline generate CTA — when no exact title match and query >= 3 chars
-        if (!results.any((h) =>
-                h.title.toLowerCase() == _query.toLowerCase().trim()) &&
-            _query.trim().length >= 3)
-          _buildInlineGenerateCta(isPro: isPro, isGenerating: isGenerating),
-
         // "You might also like" — vertical premium cards
         if (suggestions.isNotEmpty) ...[
           Padding(
@@ -559,8 +586,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     required bool isPro,
     required bool isGenerating,
   }) {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+      margin: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: isGenerating
             ? null
@@ -583,9 +611,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           child: Row(
             children: [
               Icon(
-                isGenerating
-                    ? Icons.hourglass_top_rounded
-                    : Icons.auto_awesome,
+                isGenerating ? Icons.hourglass_top_rounded : Icons.auto_awesome,
                 size: 20,
                 color: AppColors.coral,
               ),
@@ -958,219 +984,219 @@ class _SuggestionCard extends StatelessWidget {
 //  AI SEARCHING SHIMMER TILE
 // ═══════════════════════════════════════════════════════
 
-class _AiSearchingTile extends StatefulWidget {
-  @override
-  State<_AiSearchingTile> createState() => _AiSearchingTileState();
-}
-
-class _AiSearchingTileState extends State<_AiSearchingTile>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        // Eased progress: fast start, slow finish (never reaches 1.0)
-        final t = _controller.value;
-        final progress = 1.0 - math.pow(1.0 - t * 0.95, 3);
-
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.coral.withValues(alpha: 0.15)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(MdiIcons.creationOutline,
-                      size: 16, color: AppColors.coral),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Generating with AI...',
-                    style: AppTypography.caption.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 3,
-                  backgroundColor: AppColors.surfaceElevated,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.coral),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  AI GENERATING HERO — full-screen premium generation state
-// ═══════════════════════════════════════════════════════
-
-class _AiGeneratingHero extends ConsumerStatefulWidget {
+class _AiProgressCard extends ConsumerStatefulWidget {
   final String query;
-  const _AiGeneratingHero({required this.query});
+  final VoidCallback onCancel;
+  const _AiProgressCard({required this.query, required this.onCancel});
 
   @override
-  ConsumerState<_AiGeneratingHero> createState() => _AiGeneratingHeroState();
+  ConsumerState<_AiProgressCard> createState() => _AiProgressCardState();
 }
 
-class _AiGeneratingHeroState extends ConsumerState<_AiGeneratingHero> {
+class _AiProgressCardState extends ConsumerState<_AiProgressCard>
+    with TickerProviderStateMixin {
+  late final AnimationController _anim;
+  AnimationController? _doneAnim;
   int _elapsed = 0;
-  late Timer _timer;
+  late final Timer _ticker;
+  double _progressAtDone = 0;
 
   static const _phases = [
-    'Understanding your interest...',
-    'Researching the best approach...',
-    'Crafting your roadmap...',
-    'Building your hobby guide...',
-    'Polishing the details...',
+    (0, 'Checking if this hobby exists...'),
+    (2, 'Generating with AI...'),
+    (5, 'Crafting your roadmap...'),
+    (8, 'Finding the perfect image...'),
+    (12, 'Still generating...'),
+    (18, 'Taking a bit longer than usual...'),
   ];
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() => _elapsed++);
+    // Runs for 60s — asymptotic curve never completes visually
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 60),
+    )..forward();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _elapsed++);
     });
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _anim.dispose();
+    _doneAnim?.dispose();
+    _ticker.cancel();
     super.dispose();
   }
 
+  void _markComplete() {
+    if (_doneAnim != null) return;
+    _progressAtDone = _baseProgress;
+    _doneAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )
+      ..addListener(() {
+        if (mounted) setState(() {});
+      })
+      ..forward();
+  }
+
+  /// Asymptotic progress: approaches ~80% but never reaches it.
+  /// Backend: auth(~0.5s) + Claude Sonnet(~4s) || Unsplash(~1s) + DB(~0.5s)
+  double get _baseProgress {
+    final seconds = _anim.value * 60;
+    // At 3s: 32%, 5s: 46%, 8s: 58%, 12s: 69%, 16s: 75%, 20s: 78%
+    return 0.8 * (1 - math.exp(-seconds / 6));
+  }
+
+  double get _progress {
+    if (_doneAnim != null) {
+      // Completion: ease from wherever we were to 100%
+      final t = Curves.easeOut.transform(_doneAnim!.value);
+      return _progressAtDone + (1.0 - _progressAtDone) * t;
+    }
+    return _baseProgress;
+  }
+
   String get _phaseText {
-    // Cycle through phases, spending ~4s on each
-    final idx = (_elapsed ~/ 4).clamp(0, _phases.length - 1);
-    return _phases[idx];
+    if (_doneAnim != null) return 'Done!';
+    String text = _phases.first.$2;
+    for (final (sec, label) in _phases) {
+      if (_elapsed >= sec) text = label;
+    }
+    return text;
+  }
+
+  String get _etaText {
+    if (_doneAnim != null) return 'Complete';
+    final remaining = (8 - _elapsed).clamp(0, 8);
+    if (remaining > 0) return '~${remaining}s';
+    return 'Still working...';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 120, 24, 0),
-      child: Column(
-        children: [
-          // Animated icon
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 600),
-            builder: (_, v, child) => Opacity(
-              opacity: v,
-              child: Transform.scale(scale: 0.8 + 0.2 * v, child: child),
-            ),
-            child: Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.coral.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+    // Detect real generation completion
+    final genStatus = ref.watch(generationProvider).status;
+    if (genStatus == GenerationStatus.success && _doneAnim == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _markComplete();
+      });
+    }
+
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        final progress = _progress;
+        final percent = (progress * 100).round();
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.coral.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header: icon + generating text
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.coral.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(MdiIcons.creationOutline,
+                        size: 16, color: AppColors.coral),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _doneAnim != null
+                              ? '"${widget.query}"'
+                              : 'Generating "${widget.query}"',
+                          style: AppTypography.sansLabel
+                              .copyWith(color: AppColors.textPrimary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: Text(
+                            _phaseText,
+                            key: ValueKey(_phaseText),
+                            style: AppTypography.sansTiny.copyWith(
+                              color: _doneAnim != null
+                                  ? AppColors.success
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              child: Icon(MdiIcons.creationOutline,
-                  size: 28, color: AppColors.coral),
-            ),
-          ),
-          const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
-          // Query title
-          Text(
-            '"${widget.query}"',
-            style: AppTypography.title.copyWith(fontSize: 20),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-
-          // Phase text — animated crossfade
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: Text(
-              _phaseText,
-              key: ValueKey(_phaseText),
-              style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // Indeterminate pulsing progress bar (honest — no fake percentage)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: const LinearProgressIndicator(
-              minHeight: 5,
-              backgroundColor: AppColors.surfaceElevated,
-              valueColor: AlwaysStoppedAnimation(AppColors.coral),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Elapsed time
-          Text(
-            '${_elapsed}s elapsed',
-            style: AppTypography.caption.copyWith(
-              color: AppColors.textMuted,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // Cancel button
-          GestureDetector(
-            onTap: () => ref.read(generationProvider.notifier).cancel(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.glassBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.glassBorder, width: 0.5),
-              ),
-              child: Text(
-                'Cancel',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+              // Progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 4,
+                  backgroundColor: AppColors.surfaceElevated,
+                  valueColor: AlwaysStoppedAnimation(
+                    _doneAnim != null ? AppColors.success : AppColors.coral,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 10),
+
+              // Percent + ETA + cancel
+              Row(
+                children: [
+                  Text(
+                    '$percent%',
+                    style: AppTypography.monoBadge
+                        .copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _etaText,
+                    style: AppTypography.monoBadgeSmall
+                        .copyWith(color: AppColors.textMuted),
+                  ),
+                  const Spacer(),
+                  if (_doneAnim == null)
+                    GestureDetector(
+                      onTap: widget.onCancel,
+                      child: Text(
+                        'Cancel',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
