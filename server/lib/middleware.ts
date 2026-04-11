@@ -4,15 +4,21 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const ALLOWED_ORIGINS = [
   "https://trysomething.io",
   "https://www.trysomething.io",
-  "http://localhost:3000", // local Next.js dev
 ];
+
+function isAllowedOrigin(origin: string): boolean {
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Allow any localhost port for local development (Flutter web, Next.js, etc.)
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  return false;
+}
 
 // CORS headers for Flutter client + web
 export function setCorsHeaders(
   res: VercelResponse,
   origin?: string
 ): void {
-  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  const allowed = origin && isAllowedOrigin(origin) ? origin : ALLOWED_ORIGINS[0];
   res.setHeader("Access-Control-Allow-Origin", allowed);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
