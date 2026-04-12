@@ -10,7 +10,7 @@ type ValidationResult = { ok: true } | { ok: false; reason: string };
 const BLOCKLIST: string[] = [
   // Weapons / violence
   "gun", "rifle", "firearm", "bomb", "explosive", "weapon", "knife fighting",
-  "sword fighting", "martial weapon", "assassination", "killing", "murder",
+  "sword fighting", "martial weapon", "assassination", "murder",
   // Drugs / substances
   "drug", "cocaine", "heroin", "meth", "marijuana growing", "weed growing",
   "lsd", "mushroom growing psychedelic",
@@ -154,7 +154,7 @@ export function validateOutput(hobby: Record<string, unknown>): ValidationResult
 
   const blocked = containsBlockedTerm(allText);
   if (blocked) {
-    return { ok: false, reason: "Generated content contains prohibited terms" };
+    return { ok: false, reason: `Generated content contains prohibited term: ${blocked}` };
   }
 
   return { ok: true };
