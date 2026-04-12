@@ -53,6 +53,8 @@ export default async function handler(
       return handleForgotPassword(req, res);
     case "reset-password":
       return handleResetPassword(req, res);
+    case "change-password":
+      return handleChangePassword(req, res);
     default:
       errorResponse(res, 404, `Unknown auth action '${action}'`);
   }
@@ -787,5 +789,54 @@ async function handleResetPassword(
   } catch (err) {
     console.error("POST /api/auth/reset-password error:", err);
     errorResponse(res, 500, "Password reset failed");
+  }
+}
+
+// ── Change Password (authenticated) ─────────────
+
+async function handleChangePassword(
+  req: VercelRequest,
+  res: VercelResponse
+): Promise<void> {
+  if (methodNotAllowed(req, res, ["POST"])) return;
+
+  const userId = await requireAuth(req, res);
+  if (!userId) return;
+
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (!currentPassword || typeof currentPassword !== "string") {
+    return errorResponse(res, 400, "Current password is required");
+  }
+  if (!newPassword || typeof newPassword !== "string") {
+    return errorResponse(res, 400, "New password is required");
+  }
+  if (newPassword.length < 8) {
+    return errorResponse(res, 400, "New password must be at least 8 characters");
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!user || !user.passwordHash) {
+      return errorResponse(res, 400, "Account does not have a password");
+    }
+
+    const valid = await comparePassword(currentPassword, user.passwordHash);
+    if (!valid) {
+      return errorResponse(res, 401, "Current password is incorrect");
+    }
+
+    const hash = await hashPassword(newPassword);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: hash },
+    });
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("POST /api/auth/change-password error:", err);
+    errorResponse(res, 500, "Failed to change password");
   }
 }
