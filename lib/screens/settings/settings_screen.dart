@@ -682,8 +682,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         final authNotifier = ref.read(authProvider.notifier);
         final onboardingNotifier =
             ref.read(onboardingCompleteProvider.notifier);
+        final hobbiesNotifier = ref.read(userHobbiesProvider.notifier);
 
-        // 1. Clear persistent storage (no provider refreshes triggered)
+        // 1. Clear in-memory user state FIRST (prevents stale data leaking to next session)
+        hobbiesNotifier.clear();
+
+        // 2. Clear persistent storage (no provider refreshes triggered)
         await prefs.clear();
         await CacheManager.clearAll();
         try {
@@ -830,6 +834,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         initialBio: ref.read(authProvider).user?.bio ?? '',
         email: email,
         avatarUrl: avatarUrl,
+        hasPassword: ref.read(authProvider).user?.hasPassword ?? false,
       ),
     );
   }

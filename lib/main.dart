@@ -138,6 +138,9 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
           // Link RevenueCat to authenticated user and refresh subscription
           await ref.read(subscriptionProvider).setUserId(authState.user!.id);
         }
+        // Restore onboarding state — if user has a valid server session,
+        // they completed onboarding (can't get tokens without it)
+        ref.read(onboardingCompleteProvider.notifier).complete();
         ref.read(proStatusProvider.notifier).sync();
         // Also refresh from RevenueCat servers to catch promotional grants
         ref.read(proStatusProvider.notifier).refresh();

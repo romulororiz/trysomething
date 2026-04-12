@@ -153,7 +153,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       }
       return Scaffold(
         backgroundColor: Colors.transparent,
-        body: AppBackground(tintTopLeft: false, child: Center(child: Text('Hobby not found', style: AppTypography.body))),
+        body: AppBackground(
+            tintTopLeft: false,
+            child: Center(
+                child: Text('Hobby not found', style: AppTypography.body))),
       );
     }
 
@@ -166,137 +169,169 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       body: AppBackground(
         tintTopLeft: false,
         child: Stack(
-        children: [
-          CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeroImage(context, hobby)),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                    24,
-                    0,
-                    24,
-                    MediaQuery.of(context).padding.bottom + 110),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 24),
+          children: [
+            CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeroImage(context, hobby)),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                      24, 0, 24, MediaQuery.of(context).padding.bottom + 110),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      const SizedBox(height: 24),
 
-                    // 1. "Why this fits you" glass card
-                    _staggeredCard(0, _buildWhyFitsYou(hobby, prefs)),
-                    const SizedBox(height: 16),
-
-                    // 2. "Start in 20 minutes" glass card
-                    _staggeredCard(1, _buildStartIn20(hobby)),
-                    const SizedBox(height: 16),
-
-                    // 3. "What to expect" — 4-week roadmap preview
-                    _staggeredCard(2, _buildWhatToExpect(hobby)),
-                    const SizedBox(height: 16),
-
-                    // 3b. "Why people stop" — pitfalls / quitting reasons (GATED)
-                    if (hobby.pitfalls.isNotEmpty ||
-                        hobby.quittingReasons.isNotEmpty) ...[
-                      _staggeredCard(3, ProGateSection(
-                        isLocked: !isPro,
-                        sectionTitle: 'Why people stop',
-                        teaserText: 'Know the common traps before you start',
-                        onLockTap: () => context.push('/pro'),
-                        child: _buildWhyPeopleStop(hobby),
-                      )),
+                      // 1. "Why this fits you" glass card
+                      _staggeredCard(0, _buildWhyFitsYou(hobby, prefs)),
                       const SizedBox(height: 16),
-                    ],
 
-                    // 4. Starter Kit glass card (GATED)
-                    _staggeredCard(4, ProGateSection(
-                      isLocked: !isPro,
-                      sectionTitle: 'Starter Kit',
-                      teaserText: 'Everything you need to get started',
-                      onLockTap: () => context.push('/pro'),
-                      child: StarterKitCard(hobby: hobby),
-                    )),
-                    const SizedBox(height: 16),
+                      // 2. "Start in 20 minutes" glass card
+                      _staggeredCard(1, _buildStartIn20(hobby)),
+                      const SizedBox(height: 16),
 
-                    // 5. Plan first session (GATED)
-                    _staggeredCard(5, PlanFirstSessionCard(
-                      hobbyId: widget.hobbyId,
-                      isLocked: !isPro,
-                      onLockTap: () => context.push('/pro'),
-                    )),
-                    const SizedBox(height: 16),
+                      // 3. "What to expect" — 4-week roadmap preview
+                      _staggeredCard(2, _buildWhatToExpect(hobby)),
+                      const SizedBox(height: 16),
 
-                    // 6. Quick links (GATED — blurred like other Pro sections)
-                    _staggeredCard(6, ProGateSection(
-                      isLocked: !isPro,
-                      sectionTitle: 'Deep Research',
-                      teaserText: 'Cost breakdown and beginner FAQ',
-                      onLockTap: () => context.push('/pro'),
-                      child: HobbyQuickLinks(
-                        hobbyId: widget.hobbyId,
-                        isLocked: false,
-                      ),
-                    )),
-                  ]),
-                ),
-              ),
-            ],
-          ),
+                      // 3b. "Why people stop" — pitfalls / quitting reasons (GATED)
+                      if (hobby.pitfalls.isNotEmpty ||
+                          hobby.quittingReasons.isNotEmpty) ...[
+                        _staggeredCard(
+                            3,
+                            ProGateSection(
+                              isLocked: !isPro,
+                              sectionTitle: 'Why people stop',
+                              teaserText:
+                                  'Know the common traps before you start',
+                              onLockTap: () => context.push('/pro'),
+                              child: _buildWhyPeopleStop(hobby),
+                            )),
+                        const SizedBox(height: 16),
+                      ],
 
-          // Header: back + title + share
-          Positioned(
-            top: topPad + 8,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withValues(alpha: 0.35),
-                    ),
-                    child: const Icon(Icons.arrow_back_rounded,
-                        size: 20, color: Colors.white),
-                  ),
-                ),
-                const Spacer(),
-                // Save / bookmark
-                _SaveButton(hobbyId: widget.hobbyId),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () => shareHobby(context, hobby),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withValues(alpha: 0.35),
-                    ),
-                    child:
-                        Icon(AppIcons.share, size: 18, color: Colors.white),
+                      // 4. Starter Kit glass card (GATED)
+                      _staggeredCard(
+                          4,
+                          ProGateSection(
+                            isLocked: !isPro,
+                            sectionTitle: 'Starter Kit',
+                            teaserText: 'Everything you need to get started',
+                            onLockTap: () => context.push('/pro'),
+                            child: StarterKitCard(hobby: hobby),
+                          )),
+                      const SizedBox(height: 16),
+
+                      // 5. Plan first session (GATED)
+                      _staggeredCard(
+                          5,
+                          PlanFirstSessionCard(
+                            hobbyId: widget.hobbyId,
+                            isLocked: !isPro,
+                            onLockTap: () => context.push('/pro'),
+                          )),
+                      const SizedBox(height: 16),
+
+                      // 6. Quick links (GATED — blurred like other Pro sections)
+                      _staggeredCard(
+                          6,
+                          ProGateSection(
+                            isLocked: !isPro,
+                            sectionTitle: 'Deep Research',
+                            teaserText: 'Cost breakdown and beginner FAQ',
+                            onLockTap: () => context.push('/pro'),
+                            child: HobbyQuickLinks(
+                              hobbyId: widget.hobbyId,
+                              isLocked: false,
+                            ),
+                          )),
+                    ]),
                   ),
                 ),
               ],
             ),
-          ),
 
-          // Floating CTA at bottom (hidden for done hobbies)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Builder(builder: (context) {
-              final userHobby = ref.watch(userHobbiesProvider)[widget.hobbyId];
-              final isDone = userHobby?.status == HobbyStatus.done;
+            // Header: back + title + share
+            Positioned(
+              top: topPad + 8,
+              left: 16,
+              right: 16,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.35),
+                      ),
+                      child: const Icon(Icons.arrow_back_rounded,
+                          size: 20, color: Colors.white),
+                    ),
+                  ),
+                  const Spacer(),
+                  // Save / bookmark
+                  _SaveButton(hobbyId: widget.hobbyId),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () => shareHobby(context, hobby),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.35),
+                      ),
+                      child:
+                          Icon(AppIcons.share, size: 18, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-              if (isDone) {
-                // Muted status chip instead of Start CTA for completed/stopped hobbies
-                final totalSteps = hobby.roadmapSteps.length;
-                final completedSteps = userHobby!.completedStepIds.length;
-                final isFullyCompleted =
-                    totalSteps > 0 && completedSteps >= totalSteps;
+            // Floating CTA at bottom (hidden for done hobbies)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Builder(builder: (context) {
+                final userHobby =
+                    ref.watch(userHobbiesProvider)[widget.hobbyId];
+                final isDone = userHobby?.status == HobbyStatus.done;
+
+                if (isDone) {
+                  final totalSteps = hobby.roadmapSteps.length;
+                  final completedSteps = userHobby!.completedStepIds.length;
+                  final isFullyCompleted =
+                      totalSteps > 0 && completedSteps >= totalSteps;
+
+                  return Container(
+                    padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
+                    decoration: const BoxDecoration(
+                      gradient: Spacing.ctaFadeGradient,
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: TryTodayButton(
+                        text: isFullyCompleted ? 'Start again' : 'Try again',
+                        onPressed: () {
+                          final canStart = ref
+                              .read(canStartHobbyProvider(widget.hobbyId));
+                          if (!canStart) {
+                            context.push('/pro');
+                            return;
+                          }
+                          ref
+                              .read(userHobbiesProvider.notifier)
+                              .startTrying(widget.hobbyId);
+                          context.go('/home?hobby=${widget.hobbyId}');
+                        },
+                      ),
+                    ),
+                  );
+                }
 
                 return Container(
                   padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
@@ -305,69 +340,28 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   ),
                   child: SafeArea(
                     top: false,
-                    child: Container(
-                      width: double.infinity,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.glassBackground,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: AppColors.glassBorder, width: 0.5),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isFullyCompleted
-                                ? Icons.check_circle_rounded
-                                : Icons.stop_circle_outlined,
-                            size: 18,
-                            color: isFullyCompleted
-                                ? AppColors.success
-                                : AppColors.textMuted,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            isFullyCompleted ? 'Completed' : 'Tried',
-                            style: AppTypography.body.copyWith(
-                              color: AppColors.textMuted,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: TryTodayButton(
+                      text: 'Start hobby',
+                      onPressed: () {
+                        final canStart =
+                            ref.read(canStartHobbyProvider(widget.hobbyId));
+                        if (!canStart) {
+                          context.push('/pro');
+                          return;
+                        }
+                        // Start hobby directly — skip quickstart (data wasn't persisted)
+                        ref
+                            .read(userHobbiesProvider.notifier)
+                            .startTrying(widget.hobbyId);
+                        context.go('/home?hobby=${widget.hobbyId}');
+                      },
                     ),
                   ),
                 );
-              }
-
-              return Container(
-                padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
-                decoration: const BoxDecoration(
-                  gradient: Spacing.ctaFadeGradient,
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: TryTodayButton(
-                    text: 'Start hobby',
-                    onPressed: () {
-                      final canStart =
-                          ref.read(canStartHobbyProvider(widget.hobbyId));
-                      if (!canStart) {
-                        context.push('/pro');
-                        return;
-                      }
-                      // Start hobby directly — skip quickstart (data wasn't persisted)
-                      ref.read(userHobbiesProvider.notifier).startTrying(widget.hobbyId);
-                      context.go('/home?hobby=${widget.hobbyId}');
-                    },
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -393,14 +387,19 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   fromHeroContext, toHeroContext) {
                 final Hero toHero = toHeroContext.widget as Hero;
                 final radiusTween = Tween<double>(
-                  begin: direction == HeroFlightDirection.push ? Spacing.radiusCard : 0,
-                  end: direction == HeroFlightDirection.push ? 0 : Spacing.radiusCard,
+                  begin: direction == HeroFlightDirection.push
+                      ? Spacing.radiusCard
+                      : 0,
+                  end: direction == HeroFlightDirection.push
+                      ? 0
+                      : Spacing.radiusCard,
                 );
                 return AnimatedBuilder(
                   animation: animation,
                   child: toHero.child,
                   builder: (context, child) => ClipRRect(
-                    borderRadius: BorderRadius.circular(radiusTween.evaluate(animation)),
+                    borderRadius:
+                        BorderRadius.circular(radiusTween.evaluate(animation)),
                     child: child,
                   ),
                 );
@@ -421,10 +420,12 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                     memCacheWidth: 800,
                     height: heroH + Motion.maxParallaxOffset,
                     width: double.infinity,
-                    placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
+                    placeholder: (_, __) =>
+                        Container(color: AppColors.surfaceElevated),
                     errorWidget: (_, __, ___) => Container(
                       color: AppColors.surfaceElevated,
-                      child: const Icon(Icons.image, size: 40, color: AppColors.textWhisper),
+                      child: const Icon(Icons.image,
+                          size: 40, color: AppColors.textWhisper),
                     ),
                   ),
                 ),
@@ -449,7 +450,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   Text(
                     hobby.category.toUpperCase(),
                     style: AppTypography.monoBadgeSmall.copyWith(
-                      color: AppColors.textMuted, letterSpacing: 1.5),
+                        color: AppColors.textMuted, letterSpacing: 1.5),
                   ),
                   const SizedBox(height: 8),
                   Hero(
@@ -461,7 +462,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       return AnimatedBuilder(
                         animation: animation,
                         builder: (context, _) => Stack(children: [
-                          Opacity(opacity: 1 - animation.value, child: fromChild),
+                          Opacity(
+                              opacity: 1 - animation.value, child: fromChild),
                           Opacity(opacity: animation.value, child: toChild),
                         ]),
                       );
@@ -476,7 +478,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                         return Text.rich(TextSpan(children: [
                           TextSpan(
                             text: words.first,
-                            style: AppTypography.hero.copyWith(color: AppColors.coral),
+                            style: AppTypography.hero
+                                .copyWith(color: AppColors.coral),
                           ),
                           TextSpan(
                             text: ' ${words.skip(1).join(' ')}',
@@ -489,7 +492,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   const SizedBox(height: 6),
                   Text(
                     hobby.hook,
-                    style: AppTypography.body.copyWith(color: AppColors.textSecondary, height: 1.4),
+                    style: AppTypography.body
+                        .copyWith(color: AppColors.textSecondary, height: 1.4),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -497,7 +501,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                   // Specs on the overlay
                   Text(
                     '${hobby.costText}  ·  ${hobby.timeText}  ·  ${hobby.difficultyText}',
-                    style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                    style: AppTypography.caption
+                        .copyWith(color: AppColors.textMuted),
                   ),
                 ],
               ),
@@ -563,7 +568,13 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     final reasons = <String>[];
 
     // Budget fit
-    final budgetLabels = ['free', 'under CHF 30', 'under CHF 75', 'under CHF 150', 'flexible'];
+    final budgetLabels = [
+      'free',
+      'under CHF 30',
+      'under CHF 75',
+      'under CHF 150',
+      'flexible'
+    ];
     if (prefs.budgetLevel < budgetLabels.length) {
       reasons.add('Fits your ${budgetLabels[prefs.budgetLevel]} budget');
     }
@@ -594,8 +605,10 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
   // ═══════════════════════════════════════════════════════
 
   Widget _buildStartIn20(Hobby hobby) {
-    final essentialKit = hobby.starterKit.where((k) => !k.isOptional).take(2).toList();
-    final firstStep = hobby.roadmapSteps.isNotEmpty ? hobby.roadmapSteps.first : null;
+    final essentialKit =
+        hobby.starterKit.where((k) => !k.isOptional).take(2).toList();
+    final firstStep =
+        hobby.roadmapSteps.isNotEmpty ? hobby.roadmapSteps.first : null;
 
     return GlassCard(
       padding: const EdgeInsets.all(20),
@@ -783,8 +796,8 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                           color: AppColors.coral.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(week.icon,
-                            size: 14, color: AppColors.coral),
+                        child:
+                            Icon(week.icon, size: 14, color: AppColors.coral),
                       ),
                       if (!isLast)
                         Container(
@@ -884,7 +897,6 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
       ),
     );
   }
-
 }
 
 // ═══════════════════════════════════════════════════════
@@ -934,8 +946,8 @@ class _SaveButtonState extends ConsumerState<_SaveButton>
         CurvedAnimation(parent: _burstController, curve: Curves.easeOut));
     _particleController = AnimationController(
         duration: const Duration(milliseconds: 600), vsync: this);
-    _particleProgress = CurvedAnimation(
-        parent: _particleController, curve: Curves.easeOut);
+    _particleProgress =
+        CurvedAnimation(parent: _particleController, curve: Curves.easeOut);
   }
 
   @override
@@ -1022,7 +1034,9 @@ class _SaveButtonState extends ConsumerState<_SaveButton>
             ScaleTransition(
               scale: _popScale,
               child: Icon(
-                isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                isSaved
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
                 size: 18,
                 color: isSaved ? AppColors.coral : Colors.white,
                 shadows: const [Shadow(blurRadius: 8, color: Colors.black54)],

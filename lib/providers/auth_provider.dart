@@ -14,6 +14,7 @@ import '../core/analytics/analytics_service.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/auth_repository_api.dart';
 import '../models/auth.dart';
+import 'user_provider.dart';
 import '../core/subscription/subscription_service.dart';
 import 'subscription_provider.dart';
 
@@ -70,8 +71,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
   final AnalyticsService? _analytics;
   final SubscriptionService? _subscriptions;
+  final OnboardingNotifier? _onboarding;
 
-  AuthNotifier(this._repo, [this._analytics, this._subscriptions])
+  AuthNotifier(this._repo, [this._analytics, this._subscriptions, this._onboarding])
       : super(const AuthState());
 
   /// Sync user identity to Sentry for crash attribution.
@@ -94,6 +96,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(status: AuthStatus.authenticated, user: user);
       _analytics?.setUserId(user.id);
       _setSentryUser(user.id);
+      _onboarding?.complete();
       // RevenueCat setUserId is handled in main.dart (awaited) — not here
     } catch (_) {
       await TokenStorage.clearTokens();
@@ -147,6 +150,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _analytics?.setUserId(response.user.id);
       _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
+      _onboarding?.complete();
       _analytics?.trackEvent('login');
       return true;
     } catch (e) {
@@ -205,6 +209,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _analytics?.setUserId(response.user.id);
       _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
+      _onboarding?.complete();
       _analytics?.trackEvent('login_google');
       return true;
     } catch (e, stackTrace) {
@@ -287,6 +292,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _analytics?.setUserId(response.user.id);
       _setSentryUser(response.user.id);
       _subscriptions?.setUserId(response.user.id);
+      _onboarding?.complete();
       _analytics?.trackEvent('login_apple');
       return true;
     } catch (e, stackTrace) {
@@ -374,6 +380,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Change password for email users. Returns null on success, error string on failure.
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _repo.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      return null;
+    } catch (e) {
+      return _extractError(e);
+    }
+  }
+
   Future<void> updateProfile({String? displayName, String? bio, String? avatarUrl, String? fcmToken}) async {
     try {
       final updated = await _repo.updateProfile(
@@ -424,7 +446,8 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final analytics = ref.watch(analyticsProvider);
   final subscriptions = ref.watch(subscriptionProvider);
-  return AuthNotifier(ref.watch(authRepositoryProvider), analytics, subscriptions);
+  final onboarding = ref.watch(onboardingCompleteProvider.notifier);
+  return AuthNotifier(ref.watch(authRepositoryProvider), analytics, subscriptions, onboarding);
 });
 
 /// Convenience: whether the user is authenticated.

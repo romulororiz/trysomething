@@ -18,6 +18,7 @@ class EditProfileSheet extends StatefulWidget {
   final String initialBio;
   final String email;
   final String? avatarUrl;
+  final bool hasPassword;
 
   const EditProfileSheet({
     super.key,
@@ -26,31 +27,120 @@ class EditProfileSheet extends StatefulWidget {
     required this.initialBio,
     required this.email,
     required this.avatarUrl,
+    this.hasPassword = true,
   });
 
   @override
   State<EditProfileSheet> createState() => _EditProfileSheetState();
 }
 
-class _EditProfileSheetState extends State<EditProfileSheet> {
+class _EditProfileSheetState extends State<EditProfileSheet>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _bioCtrl;
+  final _currentPwCtrl = TextEditingController();
+  final _newPwCtrl = TextEditingController();
+  final _confirmPwCtrl = TextEditingController();
   String? _pendingAvatarUrl;
   bool _saving = false;
   bool _picking = false;
+  bool _pwExpanded = false;
+  bool _pwSaving = false;
+  String? _pwError;
+  bool _pwObscureCurrent = true;
+  bool _pwObscureNew = true;
+  late final AnimationController _pwAnim;
+  late final Animation<double> _pwSizeFactor;
+  late final Animation<double> _pwOpacity;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initialName);
     _bioCtrl = TextEditingController(text: widget.initialBio);
+    _pwAnim = AnimationController(
+      duration: const Duration(milliseconds: 280),
+      vsync: this,
+    );
+    _pwSizeFactor = CurvedAnimation(
+      parent: _pwAnim,
+      curve: Curves.easeInOutCubic,
+    );
+    _pwOpacity = CurvedAnimation(
+      parent: _pwAnim,
+      curve: const Interval(0.0, 0.75, curve: Curves.easeIn),
+    );
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _bioCtrl.dispose();
+    _currentPwCtrl.dispose();
+    _newPwCtrl.dispose();
+    _confirmPwCtrl.dispose();
+    _pwAnim.dispose();
     super.dispose();
+  }
+
+  void _togglePasswordSection() {
+    setState(() {
+      _pwExpanded = !_pwExpanded;
+      _pwError = null;
+    });
+    if (_pwExpanded) {
+      _pwAnim.forward();
+    } else {
+      _pwAnim.reverse();
+    }
+  }
+
+  Future<void> _changePassword() async {
+    final current = _currentPwCtrl.text;
+    final newPw = _newPwCtrl.text;
+    final confirm = _confirmPwCtrl.text;
+
+    if (current.isEmpty) {
+      setState(() => _pwError = 'Enter your current password');
+      return;
+    }
+    if (newPw.length < 8) {
+      setState(() => _pwError = 'New password must be at least 8 characters');
+      return;
+    }
+    if (newPw != confirm) {
+      setState(() => _pwError = 'Passwords don\'t match');
+      return;
+    }
+
+    setState(() {
+      _pwSaving = true;
+      _pwError = null;
+    });
+
+    final error = await widget.ref.read(authProvider.notifier).changePassword(
+          currentPassword: current,
+          newPassword: newPw,
+        );
+
+    if (!mounted) return;
+
+    if (error != null) {
+      setState(() {
+        _pwSaving = false;
+        _pwError = error;
+      });
+    } else {
+      setState(() {
+        _pwSaving = false;
+        _pwExpanded = false;
+      });
+      _currentPwCtrl.clear();
+      _newPwCtrl.clear();
+      _confirmPwCtrl.clear();
+      showAppSnackbar(context,
+          message: 'Password updated', type: AppSnackbarType.success);
+    }
   }
 
   void _pickPhoto() {
@@ -330,13 +420,144 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             const SizedBox(height: 16),
 
             // Bio
-            _FieldLabel('Bio'),
-            const SizedBox(height: 8),
-            _SheetTextField(
-              controller: _bioCtrl,
-              hint: 'Tell people what you\'re into (optional)',
-              maxLines: 3,
-            ),
+            // _FieldLabel('Bio'),
+            // const SizedBox(height: 8),
+            // _SheetTextField(
+            //   controller: _bioCtrl,
+            //   hint: 'Tell people what you\'re into (optional)',
+            //   maxLines: 3,
+            // ),
+            // Password change (email users only)
+            if (widget.hasPassword) ...[
+              const SizedBox(height: 8),
+              Container(
+                height: 0.5,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: _togglePasswordSection,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 16,
+                      color: _pwExpanded
+                          ? AppColors.coral
+                          : AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Change password',
+                        style: AppTypography.sansLabel.copyWith(
+                          color: _pwExpanded
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _pwExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.expand_more_rounded,
+                        size: 20,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizeTransition(
+                sizeFactor: _pwSizeFactor,
+                axisAlignment: -1.0,
+                child: FadeTransition(
+                  opacity: _pwOpacity,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _FieldLabel('Current password'),
+                        const SizedBox(height: 8),
+                        _PasswordField(
+                          controller: _currentPwCtrl,
+                          hint: 'Enter current password',
+                          obscure: _pwObscureCurrent,
+                          onToggle: () => setState(
+                              () => _pwObscureCurrent = !_pwObscureCurrent),
+                        ),
+                        const SizedBox(height: 14),
+                        _FieldLabel('New password'),
+                        const SizedBox(height: 8),
+                        _PasswordField(
+                          controller: _newPwCtrl,
+                          hint: 'At least 8 characters',
+                          obscure: _pwObscureNew,
+                          onToggle: () =>
+                              setState(() => _pwObscureNew = !_pwObscureNew),
+                        ),
+                        const SizedBox(height: 14),
+                        _FieldLabel('Confirm new password'),
+                        const SizedBox(height: 8),
+                        _SheetTextField(
+                          controller: _confirmPwCtrl,
+                          hint: 'Re-enter new password',
+                          obscure: true,
+                        ),
+                        if (_pwError != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            _pwError!,
+                            style: AppTypography.sansTiny.copyWith(
+                              color: AppColors.coral,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: _pwSaving ? null : _changePassword,
+                          child: Container(
+                            width: double.infinity,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _pwSaving
+                                  ? AppColors.surfaceElevated
+                                  : AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color:
+                                    AppColors.coral.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Center(
+                              child: _pwSaving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.coral,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Update password',
+                                      style: AppTypography.sansCta.copyWith(
+                                        color: AppColors.coral,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 32),
 
             // Save button
@@ -415,18 +636,21 @@ class _SheetTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final int maxLines;
+  final bool obscure;
 
   const _SheetTextField({
     required this.controller,
     required this.hint,
     this.maxLines = 1,
+    this.obscure = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
-      maxLines: maxLines,
+      maxLines: obscure ? 1 : maxLines,
+      obscureText: obscure,
       style: AppTypography.sansLabel.copyWith(color: AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,
@@ -435,6 +659,65 @@ class _SheetTextField extends StatelessWidget {
         fillColor: AppColors.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: AppColors.accent.withValues(alpha: 0.6)),
+        ),
+      ),
+    );
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final bool obscure;
+  final VoidCallback onToggle;
+
+  const _PasswordField({
+    required this.controller,
+    required this.hint,
+    required this.obscure,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: AppTypography.sansLabel.copyWith(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppTypography.sansLabel.copyWith(color: AppColors.textMuted),
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        suffixIcon: GestureDetector(
+          onTap: onToggle,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Icon(
+              obscure
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+        suffixIconConstraints:
+            const BoxConstraints(minHeight: 18, minWidth: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppColors.border),

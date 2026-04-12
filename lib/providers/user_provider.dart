@@ -35,6 +35,8 @@ class OnboardingNotifier extends StateNotifier<bool> {
   void complete() {
     state = true;
     _prefs.setBool(_key, true);
+    // Returning users already saw match results — skip the guard
+    _prefs.setBool('matchResultsSeen', true);
   }
 
   void reset() {
@@ -147,6 +149,12 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   void _save() {
     final map = state.map((key, value) => MapEntry(key, value.toJson()));
     _prefs.setString(_key, jsonEncode(map));
+  }
+
+  /// Clear all in-memory and persisted hobby state. Call on logout.
+  void clear() {
+    state = {};
+    _prefs.remove(_key);
   }
 
   /// Fire-and-forget API call with rollback on failure.

@@ -42,4 +42,7 @@ abstract class AuthRepository {
   Future<bool> resendVerification();
   Future<bool> forgotPassword({required String email});
   Future<bool> resetPassword({required String email, required String code, required String newPassword});
+
+  /// Change password for authenticated email users.
+  Future<bool> changePassword({required String currentPassword, required String newPassword});
 }
