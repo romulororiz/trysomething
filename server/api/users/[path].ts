@@ -1267,7 +1267,8 @@ async function handleRevenueCatWebhook(
           data: { subscriptionTier: "free", proExpiresAt: expiresAt },
         });
 
-          // LIFE-06: auto-resume paused hobbies on Pro lapse
+        // LIFE-06: auto-resume paused hobbies on Pro lapse
+        {
           const pausedHobbies = await prisma.userHobby.findMany({
             where: { userId, status: "paused" },
             select: { hobbyId: true, pausedAt: true, pausedDurationDays: true },
