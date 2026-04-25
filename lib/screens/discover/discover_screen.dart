@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,8 @@ import '../../components/app_background.dart';
 import '../../components/hobby_card.dart' show FeedActionButton;
 import '../../components/share_card.dart';
 import '../../components/glass_card.dart';
+import '../../components/surprise_me_button.dart';
+import '../../components/surprise_reveal_overlay.dart';
 import '../../components/spec_badge.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -240,6 +243,17 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
                 // Floating top chrome
                 _buildTopChrome(),
+
+                // Surprise Me FAB — bottom-right, above the bottom nav,
+                // below the per-card action column.
+                Positioned(
+                  right: 20,
+                  bottom: 110,
+                  child: SurpriseMeButton(
+                    enabled: allHobbies.isNotEmpty,
+                    onSurprise: () => _launchSurprise(allHobbies),
+                  ),
+                ),
               ],
             );
           },
@@ -249,6 +263,38 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   }
 
   // ── Top Chrome ────────────────────────────────────────
+
+  // ── Surprise Me ───────────────────────────────────────
+
+  /// The id of the last hobby shown in the surprise reveal, so a
+  /// re-roll never picks the same hobby twice in a row.
+  String? _lastSurpriseId;
+  final math.Random _rand = math.Random();
+
+  Hobby? _pickSurprise(List<Hobby> all, String? excludeId) {
+    if (all.isEmpty) return null;
+    if (all.length == 1) return all.first;
+    final pool = excludeId == null
+        ? all
+        : all.where((h) => h.id != excludeId).toList();
+    if (pool.isEmpty) return all.first;
+    return pool[_rand.nextInt(pool.length)];
+  }
+
+  void _launchSurprise(List<Hobby> all) {
+    final hobby = _pickSurprise(all, _lastSurpriseId);
+    if (hobby == null) return;
+    _lastSurpriseId = hobby.id;
+    showSurpriseReveal(
+      context,
+      initial: hobby,
+      pickAnother: (currentId) {
+        final next = _pickSurprise(all, currentId);
+        if (next != null) _lastSurpriseId = next.id;
+        return next;
+      },
+    );
+  }
 
   Widget _buildTopChrome() {
     final topPad = MediaQuery.of(context).padding.top;
