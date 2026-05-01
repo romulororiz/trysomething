@@ -263,10 +263,21 @@ async function handleGoogle(
 
       const tokenInfo = (await googleRes.json()) as GoogleTokenInfo;
 
-      // Token is already verified by Google's tokeninfo endpoint above.
-      // Audience check removed — single-project app, all client IDs
-      // belong to the same Firebase project. The tokeninfo validation
-      // is sufficient to confirm the token is legitimate.
+      // Audience allowlist — the token must have been minted for one of
+      // OUR OAuth client IDs, not an arbitrary third-party Google app.
+      // GOOGLE_CLIENT_IDS supports a comma-separated list (web + iOS + Android).
+      const allowedAudiences = [
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_IDS,
+      ]
+        .filter(Boolean)
+        .flatMap((s) => s!.split(",").map((v) => v.trim()))
+        .filter(Boolean);
+
+      if (!allowedAudiences.includes(tokenInfo.aud)) {
+        errorResponse(res, 401, "Invalid token audience");
+        return;
+      }
 
       googleId = tokenInfo.sub;
       email = tokenInfo.email;
