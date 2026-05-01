@@ -188,7 +188,9 @@ class SessionNotifier extends StateNotifier<SessionState?> {
   }
 
   /// DEV ONLY: Force-complete the timer to test the completion flow.
+  /// Guarded by kDebugMode so the body is tree-shaken from release builds.
   void devForceComplete() {
+    if (!kDebugMode) return;
     if (state == null) return;
     _completeTimer();
   }
