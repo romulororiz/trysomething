@@ -6,6 +6,7 @@ import {
 } from "../../lib/middleware";
 import { prisma } from "../../lib/db";
 import jwt from "jsonwebtoken";
+import * as jose from "jose";
 import {
   hashPassword,
   comparePassword,
@@ -376,19 +377,49 @@ function generateAppleClientSecret(): string {
   });
 }
 
-/**
- * Decode an Apple identity token without verification.
- * Apple's public keys rotate, so for simplicity we decode the payload
- * after validating the authorization code exchange succeeded.
- */
-function decodeAppleIdToken(idToken: string): {
+// Apple's published JWKS — auto-refreshed by the jose library, cached
+// in-memory across warm Vercel function invocations.
+const appleJWKS = jose.createRemoteJWKSet(
+  new URL("https://appleid.apple.com/auth/keys")
+);
+
+interface AppleTokenClaims {
   sub: string;
   email?: string;
-} {
-  const payload = JSON.parse(
-    Buffer.from(idToken.split(".")[1], "base64url").toString()
-  );
-  return { sub: payload.sub, email: payload.email };
+  email_verified?: string | boolean;
+  iss: string;
+  aud: string;
+  exp: number;
+}
+
+/**
+ * Cryptographically verify an Apple identity token via Apple's JWKS.
+ * Validates signature, issuer, audience (Service ID for the web/redirect
+ * flow, Bundle ID for the native iOS flow), and expiration.
+ */
+async function verifyAppleIdToken(idToken: string): Promise<AppleTokenClaims> {
+  const allowedAudiences = [
+    process.env.APPLE_SERVICE_ID,
+    process.env.APPLE_BUNDLE_ID,
+  ].filter(Boolean) as string[];
+
+  const { payload } = await jose.jwtVerify(idToken, appleJWKS, {
+    issuer: "https://appleid.apple.com",
+    audience: allowedAudiences,
+  });
+
+  if (!payload.sub || typeof payload.sub !== "string") {
+    throw new Error("Missing sub claim in Apple ID token");
+  }
+
+  return {
+    sub: payload.sub,
+    email: payload.email as string | undefined,
+    email_verified: payload.email_verified as string | boolean | undefined,
+    iss: payload.iss!,
+    aud: payload.aud as string,
+    exp: payload.exp!,
+  };
 }
 
 async function handleApple(
@@ -433,14 +464,30 @@ async function handleApple(
       }
 
       const tokenData = (await tokenRes.json()) as { id_token: string };
-      const decoded = decodeAppleIdToken(tokenData.id_token);
-      appleId = decoded.sub;
-      email = decoded.email;
+      let claims: AppleTokenClaims;
+      try {
+        claims = await verifyAppleIdToken(tokenData.id_token);
+      } catch (err) {
+        console.error("Apple token verification failed (code exchange):", err);
+        errorResponse(res, 401, "Invalid Apple ID token");
+        return;
+      }
+      appleId = claims.sub;
+      email = claims.email;
     } else {
-      // iOS native flow — identityToken is already a JWT from Apple
-      const decoded = decodeAppleIdToken(identityToken);
-      appleId = decoded.sub;
-      email = decoded.email;
+      // iOS native flow — identityToken is a JWT from Apple, which we
+      // MUST verify cryptographically against Apple's JWKS before trusting
+      // any of its claims (sub/email).
+      let claims: AppleTokenClaims;
+      try {
+        claims = await verifyAppleIdToken(identityToken);
+      } catch (err) {
+        console.error("Apple token verification failed (native):", err);
+        errorResponse(res, 401, "Invalid Apple ID token");
+        return;
+      }
+      appleId = claims.sub;
+      email = claims.email;
     }
 
     // Apple only sends name on FIRST sign-in
