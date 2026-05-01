@@ -10,8 +10,8 @@
 // ═══════════════════════════════════════════════════
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { PrismaClient } from "@prisma/client";
 import Anthropic from "@anthropic-ai/sdk";
+import { prisma } from "../../lib/db";
 import { requireAuth, requirePro } from "../../lib/auth";
 import { handleCors, methodNotAllowed, errorResponse } from "../../lib/middleware";
 import { validateInput, validateOutput } from "../../lib/content_guard";
@@ -30,8 +30,6 @@ import {
 } from "../../lib/mappers";
 import { checkCoachRateLimit } from "../../lib/rate_limit";
 import { GENERATION_LIMIT_PRO } from "../../lib/entitlement_constants";
-
-const prisma = new PrismaClient();
 
 // ── Shared Anthropic client (coach uses this directly) ──
 const COACH_MODEL = "claude-sonnet-4-6";
