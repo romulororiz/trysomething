@@ -7,7 +7,6 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
 import '../../providers/subscription_provider.dart';
 import '../../core/subscription/entitlement_constants.dart';
-import '../../models/hobby.dart';
 
 // ═══════════════════════════════════════════════════════
 //  CHAT MESSAGE MODEL
@@ -64,42 +63,52 @@ enum CoachMode {
 }
 
 // ═══════════════════════════════════════════════════════
-//  MESSAGE LIMIT TRACKER — per-hobby per-month in Hive
+//  MESSAGE LIMIT TRACKER — per-user per-day in Hive
 // ═══════════════════════════════════════════════════════
+//
+// Server is the authoritative enforcement layer (dual-bucket: 1/day +
+// 10/month). This client tracker only powers the "X messages remaining"
+// UI affordance. Bucket is per-user per-day to mirror the server's
+// daily limit — the binding constraint users hit most often.
 
 class CoachLimitTracker {
   static const _boxName = 'coach_limits';
 
-  static String _key(String hobbyId) {
+  /// Daily bucket key: ${year}_${month}_${day}. No hobby segment — server
+  /// rate limits per user globally, so a per-hobby client counter would
+  /// over-count what's actually available across hobbies.
+  static String _key() {
     final now = DateTime.now();
-    final ym = '${now.year}_${now.month.toString().padLeft(2, '0')}';
-    return '${hobbyId}_$ym';
+    final mm = now.month.toString().padLeft(2, '0');
+    final dd = now.day.toString().padLeft(2, '0');
+    return '${now.year}_${mm}_$dd';
   }
 
-  static Future<int> getCount(String hobbyId) async {
+  static Future<int> getDailyCount() async {
     final box = await Hive.openBox(_boxName);
-    return box.get(_key(hobbyId), defaultValue: 0) as int;
+    return box.get(_key(), defaultValue: 0) as int;
   }
 
-  static Future<void> increment(String hobbyId) async {
+  static Future<void> increment() async {
     final box = await Hive.openBox(_boxName);
-    final key = _key(hobbyId);
+    final key = _key();
     final current = box.get(key, defaultValue: 0) as int;
     await box.put(key, current + 1);
   }
 
-  static int limitForState(HobbyStatus? status) =>
-      EntitlementConstants.freeCoachMessagesPerMonth;
+  static int get dailyLimit => EntitlementConstants.freeCoachMessagesPerDay;
 }
 
-/// Exposes remaining messages for a hobby this month.
-final coachRemainingProvider =
-    FutureProvider.autoDispose.family<int?, String>((ref, hobbyId) async {
+/// Exposes remaining free messages for today.
+///
+/// Returns null for Pro users (unlimited — no banner needed). For free
+/// users returns 0..[CoachLimitTracker.dailyLimit].
+final coachRemainingProvider = FutureProvider.autoDispose<int?>((ref) async {
   final isPro = ref.watch(isProProvider);
   if (isPro) return null;
 
-  final limit = CoachLimitTracker.limitForState(null);
-  final count = await CoachLimitTracker.getCount(hobbyId);
+  final limit = CoachLimitTracker.dailyLimit;
+  final count = await CoachLimitTracker.getDailyCount();
   return (limit - count).clamp(0, limit);
 });
 
@@ -221,8 +230,8 @@ class CoachNotifier extends StateNotifier<List<ChatMessage>> {
       _focusEntryId = null;
 
       // Increment local counter so the remaining UI updates immediately
-      await CoachLimitTracker.increment(hobbyId);
-      ref.invalidate(coachRemainingProvider(hobbyId));
+      await CoachLimitTracker.increment();
+      ref.invalidate(coachRemainingProvider);
 
       ref.read(analyticsProvider).trackEvent('coach_message_sent', {
         'hobby_id': hobbyId,

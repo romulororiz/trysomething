@@ -249,7 +249,7 @@ class FeedActionButton extends StatefulWidget {
   final bool isActive;
   final Color? activeColor;
 
-  const FeedActionButton({
+  const FeedActionButton({super.key, 
     required this.icon,
     required this.label,
     this.onTap,

@@ -6,6 +6,11 @@ import {
 } from "../../lib/middleware";
 import { prisma } from "../../lib/db";
 import jwt from "jsonwebtoken";
+import * as jose from "jose";
+import {
+  checkAuthRateLimit,
+  getClientIp,
+} from "../../lib/auth_rate_limit";
 import {
   hashPassword,
   comparePassword,
@@ -67,6 +72,21 @@ async function handleRegister(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`register:ip:${ip}`, {
+      max: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many registration attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email, password, displayName } = req.body ?? {};
 
     if (!email || !password || !displayName) {
@@ -138,11 +158,43 @@ async function handleLogin(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`login:ip:${ip}`, {
+      max: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many login attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email, password } = req.body ?? {};
 
     if (!email || !password) {
       errorResponse(res, 400, "email and password are required");
       return;
+    }
+
+    if (typeof email === "string") {
+      const emailKey = email.toLowerCase().trim();
+      const emailLimit = checkAuthRateLimit(`login:email:${emailKey}`, {
+        max: 5,
+        windowMs: 15 * 60 * 1000,
+      });
+      if (!emailLimit.allowed) {
+        res.setHeader("Retry-After", String(emailLimit.retryAfter));
+        errorResponse(
+          res,
+          429,
+          `Too many login attempts for this account. Try again in ${emailLimit.retryAfter} seconds.`
+        );
+        return;
+      }
     }
 
     const user = await prisma.user.findUnique({
@@ -263,10 +315,21 @@ async function handleGoogle(
 
       const tokenInfo = (await googleRes.json()) as GoogleTokenInfo;
 
-      // Token is already verified by Google's tokeninfo endpoint above.
-      // Audience check removed — single-project app, all client IDs
-      // belong to the same Firebase project. The tokeninfo validation
-      // is sufficient to confirm the token is legitimate.
+      // Audience allowlist — the token must have been minted for one of
+      // OUR OAuth client IDs, not an arbitrary third-party Google app.
+      // GOOGLE_CLIENT_IDS supports a comma-separated list (web + iOS + Android).
+      const allowedAudiences = [
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_IDS,
+      ]
+        .filter(Boolean)
+        .flatMap((s) => s!.split(",").map((v) => v.trim()))
+        .filter(Boolean);
+
+      if (!allowedAudiences.includes(tokenInfo.aud)) {
+        errorResponse(res, 401, "Invalid token audience");
+        return;
+      }
 
       googleId = tokenInfo.sub;
       email = tokenInfo.email;
@@ -365,19 +428,49 @@ function generateAppleClientSecret(): string {
   });
 }
 
-/**
- * Decode an Apple identity token without verification.
- * Apple's public keys rotate, so for simplicity we decode the payload
- * after validating the authorization code exchange succeeded.
- */
-function decodeAppleIdToken(idToken: string): {
+// Apple's published JWKS — auto-refreshed by the jose library, cached
+// in-memory across warm Vercel function invocations.
+const appleJWKS = jose.createRemoteJWKSet(
+  new URL("https://appleid.apple.com/auth/keys")
+);
+
+interface AppleTokenClaims {
   sub: string;
   email?: string;
-} {
-  const payload = JSON.parse(
-    Buffer.from(idToken.split(".")[1], "base64url").toString()
-  );
-  return { sub: payload.sub, email: payload.email };
+  email_verified?: string | boolean;
+  iss: string;
+  aud: string;
+  exp: number;
+}
+
+/**
+ * Cryptographically verify an Apple identity token via Apple's JWKS.
+ * Validates signature, issuer, audience (Service ID for the web/redirect
+ * flow, Bundle ID for the native iOS flow), and expiration.
+ */
+async function verifyAppleIdToken(idToken: string): Promise<AppleTokenClaims> {
+  const allowedAudiences = [
+    process.env.APPLE_SERVICE_ID,
+    process.env.APPLE_BUNDLE_ID,
+  ].filter(Boolean) as string[];
+
+  const { payload } = await jose.jwtVerify(idToken, appleJWKS, {
+    issuer: "https://appleid.apple.com",
+    audience: allowedAudiences,
+  });
+
+  if (!payload.sub || typeof payload.sub !== "string") {
+    throw new Error("Missing sub claim in Apple ID token");
+  }
+
+  return {
+    sub: payload.sub,
+    email: payload.email as string | undefined,
+    email_verified: payload.email_verified as string | boolean | undefined,
+    iss: payload.iss!,
+    aud: payload.aud as string,
+    exp: payload.exp!,
+  };
 }
 
 async function handleApple(
@@ -422,14 +515,30 @@ async function handleApple(
       }
 
       const tokenData = (await tokenRes.json()) as { id_token: string };
-      const decoded = decodeAppleIdToken(tokenData.id_token);
-      appleId = decoded.sub;
-      email = decoded.email;
+      let claims: AppleTokenClaims;
+      try {
+        claims = await verifyAppleIdToken(tokenData.id_token);
+      } catch (err) {
+        console.error("Apple token verification failed (code exchange):", err);
+        errorResponse(res, 401, "Invalid Apple ID token");
+        return;
+      }
+      appleId = claims.sub;
+      email = claims.email;
     } else {
-      // iOS native flow — identityToken is already a JWT from Apple
-      const decoded = decodeAppleIdToken(identityToken);
-      appleId = decoded.sub;
-      email = decoded.email;
+      // iOS native flow — identityToken is a JWT from Apple, which we
+      // MUST verify cryptographically against Apple's JWKS before trusting
+      // any of its claims (sub/email).
+      let claims: AppleTokenClaims;
+      try {
+        claims = await verifyAppleIdToken(identityToken);
+      } catch (err) {
+        console.error("Apple token verification failed (native):", err);
+        errorResponse(res, 401, "Invalid Apple ID token");
+        return;
+      }
+      appleId = claims.sub;
+      email = claims.email;
     }
 
     // Apple only sends name on FIRST sign-in
@@ -682,10 +791,40 @@ async function handleForgotPassword(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`forgot:ip:${ip}`, {
+      max: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many password reset attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email } = req.body ?? {};
 
     if (!email || typeof email !== "string") {
       return errorResponse(res, 400, "Email is required");
+    }
+
+    const emailKey = email.toLowerCase().trim();
+    const emailLimit = checkAuthRateLimit(`forgot:email:${emailKey}`, {
+      max: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!emailLimit.allowed) {
+      res.setHeader("Retry-After", String(emailLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many password reset attempts. Try again in ${emailLimit.retryAfter} seconds.`
+      );
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -740,6 +879,21 @@ async function handleResetPassword(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`reset:ip:${ip}`, {
+      max: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many reset attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email, code, newPassword } = req.body ?? {};
 
     if (!email || !code || !newPassword) {
@@ -747,6 +901,23 @@ async function handleResetPassword(
     }
     if (typeof newPassword !== "string" || newPassword.length < 8) {
       return errorResponse(res, 400, "Password must be at least 8 characters");
+    }
+
+    if (typeof email === "string") {
+      const emailKey = email.toLowerCase().trim();
+      const emailLimit = checkAuthRateLimit(`reset:email:${emailKey}`, {
+        max: 5,
+        windowMs: 15 * 60 * 1000,
+      });
+      if (!emailLimit.allowed) {
+        res.setHeader("Retry-After", String(emailLimit.retryAfter));
+        errorResponse(
+          res,
+          429,
+          `Too many reset attempts. Try again in ${emailLimit.retryAfter} seconds.`
+        );
+        return;
+      }
     }
 
     const user = await prisma.user.findUnique({

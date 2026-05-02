@@ -18,9 +18,13 @@ import 'user_provider.dart';
 ///
 /// Auto-disposes when no widget is listening (session screen popped).
 class SessionNotifier extends StateNotifier<SessionState?> {
-  SessionNotifier(this._ref) : super(null);
+  /// [ref] is optional so unit tests can construct without going through
+  /// Riverpod's auto-dispose lifecycle (which causes double-dispose with
+  /// the provider's `ref.onDispose(notifier.dispose)` registration).
+  /// Tests that don't exercise ref-dependent paths can pass null.
+  SessionNotifier([this._ref]) : super(null);
 
-  final Ref _ref;
+  final Ref? _ref;
 
   Timer? _timer;
   Timer? _completionDelayTimer;
@@ -188,7 +192,9 @@ class SessionNotifier extends StateNotifier<SessionState?> {
   }
 
   /// DEV ONLY: Force-complete the timer to test the completion flow.
+  /// Guarded by kDebugMode so the body is tree-shaken from release builds.
   void devForceComplete() {
+    if (!kDebugMode) return;
     if (state == null) return;
     _completeTimer();
   }
@@ -230,6 +236,16 @@ class SessionNotifier extends StateNotifier<SessionState?> {
   /// Returns `true` if the hobby is now fully completed (all steps done).
   Future<bool> finishSession() async {
     if (state == null || !state!.isComplete) return false;
+
+    // Test path: no Ref means we can't talk to other providers — skip the
+    // ref-dependent work (step toggle, journal save, analytics) and just
+    // clean state. Tests cover those paths via dedicated provider tests.
+    if (_ref == null) {
+      _cleanup();
+      state = null;
+      return false;
+    }
+
     final s = state!;
     bool hobbyCompleted = false;
 

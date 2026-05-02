@@ -266,7 +266,7 @@ class _ReflectionCard extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Icon(
+              const Icon(
                 PhosphorIconsBold.check,
                 size: 18,
                 color: AppColors.accent,

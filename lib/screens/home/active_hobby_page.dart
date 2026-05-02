@@ -303,12 +303,12 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                   Builder(builder: (context) {
                     final isPro = ref.watch(isProProvider);
                     return PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert_rounded,
+                      icon: const Icon(Icons.more_vert_rounded,
                           color: AppColors.textMuted, size: 20),
                       color: AppColors.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
+                        side: const BorderSide(
                             color: AppColors.glassBorder, width: 0.5),
                       ),
                       onSelected: (value) {
@@ -324,7 +324,7 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                             value: 'pause',
                             child: Row(
                               children: [
-                                Icon(Icons.pause_circle_outline,
+                                const Icon(Icons.pause_circle_outline,
                                     size: 16,
                                     color: AppColors.textSecondary),
                                 const SizedBox(width: 10),
@@ -339,7 +339,7 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                           value: 'stop',
                           child: Row(
                             children: [
-                              Icon(Icons.stop_circle_outlined,
+                              const Icon(Icons.stop_circle_outlined,
                                   size: 16,
                                   color: AppColors.textSecondary),
                               const SizedBox(width: 10),
@@ -503,7 +503,7 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                         child: Row(
                           children: [
                             const SizedBox(width: 16),
-                            Icon(Icons.auto_awesome,
+                            const Icon(Icons.auto_awesome,
                                 size: 14,
                                 color: AppColors.textMuted),
                             const SizedBox(width: 10),
@@ -513,7 +513,7 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                                   color: AppColors.textMuted),
                             ),
                             const Spacer(),
-                            Icon(Icons.arrow_forward_rounded,
+                            const Icon(Icons.arrow_forward_rounded,
                                 size: 14, color: AppColors.textWhisper),
                             const SizedBox(width: 14),
                           ],
@@ -571,8 +571,8 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                       ),
                     ))
               else
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text('No entries yet',
                         style: TextStyle(color: AppColors.textMuted)),

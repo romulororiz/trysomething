@@ -118,6 +118,48 @@ class MockAuthRepository implements AuthRepository {
       vibes: vibes ?? {},
     );
   }
+
+  @override
+  Future<bool> verifyEmail({required String code}) async {
+    calls.add('verifyEmail');
+    if (shouldFail) throw Exception(failMessage);
+    return true;
+  }
+
+  @override
+  Future<bool> resendVerification() async {
+    calls.add('resendVerification');
+    if (shouldFail) throw Exception(failMessage);
+    return true;
+  }
+
+  @override
+  Future<bool> forgotPassword({required String email}) async {
+    calls.add('forgotPassword:$email');
+    if (shouldFail) throw Exception(failMessage);
+    return true;
+  }
+
+  @override
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    calls.add('resetPassword:$email');
+    if (shouldFail) throw Exception(failMessage);
+    return true;
+  }
+
+  @override
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    calls.add('changePassword');
+    if (shouldFail) throw Exception(failMessage);
+    return true;
+  }
 }
 
 void main() {

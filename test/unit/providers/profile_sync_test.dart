@@ -86,6 +86,32 @@ class MockAuthRepository implements AuthRepository {
     Set<String>? vibes,
   }) async =>
       throw UnimplementedError();
+
+  @override
+  Future<bool> verifyEmail({required String code}) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<bool> resendVerification() async => throw UnimplementedError();
+
+  @override
+  Future<bool> forgotPassword({required String email}) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async =>
+      throw UnimplementedError();
 }
 
 void main() {

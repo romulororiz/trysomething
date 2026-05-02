@@ -72,13 +72,40 @@ describe("handleCors", () => {
     const req = mockReq({ method: "GET" });
     const res = mockRes();
     handleCors(req, res);
+    // No origin header on the request → falls back to ALLOWED_ORIGINS[0].
     expect(res.setHeader).toHaveBeenCalledWith(
       "Access-Control-Allow-Origin",
-      "*"
+      "https://trysomething.io"
     );
     expect(res.setHeader).toHaveBeenCalledWith(
       "Access-Control-Allow-Methods",
       "GET, POST, PUT, DELETE, OPTIONS"
+    );
+  });
+
+  it("echoes back an allowed origin when provided", () => {
+    const req = mockReq({
+      method: "GET",
+      headers: { origin: "https://www.trysomething.io" },
+    });
+    const res = mockRes();
+    handleCors(req, res);
+    expect(res.setHeader).toHaveBeenCalledWith(
+      "Access-Control-Allow-Origin",
+      "https://www.trysomething.io"
+    );
+  });
+
+  it("falls back to canonical origin when request origin is not allowed", () => {
+    const req = mockReq({
+      method: "GET",
+      headers: { origin: "https://evil.example.com" },
+    });
+    const res = mockRes();
+    handleCors(req, res);
+    expect(res.setHeader).toHaveBeenCalledWith(
+      "Access-Control-Allow-Origin",
+      "https://trysomething.io"
     );
   });
 

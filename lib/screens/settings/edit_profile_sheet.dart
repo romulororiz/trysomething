@@ -383,7 +383,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
 
             // Email (read-only)
             if (widget.email.isNotEmpty) ...[
-              _FieldLabel('Email'),
+              const _FieldLabel('Email'),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -397,7 +397,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.lock_outline_rounded,
+                    const Icon(Icons.lock_outline_rounded,
                         size: 14, color: AppColors.textMuted),
                     const SizedBox(width: 8),
                     Expanded(
@@ -414,7 +414,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
             ],
 
             // Name
-            _FieldLabel('Display name'),
+            const _FieldLabel('Display name'),
             const SizedBox(height: 8),
             _SheetTextField(controller: _nameCtrl, hint: 'Your name'),
             const SizedBox(height: 16),
@@ -460,7 +460,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
                     AnimatedRotation(
                       turns: _pwExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
-                      child: Icon(
+                      child: const Icon(
                         Icons.expand_more_rounded,
                         size: 20,
                         color: AppColors.textMuted,
@@ -479,7 +479,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FieldLabel('Current password'),
+                        const _FieldLabel('Current password'),
                         const SizedBox(height: 8),
                         _PasswordField(
                           controller: _currentPwCtrl,
@@ -489,7 +489,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
                               () => _pwObscureCurrent = !_pwObscureCurrent),
                         ),
                         const SizedBox(height: 14),
-                        _FieldLabel('New password'),
+                        const _FieldLabel('New password'),
                         const SizedBox(height: 8),
                         _PasswordField(
                           controller: _newPwCtrl,
@@ -499,7 +499,7 @@ class _EditProfileSheetState extends State<EditProfileSheet>
                               setState(() => _pwObscureNew = !_pwObscureNew),
                         ),
                         const SizedBox(height: 14),
-                        _FieldLabel('Confirm new password'),
+                        const _FieldLabel('Confirm new password'),
                         const SizedBox(height: 8),
                         _SheetTextField(
                           controller: _confirmPwCtrl,
@@ -635,13 +635,11 @@ class _FieldLabel extends StatelessWidget {
 class _SheetTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
-  final int maxLines;
   final bool obscure;
 
   const _SheetTextField({
     required this.controller,
     required this.hint,
-    this.maxLines = 1,
     this.obscure = false,
   });
 
@@ -649,7 +647,7 @@ class _SheetTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
-      maxLines: obscure ? 1 : maxLines,
+      maxLines: 1,
       obscureText: obscure,
       style: AppTypography.sansLabel.copyWith(color: AppColors.textPrimary),
       decoration: InputDecoration(
@@ -661,11 +659,11 @@ class _SheetTextField extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -720,11 +718,11 @@ class _PasswordField extends StatelessWidget {
             const BoxConstraints(minHeight: 18, minWidth: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

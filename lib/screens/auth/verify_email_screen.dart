@@ -215,7 +215,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen>
                       style: AppTypography.title.copyWith(fontSize: 28),
                       children: [
                         const TextSpan(text: 'Verify your '),
-                        TextSpan(
+                        const TextSpan(
                           text: 'email',
                           style: TextStyle(color: AppColors.coral),
                         ),

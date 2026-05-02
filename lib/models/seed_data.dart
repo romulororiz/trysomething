@@ -13,15 +13,15 @@ class SeedData {
   // ═══════════════════════════════════════════════════
 
   static final List<HobbyCategory> categories = [
-    HobbyCategory(id: 'creative', name: 'Creative', count: 12, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=80'),
-    HobbyCategory(id: 'outdoors', name: 'Outdoors', count: 8, imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'),
-    HobbyCategory(id: 'fitness', name: 'Fitness', count: 9, imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80'),
-    HobbyCategory(id: 'maker', name: 'Maker/DIY', count: 7, imageUrl: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=600&q=80'),
-    HobbyCategory(id: 'music', name: 'Music', count: 6, imageUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'),
-    HobbyCategory(id: 'food', name: 'Food', count: 11, imageUrl: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&q=80'),
-    HobbyCategory(id: 'collecting', name: 'Collecting', count: 5, imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80'),
-    HobbyCategory(id: 'mind', name: 'Mind', count: 8, imageUrl: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=600&q=80'),
-    HobbyCategory(id: 'social', name: 'Social', count: 6, imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80'),
+    const HobbyCategory(id: 'creative', name: 'Creative', count: 12, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=80'),
+    const HobbyCategory(id: 'outdoors', name: 'Outdoors', count: 8, imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'),
+    const HobbyCategory(id: 'fitness', name: 'Fitness', count: 9, imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80'),
+    const HobbyCategory(id: 'maker', name: 'Maker/DIY', count: 7, imageUrl: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=600&q=80'),
+    const HobbyCategory(id: 'music', name: 'Music', count: 6, imageUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80'),
+    const HobbyCategory(id: 'food', name: 'Food', count: 11, imageUrl: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&q=80'),
+    const HobbyCategory(id: 'collecting', name: 'Collecting', count: 5, imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80'),
+    const HobbyCategory(id: 'mind', name: 'Mind', count: 8, imageUrl: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=600&q=80'),
+    const HobbyCategory(id: 'social', name: 'Social', count: 6, imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80'),
   ];
 
   // ═══════════════════════════════════════════════════
@@ -29,7 +29,7 @@ class SeedData {
   // ═══════════════════════════════════════════════════
 
   static final List<Hobby> hobbies = [
-    Hobby(
+    const Hobby(
       id: 'pottery',
       title: 'Pottery',
       hook: 'Get your hands dirty. Make something real.',
@@ -67,7 +67,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'bouldering',
       title: 'Bouldering',
       hook: 'Solve puzzles with your body.',
@@ -102,7 +102,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'sourdough',
       title: 'Sourdough Baking',
       hook: 'Flour, water, patience. Insanely rewarding.',
@@ -138,7 +138,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'skateboarding',
       title: 'Skateboarding',
       hook: 'Four wheels, infinite possibilities.',
@@ -175,7 +175,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'chess',
       title: 'Chess',
       hook: 'The ultimate thinking game. Infinite depth.',
@@ -186,7 +186,7 @@ class SeedData {
       costText: 'CHF 0–30',
       timeText: '2h/week',
       difficultyText: 'Easy',
-      whyLove: "You can play anywhere, anytime. Online, in a park, with friends. Every game teaches you something new about strategy and yourself.",
+      whyLove: 'You can play anywhere, anytime. Online, in a park, with friends. Every game teaches you something new about strategy and yourself.',
       difficultyExplain: 'Rules are simple to learn. Strategy depth is what keeps you playing for decades.',
       starterKit: [
         KitItem(name: 'Chess.com account (free)', description: 'Play online instantly. Puzzles and lessons included.', cost: 0),
@@ -194,7 +194,7 @@ class SeedData {
       ],
       pitfalls: [
         "Don't try to memorize openings first. Learn tactics instead.",
-        "Play longer time controls to actually learn. Avoid only bullet chess.",
+        'Play longer time controls to actually learn. Avoid only bullet chess.',
         "Analyze your losses. That's where the growth is.",
       ],
       quittingReasons: [
@@ -211,7 +211,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'calligraphy',
       title: 'Calligraphy',
       hook: 'Turn words into art. Meditative, beautiful.',
@@ -248,7 +248,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'hiking',
       title: 'Hiking',
       hook: 'Step outside. The trail is calling.',
@@ -285,7 +285,7 @@ class SeedData {
       ],
     ),
 
-    Hobby(
+    const Hobby(
       id: 'guitar',
       title: 'Guitar',
       hook: 'Six strings. Endless songs. Start tonight.',
@@ -296,7 +296,7 @@ class SeedData {
       costText: 'CHF 50–300',
       timeText: '3h/week',
       difficultyText: 'Medium',
-      whyLove: "Playing your first full song is one of the most rewarding feelings. Music becomes yours to create, not just consume.",
+      whyLove: 'Playing your first full song is one of the most rewarding feelings. Music becomes yours to create, not just consume.',
       difficultyExplain: 'Finger pain goes away after 2 weeks. Chord changes take practice. Use YouTube — there are incredible free teachers.',
       starterKit: [
         KitItem(name: 'Acoustic guitar', description: 'Yamaha FG800 or similar. Don\'t overspend on your first.', cost: 150),
@@ -304,7 +304,7 @@ class SeedData {
         KitItem(name: 'Capo', description: 'Makes many songs easier to play.', cost: 10, isOptional: true),
       ],
       pitfalls: [
-        "Your fingers will hurt for 2 weeks. Push through — calluses form fast.",
+        'Your fingers will hurt for 2 weeks. Push through — calluses form fast.',
         "Don't try barre chords in week 1. Stick to open chords.",
         'Practice 15 minutes daily rather than 2 hours on weekends.',
       ],

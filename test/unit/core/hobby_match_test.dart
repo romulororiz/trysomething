@@ -122,11 +122,11 @@ void main() {
         userPrefersSocial: true,
         userVibes: const {'creative'},
       );
-      // budget fit: costMax=40 <= 150 → +3
-      // time fit: hobbyHours=1 <= userHours=2 → +3
-      // social match: userPrefersSocial=true, tag 'social' → +2
-      // vibe match: 'creative' → +1
-      expect(score, 9);
+      // budget fit: costMax=40 <= 150 → +2
+      // time fit: hobbyHours=1 <= userHours=2 → +2
+      // social match: userPrefersSocial=true, tag 'social' → +1
+      // vibe match: 'creative' (vibe-dominant scoring) → +5
+      expect(score, 10);
     });
 
     test('over budget hobby earns no budget points', () {
@@ -139,8 +139,8 @@ void main() {
         userVibes: const {},
       );
       // costMax=400 > 50 and 400 > 50*1.5=75 → +0 budget
-      // time fit → +3
-      expect(score, 3);
+      // time fit → +2
+      expect(score, 2);
     });
 
     test('slightly over budget earns 1 budget point', () {
@@ -153,8 +153,8 @@ void main() {
         userVibes: const {},
       );
       // costMax=70 > 50 but 70 <= 75 → +1 budget
-      // time fit → +3
-      expect(score, 4);
+      // time fit → +2
+      expect(score, 3);
     });
 
     test('over hours hobby earns no time points', () {
@@ -167,8 +167,8 @@ void main() {
         userVibes: const {},
       );
       // hobbyHours=5, userHours=2, 5 > 2+2=4 → +0 time
-      // budget fit → +3
-      expect(score, 3);
+      // budget fit → +2
+      expect(score, 2);
     });
 
     test('hobby slightly over hours earns 1 time point', () {
@@ -181,8 +181,8 @@ void main() {
         userVibes: const {},
       );
       // hobbyHours=3, userHours=2, 3 <= 2+2=4 → +1 time
-      // budget fit → +3
-      expect(score, 4);
+      // budget fit → +2
+      expect(score, 3);
     });
 
     test('social mismatch earns no social points', () {
@@ -204,7 +204,7 @@ void main() {
         userPrefersSocial: true,
         userVibes: const {},
       );
-      expect(scoreWithSocial, score + 2);
+      expect(scoreWithSocial, score + 1);
     });
 
     test('vibe matches add one point each', () {
@@ -223,7 +223,8 @@ void main() {
         userPrefersSocial: false,
         userVibes: const {'creative', 'relaxing'},
       );
-      expect(vibeScore, baseScore + 2);
+      // 2 matching vibes × +5 each (vibe-dominant scoring) = +10
+      expect(vibeScore, baseScore + 10);
     });
 
     test('score is never negative', () {

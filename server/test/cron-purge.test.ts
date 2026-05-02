@@ -35,6 +35,12 @@ function mockReq(overrides: Partial<VercelRequest> = {}): VercelRequest {
   } as unknown as VercelRequest;
 }
 
+// The cron handler used to live at api/cron/purge-deleted-users.ts but was
+// merged into api/users/[path].ts on 2026-03-22 to stay within Vercel
+// Hobby's 12-function limit. vercel.json forwards /api/cron/purge-deleted-users
+// to the consolidated handler. These tests target the named export directly
+// so they exercise the actual purge logic without the dispatcher's CORS
+// preamble running first.
 describe("cron: purge-deleted-users", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,14 +48,14 @@ describe("cron: purge-deleted-users", () => {
   });
 
   it("rejects requests without valid CRON_SECRET", async () => {
-    const handler = (await import("../api/cron/purge-deleted-users")).default;
+    const { handlePurgeDeletedUsers } = await import("../api/users/[path]");
     const req = mockReq({
       method: "GET",
       headers: { authorization: "Bearer wrong-secret" },
     });
     const res = mockRes();
 
-    await handler(req, res);
+    await handlePurgeDeletedUsers(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(
@@ -58,14 +64,14 @@ describe("cron: purge-deleted-users", () => {
   });
 
   it("rejects non-GET requests with 405", async () => {
-    const handler = (await import("../api/cron/purge-deleted-users")).default;
+    const { handlePurgeDeletedUsers } = await import("../api/users/[path]");
     const req = mockReq({
       method: "POST",
       headers: { authorization: "Bearer test-cron-secret" },
     });
     const res = mockRes();
 
-    await handler(req, res);
+    await handlePurgeDeletedUsers(req, res);
 
     expect(res.status).toHaveBeenCalledWith(405);
   });
@@ -73,14 +79,14 @@ describe("cron: purge-deleted-users", () => {
   it("returns purged: 0 when no users to purge", async () => {
     (prisma.user.findMany as any).mockResolvedValue([]);
 
-    const handler = (await import("../api/cron/purge-deleted-users")).default;
+    const { handlePurgeDeletedUsers } = await import("../api/users/[path]");
     const req = mockReq({
       method: "GET",
       headers: { authorization: "Bearer test-cron-secret" },
     });
     const res = mockRes();
 
-    await handler(req, res);
+    await handlePurgeDeletedUsers(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ purged: 0 });
@@ -91,14 +97,14 @@ describe("cron: purge-deleted-users", () => {
     (prisma.user.findMany as any).mockResolvedValue(oldUsers);
     (prisma.$transaction as any).mockResolvedValue([]);
 
-    const handler = (await import("../api/cron/purge-deleted-users")).default;
+    const { handlePurgeDeletedUsers } = await import("../api/users/[path]");
     const req = mockReq({
       method: "GET",
       headers: { authorization: "Bearer test-cron-secret" },
     });
     const res = mockRes();
 
-    await handler(req, res);
+    await handlePurgeDeletedUsers(req, res);
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -108,7 +114,7 @@ describe("cron: purge-deleted-users", () => {
   it("queries users with deletedAt older than 30-day cutoff", async () => {
     (prisma.user.findMany as any).mockResolvedValue([]);
 
-    const handler = (await import("../api/cron/purge-deleted-users")).default;
+    const { handlePurgeDeletedUsers } = await import("../api/users/[path]");
     const req = mockReq({
       method: "GET",
       headers: { authorization: "Bearer test-cron-secret" },
@@ -116,7 +122,7 @@ describe("cron: purge-deleted-users", () => {
     const res = mockRes();
 
     const before = Date.now();
-    await handler(req, res);
+    await handlePurgeDeletedUsers(req, res);
 
     // Verify the cutoff date was approximately 30 days ago
     const findManyCall = (prisma.user.findMany as any).mock.calls[0][0];
