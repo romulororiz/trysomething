@@ -33,6 +33,8 @@ const _kRecommendedMinutes = 15;
 /// A [SessionNotifier] whose [startSession] is a no-op, keeping state null.
 /// Used to exercise the null-state guard branch of [SessionScreen].
 class _NullSessionNotifier extends SessionNotifier {
+  _NullSessionNotifier(super.ref);
+
   @override
   void startSession({
     required String hobbyId,
@@ -68,9 +70,9 @@ Future<Override> _prefsOverride() async {
 /// [SessionNotifier] WITHOUT the `ref.onDispose(notifier.dispose)` call
 /// that the production provider registration adds. This avoids the double-
 /// dispose error that would otherwise surface in test teardown.
-Override _sessionOverride({_NullSessionNotifier? nullNotifier}) {
+Override _sessionOverride({bool useNullStub = false}) {
   return sessionProvider.overrideWith(
-    (ref) => nullNotifier ?? SessionNotifier(),
+    (ref) => useNullStub ? _NullSessionNotifier(ref) : SessionNotifier(ref),
   );
 }
 
@@ -378,7 +380,7 @@ void main() {
         (tester) async {
       await _pumpScreen(
         tester,
-        sessionOv: _sessionOverride(nullNotifier: _NullSessionNotifier()),
+        sessionOv: _sessionOverride(useNullStub: true),
       );
 
       // No phase-specific widgets should appear.

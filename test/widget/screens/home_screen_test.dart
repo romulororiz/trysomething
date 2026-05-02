@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,7 +37,7 @@ class _StubHobbyRepository implements HobbyRepository {
   Future<List<CuratedPack>> getCuratedPacks() async => [];
 
   @override
-  Future<Hobby> generateHobby(String query) async =>
+  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) async =>
       throw UnimplementedError('generateHobby not needed in test');
 }
 

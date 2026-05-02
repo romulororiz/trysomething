@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +41,7 @@ class _StubHobbyRepository implements HobbyRepository {
   Future<List<CuratedPack>> getCuratedPacks() async => [];
 
   @override
-  Future<Hobby> generateHobby(String query) async =>
+  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) async =>
       throw UnimplementedError('generateHobby not needed in test');
 }
 
@@ -196,6 +197,32 @@ class _StubAuthRepository implements AuthRepository {
     Set<String>? vibes,
   }) async =>
       const hobby_models.UserPreferences();
+
+  @override
+  Future<bool> verifyEmail({required String code}) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<bool> resendVerification() async => throw UnimplementedError();
+
+  @override
+  Future<bool> forgotPassword({required String email}) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async =>
+      throw UnimplementedError();
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

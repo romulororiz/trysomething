@@ -18,9 +18,13 @@ import 'user_provider.dart';
 ///
 /// Auto-disposes when no widget is listening (session screen popped).
 class SessionNotifier extends StateNotifier<SessionState?> {
-  SessionNotifier(this._ref) : super(null);
+  /// [ref] is optional so unit tests can construct without going through
+  /// Riverpod's auto-dispose lifecycle (which causes double-dispose with
+  /// the provider's `ref.onDispose(notifier.dispose)` registration).
+  /// Tests that don't exercise ref-dependent paths can pass null.
+  SessionNotifier([this._ref]) : super(null);
 
-  final Ref _ref;
+  final Ref? _ref;
 
   Timer? _timer;
   Timer? _completionDelayTimer;
@@ -232,17 +236,27 @@ class SessionNotifier extends StateNotifier<SessionState?> {
   /// Returns `true` if the hobby is now fully completed (all steps done).
   Future<bool> finishSession() async {
     if (state == null || !state!.isComplete) return false;
+
+    // Test path: no Ref means we can't talk to other providers — skip the
+    // ref-dependent work (step toggle, journal save, analytics) and just
+    // clean state. Tests cover those paths via dedicated provider tests.
+    if (_ref == null) {
+      _cleanup();
+      state = null;
+      return false;
+    }
+
     final s = state!;
     bool hobbyCompleted = false;
 
     // 1. Mark step complete (optimistic)
-    final hobby = _ref.read(userHobbiesProvider)[s.hobbyId];
+    final hobby = _ref!.read(userHobbiesProvider)[s.hobbyId];
     final alreadyCompleted =
         hobby?.completedStepIds.contains(s.stepId) ?? false;
 
     if (!alreadyCompleted) {
       try {
-        hobbyCompleted = await _ref
+        hobbyCompleted = await _ref!
             .read(userHobbiesProvider.notifier)
             .toggleStep(s.hobbyId, s.stepId);
         debugPrint('[Session] toggleStep fired (optimistic)');
@@ -274,12 +288,12 @@ class SessionNotifier extends StateNotifier<SessionState?> {
         text: '$emoji $label — ${s.journalText!.trim()}',
         createdAt: DateTime.now(),
       );
-      _ref.read(journalProvider.notifier).addEntry(entry);
+      _ref!.read(journalProvider.notifier).addEntry(entry);
       debugPrint('[Session] Journal entry saved for hobby ${s.hobbyId}');
     }
 
     // 3. Fire analytics
-    _ref.read(analyticsProvider).trackEvent('session_completed', {
+    _ref!.read(analyticsProvider).trackEvent('session_completed', {
       'hobby_id': s.hobbyId,
       'step_id': s.stepId,
       'reflection': s.reflection?.name,

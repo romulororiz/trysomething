@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trysomething/models/curated_pack.dart';
 import 'package:trysomething/models/hobby.dart';
@@ -11,7 +12,7 @@ class MockHobbyRepository implements HobbyRepository {
   String? lastGenerateQuery;
 
   @override
-  Future<Hobby> generateHobby(String query) async {
+  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) async {
     lastGenerateQuery = query;
     if (shouldFail) throw Exception('generation failed');
     if (generatedHobby != null) return generatedHobby!;

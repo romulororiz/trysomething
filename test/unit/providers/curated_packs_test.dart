@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trysomething/models/curated_pack.dart';
 import 'package:trysomething/models/hobby.dart';
@@ -26,7 +27,8 @@ class MockHobbyRepository implements HobbyRepository {
   @override
   Future<List<Hobby>> searchHobbies(String query) async => [];
   @override
-  Future<Hobby> generateHobby(String query) => throw UnimplementedError();
+  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) =>
+      throw UnimplementedError();
 }
 
 void main() {

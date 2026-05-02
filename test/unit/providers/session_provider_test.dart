@@ -75,6 +75,10 @@ void main() {
 
   late SessionNotifier notifier;
 
+  // Construct directly (no Ref) — bypasses Riverpod's auto-dispose lifecycle
+  // and avoids the double-dispose issue with the production provider's
+  // ref.onDispose registration. SessionNotifier handles a null ref by
+  // skipping the ref-dependent block in finishSession().
   setUp(() => notifier = SessionNotifier());
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -294,19 +298,19 @@ void main() {
   // completeSession
   // ─────────────────────────────────────────────────────────────────────────
 
-  group('completeSession', () {
+  group('finishSession', () {
     test('sets state to null', () {
       _startSession(notifier);
       notifier.skipReflection(); // advance to complete phase
       expect(notifier.state, isNotNull);
 
-      notifier.completeSession();
+      notifier.finishSession();
 
       expect(notifier.state, isNull);
     });
 
     test('can be called when state is already null without error', () {
-      expect(() => notifier.completeSession(), returnsNormally);
+      expect(() => notifier.finishSession(), returnsNormally);
       expect(notifier.state, isNull);
     });
   });
