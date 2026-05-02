@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -131,50 +132,72 @@ class _SurpriseRevealRouteState extends State<_SurpriseRevealRoute>
         body: GestureDetector(
           onTap: _dismiss,
           behavior: HitTestBehavior.opaque,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Center(
-                child: GestureDetector(
-                  // Absorb taps on the card itself so the scrim dismiss
-                  // only fires for outside-the-card taps.
-                  onTap: () {},
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([_flipController, widget.entrance]),
-                    builder: (context, _) {
-                      final flip = _flipController.value;
-                      // Half-rotation either side of pi.
-                      final angle = flip * math.pi;
-                      // Flip the content the moment we cross the spine
-                      // so the back of the card is the new hobby, never
-                      // a mirrored version of the old one.
-                      final showFront = flip < 0.5;
-                      return Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001) // perspective
-                          ..rotateY(showFront ? angle : angle - math.pi),
-                        child: Opacity(
-                          opacity: widget.entrance.value,
-                          child: Transform.scale(
-                            scale: 0.92 +
-                                Curves.easeOutCubic
-                                        .transform(widget.entrance.value) *
-                                    0.08,
-                            child: _RevealCard(
-                              hobby: _hobby,
-                              onTryThis: _tryThis,
-                              onShuffle: _shuffleAgain,
-                              onDismiss: _dismiss,
+          child: Stack(
+            children: [
+              // Animated backdrop blur for the full-screen scrim.
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: widget.entrance,
+                  builder: (context, _) {
+                    final t = Curves.easeOutCubic
+                        .transform(widget.entrance.value.clamp(0.0, 1.0));
+                    return BackdropFilter(
+                      filter: ui.ImageFilter.blur(
+                        sigmaX: 12 * t,
+                        sigmaY: 12 * t,
+                      ),
+                      child: const SizedBox.expand(),
+                    );
+                  },
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Center(
+                    child: GestureDetector(
+                      // Absorb taps on the card itself so the scrim dismiss
+                      // only fires for outside-the-card taps.
+                      onTap: () {},
+                      child: AnimatedBuilder(
+                        animation: Listenable.merge(
+                            [_flipController, widget.entrance]),
+                        builder: (context, _) {
+                          final flip = _flipController.value;
+                          // Half-rotation either side of pi.
+                          final angle = flip * math.pi;
+                          // Flip the content the moment we cross the spine
+                          // so the back of the card is the new hobby, never
+                          // a mirrored version of the old one.
+                          final showFront = flip < 0.5;
+                          return Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.identity()
+                              ..setEntry(3, 2, 0.001) // perspective
+                              ..rotateY(showFront ? angle : angle - math.pi),
+                            child: Opacity(
+                              opacity: widget.entrance.value,
+                              child: Transform.scale(
+                                scale: 0.92 +
+                                    Curves.easeOutCubic
+                                            .transform(widget.entrance.value) *
+                                        0.08,
+                                child: _RevealCard(
+                                  hobby: _hobby,
+                                  onTryThis: _tryThis,
+                                  onShuffle: _shuffleAgain,
+                                  onDismiss: _dismiss,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    },
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -220,8 +243,7 @@ class _RevealCard extends StatelessWidget {
                       imageUrl: hobby.imageUrl,
                       fit: BoxFit.cover,
                       memCacheWidth: 720,
-                      placeholder: (_, __) =>
-                          Container(color: AppColors.sand),
+                      placeholder: (_, __) => Container(color: AppColors.sand),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.sand,
                         child: Center(
@@ -248,6 +270,28 @@ class _RevealCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // Readability scrim covering the bottom half of the entire
+              // card so title, hook, and CTAs stay legible regardless of
+              // the underlying hobby image.
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x00000000),
+                          Color(0xB3000000),
+                          Color(0xF2000000),
+                        ],
+                        stops: [0.5, 0.8, 1.0],
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
@@ -280,13 +324,6 @@ class _RevealCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        'Tonight, try…',
-                        style: AppTypography.caption.copyWith(
-                          color: AppColors.coral,
-                          letterSpacing: 1.2,
-                        ),
-                      ).animate().fadeIn(duration: Motion.normal),
                       const SizedBox(height: 6),
                       Text(
                         hobby.title,
