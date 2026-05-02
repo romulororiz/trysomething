@@ -51,7 +51,7 @@ describe("middleware utilities", () => {
       handleCors(req, res);
       expect(res.setHeader).toHaveBeenCalledWith(
         "Access-Control-Allow-Origin",
-        "*"
+        "https://trysomething.io"
       );
     });
   });
