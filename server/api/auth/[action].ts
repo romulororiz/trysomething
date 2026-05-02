@@ -8,6 +8,10 @@ import { prisma } from "../../lib/db";
 import jwt from "jsonwebtoken";
 import * as jose from "jose";
 import {
+  checkAuthRateLimit,
+  getClientIp,
+} from "../../lib/auth_rate_limit";
+import {
   hashPassword,
   comparePassword,
   generateTokenPair,
@@ -68,6 +72,21 @@ async function handleRegister(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`register:ip:${ip}`, {
+      max: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many registration attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email, password, displayName } = req.body ?? {};
 
     if (!email || !password || !displayName) {
@@ -139,11 +158,43 @@ async function handleLogin(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`login:ip:${ip}`, {
+      max: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many login attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email, password } = req.body ?? {};
 
     if (!email || !password) {
       errorResponse(res, 400, "email and password are required");
       return;
+    }
+
+    if (typeof email === "string") {
+      const emailKey = email.toLowerCase().trim();
+      const emailLimit = checkAuthRateLimit(`login:email:${emailKey}`, {
+        max: 5,
+        windowMs: 15 * 60 * 1000,
+      });
+      if (!emailLimit.allowed) {
+        res.setHeader("Retry-After", String(emailLimit.retryAfter));
+        errorResponse(
+          res,
+          429,
+          `Too many login attempts for this account. Try again in ${emailLimit.retryAfter} seconds.`
+        );
+        return;
+      }
     }
 
     const user = await prisma.user.findUnique({
@@ -740,10 +791,40 @@ async function handleForgotPassword(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`forgot:ip:${ip}`, {
+      max: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many password reset attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email } = req.body ?? {};
 
     if (!email || typeof email !== "string") {
       return errorResponse(res, 400, "Email is required");
+    }
+
+    const emailKey = email.toLowerCase().trim();
+    const emailLimit = checkAuthRateLimit(`forgot:email:${emailKey}`, {
+      max: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!emailLimit.allowed) {
+      res.setHeader("Retry-After", String(emailLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many password reset attempts. Try again in ${emailLimit.retryAfter} seconds.`
+      );
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -798,6 +879,21 @@ async function handleResetPassword(
   res: VercelResponse
 ): Promise<void> {
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkAuthRateLimit(`reset:ip:${ip}`, {
+      max: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      res.setHeader("Retry-After", String(ipLimit.retryAfter));
+      errorResponse(
+        res,
+        429,
+        `Too many reset attempts. Try again in ${ipLimit.retryAfter} seconds.`
+      );
+      return;
+    }
+
     const { email, code, newPassword } = req.body ?? {};
 
     if (!email || !code || !newPassword) {
@@ -805,6 +901,23 @@ async function handleResetPassword(
     }
     if (typeof newPassword !== "string" || newPassword.length < 8) {
       return errorResponse(res, 400, "Password must be at least 8 characters");
+    }
+
+    if (typeof email === "string") {
+      const emailKey = email.toLowerCase().trim();
+      const emailLimit = checkAuthRateLimit(`reset:email:${emailKey}`, {
+        max: 5,
+        windowMs: 15 * 60 * 1000,
+      });
+      if (!emailLimit.allowed) {
+        res.setHeader("Retry-After", String(emailLimit.retryAfter));
+        errorResponse(
+          res,
+          429,
+          `Too many reset attempts. Try again in ${emailLimit.retryAfter} seconds.`
+        );
+        return;
+      }
     }
 
     const user = await prisma.user.findUnique({
