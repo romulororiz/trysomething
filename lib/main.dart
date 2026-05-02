@@ -110,7 +110,10 @@ void main() async {
         options.tracesSampleRate = 0.2;
         options.replay.sessionSampleRate = 0.1;
         options.replay.onErrorSampleRate = 1.0;
-        options.sendDefaultPii = true;
+        // GDPR/FADP: do not send IP, request headers, or other default
+        // PII to Sentry without explicit user consent. Until a consent
+        // toggle is wired up, keep this off.
+        options.sendDefaultPii = false;
       },
       appRunner: () => runApp(SentryWidget(child: app)),
     );
