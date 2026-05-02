@@ -328,7 +328,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               .read(sharedPreferencesProvider)
                               .setBool('notifications_enabled', v);
                         },
-                        activeColor: AppColors.coral,
+                        activeThumbColor: AppColors.coral,
                       ),
                     ),
 
@@ -356,7 +356,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               .read(sharedPreferencesProvider)
                               .setBool('session_vibration', v);
                         },
-                        activeColor: AppColors.coral,
+                        activeThumbColor: AppColors.coral,
                       ),
                     ),
 
@@ -372,7 +372,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               .read(sharedPreferencesProvider)
                               .setBool('session_sound', v);
                         },
-                        activeColor: AppColors.coral,
+                        activeThumbColor: AppColors.coral,
                       ),
                     ),
 
@@ -526,7 +526,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.logout_rounded,
+                            const Icon(Icons.logout_rounded,
                                 size: 20, color: AppColors.rose),
                             const SizedBox(width: 12),
                             Column(

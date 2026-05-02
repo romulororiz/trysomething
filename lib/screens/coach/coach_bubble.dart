@@ -109,13 +109,13 @@ class CoachBubble extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: message.imageUploading
-                      ? ImageSkeleton()
+                      ? const ImageSkeleton()
                       : CachedNetworkImage(
                           imageUrl: message.imageUrl!,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           memCacheWidth: 500,
-                          placeholder: (_, __) => ImageSkeleton(),
+                          placeholder: (_, __) => const ImageSkeleton(),
                         ),
                 ),
               // Text

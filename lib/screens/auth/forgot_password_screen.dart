@@ -284,7 +284,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             style: AppTypography.title.copyWith(fontSize: 28),
             children: [
               const TextSpan(text: 'Reset your '),
-              TextSpan(
+              const TextSpan(
                 text: 'password',
                 style: TextStyle(color: AppColors.coral),
               ),

@@ -188,7 +188,7 @@ class HobbyMiniCard extends StatelessWidget {
             ],
 
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right, color: AppColors.stone, size: 20),
+            const Icon(Icons.chevron_right, color: AppColors.stone, size: 20),
           ],
         ),
       ),

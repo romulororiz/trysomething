@@ -181,7 +181,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final googleAuth = await account.authentication;
       // Only trust idToken if serverClientId was set — otherwise the token's
       // audience is the Android client ID which the server won't accept.
-      final hasServerClientId = const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID') != '';
+      const hasServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID') != '';
       final idToken = hasServerClientId ? googleAuth.idToken : null;
       final accessToken = googleAuth.accessToken;
       debugPrint('[GoogleAuth] idToken: ${idToken != null ? "present" : "NULL"} (serverClientId: $hasServerClientId)');

@@ -34,9 +34,9 @@ class AboutSheetContent extends StatelessWidget {
             text: TextSpan(
               style: AppTypography.display,
               children: [
-                TextSpan(
+                const TextSpan(
                     text: 'Try', style: TextStyle(color: AppColors.accent)),
-                TextSpan(
+                const TextSpan(
                     text: 'Something',
                     style: TextStyle(color: AppColors.textPrimary)),
               ],

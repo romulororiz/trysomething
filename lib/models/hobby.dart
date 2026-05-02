@@ -7,7 +7,7 @@ part 'hobby.g.dart';
 //  JSON CONVERTERS
 // ═══════════════════════════════════════════════════════
 
-/// Converts Set<String> ↔ List<dynamic> for JSON serialization.
+/// Converts `Set<String>` ↔ `List<dynamic>` for JSON serialization.
 class SetStringConverter implements JsonConverter<Set<String>, List<dynamic>> {
   const SetStringConverter();
 

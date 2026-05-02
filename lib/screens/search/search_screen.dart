@@ -233,7 +233,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ref.listen<GenerationState>(generationProvider, (prev, next) {
       if (next.status == GenerationStatus.success && next.hobby != null) {
         Future.delayed(const Duration(milliseconds: 800), () {
-          if (!mounted) return;
+          if (!context.mounted) return;
           ref.read(generationProvider.notifier).reset();
           context.push('/hobby/${next.hobby!.id}');
         });

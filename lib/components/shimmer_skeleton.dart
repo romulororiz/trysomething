@@ -113,7 +113,7 @@ class FeedCardSkeleton extends StatelessWidget {
           child: Container(
             height: double.infinity,
             color: AppColors.sand,
-            child: Stack(
+            child: const Stack(
               children: [
                 // Title bone — bottom left
                 Positioned(
@@ -121,7 +121,7 @@ class FeedCardSkeleton extends StatelessWidget {
                   bottom: 80,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       ShimmerBone(width: 180, height: 22, borderRadius: 6),
                       SizedBox(height: 8),
                       ShimmerBone(width: 240, height: 14, borderRadius: 4),
@@ -134,7 +134,7 @@ class FeedCardSkeleton extends StatelessWidget {
                   right: 20,
                   bottom: 30,
                   child: Row(
-                    children: const [
+                    children: [
                       ShimmerBone(width: 60, height: 26, borderRadius: 13),
                       SizedBox(width: 8),
                       ShimmerBone(width: 70, height: 26, borderRadius: 13),
@@ -163,14 +163,14 @@ class ExploreTileSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(Spacing.radiusTile),
         child: Container(
           color: AppColors.sand,
-          child: Stack(
+          child: const Stack(
             children: [
               Positioned(
                 left: 12,
                 bottom: 12,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     ShimmerBone(width: 80, height: 15, borderRadius: 4),
                     SizedBox(height: 4),
                     ShimmerBone(width: 50, height: 11, borderRadius: 3),
@@ -191,12 +191,12 @@ class DetailContentSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShimmerSkeleton(
+    return const ShimmerSkeleton(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             ShimmerBone(height: 18, borderRadius: 6),
             SizedBox(height: 12),
             ShimmerBone(height: 14, borderRadius: 4),
@@ -518,17 +518,17 @@ class DetailHeroSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShimmerSkeleton(
+    return const ShimmerSkeleton(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Hero image placeholder
-          const ShimmerBone(height: Spacing.heroHeight, borderRadius: 0),
+          ShimmerBone(height: Spacing.heroHeight, borderRadius: 0),
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 ShimmerBone(width: 220, height: 24, borderRadius: 6),
                 SizedBox(height: 12),
                 ShimmerBone(height: 14, borderRadius: 4),

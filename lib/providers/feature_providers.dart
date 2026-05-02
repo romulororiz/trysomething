@@ -111,7 +111,7 @@ class JournalNotifier extends StateNotifier<List<JournalEntry>> {
         photoUrl: entry.photoUrl,
       );
       // Replace temp entry with server response (has real ID)
-      state = [created, ...state.where((e) => e.id != entry.id).toList()];
+      state = [created, ...state.where((e) => e.id != entry.id)];
     });
   }
 
@@ -486,7 +486,7 @@ class StoriesNotifier extends StateNotifier<List<CommunityStory>> {
     state = [temp, ...state];
     _apiCall(snapshot, () async {
       final created = await _repo.createStory(quote: quote, hobbyId: hobbyId);
-      state = [created, ...state.where((s) => s.id != tempId).toList()];
+      state = [created, ...state.where((s) => s.id != tempId)];
     });
   }
 
@@ -554,7 +554,7 @@ final activityLogProvider = FutureProvider<List<ActivityLogEntry>>((ref) async {
   return raw.map((e) => ActivityLogEntry.fromJson(e)).toList();
 });
 
-/// Converts activity log entries into heatmap data: Map<DateTime, int>
+/// Converts activity log entries into heatmap data: `Map<DateTime, int>`
 /// where value is activity level (0=none, 1=light, 2=medium, 3=heavy).
 final activityHeatmapProvider = Provider<Map<DateTime, int>>((ref) {
   final logAsync = ref.watch(activityLogProvider);

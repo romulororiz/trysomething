@@ -90,6 +90,7 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
     // share_plus does NOT throw on user cancellation — only real errors land here.
     debugPrint('[shareHobby] ERROR: $e');
     debugPrint('[shareHobby] STACK: $st');
+    if (!context.mounted) return;
     showAppSnackbar(context,
         message: "Couldn't create share card", type: AppSnackbarType.error);
   } finally {

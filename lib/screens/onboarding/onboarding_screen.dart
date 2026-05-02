@@ -644,7 +644,7 @@ class _TimeBudgetPage extends StatelessWidget {
                           style: AppTypography.serifTitle
                               .copyWith(color: AppColors.coral),
                         ),
-                        TextSpan(text: '& Budget'),
+                        const TextSpan(text: '& Budget'),
                       ]), style: AppTypography.serifTitle),
                       const SizedBox(height: 8),
                       Text(

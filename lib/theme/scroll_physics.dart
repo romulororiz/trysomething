@@ -46,7 +46,7 @@ class TryScrollPhysics extends ScrollPhysics {
       }
 
       return ScrollSpringSimulation(
-        SpringDescription(
+        const SpringDescription(
           mass: 1.0,
           stiffness: 300,
           damping: 22,
