@@ -345,7 +345,7 @@ class CoachRemainingBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final remaining = ref.watch(coachRemainingProvider(hobbyId));
+    final remaining = ref.watch(coachRemainingProvider);
     return remaining.when(
       data: (value) {
         if (value == null) return const SizedBox.shrink();
@@ -407,7 +407,7 @@ class CoachEmptyState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final remaining = ref.watch(coachRemainingProvider(hobbyId));
+    final remaining = ref.watch(coachRemainingProvider);
     return remaining.when(
       data: (value) =>
           value == 0 ? _buildLockedState(context) : _buildGuidedActions(),
@@ -439,7 +439,7 @@ class CoachEmptyState extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'You\'ve used your free messages this month. Upgrade to keep the momentum going.',
+            'You\'ve used your free message for today. Comes back tomorrow — or upgrade for unlimited coaching.',
             style: AppTypography.body.copyWith(
               color: AppColors.textSecondary,
               fontSize: 14,
