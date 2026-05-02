@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,8 @@ import '../../components/app_background.dart';
 import '../../components/hobby_card.dart' show FeedActionButton;
 import '../../components/share_card.dart';
 import '../../components/glass_card.dart';
+import '../../components/surprise_me_pill.dart';
+import '../../components/surprise_reveal_overlay.dart';
 import '../../components/spec_badge.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -238,8 +241,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 else
                   _buildListView(hobbies, prefs),
 
-                // Floating top chrome
-                _buildTopChrome(),
+                // Floating top chrome (includes pinned Surprise Me pill)
+                _buildTopChrome(allHobbies),
               ],
             );
           },
@@ -250,7 +253,39 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
   // ── Top Chrome ────────────────────────────────────────
 
-  Widget _buildTopChrome() {
+  // ── Surprise Me ───────────────────────────────────────
+
+  /// The id of the last hobby shown in the surprise reveal, so a
+  /// re-roll never picks the same hobby twice in a row.
+  String? _lastSurpriseId;
+  final math.Random _rand = math.Random();
+
+  Hobby? _pickSurprise(List<Hobby> all, String? excludeId) {
+    if (all.isEmpty) return null;
+    if (all.length == 1) return all.first;
+    final pool = excludeId == null
+        ? all
+        : all.where((h) => h.id != excludeId).toList();
+    if (pool.isEmpty) return all.first;
+    return pool[_rand.nextInt(pool.length)];
+  }
+
+  void _launchSurprise(List<Hobby> all) {
+    final hobby = _pickSurprise(all, _lastSurpriseId);
+    if (hobby == null) return;
+    _lastSurpriseId = hobby.id;
+    showSurpriseReveal(
+      context,
+      initial: hobby,
+      pickAnother: (currentId) {
+        final next = _pickSurprise(all, currentId);
+        if (next != null) _lastSurpriseId = next.id;
+        return next;
+      },
+    );
+  }
+
+  Widget _buildTopChrome(List<Hobby> allHobbies) {
     final topPad = MediaQuery.of(context).padding.top;
     // Fixed height: status bar + content (~90px) + generous fade tail
     final chromeHeight = topPad + 140.0;
@@ -305,7 +340,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildPillTabs(),
+                  _buildPillTabs(allHobbies),
                 ],
               ),
             ),
@@ -362,45 +397,57 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     );
   }
 
-  Widget _buildPillTabs() {
+  Widget _buildPillTabs(List<Hobby> allHobbies) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: DiscoverTab.values.map((tab) {
-          final isActive = _activeTab == tab;
-          return Padding(
+        children: [
+          // Pinned action pill — always leftmost so it stays visible
+          // even when the filter pills overflow off-screen.
+          Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => _switchTab(tab),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? AppColors.accent.withValues(alpha: 0.15)
-                      : AppColors.glassBackground,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                  border: Border.all(
+            child: SurpriseMePill(
+              enabled: allHobbies.isNotEmpty,
+              onSurprise: () => _launchSurprise(allHobbies),
+            ),
+          ),
+          ...DiscoverTab.values.map((tab) {
+            final isActive = _activeTab == tab;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () => _switchTab(tab),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
                     color: isActive
-                        ? AppColors.accent.withValues(alpha: 0.4)
-                        : AppColors.glassBorder,
-                    width: 0.5,
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : AppColors.glassBackground,
+                    borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                    border: Border.all(
+                      color: isActive
+                          ? AppColors.accent.withValues(alpha: 0.4)
+                          : AppColors.glassBorder,
+                      width: 0.5,
+                    ),
                   ),
-                ),
-                child: Text(
-                  tab.label,
-                  style: AppTypography.caption.copyWith(
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    color:
-                        isActive ? AppColors.accent : AppColors.textSecondary,
-                    fontSize: 12,
+                  child: Text(
+                    tab.label,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: isActive
+                          ? AppColors.accent
+                          : AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }),
+        ],
       ),
     );
   }
