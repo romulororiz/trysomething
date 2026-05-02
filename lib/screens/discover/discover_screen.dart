@@ -17,7 +17,7 @@ import '../../components/app_background.dart';
 import '../../components/hobby_card.dart' show FeedActionButton;
 import '../../components/share_card.dart';
 import '../../components/glass_card.dart';
-import '../../components/surprise_me_button.dart';
+import '../../components/surprise_me_pill.dart';
 import '../../components/surprise_reveal_overlay.dart';
 import '../../components/spec_badge.dart';
 
@@ -241,19 +241,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 else
                   _buildListView(hobbies, prefs),
 
-                // Floating top chrome
-                _buildTopChrome(),
-
-                // Surprise Me FAB — bottom-right, above the bottom nav,
-                // below the per-card action column.
-                Positioned(
-                  right: 20,
-                  bottom: 110,
-                  child: SurpriseMeButton(
-                    enabled: allHobbies.isNotEmpty,
-                    onSurprise: () => _launchSurprise(allHobbies),
-                  ),
-                ),
+                // Floating top chrome (includes pinned Surprise Me pill)
+                _buildTopChrome(allHobbies),
               ],
             );
           },
@@ -296,7 +285,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     );
   }
 
-  Widget _buildTopChrome() {
+  Widget _buildTopChrome(List<Hobby> allHobbies) {
     final topPad = MediaQuery.of(context).padding.top;
     // Fixed height: status bar + content (~90px) + generous fade tail
     final chromeHeight = topPad + 140.0;
@@ -351,7 +340,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildPillTabs(),
+                  _buildPillTabs(allHobbies),
                 ],
               ),
             ),
@@ -408,45 +397,57 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     );
   }
 
-  Widget _buildPillTabs() {
+  Widget _buildPillTabs(List<Hobby> allHobbies) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: DiscoverTab.values.map((tab) {
-          final isActive = _activeTab == tab;
-          return Padding(
+        children: [
+          // Pinned action pill — always leftmost so it stays visible
+          // even when the filter pills overflow off-screen.
+          Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => _switchTab(tab),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? AppColors.accent.withValues(alpha: 0.15)
-                      : AppColors.glassBackground,
-                  borderRadius: BorderRadius.circular(Spacing.radiusBadge),
-                  border: Border.all(
+            child: SurpriseMePill(
+              enabled: allHobbies.isNotEmpty,
+              onSurprise: () => _launchSurprise(allHobbies),
+            ),
+          ),
+          ...DiscoverTab.values.map((tab) {
+            final isActive = _activeTab == tab;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () => _switchTab(tab),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
                     color: isActive
-                        ? AppColors.accent.withValues(alpha: 0.4)
-                        : AppColors.glassBorder,
-                    width: 0.5,
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : AppColors.glassBackground,
+                    borderRadius: BorderRadius.circular(Spacing.radiusBadge),
+                    border: Border.all(
+                      color: isActive
+                          ? AppColors.accent.withValues(alpha: 0.4)
+                          : AppColors.glassBorder,
+                      width: 0.5,
+                    ),
                   ),
-                ),
-                child: Text(
-                  tab.label,
-                  style: AppTypography.caption.copyWith(
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    color:
-                        isActive ? AppColors.accent : AppColors.textSecondary,
-                    fontSize: 12,
+                  child: Text(
+                    tab.label,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: isActive
+                          ? AppColors.accent
+                          : AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }),
+        ],
       ),
     );
   }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:trysomething/components/surprise_me_button.dart';
+import 'package:trysomething/components/surprise_me_pill.dart';
 
 void main() {
-  group('SurpriseMeButton', () {
+  group('SurpriseMePill', () {
     testWidgets('fires onSurprise once on tap', (tester) async {
       var calls = 0;
 
@@ -12,14 +12,14 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: SurpriseMeButton(onSurprise: () => calls++),
+              child: SurpriseMePill(onSurprise: () => calls++),
             ),
           ),
         ),
       );
 
-      await tester.tap(find.byType(SurpriseMeButton));
-      await tester.pump(); // start spring
+      await tester.tap(find.byType(SurpriseMePill));
+      await tester.pump(); // start press animation
       expect(calls, 1);
 
       // Pump until the debounce window closes.
@@ -33,7 +33,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: SurpriseMeButton(
+              child: SurpriseMePill(
                 enabled: false,
                 onSurprise: () => calls++,
               ),
@@ -42,7 +42,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(SurpriseMeButton));
+      await tester.tap(find.byType(SurpriseMePill));
       await tester.pump();
 
       expect(calls, 0);
@@ -55,15 +55,15 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: SurpriseMeButton(onSurprise: () => calls++),
+              child: SurpriseMePill(onSurprise: () => calls++),
             ),
           ),
         ),
       );
 
-      await tester.tap(find.byType(SurpriseMeButton));
+      await tester.tap(find.byType(SurpriseMePill));
       await tester.pump(const Duration(milliseconds: 50));
-      await tester.tap(find.byType(SurpriseMeButton));
+      await tester.tap(find.byType(SurpriseMePill));
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(calls, 1);
@@ -77,14 +77,21 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: SurpriseMeButton(onSurprise: () {}),
+              child: SurpriseMePill(onSurprise: () {}),
             ),
           ),
         ),
       );
 
+      // Assert against the widget tree rather than the rendered semantics
+      // tree — descendants (Text, Icon) merge into the same semantics node,
+      // so find.bySemanticsLabel doesn't reliably surface the outer label.
       expect(
-        find.bySemanticsLabel('Surprise me with a random hobby'),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              w.properties.label == 'Surprise me with a random hobby',
+        ),
         findsOneWidget,
       );
 
