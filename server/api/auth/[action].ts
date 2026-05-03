@@ -82,7 +82,7 @@ async function handleRegister(
       errorResponse(
         res,
         429,
-        `Too many registration attempts. Try again in ${ipLimit.retryAfter} seconds.`
+        `Too many registration attempts. Try again in ${Math.ceil(ipLimit.retryAfter / 60)} minutes.`
       );
       return;
     }
@@ -168,7 +168,7 @@ async function handleLogin(
       errorResponse(
         res,
         429,
-        `Too many login attempts. Try again in ${ipLimit.retryAfter} seconds.`
+        `Too many login attempts. Try again in ${Math.ceil(ipLimit.retryAfter / 60)} minutes.`
       );
       return;
     }
@@ -191,7 +191,7 @@ async function handleLogin(
         errorResponse(
           res,
           429,
-          `Too many login attempts for this account. Try again in ${emailLimit.retryAfter} seconds.`
+          `Too many login attempts for this account. Try again in ${Math.ceil(emailLimit.retryAfter / 60)} minutes.`
         );
         return;
       }
@@ -762,7 +762,7 @@ async function handleResendVerification(
       : null;
     const cooldown = isWithinCooldown(lastSentAt);
     if (cooldown.blocked) {
-      return errorResponse(res, 429, `Please wait ${cooldown.retryAfter} seconds before requesting a new code`);
+      return errorResponse(res, 429, `Please wait ${Math.ceil(cooldown.retryAfter / 60)} minutes before requesting a new code`);
     }
 
     const code = generateVerificationCode();
@@ -801,7 +801,7 @@ async function handleForgotPassword(
       errorResponse(
         res,
         429,
-        `Too many password reset attempts. Try again in ${ipLimit.retryAfter} seconds.`
+        `Too many password reset attempts. Try again in ${Math.ceil(ipLimit.retryAfter / 60)} minutes.`
       );
       return;
     }
@@ -822,7 +822,7 @@ async function handleForgotPassword(
       errorResponse(
         res,
         429,
-        `Too many password reset attempts. Try again in ${emailLimit.retryAfter} seconds.`
+        `Too many password reset attempts. Try again in ${Math.ceil(emailLimit.retryAfter / 60)} minutes.`
       );
       return;
     }
@@ -889,7 +889,7 @@ async function handleResetPassword(
       errorResponse(
         res,
         429,
-        `Too many reset attempts. Try again in ${ipLimit.retryAfter} seconds.`
+        `Too many reset attempts. Try again in ${Math.ceil(ipLimit.retryAfter / 60)} minutes.`
       );
       return;
     }
@@ -914,7 +914,7 @@ async function handleResetPassword(
         errorResponse(
           res,
           429,
-          `Too many reset attempts. Try again in ${emailLimit.retryAfter} seconds.`
+          `Too many reset attempts. Try again in ${Math.ceil(emailLimit.retryAfter / 60)} minutes.`
         );
         return;
       }
