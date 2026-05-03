@@ -370,8 +370,8 @@ class CoachRemainingBanner extends ConsumerWidget {
             children: [
               Text(
                 value == 0
-                    ? 'Upgrade to keep your momentum going'
-                    : '$value free ${value == 1 ? 'message' : 'messages'} left — Pro gives you unlimited support',
+                    ? 'You\'ve used today\'s free message — upgrade for unlimited coaching'
+                    : 'Free tier: 1 message/day · $value left today',
                 style: AppTypography.caption.copyWith(
                   color: isLow ? AppColors.accent : AppColors.textMuted,
                   fontSize: 11,
