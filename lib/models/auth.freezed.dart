@@ -204,7 +204,7 @@ class _$AuthUserImpl implements _AuthUser {
       this.bio = '',
       this.avatarUrl,
       this.createdAt,
-      this.hasPassword = true,
+      this.hasPassword = false,
       this.emailVerified = false});
 
   factory _$AuthUserImpl.fromJson(Map<String, dynamic> json) =>

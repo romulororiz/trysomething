@@ -14,7 +14,7 @@ _$AuthUserImpl _$$AuthUserImplFromJson(Map<String, dynamic> json) =>
       bio: json['bio'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
       createdAt: json['createdAt'] as String?,
-      hasPassword: json['hasPassword'] as bool? ?? true,
+      hasPassword: json['hasPassword'] as bool? ?? false,
       emailVerified: json['emailVerified'] as bool? ?? false,
     );
 

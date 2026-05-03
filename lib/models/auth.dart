@@ -12,7 +12,7 @@ class AuthUser with _$AuthUser {
     @Default('') String bio,
     String? avatarUrl,
     String? createdAt,
-    @Default(true) bool hasPassword,
+    @Default(false) bool hasPassword,
     @Default(false) bool emailVerified,
   }) = _AuthUser;
 
