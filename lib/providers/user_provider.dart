@@ -121,16 +121,24 @@ final userHobbiesProvider = StateNotifierProvider<UserHobbiesNotifier, Map<Strin
   final prefs = ref.watch(sharedPreferencesProvider);
   final repo = ref.watch(userProgressRepositoryProvider);
   final analytics = ref.watch(analyticsProvider);
-  return UserHobbiesNotifier(prefs, repo, analytics);
+  return UserHobbiesNotifier(prefs, repo, analytics, ref);
 });
+
+/// True while [UserHobbiesNotifier.syncFromServer] is in flight.
+/// Home screen reads this to render a loader instead of the empty state
+/// during the initial login → server fetch window.
+final userHobbiesSyncingProvider = StateProvider<bool>((ref) => false);
 
 class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   final SharedPreferences _prefs;
   final UserProgressRepository _repo;
   final AnalyticsService _analytics;
+  // Optional so tests that don't exercise sync state can omit it.
+  final Ref? _ref;
   static const _key = 'user_hobbies';
 
-  UserHobbiesNotifier(this._prefs, this._repo, this._analytics) : super(_load(_prefs));
+  UserHobbiesNotifier(this._prefs, this._repo, this._analytics, [this._ref])
+      : super(_load(_prefs));
 
   static Map<String, UserHobby> _load(SharedPreferences prefs) {
     final json = prefs.getString(_key);
@@ -173,6 +181,7 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
   /// If server has data, it replaces local. If server is empty but local
   /// has data, pushes local to server (first-login migration).
   Future<void> syncFromServer() async {
+    _ref?.read(userHobbiesSyncingProvider.notifier).state = true;
     try {
       final serverHobbies = await _repo.getHobbies();
       if (serverHobbies.isNotEmpty) {
@@ -185,6 +194,10 @@ class UserHobbiesNotifier extends StateNotifier<Map<String, UserHobby>> {
       }
     } catch (e) {
       debugPrint('[UserHobbies] syncFromServer failed: $e');
+    } finally {
+      if (mounted) {
+        _ref?.read(userHobbiesSyncingProvider.notifier).state = false;
+      }
     }
   }
 
