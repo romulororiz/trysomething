@@ -273,7 +273,8 @@ model UserActivityLog {
 model JournalEntry {
   id        String   @id @default(uuid())
   userId    String
-  hobbyId   String
+  // Nullable: a "General" entry isn't tied to a specific hobby.
+  hobbyId   String?
   text      String
   photoUrl  String?
   createdAt DateTime @default(now())
