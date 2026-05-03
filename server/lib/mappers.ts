@@ -298,7 +298,7 @@ export function mapActivityLog(a: PrismaActivityLog) {
 type PrismaJournalEntry = {
   id: string;
   userId: string;
-  hobbyId: string;
+  hobbyId: string | null;
   text: string;
   photoUrl: string | null;
   createdAt: Date;

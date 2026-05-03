@@ -529,13 +529,26 @@ async function handleJournal(
       res.status(200).json(entries.map(mapJournalEntry));
     } else {
       const { hobbyId, text, photoUrl } = req.body ?? {};
-      if (!hobbyId || !text) {
-        errorResponse(res, 400, "hobbyId and text are required");
+      if (!text || typeof text !== "string") {
+        errorResponse(res, 400, "text is required");
+        return;
+      }
+      if (
+        hobbyId !== undefined &&
+        hobbyId !== null &&
+        typeof hobbyId !== "string"
+      ) {
+        errorResponse(res, 400, "hobbyId must be a string when provided");
         return;
       }
 
       const entry = await prisma.journalEntry.create({
-        data: { userId, hobbyId, text, photoUrl: photoUrl ?? null },
+        data: {
+          userId,
+          hobbyId: hobbyId ?? null,
+          text,
+          photoUrl: photoUrl ?? null,
+        },
       });
       await checkChallengeProgress(userId, "journal_entry");
       res.status(201).json(mapJournalEntry(entry));
