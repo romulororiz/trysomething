@@ -114,6 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userHobbies = ref.watch(userHobbiesProvider);
+    final isSyncing = ref.watch(userHobbiesSyncingProvider);
     final isPro = ref.watch(isProProvider);
 
     // Debug-only: log hobby statuses on rebuild
@@ -149,6 +150,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final allDisplayEntries = [...activeEntries, ...pausedEntries];
 
     if (allDisplayEntries.isEmpty) {
+      if (isSyncing) {
+        // Login → server fetch in flight. Show loader instead of empty
+        // state so returning users with hobbies don't see a flash of
+        // "Ready to find your thing?" before their hobbies render.
+        Future.microtask(
+            () => ref.read(shellLoadingProvider.notifier).state = true);
+        return const Scaffold(
+          backgroundColor: Colors.transparent,
+          body: AppBackground(tintTopLeft: false, child: LogoLoader()),
+        );
+      }
       Future.microtask(
           () => ref.read(shellLoadingProvider.notifier).state = false);
       // No completed home state — celebration is a one-time overlay.
