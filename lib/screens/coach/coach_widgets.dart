@@ -370,8 +370,8 @@ class CoachRemainingBanner extends ConsumerWidget {
             children: [
               Text(
                 value == 0
-                    ? 'You\'ve used today\'s free message — upgrade for unlimited coaching'
-                    : 'Free tier: 1 message/day · $value left today',
+                    ? 'You\'ve used today\'s free messages — upgrade for unlimited coaching'
+                    : 'Free tier: 3 messages/day · $value left today',
                 style: AppTypography.caption.copyWith(
                   color: isLow ? AppColors.accent : AppColors.textMuted,
                   fontSize: 11,
@@ -439,7 +439,7 @@ class CoachEmptyState extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'You\'ve used your free message for today. Comes back tomorrow — or upgrade for unlimited coaching.',
+            'You\'ve used today\'s free messages. Comes back tomorrow — or upgrade for unlimited coaching.',
             style: AppTypography.body.copyWith(
               color: AppColors.textSecondary,
               fontSize: 14,
