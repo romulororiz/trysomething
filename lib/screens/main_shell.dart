@@ -48,53 +48,54 @@ class MainShell extends ConsumerWidget {
         duration: const Duration(milliseconds: 300),
         child: IgnorePointer(
           ignoring: isLoading,
-          child: Container(
-            margin: EdgeInsets.only(
-              left: 40,
-              right: 40,
-              bottom: bottomPadding + 12,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.glassBackground,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.glassBorder, width: 0.5),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(_tabs.length, (i) {
-                      final isActive = i == currentIndex;
-                      final tab = _tabs[i];
-                      return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => context.go(_routes[i]),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: Icon(
-                              isActive ? tab.active : tab.inactive,
-                              key: ValueKey('$i-$isActive'),
-                              size: 26,
-                              color: isActive
-                                  ? AppColors.textPrimary
-                                  : const Color(0xFF6B6360),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                margin: EdgeInsets.only(bottom: bottomPadding + 12),
+                decoration: BoxDecoration(
+                  color: AppColors.glassBackground,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppColors.glassBorder, width: 0.5),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(_tabs.length, (i) {
+                          final isActive = i == currentIndex;
+                          final tab = _tabs[i];
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => context.go(_routes[i]),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 18, vertical: 4),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  isActive ? tab.active : tab.inactive,
+                                  key: ValueKey('$i-$isActive'),
+                                  size: 26,
+                                  color: isActive
+                                      ? AppColors.textPrimary
+                                      : const Color(0xFF6B6360),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    }),
+                          );
+                        }),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
