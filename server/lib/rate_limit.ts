@@ -34,8 +34,12 @@ export async function checkCoachRateLimit(
   userId: string,
   subscriptionTier: string
 ): Promise<CoachRateLimitResult> {
-  // D-05: Pro users are unlimited.
-  if (subscriptionTier !== 'free') {
+  // D-05: Only explicitly-unlimited tiers bypass the rate limit.
+  // Positive whitelist (not negative !== 'free') so unknown / null /
+  // legacy / future tier values default to rate-limited rather than
+  // silently bypassed. Schema enum: "free", "trial", "pro".
+  const UNLIMITED_TIERS = new Set(['pro', 'trial']);
+  if (UNLIMITED_TIERS.has(subscriptionTier)) {
     return { allowed: true, count: 0, dayCount: 0, monthCount: 0 };
   }
 

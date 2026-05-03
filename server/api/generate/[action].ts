@@ -609,8 +609,18 @@ async function handleCoachChat(req: VercelRequest, res: VercelResponse) {
     const text =
       response.content[0]?.type === "text" ? response.content[0].text : "";
 
-    // Log successful coach message to GenerationLog (AFTER AI response, per Pitfall 2)
-    await logGeneration(userId, 'coach', 'success', null).catch(() => {});
+    // Log successful coach message to GenerationLog (AFTER AI response, per Pitfall 2).
+    // Critical: a silent log failure here would let the rate-limit counter stall
+    // forever (since checkCoachRateLimit reads from this table). Surface failures
+    // loudly so we can fix the underlying issue rather than masking a bypass.
+    try {
+      await logGeneration(userId, 'coach', 'success', null);
+    } catch (logErr) {
+      console.error(
+        '[Coach] CRITICAL: GenerationLog write failed — rate limit will not increment for this user!',
+        logErr
+      );
+    }
 
     return res.status(200).json({ response: text.trim() });
   } catch (err: unknown) {
