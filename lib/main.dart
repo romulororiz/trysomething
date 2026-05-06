@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
@@ -102,11 +103,19 @@ void main() async {
     }
     runApp(app);
   } else {
+    // Release tag built from PackageInfo so it tracks pubspec.yaml on every
+    // build. Hardcoding stranded source-map uploads against the wrong tag
+    // whenever the version was bumped. Read once before init because the
+    // options callback is synchronous.
+    final pkgInfo = await PackageInfo.fromPlatform();
+    final release =
+        '${pkgInfo.packageName}@${pkgInfo.version}+${pkgInfo.buildNumber}';
+
     await SentryFlutter.init(
       (options) {
         options.dsn = sentryDsn;
         options.environment = kDebugMode ? 'development' : 'production';
-        options.release = '1.0.0+15';
+        options.release = release;
         options.tracesSampleRate = 0.2;
         options.replay.sessionSampleRate = 0.1;
         options.replay.onErrorSampleRate = 1.0;
