@@ -286,7 +286,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         'We process your personal data for the following purposes and legal bases (per Art. 6 FADP / Art. 6 GDPR):',
                       ),
                       _buildBulletPoint(
-                        'Contract performance: To provide the core App functionality: creating your account, saving hobbies, tracking progress, generating personalized hobby content, and powering the AI coach.',
+                        'Contract performance: To provide the core App functionality: creating your account, saving hobbies, tracking progress, personalizing hobby recommendations, and powering the AI coach.',
                       ),
                       _buildBulletPoint(
                         'Legitimate interest: To improve the App through anonymized usage analytics (PostHog), fix bugs via crash reports (Sentry), and send you push notifications you have opted into (Firebase).',
@@ -304,9 +304,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         'TrySomething uses Anthropic\'s Claude API to power AI features. Here is exactly what is sent to Anthropic:',
                       ),
 
-                      _buildSubsectionTitle('4.1 Hobby Generation'),
+                      _buildSubsectionTitle('4.1 Catalog Content'),
                       _buildBody(
-                        'When you search for a hobby that does not exist in our database, your search query is sent to Anthropic to generate hobby content (title, description, roadmap, kit items, cost estimates). No personal data beyond the search query is included.',
+                        'Hobby content in the catalog (titles, descriptions, roadmaps, kit items, cost estimates, FAQs) is prepared with AI assistance under human curation before it reaches the App. No personal data is involved in preparing catalog content, and your searches are matched against our catalog without being sent to Anthropic.',
                       ),
 
                       _buildSubsectionTitle('4.2 AI Coach'),
@@ -354,8 +354,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
                       ),
                       _buildDataProcessorRow(
                         'Anthropic',
-                        'AI content generation, coaching',
-                        'Search queries, coach messages, hobby context',
+                        'AI coaching, image moderation',
+                        'Coach messages, journal photos, hobby context',
                         'USA',
                       ),
                       _buildDataProcessorRow(
@@ -426,7 +426,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         'The database is hosted on Neon PostgreSQL with encryption at rest.',
                       ),
                       _buildBulletPoint(
-                        'API endpoints are rate-limited (20 hobby generations per user per 24 hours) with content safety filters on all AI inputs and outputs.',
+                        'API endpoints are rate-limited with content safety filters on all AI inputs and outputs.',
                       ),
                       _buildBulletPoint(
                         'Local caching uses Hive (encrypted on-device database) and SharedPreferences (non-sensitive UI state only).',
