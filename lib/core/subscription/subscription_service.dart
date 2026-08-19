@@ -13,11 +13,12 @@ class SubscriptionService {
 
   static const _entitlement = 'pro';
 
-  // Platform-specific RevenueCat public API keys via --dart-define.
-  // defaultValue keeps dev builds working without env vars set.
-  // IMPORTANT: Rotate these keys after moving to env vars — they are in git history.
+  // Platform-specific RevenueCat public SDK keys via --dart-define, with the
+  // project defaults baked in so CI builds without build args stay configured.
+  // These are public client keys — they ship inside every binary by design.
   static const _appleKey = String.fromEnvironment(
     'REVENUECAT_APPLE_KEY',
+    defaultValue: 'appl_SkiBGKbnsWiBfFNnLWfPfFqYJXC',
   );
   static const _googleKey = String.fromEnvironment(
     'REVENUECAT_GOOGLE_KEY',
