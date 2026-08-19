@@ -215,7 +215,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                         'A curated catalog of 150+ hobbies with starter kits, cost estimates, and step-by-step roadmaps.',
                       ),
                       _buildBulletPoint(
-                        'AI-powered hobby generation and an AI hobby coach, powered by Anthropic\'s Claude language model.',
+                        'AI-powered hobby recommendations and an AI hobby coach, powered by Anthropic\'s Claude language model.',
                       ),
                       _buildBulletPoint(
                         'Personal tools including journal entries (text and photo), schedule planning, shopping lists, and progress tracking.',
@@ -244,7 +244,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                       ),
                       _buildBulletPoint('Unlimited AI coach conversations.'),
                       _buildBulletPoint('Speech-to-text input and image recognition for AI coaching.'),
-                      _buildBulletPoint('AI hobby generation to discover new hobbies.'),
+                      _buildBulletPoint('AI-assisted hobby matching and recommendations.'),
                       _buildBulletPoint('Photo journal entries.'),
                       _buildBulletPoint('Multi-hobby tracking.'),
                       _buildBulletPoint('Pause hobbies and resume without losing progress.'),
@@ -268,12 +268,12 @@ class TermsOfServiceScreen extends StatelessWidget {
                       ),
 
                       // Section 6
-                      _buildSectionTitle('6. AI-Generated Content'),
+                      _buildSectionTitle('6. AI-Assisted Content'),
                       _buildBody(
-                        'TrySomething uses artificial intelligence (Anthropic Claude) to generate hobby descriptions, roadmaps, starter kit recommendations, cost estimates, FAQ content, and coaching responses.',
+                        'Catalog content in the App (hobby descriptions, roadmaps, starter kit recommendations, cost estimates, and FAQ content) is prepared with the assistance of artificial intelligence (Anthropic Claude) under human curation before it is published. Coaching responses are AI-generated in real time.',
                       ),
                       _buildBody(
-                        'Important disclaimers regarding AI-generated content:',
+                        'Important disclaimers regarding AI-assisted content:',
                       ),
                       _buildBulletPoint(
                         'AI-generated content is for informational and inspirational purposes only. It does not constitute professional advice (medical, financial, legal, or otherwise).',
@@ -363,7 +363,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                         'Scrape, harvest, or collect data from the App through automated means.',
                       ),
                       _buildBulletPoint(
-                        'Use the AI coach or generation features to produce content that is harmful, illegal, or violates Anthropic\'s Acceptable Use Policy.',
+                        'Use the AI coach to produce content that is harmful, illegal, or violates Anthropic\'s Acceptable Use Policy.',
                       ),
                       _buildBulletPoint(
                         'Create multiple accounts to circumvent usage limits.',

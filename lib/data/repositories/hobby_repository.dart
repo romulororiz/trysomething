@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
 
@@ -11,5 +10,4 @@ abstract class HobbyRepository {
   Future<List<Hobby>> getRelatedHobbies(String hobbyId, {int limit = 3});
   Future<List<Hobby>> searchHobbies(String query);
   Future<List<CuratedPack>> getCuratedPacks();
-  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken});
 }

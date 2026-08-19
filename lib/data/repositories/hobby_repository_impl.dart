@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
 import '../../models/seed_data.dart';
@@ -42,10 +41,5 @@ class HobbyRepositoryImpl implements HobbyRepository {
   @override
   Future<List<CuratedPack>> getCuratedPacks() async {
     return []; // No seed data for curated packs
-  }
-
-  @override
-  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) {
-    throw UnsupportedError('Generation requires API');
   }
 }

@@ -69,12 +69,6 @@ class ApiConstants {
   static const usersChallenges = '/users/challenges';
   static const usersAchievements = '/users/achievements';
 
-  // AI Generation
-  static const generateHobby = '/generate/hobby';
-  static const generateFaq = '/generate/faq';
-  static const generateCost = '/generate/cost';
-  static const generateBudget = '/generate/budget';
-
   // AI Coach
   static const coachChat = '/generate/coach';
 

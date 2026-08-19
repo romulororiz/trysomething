@@ -23,8 +23,5 @@ export const COACH_FREE_DAILY_LIMIT = 3;
  */
 export const COACH_FREE_MONTHLY_LIMIT = 15;
 
-/** Pro-tier hobby generations per 24-hour window. */
-export const GENERATION_LIMIT_PRO = 10;
-
 /** Free-tier max simultaneous active hobbies. */
 export const FREE_ACTIVE_HOBBIES = 1;

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_constants.dart';
@@ -132,49 +131,6 @@ class HobbyRepositoryApi implements HobbyRepository {
           .toList();
     } catch (e) {
       return _seedFallback.getCuratedPacks();
-    }
-  }
-
-  @override
-  Future<Hobby> generateHobby(String query, {CancelToken? cancelToken}) async {
-    debugPrint('[GenerateHobby] POST ${ApiConstants.generateHobby} query="$query"');
-    try {
-      final response = await _dio.post(
-        ApiConstants.generateHobby,
-        data: {'query': query},
-        cancelToken: cancelToken,
-        options: Options(
-          receiveTimeout: const Duration(seconds: 60),
-          validateStatus: (status) => status != null && status < 500 && status != 401,
-        ),
-      );
-      debugPrint('[GenerateHobby] Response status: ${response.statusCode}');
-
-      if (response.statusCode == 429) {
-        throw Exception('Generation limit reached (5 per day). Try again tomorrow.');
-      }
-      if (response.statusCode != null && response.statusCode! >= 400) {
-        final msg = response.data is Map
-            ? (response.data['error'] ?? 'Request failed')
-            : 'Request failed';
-        throw Exception(msg.toString());
-      }
-
-      final data = response.data as Map<String, dynamic>;
-      final hobby = Hobby.fromJson(data['hobby'] as Map<String, dynamic>);
-      debugPrint('[GenerateHobby] Parsed hobby: ${hobby.title}');
-
-      // Invalidate hobbies cache so the new hobby appears in the feed
-      await CacheManager.invalidate('hobbies');
-      // Cache the new hobby individually
-      await CacheManager.put('hobby_${hobby.id}', json.encode(data['hobby']));
-
-      return hobby;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw Exception('Generation limit reached (5 per day). Try again tomorrow.');
-      }
-      rethrow;
     }
   }
 

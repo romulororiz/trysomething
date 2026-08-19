@@ -23,9 +23,6 @@ class EntitlementConstants {
   /// Caps total API cost and forces conversion for power users.
   static const int freeCoachMessagesPerMonth = 15;
 
-  /// Pro-tier hobby generations per 24-hour window.
-  static const int proGenerationsPerDay = 10;
-
   /// Free-tier max simultaneous active hobbies.
   static const int freeActiveHobbies = 1;
 }

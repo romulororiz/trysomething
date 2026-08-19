@@ -32,20 +32,6 @@ class FeatureRepositoryApi implements FeatureRepository {
       await CacheManager.put(key, jsonString);
       return _parseFaqList(jsonString);
     } catch (e) {
-      // On 404, try generating FAQ (tier-2 lazy generation for AI hobbies)
-      if (e is DioException && e.response?.statusCode == 404) {
-        try {
-          final genResponse = await _dio.post(
-            ApiConstants.generateFaq,
-            data: {'hobbyId': hobbyId},
-          );
-          final jsonString = json.encode(genResponse.data);
-          await CacheManager.put(key, jsonString);
-          return _parseFaqList(jsonString);
-        } catch (_) {
-          // Generation failed, fall through
-        }
-      }
       final stale = CacheManager.getStale(key);
       if (stale != null) return _parseFaqList(stale);
       return _seedFallback.getFaqForHobby(hobbyId);
@@ -76,22 +62,6 @@ class FeatureRepositoryApi implements FeatureRepository {
       await CacheManager.put(key, jsonString);
       return CostBreakdown.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
-      // On 404, try generating cost breakdown (tier-2 lazy generation)
-      if (e is DioException && e.response?.statusCode == 404) {
-        try {
-          final genResponse = await _dio.post(
-            ApiConstants.generateCost,
-            data: {'hobbyId': hobbyId},
-          );
-          final data = genResponse.data as Map<String, dynamic>;
-          final jsonString = json.encode(data);
-          await CacheManager.put(key, jsonString);
-          return CostBreakdown.fromJson(data);
-        } catch (_) {
-          // Generation failed, fall through
-        }
-        return null;
-      }
       final stale = CacheManager.getStale(key);
       if (stale != null) {
         return CostBreakdown.fromJson(
@@ -113,20 +83,6 @@ class FeatureRepositoryApi implements FeatureRepository {
       await CacheManager.put(key, jsonString);
       return _parseBudgetList(jsonString);
     } catch (e) {
-      // On 404, try generating budget alternatives (tier-2 lazy generation)
-      if (e is DioException && e.response?.statusCode == 404) {
-        try {
-          final genResponse = await _dio.post(
-            ApiConstants.generateBudget,
-            data: {'hobbyId': hobbyId},
-          );
-          final jsonString = json.encode(genResponse.data);
-          await CacheManager.put(key, jsonString);
-          return _parseBudgetList(jsonString);
-        } catch (_) {
-          // Generation failed, fall through
-        }
-      }
       final stale = CacheManager.getStale(key);
       if (stale != null) return _parseBudgetList(stale);
       return _seedFallback.getBudgetAlternatives(hobbyId);
