@@ -112,6 +112,12 @@ flutter_launcher_icons:
   remove_alpha_ios: true
 
 flutter:
+  # UIScene lifecycle disabled until google_sign_in/firebase_messaging ship
+  # UIScene-aware versions — old plugin versions crash under the new lifecycle.
+  # Re-enable by removing this and the _ prefix on _UIApplicationSceneManifest.
+  config:
+    enable-uiscene-migration: false
+
   uses-material-design: true
 
   assets:
