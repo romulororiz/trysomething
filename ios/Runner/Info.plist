@@ -41,6 +41,8 @@
 	<string>TrySomething accesses your photos to add images to your journal</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>TrySomething uses the microphone for voice messages to your coach</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>TrySomething uses speech recognition to turn your voice into text messages for your coach</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
