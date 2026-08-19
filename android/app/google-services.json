@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "941963960338",
+    "project_id": "trysomething-f7632",
+    "storage_bucket": "trysomething-f7632.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941963960338:android:917c65d20deefe0d5038cb",
+        "android_client_info": {
+          "package_name": "com.romulororiz.trysomething"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "941963960338-225sv86qba9ija9fqks65u355fk9fjfm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.romulororiz.trysomething",
+            "certificate_hash": "40c9585d657f3ccfdcf964b728093d450cfe8fdf"
+          }
+        },
+        {
+          "client_id": "941963960338-o03kmgb9u0kgbs5837jsngtefh8m9a7i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.romulororiz.trysomething",
+            "certificate_hash": "8a294e6605f42179aadacecd8d364f03ebf7c528"
+          }
+        },
+        {
+          "client_id": "941963960338-sc6h85hug10ml54d2g35qq21rdva5a12.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.romulororiz.trysomething",
+            "certificate_hash": "7dbb5899a589bd330d1231ca43e14ac2b84b3ad6"
+          }
+        },
+        {
+          "client_id": "941963960338-3583dc8tj80i8bi95le7in6c1jr1u96f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhuflEcLIndgOUN3eqBhgcxkI-sHEgX6A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "941963960338-3583dc8tj80i8bi95le7in6c1jr1u96f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "941963960338-mlgo5vgir324j8ctg47a2n319uocvnch.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.romulororiz.trysomething"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
