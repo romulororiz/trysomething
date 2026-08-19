@@ -57,12 +57,22 @@ void main() async {
   await LocalStorage.init();
   final prefs = await SharedPreferences.getInstance();
 
-  // Initialize notification service (mobile only — FCM not supported on web)
+  // Initialize notification service (mobile only — FCM not supported on web).
+  // Each init is guarded: a failure here (e.g. Firebase missing on this
+  // platform) must never prevent runApp from being reached.
   final notifications = NotificationService();
   final scheduler = NotificationScheduler();
   if (!kIsWeb) {
-    await notifications.init();
-    await scheduler.init();
+    try {
+      await notifications.init();
+    } catch (e) {
+      debugPrint('[Notifications] Init failed: $e');
+    }
+    try {
+      await scheduler.init();
+    } catch (e) {
+      debugPrint('[Scheduler] Init failed: $e');
+    }
   }
 
   // Initialize PostHog analytics (may fail on web — non-fatal)
@@ -73,7 +83,11 @@ void main() async {
   // Initialize RevenueCat subscriptions (mobile only — not supported on web)
   final subscriptions = SubscriptionService();
   if (!kIsWeb) {
-    await subscriptions.init();
+    try {
+      await subscriptions.init();
+    } catch (e) {
+      debugPrint('[Subscription] Init failed: $e');
+    }
   }
 
   // Build the app widget tree
