@@ -86,13 +86,13 @@ class _MatchResultsScreenState extends ConsumerState<MatchResultsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final matches = ref.watch(matchedHobbiesProvider);
+    final matchesAsync = ref.watch(matchedHobbiesProvider);
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     // Track screen view
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(analyticsProvider).trackEvent('match_results_viewed', {
-        'match_count': matches.length,
+        'match_count': matchesAsync.valueOrNull?.length ?? 0,
       });
     });
 
@@ -100,10 +100,44 @@ class _MatchResultsScreenState extends ConsumerState<MatchResultsScreen>
       backgroundColor: AppColors.background,
       body: AppBackground(
         child: SafeArea(
-          child: matches.isEmpty
-              ? _buildLoading()
-              : _buildContent(matches, bottomPad),
+          child: matchesAsync.when(
+            loading: _buildLoading,
+            error: (_, __) => _buildError(),
+            data: (matches) => matches.isEmpty
+                ? _buildLoading()
+                : _buildContent(matches, bottomPad),
+          ),
         ),
+      ),
+    );
+  }
+
+  /// Near-unreachable: the provider falls back to the local heuristic on
+  /// any server failure — this only fires if the catalog itself failed.
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Couldn\'t load your matches',
+            style: AppTypography.body.copyWith(color: AppColors.textMuted),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => ref.invalidate(matchedHobbiesProvider),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Text(
+                'Try again',
+                style: AppTypography.sansLabel.copyWith(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
