@@ -104,10 +104,13 @@ void main() async {
     child: const TrySomethingApp(),
   );
 
-  // Sentry DSN via --dart-define. Empty string skips Sentry init.
-  // IMPORTANT: Rotate this DSN after moving to env vars — it is in git history.
+  // Sentry DSN via --dart-define, with the project DSN as default so CI
+  // builds (Codemagic has no build args yet) still report crashes. DSNs are
+  // client-side keys — they ship inside every binary regardless.
   const sentryDsn = String.fromEnvironment(
     'SENTRY_DSN',
+    defaultValue:
+        'https://2252d3e5f16817067a6b5adfc0be2789@o4510999049732096.ingest.de.sentry.io/4511116609192016',
   );
 
   // Initialize Sentry on mobile, skip on web or if DSN is not set
