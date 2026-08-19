@@ -1,5 +1,6 @@
 import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
+import '../../models/server_match.dart';
 
 /// Abstract hobby data source. Implementations can delegate to
 /// SeedData (current), API, or cached Hive storage.
@@ -10,4 +11,5 @@ abstract class HobbyRepository {
   Future<List<Hobby>> getRelatedHobbies(String hobbyId, {int limit = 3});
   Future<List<Hobby>> searchHobbies(String query);
   Future<List<CuratedPack>> getCuratedPacks();
+  Future<List<ServerMatch>> getMatches(UserPreferences prefs);
 }

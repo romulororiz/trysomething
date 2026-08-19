@@ -11,6 +11,7 @@ import 'package:trysomething/data/repositories/personal_tools_repository.dart';
 import 'package:trysomething/data/repositories/user_progress_repository.dart';
 import 'package:trysomething/models/curated_pack.dart';
 import 'package:trysomething/models/features.dart';
+import 'package:trysomething/models/server_match.dart';
 import 'package:trysomething/models/social.dart';
 import 'package:trysomething/screens/home/home_screen.dart';
 
@@ -34,6 +35,10 @@ class _StubHobbyRepository implements HobbyRepository {
 
   @override
   Future<List<CuratedPack>> getCuratedPacks() async => [];
+
+  @override
+  Future<List<ServerMatch>> getMatches(UserPreferences prefs) =>
+      throw UnimplementedError('getMatches not needed in test');
 }
 
 class _StubPersonalToolsRepository implements PersonalToolsRepository {

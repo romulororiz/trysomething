@@ -1,6 +1,7 @@
 import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
 import '../../models/seed_data.dart';
+import '../../models/server_match.dart';
 import 'hobby_repository.dart';
 
 /// Local seed-data implementation of [HobbyRepository].
@@ -41,5 +42,12 @@ class HobbyRepositoryImpl implements HobbyRepository {
   @override
   Future<List<CuratedPack>> getCuratedPacks() async {
     return []; // No seed data for curated packs
+  }
+
+  @override
+  Future<List<ServerMatch>> getMatches(UserPreferences prefs) {
+    // Never called: matchedHobbiesProvider computes locally instead of
+    // going through the seed repository.
+    throw UnimplementedError('Matching requires API');
   }
 }

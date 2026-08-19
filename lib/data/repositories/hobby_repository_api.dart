@@ -6,6 +6,7 @@ import '../../core/storage/cache_manager.dart';
 import '../../models/curated_pack.dart';
 import '../../models/hobby.dart';
 import '../../models/seed_data.dart';
+import '../../models/server_match.dart';
 import 'hobby_repository.dart';
 import 'hobby_repository_impl.dart';
 
@@ -132,6 +133,25 @@ class HobbyRepositoryApi implements HobbyRepository {
     } catch (e) {
       return _seedFallback.getCuratedPacks();
     }
+  }
+
+  @override
+  Future<List<ServerMatch>> getMatches(UserPreferences prefs) async {
+    // No cache/seed fallback here on purpose: the provider falls back to
+    // the local heuristic (lib/core/hobby_match.dart) on any failure.
+    final response = await _dio.post(
+      ApiConstants.match,
+      data: {
+        'vibes': prefs.vibes.toList(),
+        'hoursPerWeek': prefs.hoursPerWeek,
+        'budgetLevel': prefs.budgetLevel,
+        'preferSocial': prefs.preferSocial,
+      },
+    );
+    final data = response.data as Map<String, dynamic>;
+    return (data['matches'] as List)
+        .map((e) => ServerMatch.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   // ── Helpers ──────────────────────────────────────

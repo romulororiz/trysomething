@@ -13,6 +13,7 @@ import 'package:trysomething/data/repositories/auth_repository.dart';
 import 'package:trysomething/providers/auth_provider.dart';
 import 'package:trysomething/models/curated_pack.dart';
 import 'package:trysomething/models/features.dart';
+import 'package:trysomething/models/server_match.dart';
 import 'package:trysomething/models/social.dart';
 import 'package:trysomething/models/auth.dart' as auth_models;
 import 'package:trysomething/models/hobby.dart' as hobby_models;
@@ -38,6 +39,10 @@ class _StubHobbyRepository implements HobbyRepository {
 
   @override
   Future<List<CuratedPack>> getCuratedPacks() async => [];
+
+  @override
+  Future<List<ServerMatch>> getMatches(UserPreferences prefs) =>
+      throw UnimplementedError('getMatches not needed in test');
 }
 
 class _StubPersonalToolsRepository implements PersonalToolsRepository {
