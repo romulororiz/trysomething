@@ -413,3 +413,18 @@ model GenerationLog {
 
   @@index([userId, createdAt])
 }
+
+// ═══════════════════════════════════════════════════
+//  MATCHING (v2 Phase 2)
+// ═══════════════════════════════════════════════════
+
+model MatchCache {
+  id          String   @id @default(cuid())
+  profileHash String   @unique
+  resultJson  Json
+  source      String   // "ai" | "heuristic"
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+}
