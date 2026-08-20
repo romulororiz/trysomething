@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 
@@ -69,24 +69,19 @@ function renderWithAccent(text: string, accent: string) {
 function FeatureRow({
   feature,
   index,
-  isMobile,
-  mobileOpenIndex,
-  onMobileToggle,
+  isOpen,
+  onToggle,
+  onHoverOpen,
+  onHoverClose,
 }: {
   feature: (typeof features)[number];
   index: number;
-  isMobile: boolean;
-  mobileOpenIndex: number | null;
-  onMobileToggle: (i: number) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+  onHoverOpen: () => void;
+  onHoverClose: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
-
-  // On desktop: hover opens. On mobile: click toggles (accordion).
-  const isOpen = isMobile ? mobileOpenIndex === index : hovered;
-
-  const handleClick = () => {
-    if (isMobile) onMobileToggle(index);
-  };
+  const detailId = `feature-detail-${index}`;
 
   return (
     <motion.div
@@ -94,19 +89,24 @@ function FeatureRow({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.6, delay: index * 0.08, ease: EASE }}
-      className="border-b border-white/[0.06] cursor-pointer select-none"
-      onClick={handleClick}
-      onMouseEnter={() => !isMobile && setHovered(true)}
-      onMouseLeave={() => !isMobile && setHovered(false)}
+      className="border-b border-white/[0.06]"
       style={{
-        borderLeft: isOpen
-          ? `2px solid ${CORAL}40`
-          : "2px solid transparent",
+        borderLeft: isOpen ? `2px solid ${CORAL}40` : "2px solid transparent",
         transition: "border-color 0.3s ease",
       }}
     >
-      {/* Collapsed row */}
-      <div className="flex items-center py-5 md:py-7 gap-4 md:gap-8 px-2 md:px-4">
+      {/* Row header — a real button: keyboard + screen-reader friendly */}
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={detailId}
+        onClick={onToggle}
+        onMouseEnter={onHoverOpen}
+        onMouseLeave={onHoverClose}
+        onFocus={onHoverOpen}
+        onBlur={onHoverClose}
+        className="w-full flex items-center py-5 md:py-7 gap-4 md:gap-8 px-2 md:px-4 text-left cursor-pointer select-none"
+      >
         {/* Number */}
         <span
           className="text-xs md:text-sm font-mono w-6 md:w-8 shrink-0 tabular-nums"
@@ -126,6 +126,7 @@ function FeatureRow({
 
         {/* Toggle icon */}
         <motion.span
+          aria-hidden="true"
           className="text-lg md:text-xl shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
           style={{ color: "#6A6A7A" }}
           animate={{ rotate: isOpen ? 45 : 0 }}
@@ -133,12 +134,13 @@ function FeatureRow({
         >
           +
         </motion.span>
-      </div>
+      </button>
 
       {/* Expandable detail */}
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
+            id={detailId}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -163,28 +165,18 @@ function FeatureRow({
 /**
  * WhatYouGet — Typographic accordion.
  *
- * 6 bold claims as a vertical list. Hover (desktop) or tap (mobile)
- * to expand details. No cards, no icons, no grids.
- * Coral accent words tell a micro-story across all 6 rows.
+ * Click/Enter toggles a row open (persistent); hover and keyboard
+ * focus preview it (transient). Real buttons with aria-expanded —
+ * no hover-only content.
  */
 export function WhatYouGet() {
   const { ref: sectionRef, inView } = useInView({ threshold: 0.05 });
-  const [isMobile, setIsMobile] = useState(false);
-  const [mobileOpenIndex, setMobileOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+  const toggle = useCallback((i: number) => {
+    setOpenIndex((prev) => (prev === i ? null : i));
   }, []);
-
-  const handleMobileToggle = useCallback(
-    (i: number) => {
-      setMobileOpenIndex(mobileOpenIndex === i ? null : i);
-    },
-    [mobileOpenIndex]
-  );
 
   return (
     <section
@@ -194,8 +186,8 @@ export function WhatYouGet() {
       style={{ backgroundColor: "#000" }}
     >
       <div className="max-w-5xl mx-auto px-6 md:px-10">
-        {/* Section label */}
-        <motion.p
+        {/* Section heading */}
+        <motion.h2
           initial={{ opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
@@ -203,7 +195,7 @@ export function WhatYouGet() {
           style={{ color: "#6A6A7A" }}
         >
           What you get
-        </motion.p>
+        </motion.h2>
 
         {/* Feature list */}
         <div className="border-t border-white/[0.06]">
@@ -212,9 +204,10 @@ export function WhatYouGet() {
               key={feature.number}
               feature={feature}
               index={i}
-              isMobile={isMobile}
-              mobileOpenIndex={mobileOpenIndex}
-              onMobileToggle={handleMobileToggle}
+              isOpen={openIndex === i || hoverIndex === i}
+              onToggle={() => toggle(i)}
+              onHoverOpen={() => setHoverIndex(i)}
+              onHoverClose={() => setHoverIndex((prev) => (prev === i ? null : prev))}
             />
           ))}
         </div>

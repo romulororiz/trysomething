@@ -62,9 +62,9 @@ function ValueAnchor({
         style={{ backgroundColor: CORAL, opacity: 0.5 }}
       />
       <div>
-        <h4 className="text-base md:text-lg font-bold text-[#FAFAFA] leading-snug">
+        <h3 className="text-base md:text-lg font-bold text-[#FAFAFA] leading-snug">
           {title}
-        </h4>
+        </h3>
         <p className="mt-1.5 text-sm text-[#8A8A9A] leading-relaxed">
           {description}
         </p>
@@ -208,7 +208,7 @@ export function Solution() {
           </motion.p>
 
           {/* Bold centered statement */}
-          <motion.h3
+          <motion.h2
             initial={{ opacity: 0, y: 28 }}
             animate={answerInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, ease: EASE }}
@@ -219,7 +219,7 @@ export function Solution() {
             to try, and{" "}
             <span className="font-serif italic text-coral">exactly</span> how to
             start?
-          </motion.h3>
+          </motion.h2>
 
           {/* Three value anchors — centered row on desktop, stacked on mobile */}
           <div className="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-left max-w-4xl mx-auto">

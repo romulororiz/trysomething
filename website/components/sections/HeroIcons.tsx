@@ -388,7 +388,10 @@ export function HeroIcons() {
     : icons;
 
   return (
-    <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden hidden md:block">
+    <div
+      className="absolute inset-0 z-[1] pointer-events-none overflow-hidden hidden md:block"
+      aria-hidden="true"
+    >
       {visibleIcons.map((icon, i) => {
         const mobileScale = isMobile ? 0.6 : 1;
         const px = icon.depth * 15;

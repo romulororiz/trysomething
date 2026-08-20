@@ -124,8 +124,9 @@ export function Manifesto() {
               A gentle manifesto
             </motion.p>
 
-            {/* Line 1 — "Stop scrolling." with split-word parallax */}
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold leading-[1.05] tracking-tight text-text-primary">
+            {/* One heading, two visual lines — split-word parallax */}
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold leading-[1.05] tracking-tight">
+              <span className="block text-text-primary">
               <motion.span
                 style={{ y: stopY, opacity: stopOpacity }}
                 className="inline-block mr-[0.3em]"
@@ -142,10 +143,8 @@ export function Manifesto() {
               >
                 scrolling.
               </motion.span>
-            </h2>
-
-            {/* Line 2 — "Start something." with split-word parallax */}
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold leading-[1.05] tracking-tight mt-3">
+              </span>
+              <span className="block mt-3">
               <motion.span
                 style={{ y: startY, opacity: startOpacity }}
                 className="inline-block mr-[0.3em]"
@@ -163,6 +162,7 @@ export function Manifesto() {
               >
                 something.
               </motion.span>
+              </span>
             </h2>
 
             {/* Decorative line */}
