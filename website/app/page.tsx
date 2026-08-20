@@ -5,7 +5,7 @@ import { Solution } from "@/components/sections/Solution";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { WhatYouGet } from "@/components/sections/WhatYouGet";
 import { Manifesto } from "@/components/sections/Manifesto";
-import { Testimonials } from "@/components/sections/Testimonials";
+import { Proof } from "@/components/sections/Proof";
 import { WaitlistCTA } from "@/components/sections/WaitlistCTA";
 import { Footer } from "@/components/layout/Footer";
 import { MobileAmbientIcons } from "@/components/layout/MobileAmbientIcons";
@@ -22,7 +22,7 @@ export default function LandingPage() {
         <HowItWorks />
         <WhatYouGet />
         <Manifesto />
-        <Testimonials />
+        <Proof />
         <WaitlistCTA />
       </main>
 

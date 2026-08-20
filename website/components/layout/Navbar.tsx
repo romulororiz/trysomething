@@ -12,7 +12,7 @@ const navLinks = [
   { label: "The Problem", href: "#solution" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "What You Get", href: "#what-you-get" },
-  { label: "Testimonials", href: "#testimonials" },
+  { label: "Straight Talk", href: "#proof" },
 ];
 
 export function Navbar() {

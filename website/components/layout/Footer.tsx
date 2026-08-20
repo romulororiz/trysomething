@@ -41,7 +41,7 @@ export function Footer() {
               {[
                 { label: "How It Works", href: "#how-it-works" },
                 { label: "What You Get", href: "#what-you-get" },
-                { label: "Testimonials", href: "#testimonials" },
+                { label: "Straight Talk", href: "#proof" },
                 { label: "Download", href: "#download" },
               ].map((link) => (
                 <li key={link.href}>
