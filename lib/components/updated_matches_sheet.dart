@@ -12,8 +12,11 @@ import 'app_overlays.dart';
 
 /// Shows a bottom sheet with updated hobby matches after preference changes.
 Future<void> showUpdatedMatchesSheet(BuildContext context, WidgetRef ref) async {
-  final matches = ref.read(matchedHobbiesProvider).take(3).toList();
-  if (matches.isEmpty) return;
+  // The provider watches userPreferencesProvider so it self-invalidates on
+  // prefs changes; the explicit invalidate is belt-and-suspenders so the
+  // sheet never shows a stale result.
+  ref.invalidate(matchedHobbiesProvider);
+  final future = ref.read(matchedHobbiesProvider.future);
 
   final maxScore = _maxPossibleScore(ref);
 
@@ -21,7 +24,7 @@ Future<void> showUpdatedMatchesSheet(BuildContext context, WidgetRef ref) async 
     context: context,
     title: 'Updated matches',
     builder: (context) => _UpdatedMatchesContent(
-      matches: matches,
+      future: future,
       maxScore: maxScore,
     ),
   );
@@ -33,16 +36,52 @@ int _maxPossibleScore(WidgetRef ref) {
 }
 
 class _UpdatedMatchesContent extends StatelessWidget {
-  final List<MatchResult> matches;
+  final Future<List<MatchResult>> future;
   final int maxScore;
 
   const _UpdatedMatchesContent({
-    required this.matches,
+    required this.future,
     required this.maxScore,
   });
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<List<MatchResult>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.accent,
+                ),
+              ),
+            ),
+          );
+        }
+
+        final matches = (snapshot.data ?? []).take(3).toList();
+        if (matches.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+            child: Text(
+              'No matches yet — try adjusting your preferences.',
+              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+            ),
+          );
+        }
+
+        return _buildMatches(context, matches);
+      },
+    );
+  }
+
+  Widget _buildMatches(BuildContext context, List<MatchResult> matches) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,

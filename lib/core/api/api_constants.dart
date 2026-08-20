@@ -69,6 +69,9 @@ class ApiConstants {
   static const usersChallenges = '/users/challenges';
   static const usersAchievements = '/users/achievements';
 
+  // Matching
+  static const match = '/match';
+
   // AI Coach
   static const coachChat = '/generate/coach';
 
