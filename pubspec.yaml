@@ -1,7 +1,7 @@
 name: trysomething
 description: "TrySomething — Hobby discovery app that helps you actually start."
 publish_to: "none"
-version: 1.0.0+15
+version: 1.0.0+19
 
 environment:
   sdk: ^3.6.0
@@ -112,6 +112,12 @@ flutter_launcher_icons:
   remove_alpha_ios: true
 
 flutter:
+  # UIScene lifecycle disabled until google_sign_in/firebase_messaging ship
+  # UIScene-aware versions — old plugin versions crash under the new lifecycle.
+  # Re-enable by removing this and the _ prefix on _UIApplicationSceneManifest.
+  config:
+    enable-uiscene-migration: false
+
   uses-material-design: true
 
   assets:

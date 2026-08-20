@@ -4,15 +4,21 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 /// Subscription service powered by RevenueCat.
 class SubscriptionService {
   bool _initialized = false;
+
+  // The native SDK hard-crashes (Swift fatalError, uncatchable from Dart)
+  // if any Purchases method runs before Purchases.configure — every call
+  // below must early-return while this is false.
+  bool _configured = false;
   CustomerInfo? _customerInfo;
 
   static const _entitlement = 'pro';
 
-  // Platform-specific RevenueCat public API keys via --dart-define.
-  // defaultValue keeps dev builds working without env vars set.
-  // IMPORTANT: Rotate these keys after moving to env vars — they are in git history.
+  // Platform-specific RevenueCat public SDK keys via --dart-define, with the
+  // project defaults baked in so CI builds without build args stay configured.
+  // These are public client keys — they ship inside every binary by design.
   static const _appleKey = String.fromEnvironment(
     'REVENUECAT_APPLE_KEY',
+    defaultValue: 'appl_SkiBGKbnsWiBfFNnLWfPfFqYJXC',
   );
   static const _googleKey = String.fromEnvironment(
     'REVENUECAT_GOOGLE_KEY',
@@ -38,6 +44,7 @@ class SubscriptionService {
 
     final config = PurchasesConfiguration(apiKey);
     await Purchases.configure(config);
+    _configured = true;
     _initialized = true;
 
     // Fetch initial customer info
@@ -50,6 +57,7 @@ class SubscriptionService {
 
   /// Refresh customer info from RevenueCat.
   Future<void> refresh() async {
+    if (!_configured) return;
     try {
       _customerInfo = await Purchases.getCustomerInfo();
     } catch (e) {
@@ -83,6 +91,7 @@ class SubscriptionService {
 
   /// Get available offerings (packages/plans).
   Future<Offerings?> getOfferings() async {
+    if (!_configured) return null;
     try {
       return await Purchases.getOfferings();
     } catch (e) {
@@ -93,6 +102,7 @@ class SubscriptionService {
 
   /// Purchase a package (monthly or annual).
   Future<bool> purchase(Package package) async {
+    if (!_configured) return false;
     try {
       final result = await Purchases.purchase(PurchaseParams.package(package));
       _customerInfo = result.customerInfo;
@@ -105,6 +115,7 @@ class SubscriptionService {
 
   /// Restore previous purchases (e.g. after reinstall).
   Future<bool> restore() async {
+    if (!_configured) return false;
     try {
       _customerInfo = await Purchases.restorePurchases();
       return isPro;
@@ -116,6 +127,7 @@ class SubscriptionService {
 
   /// Set the user ID for attribution (call after login).
   Future<void> setUserId(String userId) async {
+    if (!_configured) return;
     try {
       final result = await Purchases.logIn(userId);
       _customerInfo = result.customerInfo;
@@ -126,6 +138,7 @@ class SubscriptionService {
 
   /// Clear user on logout.
   Future<void> clearUser() async {
+    if (!_configured) return;
     try {
       _customerInfo = await Purchases.logOut();
     } catch (e) {

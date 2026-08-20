@@ -11,7 +11,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.973949791990-8r2kbjvlnmqq16supv9slbjlonthb6pp</string>
+				<string>com.googleusercontent.apps.941963960338-mlgo5vgir324j8ctg47a2n319uocvnch</string>
 			</array>
 		</dict>
 	</array>
@@ -41,9 +41,13 @@
 	<string>TrySomething accesses your photos to add images to your journal</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>TrySomething uses the microphone for voice messages to your coach</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>TrySomething uses speech recognition to turn your voice into text messages for your coach</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UIApplicationSceneManifest</key>
+	<key>_UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
