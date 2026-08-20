@@ -8,6 +8,7 @@ import '../../theme/app_typography.dart';
 import '../../theme/spacing.dart';
 import '../../components/glass_card.dart';
 import '../../components/app_background.dart';
+import '../../components/subscription_legal_footer.dart';
 
 /// One-time trial offer screen shown after onboarding, before first feed view.
 class TrialOfferScreen extends ConsumerStatefulWidget {
@@ -237,6 +238,8 @@ class _TrialOfferScreenState extends ConsumerState<TrialOfferScreen>
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const SubscriptionLegalFooter(),
                     SizedBox(height: bottomPad + 8),
                   ],
                 ),
