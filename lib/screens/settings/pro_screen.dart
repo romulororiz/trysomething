@@ -10,6 +10,7 @@ import '../../theme/spacing.dart';
 import '../../components/glass_card.dart';
 import '../../components/app_overlays.dart';
 import '../../components/app_background.dart';
+import '../../components/subscription_legal_footer.dart';
 
 /// TrySomething Pro — premium upgrade screen.
 ///
@@ -215,12 +216,8 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Subscriptions are managed by your app store.',
-                                style: AppTypography.sansTiny
-                                    .copyWith(color: AppColors.textMuted),
-                              ),
+                              const SizedBox(height: 14),
+                              const SubscriptionLegalFooter(),
                             ],
 
                             // Already Pro
