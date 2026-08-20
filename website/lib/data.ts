@@ -125,6 +125,30 @@ export const problemCards = [
   },
 ];
 
+/** Real app screenshots — one candle-making journey across four steps. */
+export const stepScreens = [
+  {
+    src: "/screens/step-1-discover.webp",
+    srcSm: "/screens/step-1-discover-sm.webp",
+    alt: "TrySomething Discover screen showing Candle Making with starter cost CHF 30–80, 2h per week, easy difficulty",
+  },
+  {
+    src: "/screens/step-2-roadmap.webp",
+    srcSm: "/screens/step-2-roadmap-sm.webp",
+    alt: "Candle Making roadmap with the first step — melt and pour your first candle — a coach tip and a Start session button",
+  },
+  {
+    src: "/screens/step-3-coach.webp",
+    srcSm: "/screens/step-3-coach-sm.webp",
+    alt: "AI coach in momentum mode with quick actions like What should I do next and I’m losing motivation",
+  },
+  {
+    src: "/screens/step-4-journal.webp",
+    srcSm: "/screens/step-4-journal-sm.webp",
+    alt: "Coach chat celebrating a journal entry that reads: I’m so proud of my first candle",
+  },
+];
+
 export const howItWorksSteps = [
   {
     step: "01",
