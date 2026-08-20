@@ -92,7 +92,7 @@ export function Proof() {
   const { scrollTo } = useSmoothScroll();
 
   return (
-    <section id="proof" className="relative py-28 md:py-40 overflow-hidden">
+    <section id="proof" className="relative py-24 md:py-32 overflow-hidden">
       {/* Atmospheric blooms */}
       <div
         className="absolute bottom-1/4 left-0 w-[500px] h-[500px] -translate-x-1/3 pointer-events-none opacity-15"

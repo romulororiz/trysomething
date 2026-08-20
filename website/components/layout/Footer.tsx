@@ -82,10 +82,10 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-16 pt-8 border-t border-glass-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-text-whisper">
+          <p className="text-xs text-text-muted">
             &copy; {currentYear} TrySomething. All rights reserved.
           </p>
-          <p className="text-xs text-text-whisper">
+          <p className="text-xs text-text-muted">
             Made with care in Switzerland.
           </p>
         </div>

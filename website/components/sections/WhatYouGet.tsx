@@ -190,7 +190,7 @@ export function WhatYouGet() {
     <section
       id="what-you-get"
       ref={sectionRef}
-      className="relative w-full py-28 md:py-40"
+      className="relative w-full py-24 md:py-32"
       style={{ backgroundColor: "#000" }}
     >
       <div className="max-w-5xl mx-auto px-6 md:px-10">

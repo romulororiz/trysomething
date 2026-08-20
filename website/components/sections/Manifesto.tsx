@@ -20,8 +20,9 @@ export function Manifesto() {
   });
 
   // --- Global container transforms ---
-  // Heavy blur: 30px → 0 over first 35% of scroll
-  const globalBlur = useTransform(scrollYProgress, [0.0, 0.35], [30, 0]);
+  // Blur-to-sharp: kept ≤8px — animated blur above that janks on
+  // mid-range Android GPUs, and 8px reads identically at speed.
+  const globalBlur = useTransform(scrollYProgress, [0.0, 0.35], [8, 0]);
   const globalBlurFilter = useTransform(globalBlur, (v) =>
     `blur(${Math.max(0, v)}px)`
   );
@@ -72,7 +73,7 @@ export function Manifesto() {
     [0, 1, 1, 0]
   );
   // Extra: "something." gets its own subtle blur that clears later
-  const somethingBlur = useTransform(scrollYProgress, [0.1, 0.4], [15, 0]);
+  const somethingBlur = useTransform(scrollYProgress, [0.1, 0.4], [6, 0]);
   const somethingBlurFilter = useTransform(somethingBlur, (v) =>
     `blur(${Math.max(0, v)}px)`
   );

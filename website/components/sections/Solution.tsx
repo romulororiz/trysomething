@@ -102,7 +102,7 @@ export function Solution() {
       {/* ═══════════════════════════════════════════════════════
           PHASE 1 — The Problem
           ═══════════════════════════════════════════════════════ */}
-      <div className="py-28 md:py-40">
+      <div className="py-24 md:py-32">
         <div
           className="absolute top-[15%] right-0 w-[500px] h-[500px] translate-x-1/3 pointer-events-none opacity-[0.06]"
           style={{
@@ -178,7 +178,7 @@ export function Solution() {
       {/* ═══════════════════════════════════════════════════════
           PHASE 2 — Subtle coral divider (not a fat line)
           ═══════════════════════════════════════════════════════ */}
-      <div className="max-w-3xl mx-auto px-6 md:px-10 my-8 md:my-16">
+      <div className="max-w-3xl mx-auto px-6 md:px-10 my-2 md:my-6">
         <motion.div
           className="w-full h-px opacity-30"
           style={{
@@ -194,7 +194,7 @@ export function Solution() {
       {/* ═══════════════════════════════════════════════════════
           PHASE 3 — The Answer (CENTERED)
           ═══════════════════════════════════════════════════════ */}
-      <div ref={answerRef} className="py-20 md:py-32">
+      <div ref={answerRef} className="py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-6 md:px-10 text-center">
           {/* Eyebrow */}
           <motion.p

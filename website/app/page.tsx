@@ -16,7 +16,7 @@ export default function LandingPage() {
       <Navbar />
       <MobileAmbientIcons />
 
-      <main>
+      <main className="relative z-10">
         <Hero />
         <Solution />
         <HowItWorks />

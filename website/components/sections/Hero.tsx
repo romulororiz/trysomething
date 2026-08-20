@@ -38,7 +38,7 @@ export function Hero() {
         transition={{ delay: 2.5 }}
         onClick={scrollToNext}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 cursor-pointer"
-        style={{ color: "#3D3835" }}
+        style={{ color: "#6B6360" }}
         aria-label="Scroll down"
       >
         <motion.div
