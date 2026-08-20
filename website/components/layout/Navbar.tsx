@@ -102,7 +102,7 @@ export function Navbar() {
             "active:scale-[0.97] transition-transform"
           )}
         >
-          Download
+          Get access
         </button>
 
         {/* Mobile hamburger */}
@@ -143,7 +143,7 @@ export function Navbar() {
                 onClick={() => scrollTo("#download")}
                 className="mt-4 px-6 py-3.5 rounded-full text-base font-semibold text-white bg-coral w-full cursor-pointer breathing-glow active:scale-[0.97] transition-transform"
               >
-                Download
+                Get access
               </button>
             </div>
           </motion.div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { StoreBadges } from "@/components/ui/StoreBadges";
+import { useSmoothScroll } from "@/components/layout/SmoothScroll";
 
 /* ─── Constants ──────────────────────────────────────────── */
 
@@ -25,6 +25,8 @@ function fadeUp(delay: number) {
 /* ─── Component ──────────────────────────────────────────── */
 
 export function HeroContent() {
+  const { scrollTo } = useSmoothScroll();
+
   return (
     <div className="relative z-10 flex flex-col items-center justify-center text-center h-full px-6">
       {/* ── Pre-heading ── */}
@@ -79,23 +81,28 @@ export function HeroContent() {
         show you exactly how to start. A personal coach keeps you going.
       </motion.p>
 
-      {/* ── Store badges ── */}
+      {/* ── Primary CTA ── */}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.8, delay: 1.3, ease: EASE }}
         className="mt-12"
       >
-        <StoreBadges />
+        <button
+          onClick={() => scrollTo("#download")}
+          className="breathing-glow px-9 py-4 rounded-full text-base font-semibold text-white bg-coral hover:bg-coral-hover transition-colors duration-200 cursor-pointer active:scale-[0.97]"
+        >
+          Get early access
+        </button>
       </motion.div>
 
-      {/* ── Available now ── */}
+      {/* ── Platform note ── */}
       <motion.p
         {...fadeUp(1.7)}
-        className="mt-5 text-xs"
-        style={{ color: "#3D3835" }}
+        className="mt-6 text-sm"
+        style={{ color: "#8A8A9A" }}
       >
-        Available on iPhone &amp; Android
+        Free for early testers &middot; iPhone &amp; Android &middot; closed beta
       </motion.p>
     </div>
   );

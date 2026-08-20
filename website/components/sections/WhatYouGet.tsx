@@ -225,14 +225,20 @@ export function WhatYouGet() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-30px" }}
           transition={{ duration: 0.7, delay: 0.3, ease: EASE }}
-          className="mt-16 md:mt-20 text-center text-sm"
-          style={{ color: "#6A6A7A" }}
+          className="mt-16 md:mt-20 text-center text-base"
+          style={{ color: "#8A8A9A" }}
         >
           All of this.{" "}
           <span className="font-serif italic" style={{ color: CORAL }}>
             One app
           </span>
-          . Download now.
+          .{" "}
+          <a
+            href="#download"
+            className="text-coral font-semibold underline underline-offset-4 decoration-coral/40 hover:decoration-coral transition-colors duration-200"
+          >
+            Get early access
+          </a>
         </motion.p>
       </div>
     </section>

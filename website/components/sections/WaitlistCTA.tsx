@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import { StaggeredText } from "@/components/ui/StaggeredText";
 import { StoreBadges } from "@/components/ui/StoreBadges";
+import { WaitlistForm } from "@/components/ui/WaitlistForm";
 
 export function WaitlistCTA() {
   const { ref, inView } = useInView({ threshold: 0.1 });
@@ -12,22 +13,22 @@ export function WaitlistCTA() {
     <section
       id="download"
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative min-h-[85vh] flex items-center justify-center overflow-hidden"
     >
       {/* ── Convergence glow layers ── */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] opacity-20"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] opacity-35"
           style={{
             background:
-              "radial-gradient(circle, rgba(255,107,107,0.25), rgba(218,165,32,0.10) 40%, transparent 70%)",
+              "radial-gradient(circle, rgba(255,107,107,0.28), rgba(218,165,32,0.10) 40%, transparent 70%)",
           }}
         />
         <div
-          className="absolute top-[40%] left-[45%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-25"
+          className="absolute top-[42%] left-[46%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-30"
           style={{
             background:
-              "radial-gradient(circle, rgba(255,107,107,0.20), transparent 65%)",
+              "radial-gradient(circle, rgba(255,107,107,0.22), transparent 65%)",
           }}
         />
       </div>
@@ -35,23 +36,25 @@ export function WaitlistCTA() {
       {/* ── Converging rings ── */}
       <motion.div
         initial={{ opacity: 0, scale: 1.3 }}
-        animate={inView ? { opacity: 0.06, scale: 1 } : {}}
+        animate={inView ? { opacity: 0.12, scale: 1 } : {}}
         transition={{ duration: 2, ease: [0.33, 1, 0.68, 1] }}
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        aria-hidden="true"
       >
-        <div className="w-[700px] h-[700px] rounded-full border border-coral/10" />
+        <div className="w-[700px] h-[700px] rounded-full border border-coral/20" />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, scale: 1.5 }}
-        animate={inView ? { opacity: 0.04, scale: 1 } : {}}
+        animate={inView ? { opacity: 0.08, scale: 1 } : {}}
         transition={{ duration: 2.5, delay: 0.3, ease: [0.33, 1, 0.68, 1] }}
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        aria-hidden="true"
       >
-        <div className="w-[1000px] h-[1000px] rounded-full border border-coral/8" />
+        <div className="w-[1000px] h-[1000px] rounded-full border border-coral/15" />
       </motion.div>
 
       {/* ── Content ── */}
-      <div className="relative max-w-3xl mx-auto px-6 text-center py-32">
+      <div className="relative max-w-3xl mx-auto px-6 text-center py-24 md:py-28 w-full">
         {/* Headline */}
         <StaggeredText
           text="Your next chapter starts now."
@@ -68,29 +71,38 @@ export function WaitlistCTA() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mt-6 text-lg md:text-xl text-text-secondary max-w-lg mx-auto leading-relaxed"
         >
-          Download TrySomething. Find the hobby you&rsquo;ll actually stick
-          with.
+          Join the closed beta and be first in when the doors open.
         </motion.p>
 
-        {/* Store badges */}
+        {/* Waitlist form — the one action that matters */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.7 }}
-          className="mt-10 flex justify-center"
+          className="mt-10"
         >
-          <StoreBadges />
+          <WaitlistForm />
         </motion.div>
 
         {/* Reassurance */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.6, delay: 1.0 }}
-          className="mt-6 text-[11px] text-text-whisper"
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="mt-5 text-sm text-text-muted"
         >
-          Free to download. No credit card required.
+          Free for early testers. One email when it&rsquo;s your turn — no spam.
         </motion.p>
+
+        {/* Store badges — honest "soon" state */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 1.1 }}
+          className="mt-12 flex justify-center"
+        >
+          <StoreBadges mode="soon" size="sm" />
+        </motion.div>
       </div>
     </section>
   );
