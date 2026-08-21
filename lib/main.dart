@@ -254,13 +254,22 @@ class _TrySomethingAppState extends ConsumerState<TrySomethingApp> {
     }
   }
 
-  void _rescheduleNotifications() {
+  Future<void> _rescheduleNotifications() async {
     final scheduler = ref.read(notificationSchedulerProvider);
     final hobbies = ref.read(userHobbiesProvider);
-    final hobbyList = ref.read(hobbyListProvider).valueOrNull ?? [];
+
+    // Wait for the catalog so reminders carry the real hobby title. Reading
+    // valueOrNull here raced the first load and every reminder fell back to
+    // the generic "your hobby" copy.
+    List<Hobby> hobbyList;
+    try {
+      hobbyList = await ref.read(hobbyListProvider.future);
+    } catch (_) {
+      hobbyList = ref.read(hobbyListProvider).valueOrNull ?? [];
+    }
     final titleMap = {for (final h in hobbyList) h.id: h.title};
 
-    scheduler.reschedule(
+    await scheduler.reschedule(
       hobbies: hobbies,
       hobbyTitle: (id) => titleMap[id] ?? 'your hobby',
     );

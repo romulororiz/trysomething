@@ -57,7 +57,44 @@ class NotificationScheduler {
     }
   }
 
-  /// Schedule all re-engagement notifications based on current hobby state.
+  /// Picks the single hobby worth reminding about, or null when none
+  /// qualifies. Precedence: active > trying > saved (matches the product's
+  /// one-hobby focus); ties broken by most recent activity. Scheduling one
+  /// reminder total — instead of one per hobby — prevents accounts with
+  /// several stalled hobbies from receiving a burst of identical
+  /// notifications at the same instant.
+  @visibleForTesting
+  static MapEntry<String, UserHobby>? selectReminderHobby(
+    Map<String, UserHobby> hobbies,
+  ) {
+    const rank = {
+      HobbyStatus.active: 0,
+      HobbyStatus.trying: 1,
+      HobbyStatus.saved: 2,
+    };
+
+    MapEntry<String, UserHobby>? best;
+    for (final entry in hobbies.entries) {
+      final r = rank[entry.value.status];
+      if (r == null) continue; // done/paused: no reminders
+
+      if (best == null) {
+        best = entry;
+        continue;
+      }
+      final bestRank = rank[best.value.status]!;
+      if (r < bestRank) {
+        best = entry;
+      } else if (r == bestRank) {
+        final a = entry.value.lastActivityAt ?? entry.value.startedAt;
+        final b = best.value.lastActivityAt ?? best.value.startedAt;
+        if (b == null || (a != null && a.isAfter(b))) best = entry;
+      }
+    }
+    return best;
+  }
+
+  /// Schedule the re-engagement notification based on current hobby state.
   /// Call this whenever hobby state changes (save, start, toggle step, etc.).
   Future<void> reschedule({
     required Map<String, UserHobby> hobbies,
@@ -75,41 +112,41 @@ class NotificationScheduler {
     // Cancel all existing re-engagement notifications first
     await _plugin.cancelAll();
 
+    final pick = selectReminderHobby(hobbies);
+    if (pick == null) return;
+
     final now = DateTime.now();
+    final hobbyId = pick.key;
+    final hobby = pick.value;
+    final title = hobbyTitle(hobbyId);
 
-    for (final entry in hobbies.entries) {
-      final hobbyId = entry.key;
-      final hobby = entry.value;
-      final title = hobbyTitle(hobbyId);
+    switch (hobby.status) {
+      case HobbyStatus.saved:
+        // Saved but never started → remind after 24h from now
+        await _scheduleSavedReminder(hobbyId, title);
+        break;
 
-      switch (hobby.status) {
-        case HobbyStatus.saved:
-          // Saved but never started → remind after 24h from now
-          await _scheduleSavedReminder(hobbyId, title);
-          break;
+      case HobbyStatus.trying:
+      case HobbyStatus.active:
+        // Check if stalled (3+ days since last activity or start)
+        final lastActive = hobby.lastActivityAt ?? hobby.startedAt ?? now;
+        final daysSilent = now.difference(lastActive).inDays;
+        if (daysSilent >= 2) {
+          // Already stalled — schedule for tomorrow evening
+          await _scheduleSilentReminder(hobbyId, title);
+        } else {
+          // Not stalled yet — schedule for 3 days from last activity
+          await _scheduleSilentReminderAt(
+            hobbyId,
+            title,
+            lastActive.add(const Duration(days: 3)),
+          );
+        }
+        break;
 
-        case HobbyStatus.trying:
-        case HobbyStatus.active:
-          // Check if stalled (3+ days since last activity or start)
-          final lastActive = hobby.lastActivityAt ?? hobby.startedAt ?? now;
-          final daysSilent = now.difference(lastActive).inDays;
-          if (daysSilent >= 2) {
-            // Already stalled — schedule for tomorrow morning
-            await _scheduleSilentReminder(hobbyId, title);
-          } else {
-            // Not stalled yet — schedule for 3 days from last activity
-            await _scheduleSilentReminderAt(
-              hobbyId,
-              title,
-              lastActive.add(const Duration(days: 3)),
-            );
-          }
-          break;
-
-        case HobbyStatus.done:
-        case HobbyStatus.paused: // No reminders while paused
-          break;
-      }
+      case HobbyStatus.done:
+      case HobbyStatus.paused:
+        break;
     }
   }
 
@@ -149,13 +186,12 @@ class NotificationScheduler {
   }
 
   Future<void> _scheduleSilentReminder(String hobbyId, String title) async {
-    // Schedule for 9am tomorrow
     final now = tz.TZDateTime.now(tz.local);
-    var when = tz.TZDateTime(tz.local, now.year, now.month, now.day + 1, 9);
-    if (when.isBefore(now)) {
-      when = when.add(const Duration(days: 1));
-    }
-    await _scheduleSilentReminderAt(hobbyId, title, when);
+    await _scheduleSilentReminderAt(
+      hobbyId,
+      title,
+      DateTime(now.year, now.month, now.day + 1),
+    );
   }
 
   Future<void> _scheduleSilentReminderAt(
@@ -163,7 +199,15 @@ class NotificationScheduler {
     String title,
     DateTime scheduledDate,
   ) async {
-    final when = tz.TZDateTime.from(scheduledDate, tz.local);
+    // Deliver at 19:00 local on the target day — the copy says "tonight",
+    // so a morning delivery reads wrong.
+    final when = tz.TZDateTime(
+      tz.local,
+      scheduledDate.year,
+      scheduledDate.month,
+      scheduledDate.day,
+      19,
+    );
     if (when.isBefore(tz.TZDateTime.now(tz.local))) return;
 
     await _plugin.zonedSchedule(
