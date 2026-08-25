@@ -18,8 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pinned: an unpinned `channel: stable` silently upgrades the toolchain
+      # on every run. A Flutter release after 3.41.2 made IconData a final
+      # class, which material_design_icons_flutter and phosphor_flutter still
+      # extend — CI went red with no code change. Bump deliberately, together
+      # with those two packages.
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: 3.41.2
           channel: stable
           cache: true
 
