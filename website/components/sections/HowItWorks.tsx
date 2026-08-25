@@ -2,8 +2,9 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useInView } from "@/hooks/useInView";
-import { howItWorksSteps } from "@/lib/data";
+import { howItWorksSteps, stepScreens } from "@/lib/data";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { HowItWorksVisual } from "./HowItWorksVisual";
@@ -208,6 +209,59 @@ export function HowItWorks() {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* Real app screens — swipeable strip */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mt-12 mb-4 text-[10px] font-semibold uppercase tracking-[0.25em]"
+          style={{ color: "#6A6A7A" }}
+        >
+          Straight from the app
+        </motion.p>
+        <div
+          className="-mx-5 px-5 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          role="group"
+          aria-label="Screenshots from the TrySomething app"
+        >
+          {stepScreens.map((screen, i) => (
+            <motion.figure
+              key={screen.srcSm}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-30px" }}
+              transition={{ duration: 0.5, delay: i * 0.06, ease: EASE }}
+              className="snap-center shrink-0 w-[172px]"
+            >
+              <div
+                className="relative rounded-[22px] overflow-hidden"
+                style={{
+                  aspectRatio: "1080 / 2222",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.45)",
+                }}
+              >
+                <Image
+                  src={screen.srcSm}
+                  alt={screen.alt}
+                  fill
+                  sizes="172px"
+                  className="object-cover object-top"
+                />
+              </div>
+              <figcaption className="mt-2.5 flex items-center gap-2">
+                <span className="text-[11px] font-bold tabular-nums text-coral">
+                  {howItWorksSteps[i].step}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: "#8A8A9A" }}>
+                  {howItWorksSteps[i].title}
+                </span>
+              </figcaption>
+            </motion.figure>
+          ))}
         </div>
       </div>
     </section>

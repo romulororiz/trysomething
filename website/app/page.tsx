@@ -5,8 +5,8 @@ import { Solution } from "@/components/sections/Solution";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { WhatYouGet } from "@/components/sections/WhatYouGet";
 import { Manifesto } from "@/components/sections/Manifesto";
-import { Testimonials } from "@/components/sections/Testimonials";
-import { WaitlistCTA } from "@/components/sections/WaitlistCTA";
+import { Proof } from "@/components/sections/Proof";
+import { DownloadCTA } from "@/components/sections/DownloadCTA";
 import { Footer } from "@/components/layout/Footer";
 import { MobileAmbientIcons } from "@/components/layout/MobileAmbientIcons";
 
@@ -16,14 +16,14 @@ export default function LandingPage() {
       <Navbar />
       <MobileAmbientIcons />
 
-      <main>
+      <main className="relative z-10">
         <Hero />
         <Solution />
         <HowItWorks />
         <WhatYouGet />
         <Manifesto />
-        <Testimonials />
-        <WaitlistCTA />
+        <Proof />
+        <DownloadCTA />
       </main>
 
       <Footer />

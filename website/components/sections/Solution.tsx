@@ -62,9 +62,9 @@ function ValueAnchor({
         style={{ backgroundColor: CORAL, opacity: 0.5 }}
       />
       <div>
-        <h4 className="text-base md:text-lg font-bold text-[#FAFAFA] leading-snug">
+        <h3 className="text-base md:text-lg font-bold text-[#FAFAFA] leading-snug">
           {title}
-        </h4>
+        </h3>
         <p className="mt-1.5 text-sm text-[#8A8A9A] leading-relaxed">
           {description}
         </p>
@@ -102,7 +102,7 @@ export function Solution() {
       {/* ═══════════════════════════════════════════════════════
           PHASE 1 — The Problem
           ═══════════════════════════════════════════════════════ */}
-      <div className="py-28 md:py-40">
+      <div className="py-24 md:py-32">
         <div
           className="absolute top-[15%] right-0 w-[500px] h-[500px] translate-x-1/3 pointer-events-none opacity-[0.06]"
           style={{
@@ -178,7 +178,7 @@ export function Solution() {
       {/* ═══════════════════════════════════════════════════════
           PHASE 2 — Subtle coral divider (not a fat line)
           ═══════════════════════════════════════════════════════ */}
-      <div className="max-w-3xl mx-auto px-6 md:px-10 my-8 md:my-16">
+      <div className="max-w-3xl mx-auto px-6 md:px-10 my-2 md:my-6">
         <motion.div
           className="w-full h-px opacity-30"
           style={{
@@ -194,7 +194,7 @@ export function Solution() {
       {/* ═══════════════════════════════════════════════════════
           PHASE 3 — The Answer (CENTERED)
           ═══════════════════════════════════════════════════════ */}
-      <div ref={answerRef} className="py-20 md:py-32">
+      <div ref={answerRef} className="py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-6 md:px-10 text-center">
           {/* Eyebrow */}
           <motion.p
@@ -208,7 +208,7 @@ export function Solution() {
           </motion.p>
 
           {/* Bold centered statement */}
-          <motion.h3
+          <motion.h2
             initial={{ opacity: 0, y: 28 }}
             animate={answerInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, ease: EASE }}
@@ -219,7 +219,7 @@ export function Solution() {
             to try, and{" "}
             <span className="font-serif italic text-coral">exactly</span> how to
             start?
-          </motion.h3>
+          </motion.h2>
 
           {/* Three value anchors — centered row on desktop, stacked on mobile */}
           <div className="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-left max-w-4xl mx-auto">

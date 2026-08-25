@@ -23,14 +23,14 @@ const ICON_FILTER = "brightness(0.9) saturate(0.85)";
 
 const ambientIcons = [
   // Scattered across the viewport, NOT pinned to edges
-  { data: bicycleData, x: 15, y: 5, size: 48, opacity: 0.32, bob: 6, delay: 0, driftX: 30, driftY: -0.09, phase: 0 },
-  { data: cameraData, x: 65, y: 12, size: 44, opacity: 0.32, bob: 5, delay: 0.4, driftX: -25, driftY: -0.13, phase: 1.2 },
-  { data: bookData, x: 40, y: 28, size: 42, opacity: 0.32, bob: 4, delay: 0.8, driftX: 35, driftY: -0.07, phase: 2.5 },
-  { data: musicData, x: 75, y: 38, size: 46, opacity: 0.32, bob: 5, delay: 0.3, driftX: -20, driftY: -0.15, phase: 0.8 },
-  { data: plantData, x: 25, y: 52, size: 40, opacity: 0.32, bob: 4, delay: 1.0, driftX: 28, driftY: -0.08, phase: 3.2 },
-  { data: cookingData, x: 55, y: 65, size: 44, opacity: 0.32, bob: 5, delay: 0.6, driftX: -32, driftY: -0.12, phase: 1.8 },
-  { data: bonfireData, x: 10, y: 75, size: 42, opacity: 0.32, bob: 4, delay: 1.2, driftX: 22, driftY: -0.06, phase: 4.0 },
-  { data: pencilData, x: 70, y: 85, size: 40, opacity: 0.32, bob: 4, delay: 0.9, driftX: -28, driftY: -0.10, phase: 2.0 },
+  { data: bicycleData, x: 15, y: 5, size: 48, opacity: 0.18, bob: 6, delay: 0, driftX: 30, driftY: -0.09, phase: 0 },
+  { data: cameraData, x: 65, y: 12, size: 44, opacity: 0.18, bob: 5, delay: 0.4, driftX: -25, driftY: -0.13, phase: 1.2 },
+  { data: bookData, x: 40, y: 28, size: 42, opacity: 0.18, bob: 4, delay: 0.8, driftX: 35, driftY: -0.07, phase: 2.5 },
+  { data: musicData, x: 75, y: 38, size: 46, opacity: 0.18, bob: 5, delay: 0.3, driftX: -20, driftY: -0.15, phase: 0.8 },
+  { data: plantData, x: 25, y: 52, size: 40, opacity: 0.18, bob: 4, delay: 1.0, driftX: 28, driftY: -0.08, phase: 3.2 },
+  { data: cookingData, x: 55, y: 65, size: 44, opacity: 0.18, bob: 5, delay: 0.6, driftX: -32, driftY: -0.12, phase: 1.8 },
+  { data: bonfireData, x: 10, y: 75, size: 42, opacity: 0.18, bob: 4, delay: 1.2, driftX: 22, driftY: -0.06, phase: 4.0 },
+  { data: pencilData, x: 70, y: 85, size: 40, opacity: 0.18, bob: 4, delay: 0.9, driftX: -28, driftY: -0.10, phase: 2.0 },
 ];
 
 export function MobileAmbientIcons() {
@@ -70,7 +70,10 @@ export function MobileAmbientIcons() {
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-[1] pointer-events-none overflow-hidden md:hidden">
+    <div
+      className="fixed inset-0 z-0 pointer-events-none overflow-hidden md:hidden"
+      aria-hidden="true"
+    >
       {ambientIcons.map((icon, i) => {
         // Elliptical orbit — each icon swings horizontally on a sine wave
         // with its own phase offset, so they all wander independently

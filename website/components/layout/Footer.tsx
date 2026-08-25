@@ -41,7 +41,7 @@ export function Footer() {
               {[
                 { label: "How It Works", href: "#how-it-works" },
                 { label: "What You Get", href: "#what-you-get" },
-                { label: "Testimonials", href: "#testimonials" },
+                { label: "Straight Talk", href: "#proof" },
                 { label: "Download", href: "#download" },
               ].map((link) => (
                 <li key={link.href}>
@@ -82,10 +82,10 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-16 pt-8 border-t border-glass-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-text-whisper">
+          <p className="text-xs text-text-muted">
             &copy; {currentYear} TrySomething. All rights reserved.
           </p>
-          <p className="text-xs text-text-whisper">
+          <p className="text-xs text-text-muted">
             Made with care in Switzerland.
           </p>
         </div>

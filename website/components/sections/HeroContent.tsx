@@ -79,7 +79,7 @@ export function HeroContent() {
         show you exactly how to start. A personal coach keeps you going.
       </motion.p>
 
-      {/* ── Store badges ── */}
+      {/* ── Store badges — the hero's action ── */}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -89,13 +89,13 @@ export function HeroContent() {
         <StoreBadges />
       </motion.div>
 
-      {/* ── Available now ── */}
+      {/* ── Platform note ── */}
       <motion.p
         {...fadeUp(1.7)}
-        className="mt-5 text-xs"
-        style={{ color: "#3D3835" }}
+        className="mt-6 text-sm"
+        style={{ color: "#8A8A9A" }}
       >
-        Available on iPhone &amp; Android
+        Free to download &middot; iPhone &amp; Android
       </motion.p>
     </div>
   );
