@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import { StaggeredText } from "@/components/ui/StaggeredText";
 import { StoreBadges } from "@/components/ui/StoreBadges";
-import { WaitlistForm } from "@/components/ui/WaitlistForm";
 
-export function WaitlistCTA() {
+export function DownloadCTA() {
   const { ref, inView } = useInView({ threshold: 0.1 });
 
   return (
@@ -71,17 +70,18 @@ export function WaitlistCTA() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mt-6 text-lg md:text-xl text-text-secondary max-w-lg mx-auto leading-relaxed"
         >
-          Join the closed beta and be first in when the doors open.
+          Download TrySomething and find the hobby you&rsquo;ll actually stick
+          with.
         </motion.p>
 
-        {/* Waitlist form — the one action that matters */}
+        {/* Store badges — the page's closing action */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.7 }}
-          className="mt-10"
+          className="mt-10 flex justify-center"
         >
-          <WaitlistForm />
+          <StoreBadges />
         </motion.div>
 
         {/* Reassurance */}
@@ -89,20 +89,10 @@ export function WaitlistCTA() {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.9 }}
-          className="mt-5 text-sm text-text-muted"
+          className="mt-6 text-sm text-text-muted"
         >
-          Free for early testers. One email when it&rsquo;s your turn — no spam.
+          Free to download. No credit card required.
         </motion.p>
-
-        {/* Store badges — honest "soon" state */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 1.1 }}
-          className="mt-12 flex justify-center"
-        >
-          <StoreBadges mode="soon" size="sm" />
-        </motion.div>
       </div>
     </section>
   );

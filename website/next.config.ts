@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
-// Standard Vercel output (serverless). Static export was dropped so the
-// /api/waitlist route handler and generated OG image can run — deploying
-// on Vercel this changes nothing about how pages are served.
+// Standard Vercel output. Static export was dropped so the generated OG
+// image renders without extra force-static wiring and next/image can
+// optimize the app screenshots — every page still prerenders as static.
 const nextConfig: NextConfig = {};
 
 export default nextConfig;

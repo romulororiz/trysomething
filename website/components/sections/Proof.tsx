@@ -186,21 +186,21 @@ export function Proof() {
           <TiltCard>
             <div className="accent-stripe-coral p-7 md:p-10 text-center">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-coral mb-4">
-                Closed beta &middot; Switzerland
+                Early days &middot; Switzerland
               </p>
               <p className="text-xl md:text-2xl font-bold leading-snug tracking-tight text-text-primary">
-                The first cohort is starting{" "}
+                The first people are starting{" "}
                 <span className="font-serif italic text-coral">right now</span>.
               </p>
               <p className="mt-4 text-sm md:text-base text-text-secondary leading-relaxed max-w-md mx-auto">
-                Early testers get the full app free while we polish it &mdash;
-                and every piece of feedback shapes what TrySomething becomes.
+                Early users get the full app free while we polish it &mdash; and
+                every piece of feedback shapes what TrySomething becomes.
               </p>
               <button
                 onClick={() => scrollTo("#download")}
                 className="mt-7 px-7 py-3.5 rounded-full text-sm font-semibold text-white bg-coral hover:bg-coral-hover transition-colors duration-200 cursor-pointer active:scale-[0.97]"
               >
-                Join the first cohort
+                Get the app
               </button>
             </div>
           </TiltCard>

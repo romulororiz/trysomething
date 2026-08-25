@@ -6,7 +6,7 @@ import { HowItWorks } from "@/components/sections/HowItWorks";
 import { WhatYouGet } from "@/components/sections/WhatYouGet";
 import { Manifesto } from "@/components/sections/Manifesto";
 import { Proof } from "@/components/sections/Proof";
-import { WaitlistCTA } from "@/components/sections/WaitlistCTA";
+import { DownloadCTA } from "@/components/sections/DownloadCTA";
 import { Footer } from "@/components/layout/Footer";
 import { MobileAmbientIcons } from "@/components/layout/MobileAmbientIcons";
 
@@ -23,7 +23,7 @@ export default function LandingPage() {
         <WhatYouGet />
         <Manifesto />
         <Proof />
-        <WaitlistCTA />
+        <DownloadCTA />
       </main>
 
       <Footer />

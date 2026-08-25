@@ -230,7 +230,7 @@ export function WhatYouGet() {
             href="#download"
             className="text-coral font-semibold underline underline-offset-4 decoration-coral/40 hover:decoration-coral transition-colors duration-200"
           >
-            Get early access
+            Download it
           </a>
         </motion.p>
       </div>
