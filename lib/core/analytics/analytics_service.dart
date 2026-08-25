@@ -8,10 +8,13 @@ class AnalyticsService {
 
   bool _initialized = false;
 
-  // PostHog API key via --dart-define. Empty string skips init.
-  // IMPORTANT: Rotate this key after moving to env vars — it is in git history.
+  // PostHog *project* API key (phc_ prefix) — a write-only ingestion key that
+  // is meant to ship inside client binaries. Baked as the default so CI builds
+  // without --dart-define still report. Never put a phx_ personal key here:
+  // those are account-wide secrets and PostHog rejects their ingestion.
   static const _apiKey = String.fromEnvironment(
     'POSTHOG_API_KEY',
+    defaultValue: 'phc_2JdQmgssLVNdwU4FJjBteajM9dXkztG5by6xF0A4U8z',
   );
 
   /// Initialize PostHog SDK.
