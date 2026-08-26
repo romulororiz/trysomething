@@ -37,7 +37,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'meditative'],
-      costText: 'CHF 40–120',
+      costText: '\$40–120',
       timeText: '2h/week',
       difficultyText: 'Medium',
       whyLove: 'The tactile satisfaction is unmatched. You lose track of time, your phone stays in your pocket, and you walk away with something you made with your own hands.',
@@ -75,7 +75,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=600&h=800&fit=crop',
       tags: ['physical', 'social', 'competitive'],
-      costText: 'CHF 20–60',
+      costText: '\$20–60',
       timeText: '3h/week',
       difficultyText: 'Medium',
       whyLove: "It's social, physical, and mental all at once. You'll make friends at the gym and surprise yourself with what your body can do.",
@@ -110,7 +110,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'solo'],
-      costText: 'CHF 15–50',
+      costText: '\$15–50',
       timeText: '2h/week',
       difficultyText: 'Medium',
       whyLove: "The smell. The ritual. Pulling a golden loaf from your own oven. You'll never look at supermarket bread the same way again.",
@@ -146,7 +146,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1564982752979-3f7bc974d29a?w=600&h=800&fit=crop',
       tags: ['physical', 'outdoors', 'creative'],
-      costText: 'CHF 80–200',
+      costText: '\$80–200',
       timeText: '3h/week',
       difficultyText: 'Hard',
       whyLove: "There's nothing like the feeling of rolling. The freedom, the flow state, the community. Every trick you land is pure magic.",
@@ -157,7 +157,7 @@ class SeedData {
         KitItem(name: 'Knee & elbow pads', description: 'Falls are inevitable. Protect yourself.', cost: 25, isOptional: true),
       ],
       pitfalls: [
-        "Don't buy a cheap toy board. Spend at least CHF 80 on a real one.",
+        "Don't buy a cheap toy board. Spend at least \$80 on a real one.",
         'Learn to push and stop before attempting tricks.',
         'Skate on smooth ground first. Rough pavement is frustrating.',
       ],
@@ -183,7 +183,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=600&h=800&fit=crop',
       tags: ['competitive', 'solo', 'technical'],
-      costText: 'CHF 0–30',
+      costText: '\$0–30',
       timeText: '2h/week',
       difficultyText: 'Easy',
       whyLove: 'You can play anywhere, anytime. Online, in a park, with friends. Every game teaches you something new about strategy and yourself.',
@@ -219,7 +219,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'solo'],
-      costText: 'CHF 20–60',
+      costText: '\$20–60',
       timeText: '1h/week',
       difficultyText: 'Easy',
       whyLove: "The meditative rhythm of pen strokes. Watching beautiful letters flow from your hand. It's mindfulness made visible.",
@@ -256,7 +256,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=800&fit=crop',
       tags: ['physical', 'outdoors', 'relaxing'],
-      costText: 'CHF 0–150',
+      costText: '\$0–150',
       timeText: '4h/week',
       difficultyText: 'Easy',
       whyLove: 'The views, the fresh air, the sense of accomplishment at the summit. Nature is the best therapy — and it\'s free.',
@@ -293,7 +293,7 @@ class SeedData {
 
       imageUrl: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&h=800&fit=crop',
       tags: ['creative', 'relaxing', 'solo'],
-      costText: 'CHF 50–300',
+      costText: '\$50–300',
       timeText: '3h/week',
       difficultyText: 'Medium',
       whyLove: 'Playing your first full song is one of the most rewarding feelings. Music becomes yours to create, not just consume.',

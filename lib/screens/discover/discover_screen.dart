@@ -147,8 +147,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   }
 
   List<Hobby> _startCheap(List<Hobby> all) {
-    // Filter by the MINIMUM starter cost — "can I start for under CHF 50?"
-    // A hobby like "CHF 0–150" has min=0, so it IS cheap to start.
+    // Filter by the MINIMUM starter cost — "can I start for under $50?"
+    // A hobby like "$0–150" has min=0, so it IS cheap to start.
     // Use min cost for filtering, max cost as tiebreaker for sorting.
     final cheap = all.where((h) {
       final (min, _) = parseCostRange(h.costText);

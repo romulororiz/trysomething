@@ -4,7 +4,7 @@ import '../models/hobby.dart';
 //  PARSING HELPERS
 // ═══════════════════════════════════════════════════════
 
-/// Extracts numeric cost range from strings like "CHF 40–120" or "CHF 0–30".
+/// Extracts numeric cost range from strings like "$40–120" or "$0–30".
 /// Returns (min, max). Falls back to (0, 9999) if unparseable.
 (int, int) parseCostRange(String costText) {
   // Match patterns like "40–120", "0-30", "40 – 120"
@@ -12,7 +12,7 @@ import '../models/hobby.dart';
   if (match != null) {
     return (int.parse(match.group(1)!), int.parse(match.group(2)!));
   }
-  // Single number like "CHF 50"
+  // Single number like "$50"
   final single = RegExp(r'(\d+)').firstMatch(costText);
   if (single != null) {
     final v = int.parse(single.group(1)!);
@@ -35,7 +35,7 @@ double parseWeeklyHours(String timeText) {
 //  BUDGET THRESHOLDS
 // ═══════════════════════════════════════════════════════
 
-/// Maps budget level (0=low, 1=medium, 2=high) to max starter cost in CHF.
+/// Maps budget level (0=low, 1=medium, 2=high) to max starter cost in USD.
 int budgetThreshold(int budgetLevel) {
   switch (budgetLevel) {
     case 0:
@@ -196,7 +196,7 @@ List<String> computeMatchReasons({
   final maxBudget = budgetThreshold(userBudgetLevel);
   if (costMax <= maxBudget && userBudgetLevel < 2) {
     if (costMin == 0 && costMax <= 30) {
-      reasons.add('Starts free or under CHF 30');
+      reasons.add('Starts free or under \$30');
     } else {
       reasons.add('Starter cost: ${hobby.costText}');
     }
