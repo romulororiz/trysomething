@@ -19,8 +19,6 @@ import '../../components/app_overlays.dart';
 import '../../components/updated_matches_sheet.dart';
 import 'edit_profile_sheet.dart';
 import '../../core/analytics/analytics_provider.dart';
-import '../../core/storage/cache_manager.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../../models/hobby.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -677,36 +675,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       confirmLabel: 'Log out',
       isDestructive: true,
       onConfirm: () async {
-        // Grab references before any state changes dispose the widget
-        final prefs = ref.read(sharedPreferencesProvider);
+        // Grab the notifier before any state change disposes the widget.
+        // logout() owns the full cleanup (tokens, cache, coach boxes, prefs,
+        // user-keyed providers, onboarding reset) — see AuthNotifier.
         final authNotifier = ref.read(authProvider.notifier);
-        final onboardingNotifier =
-            ref.read(onboardingCompleteProvider.notifier);
-        final hobbiesNotifier = ref.read(userHobbiesProvider.notifier);
-
-        // 1. Clear in-memory user state FIRST (prevents stale data leaking to next session)
-        hobbiesNotifier.clear();
-
-        // 2. Clear persistent storage (no provider refreshes triggered)
-        await prefs.clear();
-        await CacheManager.clearAll();
-        try {
-          final coachBox = await Hive.openBox('coach_conversations');
-          await coachBox.clear();
-          final limitsBox = await Hive.openBox('coach_limits');
-          await limitsBox.clear();
-        } catch (_) {
-          // Boxes may not exist yet if coach was never opened
-        }
-
-        // 2. Logout FIRST — sets auth to unauthenticated, router → /login
-        //    Must happen before onboarding reset, otherwise the router sees
-        //    authenticated + !onboarded and redirects to /onboarding
         await authNotifier.logout();
-
-        // 3. Reset in-memory onboarding state (safe — auth already cleared)
-        onboardingNotifier.reset();
-
         if (context.mounted) context.go('/login');
       },
     );

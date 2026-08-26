@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../core/auth/token_storage.dart';
@@ -15,6 +16,7 @@ import '../data/repositories/auth_repository.dart';
 import '../data/repositories/auth_repository_api.dart';
 import '../models/auth.dart';
 import 'user_provider.dart';
+import 'feature_providers.dart';
 import '../core/subscription/subscription_service.dart';
 import 'subscription_provider.dart';
 
@@ -58,12 +60,20 @@ class AuthState {
 //  AUTH NOTIFIER
 // ═══════════════════════════════════════════════════
 
+// Google OAuth *web* client ID — a public identifier, baked as the default so
+// CI builds without --dart-define still request an idToken (whose audience the
+// server accepts). Single source of truth: the sign-in config below and the
+// idToken gate in loginWithGoogle must never disagree.
+const _googleServerClientId = String.fromEnvironment(
+  'GOOGLE_SERVER_CLIENT_ID',
+  defaultValue:
+      '941963960338-3583dc8tj80i8bi95le7in6c1jr1u96f.apps.googleusercontent.com',
+);
+
 // Primary GoogleSignIn — with serverClientId to request idToken (Android/iOS).
 final _googleSignIn = GoogleSignIn(
   scopes: ['email', 'profile'],
-  serverClientId: const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID') != ''
-      ? const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')
-      : null,
+  serverClientId: _googleServerClientId.isEmpty ? null : _googleServerClientId,
 );
 
 
@@ -72,8 +82,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AnalyticsService? _analytics;
   final SubscriptionService? _subscriptions;
   final OnboardingNotifier? _onboarding;
+  final Ref? _ref;
 
-  AuthNotifier(this._repo, [this._analytics, this._subscriptions, this._onboarding])
+  AuthNotifier(this._repo,
+      [this._analytics, this._subscriptions, this._onboarding, this._ref])
       : super(const AuthState());
 
   /// Sync user identity to Sentry for crash attribution.
@@ -181,7 +193,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final googleAuth = await account.authentication;
       // Only trust idToken if serverClientId was set — otherwise the token's
       // audience is the Android client ID which the server won't accept.
-      const hasServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID') != '';
+      const hasServerClientId = _googleServerClientId != '';
       final idToken = hasServerClientId ? googleAuth.idToken : null;
       final accessToken = googleAuth.accessToken;
       debugPrint('[GoogleAuth] idToken: ${idToken != null ? "present" : "NULL"} (serverClientId: $hasServerClientId)');
@@ -318,20 +330,65 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Wipe every trace of the current user from the device.
+  ///
+  /// Owned by the notifier rather than the calling screen so no logout path
+  /// can forget a step — the previous split let a bare logout() leave cached
+  /// API responses and in-memory provider state behind, which the next
+  /// account would briefly see.
+  ///
+  /// Order matters: SharedPreferences must be cleared BEFORE providers are
+  /// invalidated, because notifiers reload from prefs when recreated.
+  Future<void> _clearUserData() async {
+    await TokenStorage.clearTokens();
+    await CacheManager.clearAll();
+
+    // Coach history lives in its own boxes, outside CacheManager.
+    for (final box in ['coach_conversations', 'coach_limits']) {
+      try {
+        await (await Hive.openBox(box)).clear();
+      } catch (e) {
+        debugPrint('[Logout] Could not clear $box: $e');
+      }
+    }
+
+    final ref = _ref;
+    if (ref == null) return;
+
+    await ref.read(sharedPreferencesProvider).clear();
+    ref.read(userHobbiesProvider.notifier).clear();
+
+    // Every provider seeded on login (see main.dart) plus the user-scoped
+    // ones loaded lazily afterwards. Invalidation recreates them empty.
+    ref.invalidate(profileProvider);
+    ref.invalidate(proStatusProvider);
+    ref.invalidate(journalProvider);
+    ref.invalidate(scheduleProvider);
+    ref.invalidate(storiesProvider);
+    ref.invalidate(buddyProvider);
+    ref.invalidate(challengeProvider);
+    ref.invalidate(achievementsProvider);
+    ref.invalidate(notesProvider);
+    ref.invalidate(shoppingListCheckedProvider);
+    ref.invalidate(activityLogProvider);
+    ref.invalidate(userPreferencesProvider);
+  }
+
   Future<void> logout() async {
     _analytics?.trackEvent('logout');
     _analytics?.setUserId(null);
     _setSentryUser(null);
     _subscriptions?.clearUser();
-    await TokenStorage.clearTokens();
+    await _clearUserData();
     // Fire-and-forget — signOut hangs on unsupported platforms (Windows/Linux).
     _googleSignIn.signOut().catchError((_) => null);
     state = const AuthState(status: AuthStatus.unauthenticated);
+    // After the state flip: an authenticated-but-not-onboarded user would be
+    // routed to /onboarding instead of /login.
+    _onboarding?.reset();
   }
 
   /// Delete the user's account. Returns true on success.
-  /// Caller (Settings screen) must also clear SharedPreferences and
-  /// reset onboarding state, since those require WidgetRef.
   Future<bool> deleteAccount({String? password}) async {
     try {
       await _repo.deleteAccount(password: password);
@@ -340,10 +397,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _analytics?.setUserId(null);
       _setSentryUser(null);
       _subscriptions?.clearUser();
-      await TokenStorage.clearTokens();
-      await CacheManager.clearAll();
+      await _clearUserData();
       _googleSignIn.signOut().catchError((_) => null);
       state = const AuthState(status: AuthStatus.unauthenticated);
+      _onboarding?.reset();
       return true;
     } catch (e) {
       debugPrint('[DeleteAccount] Failed: $e');
@@ -447,7 +504,8 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final analytics = ref.watch(analyticsProvider);
   final subscriptions = ref.watch(subscriptionProvider);
   final onboarding = ref.watch(onboardingCompleteProvider.notifier);
-  return AuthNotifier(ref.watch(authRepositoryProvider), analytics, subscriptions, onboarding);
+  return AuthNotifier(
+      ref.watch(authRepositoryProvider), analytics, subscriptions, onboarding, ref);
 });
 
 /// Convenience: whether the user is authenticated.
