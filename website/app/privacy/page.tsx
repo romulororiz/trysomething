@@ -120,7 +120,12 @@ export default function PrivacyPage() {
           <li className="marker:text-coral">
             Usage analytics: screen views and custom events (e.g., hobby saved,
             session completed), collected via PostHog. Your PostHog user ID is
-            your internal account ID, not your name or email.
+            your internal account ID, not your name or email. PostHog also
+            records device information (model, OS version, screen size,
+            language) and derives an approximate, city-level location from
+            your IP address at the moment an event is received; we have
+            configured PostHog to discard the IP address itself, so it is not
+            stored with your data.
           </li>
           <li className="marker:text-coral">
             Crash reports: error stack traces, device model, and OS version,
@@ -297,8 +302,9 @@ export default function PrivacyPage() {
         <div className="bg-glass border border-glass-border rounded-xl p-4 mb-3">
           <p className="font-semibold text-text-primary">PostHog</p>
           <p className="text-sm text-text-secondary">
-            Usage analytics &bull; Anonymous user ID, screen views, events
-            &bull; USA
+            Usage analytics &bull; Anonymous user ID, screen views, events,
+            device info, approximate (city-level) location &mdash; IP address
+            discarded, not stored &bull; USA
           </p>
         </div>
 

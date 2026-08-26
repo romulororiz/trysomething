@@ -129,6 +129,9 @@ flutter:
 
 sentry:
   upload_debug_symbols: true
-  upload_source_maps: true
+  # Mobile-only app: source maps are release-name-matched and the plugin's
+  # default release never matches the runtime release set in main.dart.
+  # Debug symbols are UUID-matched and unaffected.
+  upload_source_maps: false
   project: try-something
   org: trysomething-lz
