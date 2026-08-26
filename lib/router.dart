@@ -492,8 +492,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           path == '/forgot-password';
 
       if (auth.status == AuthStatus.unknown) {
-        // Cold start: redirect to login while initial auth check runs
-        if (!isAuthRoute && !isPublicRoute) return '/login';
+        // Cold start: HOLD the current location while the session restore
+        // runs. The splash overlay covers the app during unknown/loading, so
+        // nothing leaks visually. Redirecting to /login here mounted the
+        // login form beneath the splash, and a restored session then
+        // navigated login → home — briefly crossfading the form on screen
+        // for an already-logged-in user.
         return null;
       }
 
