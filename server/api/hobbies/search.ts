@@ -19,6 +19,7 @@ export default async function handler(
 
     const hobbies = await prisma.hobby.findMany({
       where: {
+        isPublished: true,
         OR: [
           { title: { contains: q, mode: "insensitive" } },
           { hook: { contains: q, mode: "insensitive" } },

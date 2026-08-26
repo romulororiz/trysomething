@@ -47,7 +47,7 @@ export default async function handler(
       const packs = await Promise.all(
         CURATED_PACKS.map(async (pack) => {
           const hobbies = await prisma.hobby.findMany({
-            where: pack.filter as any,
+            where: { isPublished: true, ...(pack.filter as any) },
             take: pack.limit,
             orderBy: { sortOrder: "asc" },
             include: hobbyIncludes,
@@ -65,8 +65,9 @@ export default async function handler(
       return;
     }
 
-    // Default: return all hobbies
+    // Default: return all published hobbies
     const hobbies = await prisma.hobby.findMany({
+      where: { isPublished: true },
       orderBy: { sortOrder: "asc" },
       include: hobbyIncludes,
     });
