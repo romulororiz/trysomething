@@ -147,9 +147,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ═══════════════════════════════════════════════════
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) {
-          return MainShell(child: child);
-        },
+        // Explicit page: with plain `builder:` the shell got the default
+        // MaterialPage, whose iOS transition is a Cupertino slide — so the
+        // login form visibly slid away when the shell entered after sign-in.
+        // A fade here crossfades with the auth screens' fade-out instead.
+        // Stable key so tab changes update the page in place (no re-transition).
+        pageBuilder: (context, state, child) => CustomTransitionPage(
+          key: const ValueKey('main-shell'),
+          child: MainShell(child: child),
+          transitionsBuilder: (context, animation, _, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: Motion.slow,
+        ),
         routes: [
           GoRoute(
             path: '/home',
