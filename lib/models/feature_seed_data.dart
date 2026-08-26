@@ -228,19 +228,19 @@ class FeatureSeedData {
       'Pottery costs less than a Netflix + gym combo after month 3',
     ]),
     'bouldering': const CostBreakdown(starter: 20, threeMonth: 180, oneYear: 600, tips: [
-      'Day passes are CHF 18-25. Monthly passes save money after 3 visits/month',
+      'Day passes are \$18-25. Monthly passes save money after 3 visits/month',
       'Rent shoes until you\'re sure you\'ll stick with it',
       'Chalk lasts months — don\'t overthink gear',
     ]),
     'sourdough': const CostBreakdown(starter: 20, threeMonth: 45, oneYear: 100, tips: [
-      'Flour is your only recurring cost — about CHF 5/month',
+      'Flour is your only recurring cost — about \$5/month',
       'A Dutch oven is the single best upgrade you can make',
       'You\'ll save money vs. buying artisan bread',
     ]),
     'guitar': const CostBreakdown(starter: 160, threeMonth: 180, oneYear: 250, tips: [
       'Free YouTube lessons are genuinely excellent',
       'A used guitar in good condition saves 40-50%',
-      'Strings are the only recurring cost — CHF 8 every 2-3 months',
+      'Strings are the only recurring cost — \$8 every 2-3 months',
     ]),
     'chess': const CostBreakdown(starter: 0, threeMonth: 0, oneYear: 30, tips: [
       'Lichess is completely free with no premium tier',

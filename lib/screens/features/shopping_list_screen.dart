@@ -227,7 +227,7 @@ class ShoppingListScreen extends ConsumerWidget {
           children: [
             Text('Remaining total',
                 style: AppTypography.sansLabel.copyWith(color: AppColors.driftwood)),
-            Text('CHF $total',
+            Text('\$$total',
                 style: AppTypography.monoLarge.copyWith(color: AppColors.coral, fontSize: 20)),
           ],
         ),
@@ -372,7 +372,7 @@ class _ShoppingItemCard extends StatelessWidget {
             children: [
               if (item.cost > 0)
                 Text(
-                  'CHF ${item.cost}',
+                  '\$${item.cost}',
                   style: AppTypography.monoBadge.copyWith(
                     color: isChecked ? AppColors.warmGray : AppColors.coral,
                     fontWeight: FontWeight.w700,

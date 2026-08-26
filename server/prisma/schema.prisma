@@ -40,6 +40,7 @@ model Hobby {
   sortOrder         Int      @default(0)
   isAiGenerated     Boolean  @default(false)
   generatedBy       String?
+  isPublished       Boolean  @default(true)
   createdAt         DateTime @default(now())
 
   category       Category            @relation(fields: [categoryId], references: [id])

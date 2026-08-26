@@ -266,7 +266,7 @@ class _CostColumn extends StatelessWidget {
     return Column(
       children: [
         Text(
-          amount == 0 ? 'Free' : 'CHF $amount',
+          amount == 0 ? 'Free' : '\$$amount',
           style: AppTypography.monoMedium.copyWith(color: color),
         ),
         const SizedBox(height: 4),
@@ -431,7 +431,7 @@ class _TierColumn extends StatelessWidget {
 
           // Cost
           Text(
-            cost == 0 ? 'Free' : 'CHF $cost',
+            cost == 0 ? 'Free' : '\$$cost',
             style: AppTypography.monoMedium.copyWith(
               color: tierColor,
               fontSize: 14,

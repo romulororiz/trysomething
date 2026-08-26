@@ -207,7 +207,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
           _OptionCard(
             title: 'Minimum',
             subtitle: 'Only the essentials to get started',
-            trailing: essentialCost > 0 ? '~ CHF $essentialCost' : 'FREE',
+            trailing: essentialCost > 0 ? '~ \$$essentialCost' : 'FREE',
             selected: _budgetChoice == 0,
             onTap: () => setState(() => _budgetChoice = 0),
           ),
@@ -215,7 +215,7 @@ class _QuickstartScreenState extends ConsumerState<QuickstartScreen> {
           _OptionCard(
             title: 'Best value',
             subtitle: 'Better gear that lasts longer',
-            trailing: fullCost > 0 ? '~ CHF $fullCost' : 'FREE',
+            trailing: fullCost > 0 ? '~ \$$fullCost' : 'FREE',
             selected: _budgetChoice == 1,
             onTap: () => setState(() => _budgetChoice = 1),
           ),

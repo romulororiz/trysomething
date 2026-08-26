@@ -84,3 +84,8 @@ docs/superpowers/
 devtools_options.yaml
 server/.planning/
 .vercel
+
+# Curation audit outputs (date-stamped, local-only)
+server/scripts/audit-report-*.md
+server/scripts/image-audit-report-*.md
+server/scripts/image-audit-cache.json

@@ -102,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── Load catalog (light select) + stage 1 ──
     const hobbies = await prisma.hobby.findMany({
+      where: { isPublished: true },
       select: {
         id: true,
         title: true,

@@ -570,9 +570,9 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
     // Budget fit
     final budgetLabels = [
       'free',
-      'under CHF 30',
-      'under CHF 75',
-      'under CHF 150',
+      'under \$30',
+      'under \$75',
+      'under \$150',
       'flexible'
     ];
     if (prefs.budgetLevel < budgetLabels.length) {
@@ -666,7 +666,7 @@ class _HobbyDetailScreenState extends ConsumerState<HobbyDetailScreen>
                       ),
                     ),
                     if (item.cost > 0)
-                      Text('CHF ${item.cost}',
+                      Text('\$${item.cost}',
                           style: AppTypography.monoBadgeSmall.copyWith(
                             color: AppColors.textMuted,
                           )),

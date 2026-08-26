@@ -60,7 +60,7 @@ class _StarterKitCardState extends State<StarterKitCard> {
                     )),
               ),
               if (total > 0)
-                Text('~ CHF $total',
+                Text('~ \$$total',
                     style: AppTypography.monoBadge
                         .copyWith(color: AppColors.textMuted)),
             ],
@@ -167,7 +167,7 @@ class _StarterKitCardState extends State<StarterKitCard> {
             // Cost badge
             const SizedBox(width: 8),
             if (item.cost > 0)
-              Text('CHF ${item.cost}',
+              Text('\$${item.cost}',
                   style: AppTypography.monoBadge.copyWith(
                     color: AppColors.textSecondary,
                   ))

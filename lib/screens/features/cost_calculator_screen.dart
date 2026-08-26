@@ -295,7 +295,7 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
                     painter: _DonutChartPainter(
                       segments: segments,
                       progress: _chartProgress.value,
-                      centerText: 'CHF $total',
+                      centerText: '\$$total',
                       centerLabel: _selectedTier.label,
                     ),
                   );
@@ -601,7 +601,7 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
-                        child: Text('CHF ${item.cost}'),
+                        child: Text('\$${item.cost}'),
                       ),
                       if (item.affiliateUrl != null &&
                           item.affiliateUrl!.isNotEmpty &&
@@ -740,7 +740,7 @@ class _CostCalculatorScreenState extends ConsumerState<CostCalculatorScreen>
               ),
             ),
             Text(
-              'CHF $amount',
+              '\$$amount',
               style: AppTypography.data.copyWith(
                 color: AppColors.textPrimary,
                 fontSize: 13,

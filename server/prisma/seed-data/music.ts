@@ -11,7 +11,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&h=800&fit=crop",
     tags: ["creative", "relaxing", "solo", "social"],
-    costText: "CHF 50–300",
+    costText: "$50–300",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -33,7 +33,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1578579653953-64e944c3741b?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "relaxing", "portable", "beginner-friendly"],
-    costText: "CHF 30–120",
+    costText: "$30–120",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -55,7 +55,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1520523839897-bd77f47acab4?w=600&h=800&fit=crop",
     tags: ["creative", "relaxing", "intellectual", "classical"],
-    costText: "CHF 150–800",
+    costText: "$150–800",
     timeText: "4h/week",
     difficultyText: "Medium",
     whyLove:
@@ -77,7 +77,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1543443258-92b04ad5ec6b?w=600&h=800&fit=crop",
     tags: ["energetic", "physical", "stress-relief", "social"],
-    costText: "CHF 80–600",
+    costText: "$80–600",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -99,7 +99,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=600&h=800&fit=crop",
     tags: ["creative", "social", "expressive", "zero-cost"],
-    costText: "CHF 0–50",
+    costText: "$0–50",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -121,7 +121,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1612225330812-01a9c73f06b4?w=600&h=800&fit=crop",
     tags: ["classical", "expressive", "challenging", "elegant"],
-    costText: "CHF 100–500",
+    costText: "$100–500",
     timeText: "4h/week",
     difficultyText: "Hard",
     whyLove:
@@ -143,7 +143,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=600&h=800&fit=crop",
     tags: ["creative", "social", "electronic", "nightlife"],
-    costText: "CHF 150–600",
+    costText: "$150–600",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -165,7 +165,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1658247060442-9cc9b2e2a3f9?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "technical", "digital", "solo"],
-    costText: "CHF 0–400",
+    costText: "$0–400",
     timeText: "4h/week",
     difficultyText: "Hard",
     whyLove:
@@ -187,7 +187,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1517498206-2b9d47634bb9?w=800&h=1066&fit=crop&q=85",
     tags: ["portable", "blues", "folk", "beginner-friendly"],
-    costText: "CHF 20–80",
+    costText: "$20–80",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -209,7 +209,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1512404871764-1cf03a297841?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "rhythmic", "social", "band-essential"],
-    costText: "CHF 100–400",
+    costText: "$100–400",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -231,7 +231,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1690181307176-95fde5584eed?w=800&h=1066&fit=crop&q=85",
     tags: ["classical", "meditative", "portable", "elegant"],
-    costText: "CHF 80–400",
+    costText: "$80–400",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -253,7 +253,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=600&h=800&fit=crop",
     tags: ["jazz", "expressive", "social", "cool"],
-    costText: "CHF 200–800",
+    costText: "$200–800",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -275,7 +275,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1620564131209-6df84641fe87?w=800&h=1066&fit=crop&q=85",
     tags: ["rhythmic", "portable", "acoustic", "social"],
-    costText: "CHF 60–250",
+    costText: "$60–250",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -297,7 +297,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1504732099162-d8c9d5ba3bfd?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "zero-cost", "portable", "hip-hop"],
-    costText: "CHF 0",
+    costText: "$0",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -319,7 +319,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1593698054498-56898cbad8af?w=800&h=1066&fit=crop&q=85",
     tags: ["creative", "introspective", "expressive", "literary"],
-    costText: "CHF 0–50",
+    costText: "$0–50",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -341,7 +341,7 @@ export const musicHobbies = [
     imageUrl:
       "https://images.unsplash.com/photo-1520523839897-bd77f47acab4?w=600&h=800&fit=crop",
     tags: ["intellectual", "foundational", "analytical", "solo"],
-    costText: "CHF 0–40",
+    costText: "$0–40",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -1960,7 +1960,7 @@ export const musicFaqItems = [
     hobbyId: "drumming",
     question: "Do I need a full drum kit to start?",
     answer:
-      "No. Start with a practice pad and sticks for CHF 35 total. You can learn all fundamental techniques on a pad before investing in a kit.",
+      "No. Start with a practice pad and sticks for $35 total. You can learn all fundamental techniques on a pad before investing in a kit.",
     sortOrder: 1,
   },
 
@@ -1992,7 +1992,7 @@ export const musicFaqItems = [
     hobbyId: "violin",
     question: "Should I rent or buy a violin as a beginner?",
     answer:
-      "Renting (CHF 20-30/month) is smart for the first 3-6 months — it lets you try without a big commitment and most shops apply rental fees toward a purchase later.",
+      "Renting ($20-30/month) is smart for the first 3-6 months — it lets you try without a big commitment and most shops apply rental fees toward a purchase later.",
     sortOrder: 0,
   },
   {
@@ -2015,7 +2015,7 @@ export const musicFaqItems = [
     hobbyId: "dj-mixing",
     question: "What's the cheapest way to start DJing?",
     answer:
-      "Download the free version of rekordbox or Traktor DJ and use a Numark DJ2GO2 controller (around CHF 80). You can also start with just a laptop and Mixxx (free open-source DJ software).",
+      "Download the free version of rekordbox or Traktor DJ and use a Numark DJ2GO2 controller (around $80). You can also start with just a laptop and Mixxx (free open-source DJ software).",
     sortOrder: 1,
   },
   {
@@ -2031,7 +2031,7 @@ export const musicFaqItems = [
     hobbyId: "music-production",
     question: "What's the best DAW for beginners?",
     answer:
-      "GarageBand (free on Mac) is the easiest starting point. For cross-platform, Ableton Live Intro (CHF 80) or the free version of BandLab are excellent. FL Studio also has a free trial.",
+      "GarageBand (free on Mac) is the easiest starting point. For cross-platform, Ableton Live Intro ($80) or the free version of BandLab are excellent. FL Studio also has a free trial.",
     sortOrder: 0,
   },
   {
@@ -2048,20 +2048,20 @@ export const musicFaqItems = [
 // =============================================================================
 
 export const musicCostBreakdowns = [
-  { hobbyId: "guitar", starter: 180, threeMonth: 340, oneYear: 500, tips: ["Guitar CHF 100-300, picks/tuner/capo CHF 30, replacement strings CHF 20-40/year, online course CHF 0-100."] },
-  { hobbyId: "ukulele", starter: 60, threeMonth: 130, oneYear: 200, tips: ["Ukulele CHF 40-120, tuner CHF 10, strings CHF 10, gig bag CHF 15, lessons free on YouTube."] },
-  { hobbyId: "piano", starter: 200, threeMonth: 550, oneYear: 900, tips: ["Digital piano CHF 150-500, sustain pedal CHF 20, lesson book CHF 15, optional bench CHF 60, optional online lessons CHF 100-300."] },
-  { hobbyId: "drumming", starter: 50, threeMonth: 325, oneYear: 600, tips: ["Practice pad + sticks CHF 35, metronome CHF 15", "Optional e-kit CHF 300-500 when ready", "Stick replacements CHF 20/year."] },
-  { hobbyId: "singing", starter: 0, threeMonth: 50, oneYear: 100, tips: ["Free to start with YouTube lessons", "Optional: USB mic CHF 45, pitch app CHF 20, vocal lesson book CHF 15."] },
-  { hobbyId: "violin", starter: 200, threeMonth: 450, oneYear: 700, tips: ["Violin set CHF 150-400, shoulder rest CHF 20, rosin CHF 8, tuner CHF 12, extra strings CHF 15, lessons strongly recommended CHF 0-200."] },
-  { hobbyId: "dj-mixing", starter: 200, threeMonth: 450, oneYear: 700, tips: ["Controller CHF 80-300, headphones CHF 60-150, music subscription CHF 150/year, optional laptop stand CHF 30."] },
-  { hobbyId: "music-production", starter: 0, threeMonth: 300, oneYear: 600, tips: ["Free DAW (GarageBand/Reaper) CHF 0, headphones CHF 50-130, audio interface CHF 0-100, MIDI keyboard CHF 0-70, sample packs CHF 0-50."] },
-  { hobbyId: "harmonica", starter: 35, threeMonth: 93, oneYear: 150, tips: ["Harmonica in C CHF 25-50, lesson book CHF 15, second harmonica in G CHF 25-50, carry case CHF 10."] },
-  { hobbyId: "bass-guitar", starter: 250, threeMonth: 425, oneYear: 600, tips: ["Bass guitar CHF 150-350, practice amp CHF 50-100, cable CHF 10, tuner CHF 12, replacement strings CHF 20."] },
-  { hobbyId: "flute", starter: 150, threeMonth: 325, oneYear: 500, tips: ["Student flute CHF 100-400 (or rent CHF 25/month), cleaning kit CHF 8, music stand CHF 15, lesson book CHF 15."] },
-  { hobbyId: "saxophone", starter: 300, threeMonth: 600, oneYear: 900, tips: ["Alto sax CHF 200-600 (or rent CHF 40/month), reeds CHF 50/year, neck strap CHF 15, cleaning supplies CHF 15, mouthpiece upgrade CHF 30."] },
-  { hobbyId: "cajon", starter: 80, threeMonth: 190, oneYear: 300, tips: ["Cajon CHF 60-200, seat pad CHF 15, brush rute CHF 12, online course CHF 0-50."] },
-  { hobbyId: "beatboxing", starter: 0, threeMonth: 100, oneYear: 200, tips: ["Free to start — zero equipment needed", "Optional: microphone CHF 40-90, loop pedal CHF 80, in-ear monitors CHF 25."] },
-  { hobbyId: "songwriting", starter: 0, threeMonth: 50, oneYear: 100, tips: ["Free with phone voice memos and a notebook", "Optional: songwriter's journal CHF 15, voice recorder CHF 35, rhyming dictionary CHF 12."] },
-  { hobbyId: "music-theory", starter: 0, threeMonth: 40, oneYear: 80, tips: ["Free with musictheory.net and YouTube", "Optional: workbook CHF 20, staff paper CHF 8, mini MIDI keyboard CHF 40."] },
+  { hobbyId: "guitar", starter: 180, threeMonth: 340, oneYear: 500, tips: ["Guitar $100-300, picks/tuner/capo $30, replacement strings $20-40/year, online course $0-100."] },
+  { hobbyId: "ukulele", starter: 60, threeMonth: 130, oneYear: 200, tips: ["Ukulele $40-120, tuner $10, strings $10, gig bag $15, lessons free on YouTube."] },
+  { hobbyId: "piano", starter: 200, threeMonth: 550, oneYear: 900, tips: ["Digital piano $150-500, sustain pedal $20, lesson book $15, optional bench $60, optional online lessons $100-300."] },
+  { hobbyId: "drumming", starter: 50, threeMonth: 325, oneYear: 600, tips: ["Practice pad + sticks $35, metronome $15", "Optional e-kit $300-500 when ready", "Stick replacements $20/year."] },
+  { hobbyId: "singing", starter: 0, threeMonth: 50, oneYear: 100, tips: ["Free to start with YouTube lessons", "Optional: USB mic $45, pitch app $20, vocal lesson book $15."] },
+  { hobbyId: "violin", starter: 200, threeMonth: 450, oneYear: 700, tips: ["Violin set $150-400, shoulder rest $20, rosin $8, tuner $12, extra strings $15, lessons strongly recommended $0-200."] },
+  { hobbyId: "dj-mixing", starter: 200, threeMonth: 450, oneYear: 700, tips: ["Controller $80-300, headphones $60-150, music subscription $150/year, optional laptop stand $30."] },
+  { hobbyId: "music-production", starter: 0, threeMonth: 300, oneYear: 600, tips: ["Free DAW (GarageBand/Reaper) $0, headphones $50-130, audio interface $0-100, MIDI keyboard $0-70, sample packs $0-50."] },
+  { hobbyId: "harmonica", starter: 35, threeMonth: 93, oneYear: 150, tips: ["Harmonica in C $25-50, lesson book $15, second harmonica in G $25-50, carry case $10."] },
+  { hobbyId: "bass-guitar", starter: 250, threeMonth: 425, oneYear: 600, tips: ["Bass guitar $150-350, practice amp $50-100, cable $10, tuner $12, replacement strings $20."] },
+  { hobbyId: "flute", starter: 150, threeMonth: 325, oneYear: 500, tips: ["Student flute $100-400 (or rent $25/month), cleaning kit $8, music stand $15, lesson book $15."] },
+  { hobbyId: "saxophone", starter: 300, threeMonth: 600, oneYear: 900, tips: ["Alto sax $200-600 (or rent $40/month), reeds $50/year, neck strap $15, cleaning supplies $15, mouthpiece upgrade $30."] },
+  { hobbyId: "cajon", starter: 80, threeMonth: 190, oneYear: 300, tips: ["Cajon $60-200, seat pad $15, brush rute $12, online course $0-50."] },
+  { hobbyId: "beatboxing", starter: 0, threeMonth: 100, oneYear: 200, tips: ["Free to start — zero equipment needed", "Optional: microphone $40-90, loop pedal $80, in-ear monitors $25."] },
+  { hobbyId: "songwriting", starter: 0, threeMonth: 50, oneYear: 100, tips: ["Free with phone voice memos and a notebook", "Optional: songwriter's journal $15, voice recorder $35, rhyming dictionary $12."] },
+  { hobbyId: "music-theory", starter: 0, threeMonth: 40, oneYear: 80, tips: ["Free with musictheory.net and YouTube", "Optional: workbook $20, staff paper $8, mini MIDI keyboard $40."] },
 ];
