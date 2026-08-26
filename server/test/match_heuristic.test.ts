@@ -182,7 +182,7 @@ describe("computeMatchReasons (Dart parity)", () => {
       preferSocial: false,
     };
     expect(computeMatchReasons(meditation, profile)).toEqual([
-      "Starts free or under CHF 30",
+      "Starts free or under $30",
       "Perfect for solo time",
       "Matches your meditative vibe",
     ]);

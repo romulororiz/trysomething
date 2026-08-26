@@ -13,7 +13,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=600&h=800&fit=crop",
     tags: ["creative", "relaxing", "home-based", "slow"],
-    costText: "CHF 15–50",
+    costText: "$15–50",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -34,7 +34,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&h=800&fit=crop",
     tags: ["science", "healthy", "home-based", "creative"],
-    costText: "CHF 20–60",
+    costText: "$20–60",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -55,7 +55,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1447933601403-56dc2df6e3f5?w=600&h=800&fit=crop",
     tags: ["craft", "aromatic", "home-based", "morning-routine"],
-    costText: "CHF 40–150",
+    costText: "$40–150",
     timeText: "1h/week",
     difficultyText: "Medium",
     whyLove:
@@ -76,7 +76,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1556761223-4c4282c73f77?w=600&h=800&fit=crop",
     tags: ["creative", "social", "hands-on", "italian"],
-    costText: "CHF 20–80",
+    costText: "$20–80",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -97,7 +97,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=800&fit=crop",
     tags: ["precision", "social", "japanese", "creative"],
-    costText: "CHF 40–100",
+    costText: "$40–100",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -118,7 +118,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=800&fit=crop",
     tags: ["outdoor", "social", "patience", "weekend"],
-    costText: "CHF 80–300",
+    costText: "$80–300",
     timeText: "4h/week",
     difficultyText: "Medium",
     whyLove:
@@ -139,7 +139,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=800&fit=crop",
     tags: ["comforting", "home-based", "creative", "family"],
-    costText: "CHF 15–50",
+    costText: "$15–50",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -160,7 +160,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&h=800&fit=crop",
     tags: ["social", "creative", "evening", "classy"],
-    costText: "CHF 60–200",
+    costText: "$60–200",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -181,7 +181,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=600&h=800&fit=crop",
     tags: ["science", "hands-on", "home-based", "rewarding"],
-    costText: "CHF 30–80",
+    costText: "$30–80",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -202,7 +202,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=600&h=800&fit=crop",
     tags: ["creative", "precision", "gift-worthy", "indulgent"],
-    costText: "CHF 40–120",
+    costText: "$40–120",
     timeText: "2h/week",
     difficultyText: "Hard",
     whyLove:
@@ -223,7 +223,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1534483509719-8b078da3e3da?w=600&h=800&fit=crop",
     tags: ["preserving", "seasonal", "home-based", "practical"],
-    costText: "CHF 15–40",
+    costText: "$15–40",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -244,7 +244,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&h=800&fit=crop",
     tags: ["spicy", "creative", "home-based", "gift-worthy"],
-    costText: "CHF 20–50",
+    costText: "$20–50",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -265,7 +265,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=800&fit=crop",
     tags: ["cultural", "flavourful", "social", "home-based"],
-    costText: "CHF 30–80",
+    costText: "$30–80",
     timeText: "3h/week",
     difficultyText: "Medium",
     whyLove:
@@ -286,7 +286,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&h=800&fit=crop",
     tags: ["spicy", "aromatic", "cultural", "home-based"],
-    costText: "CHF 25–60",
+    costText: "$25–60",
     timeText: "2h/week",
     difficultyText: "Medium",
     whyLove:
@@ -307,7 +307,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=800&fit=crop",
     tags: ["social", "family", "creative", "italian"],
-    costText: "CHF 25–120",
+    costText: "$25–120",
     timeText: "2h/week",
     difficultyText: "Easy",
     whyLove:
@@ -328,7 +328,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1483695028939-5bb13f8648b0?w=600&h=800&fit=crop",
     tags: ["precision", "creative", "impressive", "gift-worthy"],
-    costText: "CHF 30–100",
+    costText: "$30–100",
     timeText: "3h/week",
     difficultyText: "Hard",
     whyLove:
@@ -349,7 +349,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&h=800&fit=crop",
     tags: ["mindful", "cultural", "relaxing", "daily-ritual"],
-    costText: "CHF 30–150",
+    costText: "$30–150",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -370,7 +370,7 @@ export const foodHobbies = [
     categoryId: "food",
     imageUrl: "https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?w=600&h=800&fit=crop",
     tags: ["science", "healthy", "home-based", "fermented"],
-    costText: "CHF 20–50",
+    costText: "$20–50",
     timeText: "1h/week",
     difficultyText: "Easy",
     whyLove:
@@ -387,7 +387,7 @@ export const foodHobbies = [
 ];
 
 // =============================================================================
-//  Kit Items — 3-5 per hobby (CHF pricing, Amazon.de affiliate links)
+//  Kit Items — 3-5 per hobby (USD pricing, Amazon.de affiliate links)
 // =============================================================================
 
 export const foodKitItems = [
@@ -1383,7 +1383,7 @@ export const foodFaqItems = [
 ];
 
 // =============================================================================
-//  Cost Breakdowns — 1 per hobby (starter / 3-month / 1-year, in CHF)
+//  Cost Breakdowns — 1 per hobby (starter / 3-month / 1-year, in USD)
 // =============================================================================
 
 export const foodCostBreakdowns = [
@@ -1459,7 +1459,7 @@ export const foodCostBreakdowns = [
     threeMonth: 55,
     oneYear: 120,
     tips: [
-      "Flour and yeast are extremely affordable. A loaf costs under CHF 1 in ingredients.",
+      "Flour and yeast are extremely affordable. A loaf costs under $1 in ingredients.",
       "Most tools you likely already own. A scale is the most important investment.",
       "Baking bread replaces buying it, so the hobby practically pays for itself.",
     ],
@@ -1525,7 +1525,7 @@ export const foodCostBreakdowns = [
     threeMonth: 100,
     oneYear: 250,
     tips: [
-      "Korean pantry staples (gochugaru, doenjang, gochujang) last months and cost under CHF 30 total.",
+      "Korean pantry staples (gochugaru, doenjang, gochujang) last months and cost under $30 total.",
       "Asian supermarkets in Swiss cities have dramatically lower prices than regular shops.",
       "Many banchan use very cheap vegetables like spinach, bean sprouts, and potatoes.",
     ],
@@ -1548,7 +1548,7 @@ export const foodCostBreakdowns = [
     oneYear: 200,
     tips: [
       "A pizza stone is the best single investment. Heats evenly and lasts a lifetime.",
-      "Dough ingredients (flour, yeast, salt) cost well under CHF 1 per pizza.",
+      "Dough ingredients (flour, yeast, salt) cost well under $1 per pizza.",
       "San Marzano tins bought in bulk from Italian delis are much cheaper.",
     ],
   },
@@ -1582,7 +1582,7 @@ export const foodCostBreakdowns = [
     tips: [
       "A single SCOBY reproduces endlessly. You'll never need to buy another.",
       "Black tea and sugar are the cheapest possible ingredients for a brewing hobby.",
-      "Home-brewed kombucha costs about CHF 0.50 per litre vs CHF 4-6 in shops.",
+      "Home-brewed kombucha costs about $0.50 per litre vs $4-6 in shops.",
     ],
   },
 ];

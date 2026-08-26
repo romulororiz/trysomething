@@ -33,7 +33,7 @@ export interface ScoredHobby {
 
 // ── Parsing helpers ─────────────────────────────
 
-/** Extracts numeric cost range from strings like "CHF 40–120" or "CHF 0–30".
+/** Extracts numeric cost range from strings like "$40–120" or "$0–30".
  *  Returns [min, max]. Falls back to [0, 9999] if unparseable ("Free" included). */
 export function parseCostRange(costText: string): [number, number] {
   const range = costText.match(/(\d+)\s*[–-]\s*(\d+)/);
@@ -60,7 +60,7 @@ export function parseWeeklyHours(timeText: string): number {
 
 // ── Budget thresholds ───────────────────────────
 
-/** Maps budget level (0=low, 1=medium, 2+=high) to max starter cost in CHF. */
+/** Maps budget level (0=low, 1=medium, 2+=high) to max starter cost in USD. */
 export function budgetThreshold(budgetLevel: number): number {
   switch (budgetLevel) {
     case 0:
@@ -183,7 +183,7 @@ export function computeMatchReasons(hobby: HobbyLite, profile: MatchProfile): st
   const maxBudget = budgetThreshold(profile.budgetLevel);
   if (costMax <= maxBudget && profile.budgetLevel < 2) {
     if (costMin === 0 && costMax <= 30) {
-      reasons.push("Starts free or under CHF 30");
+      reasons.push("Starts free or under $30");
     } else {
       reasons.push(`Starter cost: ${hobby.costText}`);
     }
