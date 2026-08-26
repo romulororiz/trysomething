@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../providers/subscription_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -51,6 +52,10 @@ class _ProScreenState extends ConsumerState<ProScreen> {
   @override
   Widget build(BuildContext context) {
     final status = ref.watch(proStatusProvider);
+    final offering = ref.watch(currentOfferingProvider).valueOrNull;
+    final monthlyProduct = offering?.monthly?.storeProduct;
+    final annualProduct = offering?.annual?.storeProduct;
+    final annualPerMonth = annualProduct?.pricePerMonthString;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -186,17 +191,22 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                                     _buildPlanTile(
                                       index: 1,
                                       label: 'Annual',
-                                      price: 'CHF 39.99',
+                                      price: annualProduct?.priceString ??
+                                          'CHF 39.99',
                                       period: '/year',
-                                      perMonthPrice: 'CHF 3.33/mo',
-                                      savingsPercent: 33,
+                                      perMonthPrice: annualPerMonth != null
+                                          ? '$annualPerMonth/mo'
+                                          : 'CHF 3.33/mo',
+                                      savingsPercent: _savingsPercent(
+                                          monthlyProduct, annualProduct),
                                       badge: 'BEST VALUE',
                                     ),
                                     const SizedBox(height: 10),
                                     _buildPlanTile(
                                       index: 0,
                                       label: 'Monthly',
-                                      price: 'CHF 4.99',
+                                      price: monthlyProduct?.priceString ??
+                                          'CHF 4.99',
                                       period: '/month',
                                     ),
                                   ],
@@ -515,6 +525,14 @@ class _ProScreenState extends ConsumerState<ProScreen> {
   // ═══════════════════════════════════════════════════════
 
   String get _ctaLabel => 'Start Free Trial';
+
+  /// Real savings of annual vs 12× monthly from store prices;
+  /// 33 mirrors the CHF list-price ratio when offerings are unavailable.
+  int _savingsPercent(StoreProduct? monthly, StoreProduct? annual) {
+    if (monthly == null || annual == null || monthly.price <= 0) return 33;
+    final savings = 1 - (annual.price / (monthly.price * 12));
+    return (savings * 100).round().clamp(0, 99);
+  }
 
   String _statusText(ProStatus status) {
     if (status.isTrialing) {
