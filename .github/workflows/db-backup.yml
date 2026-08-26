@@ -1,0 +1,49 @@
+name: DB Backup
+
+on:
+  schedule:
+    - cron: "30 2 * * *" # nightly 02:30 UTC (04:30 CH summer time)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Neon runs PostgreSQL 17; the runner's default client is 16 and
+      # pg_dump refuses servers newer than itself.
+      - name: Install postgresql-client-17
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: pg_dump (custom format, compressed)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # pg_dump must not go through PgBouncer — strip Neon's -pooler suffix
+          DIRECT_URL="${DATABASE_URL/-pooler/}"
+          STAMP=$(date -u +%Y-%m-%d)
+          /usr/lib/postgresql/17/bin/pg_dump "$DIRECT_URL" \
+            --format=custom --compress=9 --no-owner --no-privileges \
+            --file="trysomething-$STAMP.dump"
+          # A truncated/empty dump must fail loudly, not archive silently
+          SIZE=$(stat -c%s "trysomething-$STAMP.dump")
+          echo "dump size: $SIZE bytes"
+          if [ "$SIZE" -lt 1000000 ]; then
+            echo "::error::Dump suspiciously small (<1MB) — refusing to archive"
+            exit 1
+          fi
+
+      - name: Upload artifact (14-day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: trysomething-*.dump
+          retention-days: 14
+          if-no-files-found: error
