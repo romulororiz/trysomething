@@ -32,11 +32,15 @@ jobs:
           /usr/lib/postgresql/17/bin/pg_dump "$DIRECT_URL" \
             --format=custom --compress=9 --no-owner --no-privileges \
             --file="trysomething-$STAMP.dump"
-          # A truncated/empty dump must fail loudly, not archive silently
+          # A truncated/empty dump must fail loudly, not archive silently.
+          # The healthy dump is only ~550KB (--compress=9 on mostly-text data),
+          # so validate CONTENT, not just size: the TOC must list all Prisma
+          # tables. 100KB floor still catches an empty/garbage file.
           SIZE=$(stat -c%s "trysomething-$STAMP.dump")
-          echo "dump size: $SIZE bytes"
-          if [ "$SIZE" -lt 1000000 ]; then
-            echo "::error::Dump suspiciously small (<1MB) — refusing to archive"
+          TABLES=$(/usr/lib/postgresql/17/bin/pg_restore --list "trysomething-$STAMP.dump" | grep -c "TABLE DATA" || true)
+          echo "dump size: $SIZE bytes, tables with data entries: $TABLES"
+          if [ "$SIZE" -lt 100000 ] || [ "$TABLES" -lt 20 ]; then
+            echo "::error::Dump failed validation (size=$SIZE, tables=$TABLES) — refusing to archive"
             exit 1
           fi
 
