@@ -190,6 +190,32 @@ void main() {
       return notifier;
     }
 
+    testWidgets('digits sit at the ring center under a notched status bar',
+        (tester) async {
+      // iPhone-style top inset: 177 physical px @ dpr 3 = 59 logical px.
+      // Regression guard: SafeArea zeroes padding AND viewPadding for
+      // descendants, so the phase must read the inset from the raw view.
+      tester.view.padding = const FakeViewPadding(top: 177);
+      addTearDown(tester.view.resetPadding);
+
+      final notifier = await enterTimerPhase(tester);
+      // Let the AnimatedSwitcher's 400ms fade/slide finish before measuring —
+      // mid-flight the SlideTransition still offsets the phase by a few px.
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final logicalHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      final ringCenterY = logicalHeight * 0.42;
+      // The ':' separator is vertically centered with the rolling digits.
+      expect(
+        tester.getCenter(find.text(':')).dy,
+        closeTo(ringCenterY, 1.0),
+      );
+
+      notifier.endTimerEarly();
+      await tester.pump();
+    });
+
     testWidgets('shows MM:SS countdown and step instructions', (tester) async {
       final notifier = await enterTimerPhase(tester);
 

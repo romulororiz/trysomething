@@ -488,7 +488,9 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                       coachMode: coachMode,
                       autoSend: autoSend,
                     ),
-                    const SizedBox(height: 8),
+                    // Same breathing room above and below the pill (user
+                    // feedback: 8/16 read as a bottom-heavy gap).
+                    const SizedBox(height: 16),
                     // Open coach freely — no pre-filled message
                     GestureDetector(
                       onTap: () => context.push('/coach/${hobby.id}'),
