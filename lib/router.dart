@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -187,13 +188,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) {
               final railId = state.pathParameters['railId']!;
               final title = state.uri.queryParameters['title'] ?? railId;
-              return CustomTransitionPage(
+              return CupertinoPage(
                 child: RailFeedScreen(railId: railId, railTitle: title),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return buildSlideRightTransition(animation, child);
-                },
-                transitionDuration: Motion.navForward,
-                reverseTransitionDuration: Motion.navBack,
               );
             },
           ),
@@ -227,13 +223,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return CustomTransitionPage(
+          // CupertinoPage: native slide + iOS interactive swipe-back gesture
+          // (the gesture lives in the route type — a transitionsBuilder can
+          // never provide it).
+          return CupertinoPage(
             child: HobbyDetailScreen(hobbyId: id),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return buildSlideRightTransition(animation, child);
-            },
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
@@ -303,13 +297,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               quotedText: extra['quotedText'] as String?,
             );
           }
-          return CustomTransitionPage(
+          return CupertinoPage(
             child: HobbyCoachScreen(hobbyId: hobbyId, entryContext: entryContext),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return buildSlideRightTransition(animation, child);
-            },
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
@@ -319,13 +308,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          return CustomTransitionPage(
-            child: const SettingsScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return buildSlideRightTransition(animation, child);
-            },
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
+          return const CupertinoPage(
+            child: SettingsScreen(),
           );
         },
       ),
@@ -335,13 +319,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/pro',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          return CustomTransitionPage(
-            child: const ProScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return buildSlideRightTransition(animation, child);
-            },
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
+          return const CupertinoPage(
+            child: ProScreen(),
           );
         },
       ),
@@ -350,11 +329,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/privacy-policy',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const PrivacyPolicyScreen(),
-          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-          transitionDuration: Motion.navForward,
-          reverseTransitionDuration: Motion.navBack,
+        pageBuilder: (context, state) => const CupertinoPage(
+          child: PrivacyPolicyScreen(),
         ),
       ),
 
@@ -362,11 +338,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/terms-of-service',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const TermsOfServiceScreen(),
-          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-          transitionDuration: Motion.navForward,
-          reverseTransitionDuration: Motion.navBack,
+        pageBuilder: (context, state) => const CupertinoPage(
+          child: TermsOfServiceScreen(),
         ),
       ),
 
@@ -379,11 +352,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
-          return CustomTransitionPage(
+          return CupertinoPage(
             child: BeginnerFaqScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
@@ -392,11 +362,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
-          return CustomTransitionPage(
+          return CupertinoPage(
             child: PersonalNotesScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
@@ -405,11 +372,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
-          return CustomTransitionPage(
+          return CupertinoPage(
             child: BudgetAlternativesScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
@@ -418,11 +382,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
-          return CustomTransitionPage(
+          return CupertinoPage(
             child: CostCalculatorScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
@@ -431,44 +392,32 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final hobbyId = state.pathParameters['hobbyId']!;
-          return CustomTransitionPage(
+          return CupertinoPage(
             child: ShoppingListScreen(hobbyId: hobbyId),
-            transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-            transitionDuration: Motion.navForward,
-            reverseTransitionDuration: Motion.navBack,
           );
         },
       ),
       GoRoute(
         path: '/compare',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const CompareModeScreen(),
-          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-          transitionDuration: Motion.navForward,
-          reverseTransitionDuration: Motion.navBack,
+        pageBuilder: (context, state) => const CupertinoPage(
+          child: CompareModeScreen(),
         ),
       ),
       GoRoute(
         path: '/journal',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage(
           child: HobbyJournalScreen(
             initialHobbyId: state.uri.queryParameters['hobby'],
           ),
-          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-          transitionDuration: Motion.navForward,
-          reverseTransitionDuration: Motion.navBack,
         ),
       ),
       GoRoute(
         path: '/scheduler',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const HobbySchedulerScreen(),
-          transitionsBuilder: (_, a, __, c) => buildSlideRightTransition(a, c),
-          transitionDuration: Motion.navForward,
-          reverseTransitionDuration: Motion.navBack,
+        pageBuilder: (context, state) => const CupertinoPage(
+          child: HobbySchedulerScreen(),
         ),
       ),
 
