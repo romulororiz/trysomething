@@ -40,7 +40,10 @@ class SessionTimerPhase extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final safeTop = MediaQuery.of(context).padding.top;
+    // This phase renders inside SafeArea, which consumes MediaQuery.padding —
+    // viewPadding survives it and gives the real top inset, so ring-relative
+    // positions here match the ring session_screen draws in raw coordinates.
+    final safeTop = MediaQuery.of(context).viewPadding.top;
     final ringCenterY = screenHeight * 0.42 - safeTop;
 
     return Stack(
@@ -60,8 +63,9 @@ class SessionTimerPhase extends StatelessWidget {
         ),
 
         // Timer/completion centered EXACTLY at ring center
+        // (timer is 80px tall → top at center-40 puts the digits dead-center)
         Positioned(
-          top: _isCompleting ? ringCenterY - 60 : ringCenterY - 85,
+          top: _isCompleting ? ringCenterY - 65 : ringCenterY - 40,
           left: 32,
           right: 32,
           child: _isCompleting
@@ -90,27 +94,35 @@ class SessionTimerPhase extends StatelessWidget {
                     ],
                   ],
                 )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _RollingTimer(
-                      remaining: _remaining,
-                      isWarm: _remaining < 60,
-                    ),
-                    const SizedBox(height: 8),
-                    AnimatedOpacity(
-                      opacity: session.isPaused ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Text('Paused', style: AppTypography.caption),
-                    ),
-                  ],
+              : _RollingTimer(
+                  remaining: _remaining,
+                  isWarm: _remaining < 60,
                 ),
         ),
+
+        // Paused hint — out of the timer's flow so the digits stay
+        // dead-center in the ring whether paused or not.
+        if (!_isCompleting)
+          Positioned(
+            top: ringCenterY + 52,
+            left: 32,
+            right: 32,
+            child: AnimatedOpacity(
+              opacity: session.isPaused ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                'Paused',
+                style: AppTypography.caption,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
 
         // Step instructions + coach tip below ring
         if (!_isCompleting)
           Positioned(
-            top: ringCenterY + 80,
+            // 24px below the ring's bottom edge (ring radius = 135)
+            top: ringCenterY + 159,
             left: 32,
             right: 32,
             child: Column(
