@@ -295,7 +295,7 @@ void main() {
       expect(hasBudgetReason, isFalse);
     });
 
-    test('budget reason shows "free or under CHF 30" for near-free hobbies', () {
+    test('budget reason shows "free or under \$30" for near-free hobbies', () {
       final hobby = _hobby(costText: 'CHF 0-20', timeText: '2h/week');
       final reasons = computeMatchReasons(
         hobby: hobby,
@@ -304,7 +304,7 @@ void main() {
         userPrefersSocial: false,
         userVibes: const {},
       );
-      expect(reasons, contains('Starts free or under CHF 30'));
+      expect(reasons, contains('Starts free or under \$30'));
     });
 
     test('time reason shown when hobby fits user hours', () {
