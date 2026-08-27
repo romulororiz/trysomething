@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import '../core/subscription/subscription_service.dart';
 
 /// Global subscription service singleton.
@@ -79,4 +80,11 @@ final proStatusProvider =
 /// Convenience: whether the user has Pro access (paid or trial).
 final isProProvider = Provider<bool>((ref) {
   return ref.watch(proStatusProvider).isPro;
+});
+
+/// Current RevenueCat offering, for store-localized paywall prices.
+/// Resolves to null when the store is unavailable (offline, unconfigured).
+final currentOfferingProvider = FutureProvider<Offering?>((ref) async {
+  final offerings = await ref.watch(subscriptionProvider).getOfferings();
+  return offerings?.current;
 });
