@@ -39,10 +39,17 @@ class HobbyCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Full-bleed background image with parallax
-          Transform.translate(
-            offset: Offset(0, parallaxOffset * 50),
-            child: _buildImage(),
+          // Full-bleed background image with parallax. The 1.12 scale gives
+          // the translate slack on both edges so the card never exposes a
+          // gap mid-scroll; ClipRect keeps the oversize image inside the page.
+          ClipRect(
+            child: Transform.translate(
+              offset: Offset(0, parallaxOffset * 40),
+              child: Transform.scale(
+                scale: 1.12,
+                child: _buildImage(),
+              ),
+            ),
           ),
 
           // Gradient overlay (heavier at bottom for readability)
