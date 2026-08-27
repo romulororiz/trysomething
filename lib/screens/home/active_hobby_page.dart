@@ -509,8 +509,15 @@ class _ActiveHobbyPageState extends ConsumerState<ActiveHobbyPage> {
                             const SizedBox(width: 10),
                             Text(
                               'Ask anything about ${hobby.title}...',
+                              // Single-line pill label: drop the 1.4 line
+                              // height and split the leading evenly so the
+                              // glyphs sit at the pill's true center.
                               style: AppTypography.caption.copyWith(
-                                  color: AppColors.textMuted),
+                                color: AppColors.textMuted,
+                                height: 1.0,
+                                leadingDistribution:
+                                    TextLeadingDistribution.even,
+                              ),
                             ),
                             const Spacer(),
                             const Icon(Icons.arrow_forward_rounded,
