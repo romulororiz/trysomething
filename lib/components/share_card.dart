@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/hobby.dart';
@@ -25,10 +26,14 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
   // Overlay.of() is non-nullable and asserts rather than returning null.
   // maybeOf is the correct API for a safe null check.
   final overlay = Overlay.maybeOf(context);
+  final screenSize = MediaQuery.of(context).size;
+  // Tracks the pipeline stage so a failure reports WHERE it broke.
+  var step = 'overlay';
   try {
     if (overlay == null) throw Exception('No Overlay found in context');
 
     // 1. Precache the hobby image so it renders synchronously inside the card.
+    step = 'precache';
     if (hobby.imageUrl.isNotEmpty) {
       await precacheImage(
         CachedNetworkImageProvider(hobby.imageUrl),
@@ -41,6 +46,7 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
     // RenderObject — use an untyped GlobalKey and cast when accessing.
     final boundaryKey = GlobalKey();
 
+    step = 'insert-overlay';
     entry = OverlayEntry(
       builder: (_) => Positioned(
         // Off-screen but still painted — Offstage suppresses painting and
@@ -60,15 +66,23 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
     overlay.insert(entry);
 
     // 3. Wait two frames: first completes layout, second completes image decode.
+    step = 'capture';
     await WidgetsBinding.instance.endOfFrame;
     await WidgetsBinding.instance.endOfFrame;
 
     // 4. Capture the rendered boundary as a PNG at 3× pixel ratio → 900×1260px.
     final boundary = boundaryKey.currentContext!.findRenderObject()
         as RenderRepaintBoundary;
-    final image = await boundary.toImage(pixelRatio: 3.0);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    if (byteData == null) throw Exception('toByteData returned null');
+    var image = await boundary.toImage(pixelRatio: 3.0);
+    var byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) {
+      // PNG encoding can transiently fail on some devices — retry once,
+      // one frame later and at a lower pixel ratio.
+      await WidgetsBinding.instance.endOfFrame;
+      image = await boundary.toImage(pixelRatio: 2.0);
+      byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    }
+    if (byteData == null) throw Exception('toByteData returned null twice');
 
     // 5. Remove the overlay entry before sharing (keeps tree clean).
     entry.remove();
@@ -76,6 +90,7 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
 
     // 6. Share directly from memory — XFile.fromData works on all platforms
     // including web (no file system / path_provider required).
+    step = 'share-sheet';
     await Share.shareXFiles(
       [
         XFile.fromData(
@@ -85,11 +100,22 @@ Future<void> shareHobby(BuildContext context, Hobby hobby) async {
         )
       ],
       text: "I'm trying ${hobby.title} on TrySomething",
+      // iPad's UIActivityViewController requires an anchor rect —
+      // harmless on iPhone/Android.
+      sharePositionOrigin: Rect.fromCenter(
+        center: screenSize.center(Offset.zero),
+        width: 1,
+        height: 1,
+      ),
     );
   } catch (e, st) {
     // share_plus does NOT throw on user cancellation — only real errors land here.
-    debugPrint('[shareHobby] ERROR: $e');
+    debugPrint('[shareHobby] ERROR at $step: $e');
     debugPrint('[shareHobby] STACK: $st');
+    await Sentry.captureException(e, stackTrace: st, withScope: (scope) {
+      scope.setTag('share_step', step);
+      scope.setTag('hobby_id', hobby.id);
+    });
     if (!context.mounted) return;
     showAppSnackbar(context,
         message: "Couldn't create share card", type: AppSnackbarType.error);
