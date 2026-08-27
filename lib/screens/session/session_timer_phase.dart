@@ -40,10 +40,12 @@ class SessionTimerPhase extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    // This phase renders inside SafeArea, which consumes MediaQuery.padding —
-    // viewPadding survives it and gives the real top inset, so ring-relative
-    // positions here match the ring session_screen draws in raw coordinates.
-    final safeTop = MediaQuery.of(context).viewPadding.top;
+    // This phase renders inside SafeArea, whose MediaQuery.removePadding
+    // zeroes BOTH padding.top and viewPadding.top for descendants. Read the
+    // physical view directly — immune to ancestor MediaQuery surgery — so
+    // ring-relative positions match the ring session_screen draws in raw
+    // screen coordinates.
+    final safeTop = MediaQueryData.fromView(View.of(context)).padding.top;
     final ringCenterY = screenHeight * 0.42 - safeTop;
 
     return Stack(
